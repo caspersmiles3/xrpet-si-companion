@@ -3,7 +3,7 @@ import * as cheerio from 'cheerio';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
 app.use(express.static('public'));
 
 const OFFICIAL_SOURCES = [
@@ -12,34 +12,46 @@ const OFFICIAL_SOURCES = [
   { name: 'XRPL Blog', url: 'https://xrpl.org/blog/', type: 'official' }
 ];
 
+const cache = {
+  updates: { at: 0, data: [] },
+  market: { at: 0, data: null }
+};
+const FIVE_MIN = 5 * 60 * 1000;
+const TEN_MIN = 10 * 60 * 1000;
 const clean = s => (s || '').replace(/\s+/g, ' ').trim();
 
-async function fetchPage(url) {
-  const r = await fetch(url, { headers: { 'user-agent': 'XRPetSI/0.1 (+educational companion)' }});
+async function fetchJson(url, options={}) {
+  const r = await fetch(url, { headers: { 'user-agent': 'XRPetSI/0.3 (+xrpl companion)' }, ...options });
   if (!r.ok) throw new Error(`${r.status} ${url}`);
-  return await r.text();
+  return r.json();
+}
+async function fetchPage(url) {
+  const r = await fetch(url, { headers: { 'user-agent': 'XRPetSI/0.3 (+xrpl companion)' }});
+  if (!r.ok) throw new Error(`${r.status} ${url}`);
+  return r.text();
 }
 
 function classify(title, source) {
   const t = title.toLowerCase();
   let importance = 'normal';
-  if (/launch|partner|license|approval|acqui|institution|lending|etf|custody|settlement|payment|stablecoin|rlusd|xrpl|xrp/.test(t)) importance = 'important';
+  if (/launch|partner|license|approval|acqui|institution|lending|etf|custody|settlement|payment|stablecoin|rlusd|xrpl|xrp|amendment|mainnet/.test(t)) importance = 'important';
   return {
     label: source.type === 'official' ? 'CONFIRMED' : 'UNVERIFIED',
     importance,
-    reason: source.type === 'official' ? 'Published by an official Ripple/XRPL source.' : 'Requires confirmation from a primary source.'
+    reason: source.type === 'official'
+      ? 'Published by an official Ripple/XRPL source.'
+      : 'Requires confirmation from a primary source.'
   };
 }
 
-async function scrapeRipple(source) {
+async function scrapeSource(source) {
   const html = await fetchPage(source.url);
   const $ = cheerio.load(html);
   const items = [];
   $('a').each((_, a) => {
     const title = clean($(a).text());
     let href = $(a).attr('href');
-    if (!title || title.length < 18 || title.length > 180) return;
-    if (!href) return;
+    if (!title || title.length < 18 || title.length > 180 || !href) return;
     if (href.startsWith('/')) href = new URL(href, source.url).toString();
     if (!href.startsWith('http')) return;
     if (!/ripple\.com\/(insights|ripple-press|press-releases)|xrpl\.org\//.test(href)) return;
@@ -49,36 +61,134 @@ async function scrapeRipple(source) {
   return items.slice(0, 12);
 }
 
-app.get('/api/updates', async (_req, res) => {
-  const settled = await Promise.allSettled(OFFICIAL_SOURCES.map(scrapeRipple));
+async function getUpdates() {
+  if (Date.now() - cache.updates.at < TEN_MIN && cache.updates.data.length) return cache.updates.data;
+  const settled = await Promise.allSettled(OFFICIAL_SOURCES.map(scrapeSource));
   const items = settled.flatMap(x => x.status === 'fulfilled' ? x.value : []);
   const seen = new Set();
   const unique = items.filter(x => !seen.has(x.url) && seen.add(x.url)).slice(0, 18);
-  res.json({
-    generatedAt: new Date().toISOString(),
-    sourcePolicy: 'Official Ripple and XRPL sources are CONFIRMED. Secondary-source support can be added later.',
-    items: unique
-  });
-});
+  cache.updates = { at: Date.now(), data: unique };
+  return unique;
+}
 
-app.post('/api/companion', (req, res) => {
-  const { message = '', context = {} } = req.body || {};
-  const m = message.toLowerCase();
-  let reply;
-  if (/what.*happen|catch.*up|update|news/.test(m)) {
-    reply = `Ledger ${context.ledgerIndex || 'is live'}. Network mood: ${context.networkMood || 'watchful'}. I can show confirmed Ripple/XRPL updates in the Live Feed. I label official-source items CONFIRMED and avoid turning speculation into fact.`;
-  } else if (/fee|cost/.test(m)) {
-    reply = `Current base fee: ${context.baseFeeDrops ?? 'checking'} drops. XRPL fees are dynamic under load, so I watch the live fee signal instead of assuming a fixed cost.`;
-  } else if (/hello|hi|hey/.test(m)) {
-    reply = `Hey. I'm ${context.petName || 'Nexus'}, your XRPL companion. The ledger is ${context.connected ? 'connected and pulsing' : 'still connecting'}.`;
-  } else if (/rumor|true|truth/.test(m)) {
-    reply = `Truth Mode is on. Give me the exact claim and I’ll classify it as CONFIRMED, LIKELY, SPECULATION, RUMOR, or MISLEADING based on source quality.`;
-  } else {
-    reply = `I'm listening. Ask me about the live ledger, Ripple/XRPL updates, fees, your watched account, or say “catch me up.”`;
+async function getMarket() {
+  if (Date.now() - cache.market.at < FIVE_MIN && cache.market.data) return cache.market.data;
+  try {
+    const [spot, stats] = await Promise.all([
+      fetchJson('https://api.coinbase.com/v2/prices/XRP-USD/spot'),
+      fetchJson('https://api.exchange.coinbase.com/products/XRP-USD/stats')
+    ]);
+    const price = Number(spot?.data?.amount);
+    const open = Number(stats?.open);
+    const last = Number(stats?.last || price);
+    const change24h = Number.isFinite(open) && open > 0 ? ((last - open) / open) * 100 : null;
+    const data = {
+      price,
+      change24h,
+      volume24hXrp: Number(stats?.volume),
+      high24h: Number(stats?.high),
+      low24h: Number(stats?.low),
+      source: 'Coinbase public market data',
+      generatedAt: new Date().toISOString()
+    };
+    cache.market = { at: Date.now(), data };
+    return data;
+  } catch {
+    const cg = await fetchJson('https://api.coingecko.com/api/v3/simple/price?ids=ripple&vs_currencies=usd&include_24hr_change=true');
+    const data = {
+      price: Number(cg?.ripple?.usd),
+      change24h: Number(cg?.ripple?.usd_24h_change),
+      volume24hXrp: null,
+      high24h: null,
+      low24h: null,
+      source: 'CoinGecko public market data',
+      generatedAt: new Date().toISOString()
+    };
+    cache.market = { at: Date.now(), data };
+    return data;
   }
-  res.json({ reply, mode: 'local-si', note: 'Provider-neutral SI core. Add a model provider later without changing the UI.' });
+}
+
+function fmtPct(n) {
+  if (!Number.isFinite(n)) return 'unavailable';
+  return `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`;
+}
+function buildBriefing(context, market, updates) {
+  const important = updates.filter(x => x.importance === 'important').slice(0, 3);
+  const movement = Number.isFinite(market?.change24h)
+    ? Math.abs(market.change24h) >= 5 ? 'a notable move' : Math.abs(market.change24h) >= 2 ? 'a moderate move' : 'a relatively quiet move'
+    : 'an unavailable 24-hour move';
+  return {
+    headline: `XRP is ${Number.isFinite(market?.price) ? '$' + market.price.toFixed(4) : 'price unavailable'} with ${movement} over 24h.`,
+    ledger: `XRPL is ${context.connected ? 'live' : 'not currently connected in this browser'}${context.ledgerIndex ? ', latest observed ledger ' + Number(context.ledgerIndex).toLocaleString() : ''}${context.txCount != null ? ', with ' + context.txCount + ' transactions in the last observed close' : ''}.`,
+    market: Number.isFinite(market?.change24h) ? `24h change: ${fmtPct(market.change24h)}.` : '24h market change unavailable.',
+    important,
+    caution: 'Market movement is descriptive, not a prediction. Official-source headlines are facts about announcements, not proof of future XRP price performance.'
+  };
+}
+
+function truthLabelForClaim(claim, updates) {
+  const c = claim.toLowerCase();
+  const words = c.split(/[^a-z0-9]+/).filter(w => w.length > 4);
+  const match = updates.find(x => words.filter(w => x.title.toLowerCase().includes(w)).length >= 2);
+  if (match) return { label:'LIKELY', reason:`A related official headline exists: “${match.title}”. This does not prove every detail of the claim.`, source:match.url };
+  if (/guarantee|guaranteed|will hit|definitely|1000|10000|overnight|replace swift|all banks/.test(c)) return { label:'SPECULATION', reason:'The wording makes a future-price or universal-adoption claim that cannot be confirmed as fact.', source:null };
+  return { label:'RUMOR', reason:'I could not match this claim to the official Ripple/XRPL headlines currently in my feed. Treat it as unconfirmed until a primary source supports it.', source:null };
+}
+
+app.get('/api/updates', async (_req, res) => {
+  try {
+    const items = await getUpdates();
+    res.json({ generatedAt:new Date().toISOString(), sourcePolicy:'Official Ripple and XRPL sources are CONFIRMED.', items });
+  } catch (e) {
+    res.status(502).json({ error:'Official update feed unavailable', detail:e.message });
+  }
 });
 
-app.get('/api/health', (_req, res) => res.json({ ok: true, product: 'XRPet SI Companion', version: '0.2.0' }));
+app.get('/api/market', async (_req, res) => {
+  try { res.json(await getMarket()); }
+  catch (e) { res.status(502).json({ error:'XRP market feed unavailable', detail:e.message }); }
+});
 
-app.listen(PORT, () => console.log(`XRPet SI Companion running on http://localhost:${PORT}`));
+app.post('/api/briefing', async (req, res) => {
+  try {
+    const [market, updates] = await Promise.all([getMarket(), getUpdates()]);
+    res.json(buildBriefing(req.body?.context || {}, market, updates));
+  } catch (e) {
+    res.status(502).json({ error:'Briefing unavailable', detail:e.message });
+  }
+});
+
+app.post('/api/companion', async (req, res) => {
+  const { message = '', context = {} } = req.body || {};
+  const m = clean(message);
+  const lower = m.toLowerCase();
+  let market = null, updates = [];
+  try { [market, updates] = await Promise.all([getMarket(), getUpdates()]); } catch {}
+  let reply, truth = null;
+
+  if (/what.*happen|catch.*up|update|news|today/.test(lower)) {
+    const b = buildBriefing(context, market || {}, updates);
+    const top = b.important[0] ? ` Top confirmed update: ${b.important[0].title}` : '';
+    reply = `${b.headline} ${b.market} ${b.ledger}${top} ${b.caution}`;
+  } else if (/price|xrp.*usd|market/.test(lower)) {
+    reply = Number.isFinite(market?.price)
+      ? `XRP is about $${market.price.toFixed(4)} USD. The 24-hour change is ${fmtPct(market.change24h)}. Source: ${market.source}. That's a live market snapshot, not a forecast.`
+      : 'The live XRP market feed is temporarily unavailable.';
+  } else if (/fee|cost/.test(lower)) {
+    reply = `Current observed XRPL base fee: ${context.baseFeeDrops ?? 'checking'} drops. I use the live network signal instead of assuming a fixed fee.`;
+  } else if (/hello|hi|hey/.test(lower)) {
+    reply = `Hey. I'm ${context.petName || 'Nexus'}, your XRPL companion. The ledger is ${context.connected ? 'connected and pulsing' : 'still connecting'}.`;
+  } else if (/rumor|true|truth|claim|verify/.test(lower)) {
+    const claim = m.replace(/^(is|check|verify|truth|rumor)\s+/i,'');
+    truth = truthLabelForClaim(claim, updates);
+    reply = `Truth Mode: ${truth.label}. ${truth.reason}`;
+  } else {
+    reply = `Ask me for “catch me up,” the live XRP price, XRPL fees, a Ripple/XRPL update, or paste a claim and say “verify this.”`;
+  }
+  res.json({ reply, truth, mode:'grounded-local-si-v0.3', marketSource:market?.source || null });
+});
+
+app.get('/api/health', (_req, res) => res.json({ ok:true, product:'XRPet SI Companion', version:'0.3.0' }));
+
+app.listen(PORT, () => console.log(`XRPet SI Companion v0.3 running on http://localhost:${PORT}`));
