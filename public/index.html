@@ -37,6 +37,7 @@
     <section class="grid stats">
       <article class="card stat"><small>XRPL STATUS</small><strong id="status">Connecting</strong><span id="serverState">—</span></article>
       <article class="card stat"><small>LATEST LEDGER</small><strong id="ledger">—</strong><span id="txCount">Waiting for close</span></article>
+      <article class="card stat"><small>XRP / USD</small><strong id="xrpPrice">Loading…</strong><span id="xrpChange">24h market data</span></article>
       <article class="card stat"><small>BASE FEE</small><strong><span id="fee">—</span> drops</strong><span>Live network signal</span></article>
       <article class="card stat"><small>NETWORK MOOD</small><strong id="networkMood">Calm</strong><span id="closeTime">—</span></article>
     </section>
@@ -46,7 +47,7 @@
         <div class="panel-head"><div><p class="eyebrow">SI LIVE CORE</p><h3>Ask XRPet</h3></div><span class="truth">TRUTH MODE ●</span></div>
         <div id="chat" class="chat"><div class="bubble pet-bubble">Ask me what's happening with Ripple, XRP, or the live ledger.</div></div>
         <form id="chatForm"><input id="message" autocomplete="off" placeholder="Ask XRPet…"/><button>Send</button></form>
-        <div class="quick"><button data-q="Catch me up">Catch me up</button><button data-q="What's the live fee?">Live fee</button><button data-q="Is this rumor true?">Check a rumor</button></div>
+        <div class="quick"><button data-q="Catch me up">Catch me up</button><button data-q="What's the XRP price?">XRP price</button><button data-q="What's the live fee?">Live fee</button><button data-q="Verify this claim">Truth Mode</button></div>
       </article>
 
       <article class="card panel">
@@ -68,7 +69,7 @@
       </article>
     </section>
 
-    <footer>XRPet SI Companion™ · MVP 0.2 · Built around public XRPL data · Not financial advice</footer>
+    <footer>XRPet SI Companion™ · v0.3 · Live XRPL + XRP market intelligence · Not financial advice</footer>
   </main>
   <script src="/app.js"></script>
 </body>
