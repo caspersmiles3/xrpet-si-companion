@@ -1,0 +1,12 @@
+{
+  "name": "XRPet SI Companion",
+  "short_name": "XRPet",
+  "description": "A living companion connected to the XRP Ledger.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#061018",
+  "theme_color": "#08131c",
+  "icons": [
+    {"src":"/xrpet-icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
