@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#08131c" />
-  <meta name="description" content="A living SI companion connected to the XRP Ledger." />
+  <meta name="description" content="A living SI companion connected to Ripple, XRP and the XRP Ledger." />
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="icon" href="/xrpet-icon.svg" />
   <title>XRPet SI Companion</title>
@@ -14,23 +14,35 @@
   <main class="shell">
     <header class="topbar">
       <div><span class="brand">XRPET</span><span class="slash">//</span><span class="subbrand">SI COMPANION</span></div>
-      <div id="liveBadge" class="badge offline"><span></span> CONNECTING</div>
+      <nav class="top-actions">
+        <button id="notifyButton" class="ghost">Notifications</button>
+        <button id="settingsButton" class="ghost">Settings</button>
+        <div id="liveBadge" class="badge offline"><span></span> CONNECTING</div>
+      </nav>
     </header>
 
-    <section class="hero card">
+    <section id="room" class="hero card room-nexus">
       <div class="pet-wrap">
-        <div id="pet" class="pet calm" aria-label="XRPet companion">
+        <div id="pet" class="pet calm form-drop" aria-label="XRPet companion">
           <div class="ear e1"></div><div class="ear e2"></div>
           <div class="face"><i class="eye"></i><i class="eye"></i><b class="core">X</b></div>
           <div class="body"><div class="pulse"></div></div>
         </div>
-        <div class="identity"><h1 id="petName">NEXUS-589</h1><p id="petMood">Mood: Watching the Ledger</p></div>
+        <div class="identity">
+          <h1 id="petName">NEXUS-589</h1>
+          <p id="petMood">Mood: Watching the Ledger</p>
+          <div class="level-line"><span id="evolution">Drop</span><span>•</span><span id="level">Lv. 1</span><span>•</span><span id="xpLabel">0 XP</span></div>
+          <div class="xpbar"><i id="xpFill"></i></div>
+        </div>
       </div>
       <div class="hero-copy">
         <p class="eyebrow">A LIVING FRIEND FROM XRPL</p>
         <h2>Don't watch the Ledger.<br><strong>Live with it.</strong></h2>
         <p id="petSpeech">Connecting to the XRP Ledger…</p>
-        <button id="catchup">Catch Me Up</button>
+        <div class="hero-buttons">
+          <button id="catchup">Catch Me Up</button>
+          <button id="dailyButton" class="ghost">Daily Briefing</button>
+        </div>
       </div>
     </section>
 
@@ -44,10 +56,15 @@
 
     <section class="columns">
       <article class="card panel">
-        <div class="panel-head"><div><p class="eyebrow">SI LIVE CORE</p><h3>Ask XRPet</h3></div><span class="truth">TRUTH MODE ●</span></div>
+        <div class="panel-head"><div><p class="eyebrow">SI LIVE CORE</p><h3>Ask <span id="chatPetName">XRPet</span></h3></div><span class="truth">TRUTH MODE ●</span></div>
         <div id="chat" class="chat"><div class="bubble pet-bubble">Ask me what's happening with Ripple, XRP, or the live ledger.</div></div>
-        <form id="chatForm"><input id="message" autocomplete="off" placeholder="Ask XRPet…"/><button>Send</button></form>
-        <div class="quick"><button data-q="Catch me up">Catch me up</button><button data-q="What's the XRP price?">XRP price</button><button data-q="What's the live fee?">Live fee</button><button data-q="Verify this claim">Truth Mode</button></div>
+        <form id="chatForm"><input id="message" autocomplete="off" maxlength="500" placeholder="Ask your companion…"/><button>Send</button></form>
+        <div class="quick">
+          <button data-q="Catch me up">Catch me up</button>
+          <button data-q="What's the XRP price?">XRP price</button>
+          <button data-q="What's the live fee?">Live fee</button>
+          <button data-q="Verify this claim">Truth Mode</button>
+        </div>
       </article>
 
       <article class="card panel">
@@ -56,20 +73,81 @@
       </article>
     </section>
 
-    <section class="columns lower">
-      <article class="card panel">
-        <p class="eyebrow">WALLET WATCH</p><h3>Watch an XRPL account</h3>
-        <p class="muted">Public address only. XRPet never needs your secret key.</p>
-        <form id="watchForm"><input id="account" placeholder="r… XRPL public address"/><button>Watch</button></form>
-        <div id="walletState" class="wallet-state">No account watched.</div>
+    <section class="columns">
+      <article class="card panel compact">
+        <div class="panel-head"><div><p class="eyebrow">COMPANION PROFILE</p><h3>Your XRPet</h3></div><span id="personalityChip" class="chip confirmed">Guardian</span></div>
+        <form id="profileForm" class="stack-form">
+          <label>Companion name<input id="profileName" maxlength="24" placeholder="NEXUS-589"/></label>
+          <label>Personality<select id="profilePersonality">
+            <option>Guardian</option><option>Explorer</option><option>Oracle</option><option>Builder</option><option>Spark</option><option>Jester</option>
+          </select></label>
+          <label>Your focus<input id="profileFocus" maxlength="80" placeholder="e.g. XRP, XRPL building, learning"/></label>
+          <button>Save Profile</button>
+        </form>
+        <p id="memorySummary" class="muted">No companion memory yet.</p>
       </article>
-      <article class="card panel">
-        <p class="eyebrow">DAILY COMPANION</p><h3>30-second mission</h3>
-        <div class="mission"><strong>Pulse Check</strong><p>Tap the core 7 times before the next ledger closes.</p><div class="meter"><i id="meterFill"></i></div><button id="charge">Charge Core <span id="chargeCount">0/7</span></button></div>
+
+      <article class="card panel compact">
+        <div class="panel-head"><div><p class="eyebrow">EVOLUTION</p><h3>Growth Path</h3></div><span id="streakChip" class="chip">0 day streak</span></div>
+        <div class="evolution-track">
+          <span>Drop</span><span>Ripple</span><span>Wave</span><span>Surge</span><span>Nexus</span><span>Titan</span><span>Legend</span>
+        </div>
+        <div class="mission">
+          <strong id="missionTitle">Pulse Check</strong>
+          <p id="missionText">Tap the core 7 times to complete today's mission.</p>
+          <div class="meter"><i id="meterFill"></i></div>
+          <button id="charge">Charge Core <span id="chargeCount">0/7</span></button>
+        </div>
       </article>
     </section>
 
-    <footer>XRPet SI Companion™ · v0.3 · Live XRPL + XRP market intelligence · Not financial advice</footer>
+    <section class="columns">
+      <article class="card panel compact">
+        <p class="eyebrow">WALLET WATCH</p><h3>Watch an XRPL account</h3>
+        <p class="muted">Public address only. XRPet never asks for a seed phrase or private key.</p>
+        <form id="watchForm"><input id="account" placeholder="r… XRPL public address"/><button>Watch</button></form>
+        <div id="walletState" class="wallet-state">No account watched.</div>
+        <button id="clearWallet" class="ghost small">Stop watching</button>
+      </article>
+
+      <article class="card panel compact">
+        <div class="panel-head"><div><p class="eyebrow">ROOM + COSMETICS</p><h3>Customize</h3></div><span id="unlocksChip" class="chip">3 unlocked</span></div>
+        <div class="cosmetic-grid">
+          <button class="cosmetic active" data-room="nexus">Nexus Room</button>
+          <button class="cosmetic" data-room="ocean">Ripple Ocean</button>
+          <button class="cosmetic" data-room="vault">Vault Chamber</button>
+          <button class="cosmetic lockable" data-room="aurora">Aurora <small>Wave+</small></button>
+          <button class="cosmetic lockable" data-room="legend">Legend <small>Titan+</small></button>
+        </div>
+      </article>
+    </section>
+
+    <section class="columns">
+      <article class="card panel compact">
+        <div class="panel-head"><div><p class="eyebrow">NOTIFICATION CENTER</p><h3>Recent Signals</h3></div><button id="clearNotifications" class="ghost small">Clear</button></div>
+        <div id="notificationList" class="notification-list"><p class="muted">No signals yet.</p></div>
+      </article>
+
+      <article class="card panel compact">
+        <p class="eyebrow">COMPANION MEMORY</p><h3>Things your XRPet remembers</h3>
+        <form id="memoryForm"><input id="memoryInput" maxlength="120" placeholder="Remember that I want short XRP summaries"/><button>Remember</button></form>
+        <div id="memoryList" class="memory-list"></div>
+        <button id="clearMemory" class="ghost small">Clear companion memory</button>
+      </article>
+    </section>
+
+    <section id="settingsPanel" class="card panel settings-panel hidden">
+      <div class="panel-head"><div><p class="eyebrow">SETTINGS</p><h3>Companion Preferences</h3></div><button id="closeSettings" class="ghost">Close</button></div>
+      <div class="settings-grid">
+        <label>Explanation level<select id="explainLevel"><option value="simple">Simple</option><option value="balanced">Balanced</option><option value="technical">Technical</option></select></label>
+        <label>Notification intensity<select id="notifyLevel"><option value="quiet">Quiet</option><option value="normal">Normal</option><option value="active">Active</option></select></label>
+        <label class="toggle"><input id="truthToggle" type="checkbox" checked/> Truth Mode</label>
+        <label class="toggle"><input id="marketMoodToggle" type="checkbox" checked/> Let XRP market movement affect mood</label>
+      </div>
+      <p class="muted">Everything in this v1.0 build is stored locally in your browser. No account or paid database is required.</p>
+    </section>
+
+    <footer>XRPet SI Companion™ · v1.0 · Ripple + XRP + XRPL companion · Not financial advice</footer>
   </main>
   <script src="/app.js"></script>
 </body>
