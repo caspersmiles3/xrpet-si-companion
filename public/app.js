@@ -1,6 +1,6 @@
 const $ = s => document.querySelector(s);
 const saved=JSON.parse(localStorage.getItem('xrpet-state')||'{}');
-const state = { connected:false, ledgerIndex:null, txCount:0, baseFeeDrops:null, networkMood:saved.networkMood||'Calm', petName:saved.petName||'NEXUS-589', account:saved.account||null, streak:saved.streak||0, xp:saved.xp||0 };
+const state = { connected:false, ledgerIndex:null, txCount:0, baseFeeDrops:null, networkMood:saved.networkMood||'Calm', petName:saved.petName||'NEXUS-589', account:saved.account||null, streak:saved.streak||0, xp:saved.xp||0, xrpPrice:null, xrpChange24h:null };
 function saveState(){localStorage.setItem('xrpet-state',JSON.stringify({networkMood:state.networkMood,petName:state.petName,account:state.account,streak:state.streak,xp:state.xp}))}
 const XRPL_WS = 'wss://xrplcluster.com/';
 let ws;
@@ -41,6 +41,40 @@ function handle(msg){
 }
 function subscribeAccount(account){ if(ws?.readyState===1) ws.send(JSON.stringify({id:'xrpet-account',command:'subscribe',accounts:[account]})); }
 
+async function loadMarket(){
+  try{
+    const r=await fetch('/api/market');
+    const d=await r.json();
+    state.xrpPrice=d.price;
+    state.xrpChange24h=d.change24h;
+    $('#xrpPrice').textContent=Number.isFinite(d.price)?'
+  try{const r=await fetch('/api/updates'); const d=await r.json(); if(!d.items.length) throw new Error('No items'); $('#updates').innerHTML=d.items.slice(0,10).map(x=>`<div class="update"><a href="${x.url}" target="_blank" rel="noopener">${escapeHtml(x.title)}</a><div class="meta"><span class="chip confirmed">${x.label}</span><span class="chip">${escapeHtml(x.source)}</span><span class="chip">${x.importance}</span></div></div>`).join('');}
+  catch(e){$('#updates').innerHTML='<p class="muted">Official update feed is temporarily unavailable. Live XRPL data still works.</p>'}
+}
+function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+async function ask(message){
+  const chat=$('#chat'); chat.insertAdjacentHTML('beforeend',`<div class="bubble user-bubble">${escapeHtml(message)}</div>`); chat.scrollTop=chat.scrollHeight;
+  const r=await fetch('/api/companion',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message,context:state})}); const d=await r.json(); chat.insertAdjacentHTML('beforeend',`<div class="bubble pet-bubble">${escapeHtml(d.reply)}</div>`); chat.scrollTop=chat.scrollHeight;
+}
+$('#chatForm').addEventListener('submit',e=>{e.preventDefault();const m=$('#message').value.trim();if(!m)return;$('#message').value='';ask(m)});
+document.querySelectorAll('.quick button').forEach(b=>b.onclick=()=>ask(b.dataset.q));
+$('#catchup').onclick=()=>{ask('Catch me up');loadUpdates();loadMarket()}; $('#refreshNews').onclick=()=>{loadUpdates();loadMarket()};
+$('#watchForm').addEventListener('submit',e=>{e.preventDefault();const a=$('#account').value.trim(); if(!/^r[1-9A-HJ-NP-Za-km-z]{24,34}$/.test(a)){ $('#walletState').textContent='That does not look like a valid XRPL classic address.'; return;} state.account=a; saveState(); subscribeAccount(a); $('#walletState').textContent=`Watching ${a.slice(0,6)}…${a.slice(-5)} for validated transactions.`;});
+$('#charge').onclick=()=>{charge=Math.min(7,charge+1);$('#chargeCount').textContent=`${charge}/7`;$('#meterFill').style.width=`${charge/7*100}%`; if(charge===7){state.streak+=1;state.xp+=10;saveState();setPetMood('Charged',`Core fully charged. Mission complete. Streak ${state.streak} · XP ${state.xp}.`,'energized')}};
+connect(); loadUpdates(); loadMarket(); setInterval(loadMarket,300000);
+
+if(state.account){$('#account').value=state.account;$('#walletState').textContent=`Watching ${state.account.slice(0,6)}…${state.account.slice(-5)} after restart.`;}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));}
++Number(d.price).toFixed(4):'Unavailable';
+    if(Number.isFinite(d.change24h)){
+      const sign=d.change24h>=0?'+':'';
+      $('#xrpChange').textContent=sign+Number(d.change24h).toFixed(2)+'% · 24h';
+    } else $('#xrpChange').textContent='24h data unavailable';
+  }catch{
+    $('#xrpPrice').textContent='Unavailable';
+    $('#xrpChange').textContent='Market feed offline';
+  }
+}
 async function loadUpdates(){
   $('#updates').innerHTML='<p class="muted">Checking official Ripple/XRPL sources…</p>';
   try{const r=await fetch('/api/updates'); const d=await r.json(); if(!d.items.length) throw new Error('No items'); $('#updates').innerHTML=d.items.slice(0,10).map(x=>`<div class="update"><a href="${x.url}" target="_blank" rel="noopener">${escapeHtml(x.title)}</a><div class="meta"><span class="chip confirmed">${x.label}</span><span class="chip">${escapeHtml(x.source)}</span><span class="chip">${x.importance}</span></div></div>`).join('');}
