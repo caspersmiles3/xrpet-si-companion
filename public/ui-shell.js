@@ -28,6 +28,66 @@
     People:['People Involved','Key people who shaped the XRP Ledger, Ripple and the XRP ecosystem.']
   };
 
+  let historyArchiveCache=null;
+  async function getHistoryArchive(){
+    if(historyArchiveCache)return historyArchiveCache;
+    const r=await fetch('/xrp-history.json',{cache:'no-store'});
+    if(!r.ok)throw new Error('History archive unavailable');
+    historyArchiveCache=await r.json();
+    return historyArchiveCache;
+  }
+  function historyWhy(category){
+    const map={
+      Origins:'This explains the creation and earliest development of the XRP Ledger and the organizations that formed around it.',
+      Ripple:'This is a Ripple-company milestone. Ripple the company is kept distinct from XRP and the public XRP Ledger.',
+      XRP:'This concerns XRP supply, distribution, utility, or asset-level history.',
+      XRPL:'This concerns the XRP Ledger protocol, amendments, network operations, or infrastructure.',
+      Legal:'This affected the legal or regulatory environment surrounding Ripple and/or XRP.',
+      Market:'This is historical market-cycle context only. It is descriptive, not a prediction.',
+      Adoption:'This records payment, integration, institutional, or ecosystem adoption connected to Ripple/XRP/XRPL.',
+      Acquisition:'This records an acquisition or institutional-infrastructure expansion by Ripple.'
+    };
+    return map[category]||'This event is part of the Ripple, XRP, and XRP Ledger historical record.';
+  }
+  function renderHistoryEvents(rows){
+    const box=q('#xrpTimeline');if(!box)return;
+    box.innerHTML=rows.length?rows.map(x=>'<article class="xrp-event '+(x.sentiment==='up'||x.sentiment==='positive'?'up':x.sentiment==='down'?'down':x.sentiment==='mixed'?'mixed':'neutral')+'">'+
+      '<div class="xrp-event-rail"><i></i><span>'+esc(x.year||'')+'</span></div>'+
+      '<div class="xrp-event-body">'+
+        '<div class="xrp-event-meta"><b>'+esc(x.category||'History')+'</b><time>'+esc(x.date||'')+'</time></div>'+
+        '<h3>'+esc(x.title||'Historical event')+'</h3>'+
+        '<p>'+esc(x.summary||'')+'</p>'+
+        '<details class="xrp-event-details"><summary>Open detailed context</summary><div>'+
+          '<strong>Why it matters</strong><p>'+esc(historyWhy(x.category))+'</p>'+
+          ((x.people||[]).length?'<p><b>People involved:</b> '+esc((x.people||[]).join(', '))+'</p>':'')+
+          '<p><b>Status:</b> Historical archive entry</p>'+
+          (x.source?'<a href="'+esc(x.source)+'" target="_blank" rel="noopener">Open primary source ↗</a>':'')+
+        '</div></details>'+
+      '</div>'+
+    '</article>').join(''):'<div class="history-empty-state"><strong>No entries found for this section.</strong><p>The archive loaded correctly, but this category currently has no matching milestones.</p></div>';
+  }
+  async function renderHistoryView(view='All'){
+    const timeline=q('#xrpTimeline');
+    const people=q('#xrpPeople');
+    if(timeline)timeline.innerHTML='<p class="muted">Loading '+esc((HISTORY_META[view]||HISTORY_META.All)[0])+'…</p>';
+    try{
+      const archive=await getHistoryArchive();
+      if(view==='People'){
+        if(people){
+          people.innerHTML=(archive.people||[]).map(p=>'<article class="xrp-person"><strong>'+esc(p.name)+'</strong><span>'+esc(p.role)+'</span><p>'+esc(p.involvement)+'</p></article>').join('');
+        }
+        if(timeline)timeline.innerHTML='';
+        return;
+      }
+      const rows=(archive.events||[])
+        .filter(x=>view==='All'||x.category===view)
+        .sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+      renderHistoryEvents(rows);
+    }catch(err){
+      if(timeline)timeline.innerHTML='<div class="history-empty-state"><strong>History archive could not load.</strong><p>XRPet will retry when you select this section again.</p></div>';
+    }
+  }
+
   function closeSidebarMenus(except=null){
     qa('#xrpetSidebar details[open]').forEach(menu=>{
       if(menu!==except)menu.removeAttribute('open');
@@ -82,17 +142,27 @@
   }
 
   function showHistory(view='All'){
+    const selected=HISTORY_META[view]?view:'All';
     showView('history');
     const section=q('#xrpHistorySection');
-    if(section)section.dataset.historyMode=view;
-    const meta=HISTORY_META[view]||HISTORY_META.All;
+    if(section)section.dataset.historyMode=selected;
+    const meta=HISTORY_META[selected];
     const header=q('#historySelectedHeader');
-    if(header)header.hidden=view==='All';
+    if(header)header.hidden=selected==='All';
     if(q('#historySelectedTitle'))q('#historySelectedTitle').textContent=meta[0];
     if(q('#historySelectedDescription'))q('#historySelectedDescription').textContent=meta[1];
-    window.XRPetHistoryPending=view;
-    try{window.XRPetHistory?.setView?.(view)}catch{}
-    setTimeout(()=>{try{window.XRPetHistory?.setView?.(view)}catch{}},250);
+
+    // Explicitly control Overview/People visibility so no old CSS state can blank the page.
+    qa('#xrpHistorySection .history-overview-only').forEach(el=>{el.hidden=selected!=='All'});
+    qa('#xrpHistorySection .history-people-only').forEach(el=>{el.hidden=selected!=='All'&&selected!=='People'});
+    const timeline=q('#xrpTimeline');
+    if(timeline)timeline.hidden=selected==='People';
+
+    window.XRPetHistoryPending=selected;
+    renderHistoryView(selected);
+
+    // Keep timeline.js synchronized if it is present, but it is no longer required.
+    try{window.XRPetHistory?.setView?.(selected)}catch{}
   }
 
   function showLearn(name='xrp'){
