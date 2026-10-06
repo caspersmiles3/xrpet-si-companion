@@ -6911,3 +6911,17 @@ body.sidebar-collapsed .main-shell{
     width:0!important;
   }
 }
+
+
+/* v5.5.22 — main-view crash recovery guard */
+.main-shell{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  min-width:0!important;
+}
+#homeSection.view-active,
+.primary-view-section.view-active{
+  visibility:visible!important;
+  opacity:1!important;
+}
