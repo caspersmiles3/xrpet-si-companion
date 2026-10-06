@@ -659,9 +659,15 @@ bind('#applyRoom','click',()=>{
   closeCustomizationPanels();
 }); qa('.cosmetic-choice').forEach(b=>b.addEventListener('click',()=>{state.cosmetic=b.dataset.cosmetic;state.nftCompanion=null;persist();applyNftCompanion();render();mood('Reconfigured','Companion build changed to '+b.querySelector('strong')?.textContent+'.','energized')}));
 function scrollSectionTop(id){
-  const target=q('#'+id); if(!target)return;
-  const y=Math.max(0,target.getBoundingClientRect().top+window.scrollY-14);
-  window.scrollTo({top:y,behavior:'smooth'});
+  const target=q('#'+id);if(!target)return;
+  const shell=q('.main-shell');
+  if(shell){
+    const y=Math.max(0,target.offsetTop-10);
+    shell.scrollTo({top:y,behavior:'auto'});
+    return;
+  }
+  const y=Math.max(0,target.getBoundingClientRect().top+window.scrollY-10);
+  window.scrollTo({top:y,behavior:'auto'});
 }
 qa('[data-scroll]').forEach(b=>b.addEventListener('click',()=>{
   qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));
@@ -1235,7 +1241,8 @@ function setPrimaryView(view='home'){
   qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));
   document.body.classList.remove('workspace-open','customization-open');
   const target=view==='home'?'homeSection':view==='live'?'xrplPanel':view==='announcements'?'announcementsSection':view==='ripplet'?'companionSection':view==='ecosystem'?'ecosystemSection':view==='games'?'gamesSection':'xrpHistorySection';
-  setTimeout(()=>scrollSectionTop(target),10);
+  ['historyNavDetails','ecosystemNavDetails','gamesNavDetails'].forEach(id=>{if((view==='history'&&id==='historyNavDetails')||(view==='ecosystem'&&id==='ecosystemNavDetails')||(view==='games'&&id==='gamesNavDetails'))return;q('#'+id)?.removeAttribute('open')});
+  setTimeout(()=>scrollSectionTop(target),0);
 }
 qa('[data-primary-view]').forEach(b=>b.addEventListener('click',()=>setPrimaryView(b.dataset.primaryView)));
 
@@ -1268,6 +1275,28 @@ function openHistoryView(view='All'){
   setTimeout(()=>scrollSectionTop('xrpHistorySection'),10);
 }
 qa('[data-history-view]').forEach(b=>b.addEventListener('click',()=>openHistoryView(b.dataset.historyView)));
+
+function setEcosystemSubview(view='directory'){
+  setPrimaryView('ecosystem');
+  qa('[data-ecosystem-panel]').forEach(panel=>panel.classList.toggle('active',panel.dataset.ecosystemPanel===view));
+  qa('[data-ecosystem-view]').forEach(btn=>btn.classList.toggle('active',btn.dataset.ecosystemView===view));
+  q('#ecosystemNavDetails')?.removeAttribute('open');
+  setTimeout(()=>scrollSectionTop('ecosystemSection'),0);
+}
+qa('[data-ecosystem-view]').forEach(btn=>btn.addEventListener('click',()=>setEcosystemSubview(btn.dataset.ecosystemView)));
+
+function setGameSubview(id='ledgerRush'){
+  setPrimaryView('games');
+  const tab=q('[data-game-tab="'+id+'"]');
+  tab?.click();
+  qa('[data-game-nav]').forEach(btn=>btn.classList.toggle('active',btn.dataset.gameNav===id));
+  q('#gamesNavDetails')?.removeAttribute('open');
+  setTimeout(()=>scrollSectionTop('gamesSection'),0);
+}
+qa('[data-game-nav]').forEach(btn=>btn.addEventListener('click',()=>setGameSubview(btn.dataset.gameNav)));
+
+q('#ecosystemNavDetails > summary')?.addEventListener('click',()=>setTimeout(()=>{if(primaryView!=='ecosystem')setPrimaryView('ecosystem')},0));
+q('#gamesNavDetails > summary')?.addEventListener('click',()=>setTimeout(()=>{if(primaryView!=='games')setPrimaryView('games')},0));
 
 q('#customizeDetails')?.addEventListener('toggle',e=>{
   if(e.target.open) q('#settingsDetails')?.removeAttribute('open');
