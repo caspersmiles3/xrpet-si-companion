@@ -28,7 +28,7 @@ const state={
   lifeSocial:Number.isFinite(saved.lifeSocial)?saved.lifeSocial:82,
   lifeActivity:saved.lifeActivity||'explore',
   lifeRoaming:saved.lifeRoaming!==false,
-  lifePinned:saved.lifePinned===true,
+  lifePinned:false,
   lifeLastTick:Number(saved.lifeLastTick)||Date.now(),
   lastLedgerTxAt:Number(saved.lastLedgerTxAt)||0,
   lastAnnouncementTitle:saved.lastAnnouncementTitle||'',
@@ -112,7 +112,6 @@ const LIFE_STATIONS={
   socialize:{label:'With Signal Friend',thought:'A new official signal arrived. I am checking it with my Signal Friend.'},
   explore:{label:'Roaming XRPet',thought:'I am walking through XRPet and watching for the next live signal.'},
   ledger:{label:'Watching XRPL',thought:'I am monitoring validated XRP Ledger activity.'},
-  sit:{label:'Sitting & staying',thought:'I will stay here until you unpin me.'}
 };
 function clampNeed(v){return Math.max(0,Math.min(100,Number(v)||0))}
 function applyOfflineLifeDecay(){
@@ -121,9 +120,8 @@ function applyOfflineLifeDecay(){
   state.lifeRest=clampNeed(state.lifeRest-minutes*.04);state.lifeSocial=clampNeed(state.lifeSocial-minutes*.04);state.lifeLastTick=now;
 }
 function renderLife(){
-  const cfg=LIFE_STATIONS[state.lifePinned?'sit':state.lifeActivity]||LIFE_STATIONS.explore;
+  const cfg=LIFE_STATIONS[state.lifeActivity]||LIFE_STATIONS.explore;
   setText('#lifeMode',cfg.label);setText('#lifeThought',cfg.thought);
-  const stay=q('#lifeSitStay');if(stay)stay.textContent=state.lifePinned?'Unpin & Roam':'Sit & Stay';
 }
 const LIFE_REACTIONS={
   drink:[
@@ -166,21 +164,20 @@ function playLifeReaction(activity){
   return choice;
 }
 function performLifeActivity(activity,manual=false,moveToStation=manual){
-  if(state.lifePinned&&activity!=='sit'&&!manual)return;
   const isLiveOverlay=!manual&&['drink','eat','sleep','socialize'].includes(activity);
   if(!isLiveOverlay)state.lifeActivity=activity;
   if(activity==='drink')state.lifeWater=clampNeed(state.lifeWater+(manual?12:4));
   if(activity==='eat')state.lifeFood=clampNeed(state.lifeFood+(manual?12:4));
   if(activity==='sleep')state.lifeRest=clampNeed(state.lifeRest+(manual?10:3));
   if(activity==='socialize')state.lifeSocial=clampNeed(state.lifeSocial+(manual?12:4));
-  const reaction=activity==='ledger'?'scan':activity==='explore'?'greet':activity==='sit'?'focus':'greet';
+  const reaction=activity==='ledger'?'scan':activity==='explore'?'greet':'greet';
   const lifeReaction=['drink','eat','sleep','socialize'].includes(activity)?playLifeReaction(activity):null;
   if(!lifeReaction)window.XRPet3D?.perform?.(reaction);
   // Automatic live reactions happen wherever Ripplet currently is. Manual station taps may guide him there.
   if(moveToStation)window.XRPetRoam?.go?.(activity);
   clearTimeout(lifeReturnTimer);
-  if(moveToStation&&!state.lifePinned&&['drink','eat','sleep','socialize'].includes(activity)){
-    lifeReturnTimer=setTimeout(()=>{if(!state.lifePinned){state.lifeActivity='explore';renderLife();persist()}},4200);
+  if(moveToStation&&['drink','eat','sleep','socialize'].includes(activity)){
+    lifeReturnTimer=setTimeout(()=>{state.lifeActivity='explore';renderLife();persist()},4200);
   }
   renderLife();persist();
 }
@@ -189,7 +186,7 @@ function lifeTick(){
   state.lifeRest=clampNeed(state.lifeRest-.02);
   state.lifeSocial=clampNeed(state.lifeSocial-.02);state.lifeLastTick=Date.now();
   const quiet=Date.now()-(state.lastLedgerTxAt||0)>20000;
-  if(!state.lifePinned&&quiet&&Date.now()-lastQuietReactionAt>45000){
+  if(quiet&&Date.now()-lastQuietReactionAt>45000){
     lastQuietReactionAt=Date.now();performLifeActivity('sleep');
     setText('#sleepSignal','Quiet period');
   }else if(!quiet){
@@ -271,7 +268,7 @@ if(Number.isFinite(previousPrice)&&Number.isFinite(state.xrpPrice)&&previousPric
   const delta=(state.xrpPrice-previousPrice)/previousPrice*100;
   state.lastPriceTickPct=delta;
   setText('#foodSignal',(delta>=0?'+':'')+delta.toFixed(3)+'% tick');
-  if(!state.lifePinned)performLifeActivity('eat');
+  if(!false)performLifeActivity('eat');
 }const livePrice=Number.isFinite(state.xrpPrice)?'$'+state.xrpPrice.toFixed(4):'Unavailable';const liveChange=Number.isFinite(state.xrpChange24h)?(state.xrpChange24h>=0?'+':'')+state.xrpChange24h.toFixed(2)+'% · 24h':'24h unavailable';setText('#xrpPrice',livePrice);setText('#xrpChange',liveChange);setText('#globalXrpPrice',livePrice);setText('#globalXrpChange',liveChange);if(state.marketMood&&Number.isFinite(state.xrpChange24h)&&Math.abs(state.xrpChange24h)>=5)mood(state.xrpChange24h>0?'Excited':'Watchful','XRP moved '+Math.abs(state.xrpChange24h).toFixed(2)+'% over 24 hours. Movement is not a prediction.',state.xrpChange24h>0?'energized':'alert')}catch{setText('#xrpPrice','Unavailable');setText('#xrpChange','Market feed offline');setText('#globalXrpPrice','Unavailable');setText('#globalXrpChange','Market feed offline');renderSignal589()}}
 function renderMarketChart(points=[]){
   const svg=q('#xrpMarketChart'),line=q('#marketLine'),area=q('#marketArea'),grid=q('#marketGrid');
@@ -305,7 +302,7 @@ async function loadMarketHistory(){
     renderMarketChart(d.points);
   }catch{setText('#chartRange','MARKET CHART OFFLINE')}
 }
-async function loadUpdates(){const box=q('#updates');if(box)box.innerHTML='<p class="muted">Checking official Ripple and XRPL sources…</p>';try{const r=await fetch('/api/updates',{cache:'no-store'});const d=await r.json();if(!r.ok||!Array.isArray(d.items)||!d.items.length)throw new Error();const items=d.items.slice(0,12);box.innerHTML=items.map((x,i)=>'<article class="announcement-card"><div class="announcement-index">'+String(i+1).padStart(2,'0')+'</div><div><span class="announcement-source">'+esc(x.source)+' · '+esc(x.label||'CONFIRMED')+'</span><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title)+'</a><small>Official source ↗</small></div></article>').join('');setText('#announcementStatus','Live');setText('#announcementUpdated','Updated '+new Date().toLocaleTimeString());const newest=items[0]?.title||'';setText('#friendSignal',newest?'New signal':'Standing by');if(newest&&state.lastAnnouncementTitle&&newest!==state.lastAnnouncementTitle&&!state.lifePinned){state.lastAnnouncementAt=Date.now();performLifeActivity('socialize')}state.lastAnnouncementTitle=newest;persist()}catch{if(box)box.innerHTML='<p class="muted">Official update feed is temporarily unavailable.</p>';setText('#announcementStatus','Unavailable');setText('#announcementUpdated','Retrying automatically')}}
+async function loadUpdates(){const box=q('#updates');if(box)box.innerHTML='<p class="muted">Checking official Ripple and XRPL sources…</p>';try{const r=await fetch('/api/updates',{cache:'no-store'});const d=await r.json();if(!r.ok||!Array.isArray(d.items)||!d.items.length)throw new Error();const items=d.items.slice(0,12);box.innerHTML=items.map((x,i)=>'<article class="announcement-card"><div class="announcement-index">'+String(i+1).padStart(2,'0')+'</div><div><span class="announcement-source">'+esc(x.source)+' · '+esc(x.label||'CONFIRMED')+'</span><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title)+'</a><small>Official source ↗</small></div></article>').join('');setText('#announcementStatus','Live');setText('#announcementUpdated','Updated '+new Date().toLocaleTimeString());const newest=items[0]?.title||'';setText('#friendSignal',newest?'New signal':'Standing by');if(newest&&state.lastAnnouncementTitle&&newest!==state.lastAnnouncementTitle&&!false){state.lastAnnouncementAt=Date.now();performLifeActivity('socialize')}state.lastAnnouncementTitle=newest;persist()}catch{if(box)box.innerHTML='<p class="muted">Official update feed is temporarily unavailable.</p>';setText('#announcementStatus','Unavailable');setText('#announcementUpdated','Retrying automatically')}}
 const liveTransactions=[];
 const seenLiveTx=new Set();
 let liveTxRenderTimer=0,lifeWaterTimer=0,lifeReturnTimer=0,lastQuietReactionAt=0,spontaneousReactionTimer=0;
@@ -360,7 +357,7 @@ function connectLedger(){clearTimeout(retry);try{ws=new WebSocket('wss://xrplclu
   ws.onopen=()=>{state.connected=true;renderSignal589();setText('#status','Live');const b=q('#liveBadge');if(b){b.className='status-pill live';b.innerHTML='<i></i><span>XRPL Live</span>'}mood('Connected','Live XRPL data is flowing.','calm');ws.send(JSON.stringify({id:'ledger',command:'subscribe',streams:['ledger','server','transactions']}));ws.send(JSON.stringify({id:'fee',command:'fee'}));if(state.account)subscribeAccount(state.account)};
   ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='ledgerClosed'){state.ledgerIndex=m.ledger_index;state.txCount=m.txn_count??0;state.baseFeeDrops=m.fee_base??state.baseFeeDrops;setText('#ledger',Number(m.ledger_index).toLocaleString());setText('#txCount',(m.txn_count??0)+' transactions');setText('#homeNetworkDetail','Ledger '+Number(m.ledger_index).toLocaleString()+' · '+(m.txn_count??0)+' transactions in latest close');if(m.fee_base!=null)setText('#fee',m.fee_base);renderSignal589()}else if(m.type==='serverStatus'){setText('#serverState',m.server_status||'Connected')}else if(m.id==='fee'&&m.result){const drops=m.result?.drops?.base_fee;if(drops!=null){state.baseFeeDrops=Number(drops);setText('#fee',drops)}}else if(m.id==='xrpet-nfts'&&Array.isArray(m.result?.account_nfts)){
     renderNfts(m.result.account_nfts);
-  }else if(m.type==='transaction'){const normalized=normalizeLiveTransaction(m);if(normalized){liveTransactions.unshift(normalized);if(liveTransactions.length>25)liveTransactions.length=25;scheduleLiveTransactionRender();state.lastLedgerTxAt=Date.now();setText('#waterSignal','Ledger #'+normalized.ledger);setText('#sleepSignal','XRPL active');if(!state.lifePinned&&!lifeWaterTimer){performLifeActivity('drink');lifeWaterTimer=setTimeout(()=>lifeWaterTimer=0,3500)}}const tx=m.transaction||m.tx_json||m.tx||{};if(state.account&&(tx.Account===state.account||tx.Destination===state.account)){if(state.ledgerSound)playSound('ledgerTx');window.XRPet3D?.celebrate?.();mood('Wallet activity','Validated activity detected on the watched account.','energized');addXp(3)}}};
+  }else if(m.type==='transaction'){const normalized=normalizeLiveTransaction(m);if(normalized){liveTransactions.unshift(normalized);if(liveTransactions.length>25)liveTransactions.length=25;scheduleLiveTransactionRender();state.lastLedgerTxAt=Date.now();setText('#waterSignal','Ledger #'+normalized.ledger);setText('#sleepSignal','XRPL active');if(!false&&!lifeWaterTimer){performLifeActivity('drink');lifeWaterTimer=setTimeout(()=>lifeWaterTimer=0,3500)}}const tx=m.transaction||m.tx_json||m.tx||{};if(state.account&&(tx.Account===state.account||tx.Destination===state.account)){if(state.ledgerSound)playSound('ledgerTx');window.XRPet3D?.celebrate?.();mood('Wallet activity','Validated activity detected on the watched account.','energized');addXp(3)}}};
   ws.onclose=()=>{state.connected=false;renderSignal589();setText('#status','Reconnecting');const b=q('#liveBadge');if(b){b.className='status-pill waiting';b.innerHTML='<i></i><span>Reconnecting</span>'}scheduleReconnect()};ws.onerror=()=>safe(()=>ws.close())
 }
 function scheduleReconnect(){clearTimeout(retry);retry=setTimeout(connectLedger,4000)}
@@ -790,7 +787,7 @@ if(launchGate){
 
 
 const floatEl=q('#floatingCompanion'),roamLayer=q('#rippletRoamLayer'),lifeAvatar=q('#lifeAvatar');
-let roamPinned=state.lifePinned===true,roamX=.72,roamY=.72,roamTimer=0;
+let roamPinned=false,roamX=.72,roamY=.72,roamTimer=0;
 
 function syncRoamBounds(){
   const shell=q('.main-shell');if(!shell||!roamLayer)return;
@@ -816,13 +813,11 @@ function stationPosition(activity){
   return {x:r.left-layer.left+r.width/2-85,y:r.bottom-layer.top+4};
 }
 function goRipplet(activity='explore'){
-  if(roamPinned&&activity!=='sit')return;
   syncRoamBounds();
   if(activity==='drink'||activity==='eat'||activity==='sleep'||activity==='socialize'){
     const p=stationPosition(activity);if(p){setRoamPosition(p.x,p.y,activity);return}
   }
   const layer=roamLayer?.getBoundingClientRect();if(!layer)return;
-  if(activity==='sit'){setRoamPosition(layer.width*.72,Math.max(150,layer.height*.68),'sit');return}
   if(activity==='ledger'){setRoamPosition(layer.width*.72,Math.max(165,layer.height*.34),'ledger');return}
   const x=70+Math.random()*Math.max(60,layer.width-300);
   const y=190+Math.random()*Math.max(40,layer.height-430);
@@ -831,7 +826,7 @@ function goRipplet(activity='explore'){
 }
 function roamingStep(){
   clearTimeout(roamTimer);
-  if(!roamPinned)goRipplet('explore');
+  goRipplet('explore');
   roamTimer=setTimeout(roamingStep,4200+Math.random()*5200);
 }
 function renderMind(){
@@ -856,7 +851,7 @@ function mindContext(){
   };
 }
 function executeMindDecision(decision){
-  if(!decision||state.lifePinned)return;
+  if(!decision||false)return;
   const action=decision.action||'roam';
   state.mindAction=action;
   state.mindThought=decision.thought||'I chose my next move.';
@@ -876,7 +871,7 @@ function executeMindDecision(decision){
 let mindTimer=0,mindBusy=false;
 async function runAutonomousMind(){
   clearTimeout(mindTimer);
-  if(!state.lifePinned&&!mindBusy){
+  if(!false&&!mindBusy){
     mindBusy=true;
     try{
       const r=await fetch('/api/companion/decision',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({context:mindContext()})});
@@ -892,7 +887,7 @@ async function runAutonomousMind(){
 }
 function spontaneousRippletReaction(){
   clearTimeout(spontaneousReactionTimer);
-  if(!roamPinned){
+  {
     const options=['greet','happy','focus','scan','wave','dance'];
     const pick=options[Math.floor(Math.random()*options.length)];
     window.XRPet3D?.perform?.(pick);
@@ -900,17 +895,14 @@ function spontaneousRippletReaction(){
   }
   spontaneousReactionTimer=setTimeout(spontaneousRippletReaction,6500+Math.random()*9000);
 }
-function setRoamPinned(v){
-  roamPinned=!!v;state.lifePinned=roamPinned;state.lifeRoaming=!roamPinned;persist();
-  if(roamPinned){state.lifeActivity='sit';goRipplet('sit')}else{state.lifeActivity='explore';goRipplet('explore')}
-  renderLife();
+function setRoamPinned(){
+  roamPinned=false;false=false;state.lifeRoaming=true;state.lifeActivity='explore';persist();renderLife();
 }
-window.XRPetRoam={go:goRipplet,pin:setRoamPinned,sync:syncRoamBounds};
-addEventListener('resize',()=>{syncRoamBounds();goRipplet(state.lifePinned?'sit':state.lifeActivity)});
+window.XRPetRoam={go:goRipplet,pin:()=>setRoamPinned(false),sync:syncRoamBounds};
+addEventListener('resize',()=>{syncRoamBounds();goRipplet(state.lifeActivity||'explore')});
 addEventListener('scroll',syncRoamBounds,{passive:true});
-syncRoamBounds();setTimeout(()=>goRipplet(state.lifePinned?'sit':'explore'),300);roamingStep();spontaneousRippletReaction();applyNftCompanion();
-qa('[data-life-action]').forEach(b=>b.addEventListener('click',()=>{if(state.lifePinned)setRoamPinned(false);performLifeActivity(b.dataset.lifeAction,true)}));
-bind('#lifeSitStay','click',()=>setRoamPinned(!state.lifePinned));
+syncRoamBounds();setTimeout(()=>goRipplet('explore'),300);roamingStep();spontaneousRippletReaction();applyNftCompanion();
+qa('[data-life-action]').forEach(b=>b.addEventListener('click',()=>performLifeActivity(b.dataset.lifeAction,true)));
 setInterval(lifeTick,15000);
 dailyVisit();render();registerVisitor();connectLedger();loadMarket();loadMarketHistory();loadUpdates();integrationCheck();setTimeout(runAutonomousMind,12000);setInterval(loadMarket,60000);setInterval(loadMarketHistory,60000);setInterval(loadUpdates,60000);setInterval(integrationCheck,60000);
 
