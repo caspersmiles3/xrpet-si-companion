@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=2.4.0">
+  <link rel="stylesheet" href="/styles.css?v=2.5.0">
 </head>
 <body>
 <div class="ambient ambient-one"></div>
@@ -143,6 +143,15 @@
         <form id="memoryForm" class="inline-form"><input id="memoryInput" maxlength="120" placeholder="Remember that I want short XRP summaries…"><button>Remember</button></form>
         <div id="memoryList" class="memory-list"></div>
       </article>
+
+      <article class="detail-card nft-companion-card">
+        <div class="card-title">
+          <div><h3>XRPL NFT Companions</h3><p>Use characters and collectibles owned by the connected or watched XRPL account.</p></div>
+          <button id="loadNfts" class="mini-button">Load my NFTs</button>
+        </div>
+        <div id="nftStatus" class="muted">Connect or watch an XRPL account, then load its NFTs.</div>
+        <div id="nftCompanionList" class="nft-companion-list"></div>
+      </article>
     </section>
 
     <section id="roomsSection" class="flow-section">
@@ -215,18 +224,29 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet SI Companion™ · Beta 2.4 · XRP Ledger companion · Not affiliated with or endorsed by Ripple · Not financial advice</footer>
+    <footer>XRPet SI Companion™ · Beta 2.5 · XRP Ledger companion · Not affiliated with or endorsed by Ripple · Not financial advice</footer>
   </main>
 </div>
 
 <div id="floatingCompanion" class="floating-companion" aria-label="Floating interactive XRPet">
+  <div id="nftFloatingCompanion" class="nft-floating-companion hidden" aria-hidden="true">
+    <img id="nftFloatingImage" alt="">
+    <div class="nft-holo-ring"></div>
+  </div>
   <div id="companion3d" class="companion3d-host" role="application" aria-label="Interactive 3D XRPet companion">
     <div class="companion3d-loading"><span class="loading-orb"></span><small>INITIALIZING XRPET</small></div>
   </div>
-  <div class="floating-tag"><strong id="floatingPetName">NEXUS-589</strong><span>drag to rotate · click to react</span></div>
+  <div id="floatingHandle" class="floating-tag">
+    <strong id="floatingPetName">NEXUS-589</strong>
+    <span id="floatingModeLabel">auto levitate · drag this tag to place</span>
+    <div class="floating-controls">
+      <button id="toggleFloat" type="button">Pin</button>
+      <button id="centerFloat" type="button">Center</button>
+    </div>
+  </div>
 </div>
 
-<script src="/app.js?v=2.4.0"></script>
-<script type="module" src="/companion3d.js?v=2.4.0"></script>
+<script src="/app.js?v=2.5.0"></script>
+<script type="module" src="/companion3d.js?v=2.5.0"></script>
 </body>
 </html>
