@@ -182,6 +182,55 @@ function truthLabelForClaim(claim, updates) {
   return { label:'RUMOR', reason:'I could not match this claim to the official Ripple/XRPL headlines currently in my feed. Treat it as unconfirmed until a primary source supports it.', source:null };
 }
 
+app.get('/reset-xrpet', (_req, res) => {
+  res.setHeader('Cache-Control','no-store, no-cache, must-revalidate');
+  res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'");
+  res.type('html').send(`<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reset XRPet</title>
+<style>
+body{font-family:system-ui;background:#07131b;color:#eef8ff;margin:0;display:grid;place-items:center;min-height:100vh}
+.card{max-width:520px;margin:24px;padding:28px;border:1px solid #214255;border-radius:20px;background:#0b1a24}
+button{font:inherit;padding:14px 20px;border-radius:12px;border:0;cursor:pointer}
+#status{margin-top:16px;color:#9fd7e8}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>Resetting XRPet</h1>
+<p>This clears the old cached app and opens the current build.</p>
+<button id="reset">Reset and reopen XRPet</button>
+<p id="status">Ready.</p>
+</div>
+<script>
+document.getElementById('reset').addEventListener('click', async () => {
+  const status=document.getElementById('status');
+  status.textContent='Clearing old XRPet cache…';
+  try{
+    if('serviceWorker' in navigator){
+      const regs=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r=>r.unregister()));
+    }
+    if('caches' in window){
+      const keys=await caches.keys();
+      await Promise.all(keys.map(k=>caches.delete(k)));
+    }
+    try{ localStorage.removeItem('xrpet-v1-state'); }catch{}
+    status.textContent='Done. Opening fresh XRPet…';
+    setTimeout(()=>location.replace('/?fresh='+Date.now()),300);
+  }catch(e){
+    status.textContent='Reset finished with a browser warning. Opening XRPet…';
+    setTimeout(()=>location.replace('/?fresh='+Date.now()),500);
+  }
+});
+</script>
+</body>
+</html>`);
+});
+
 app.get('/api/config', (_req, res) => {
   res.json({
     xamanApiKey: process.env.XAMAN_API_KEY || null,
