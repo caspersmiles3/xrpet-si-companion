@@ -1,6 +1,32 @@
-# XRPet SI Companion™ — v0.2
+# XRPet SI Companion™ — v1.0
 
-A lightweight living companion for the XRP Ledger. It combines real-time XRPL WebSocket signals, official Ripple/XRPL update aggregation, a provider-neutral SI companion core, Truth Mode labels, public-address wallet watching, and a tiny daily companion mission.
+**Don't watch the Ledger. Live with it.**
+
+XRPet is a lightweight, installable companion built around Ripple, XRP and the XRP Ledger. It combines live XRPL WebSocket signals, XRP market data, official Ripple/XRPL updates, grounded Truth Mode, a customizable companion, local memory, evolution, daily missions, rooms, notifications and public-address wallet watching.
+
+## Live product
+
+Render service: https://xrpet-si-companion.onrender.com
+
+## v1.0 capabilities
+
+- Live XRPL ledger + fee signals
+- XRP/USD market snapshot with public-data fallback
+- Official Ripple + XRPL update feed
+- Catch Me Up / daily grounded briefing
+- Truth Mode: CONFIRMED / LIKELY / SPECULATION / RUMOR / MISLEADING
+- Companion name + personality
+- Explanation-level preferences
+- Local companion memory
+- XP, streaks and seven evolution stages
+- Daily 30-second mission
+- Unlockable rooms/cosmetics
+- Public XRPL wallet watch
+- Local notification center
+- Optional browser notifications
+- Installable PWA + offline shell
+- No proprietary token
+- No custody and no private-key collection
 
 ## Run locally
 
@@ -9,49 +35,41 @@ npm install
 npm start
 ```
 
-Open http://localhost:3000
+Open http://localhost:3000.
 
-## Deploy on Render
+## Architecture
 
-- Runtime: Node
-- Build command: `npm install`
-- Start command: `npm start`
-- No environment variables are required for the MVP.
+- `public/app.js`: companion state, XRPL WebSocket client, UI, local memory/evolution/notifications
+- `server.js`: XRP market feed, official-source aggregation, briefings, grounded companion response logic
+- `public/sw.js`: offline PWA shell
+- `wss://xrplcluster.com/`: live public XRPL WebSocket endpoint
 
-## MVP architecture
+## Privacy and wallet safety
 
-- `public/app.js`: browser companion + XRPL WebSocket client
-- `server.js`: official update aggregator + local SI behavior endpoint
-- XRPL endpoint: `wss://xrplcluster.com/`
-- Wallet watch uses only a public XRPL classic address. Never collect or store seed phrases/private keys.
+v1.0 stores companion profile, XP, rooms, notification history, preferences, memories, and the watched public XRPL address in the user's browser local storage. The server does not need those values persisted.
 
-## SI upgrade path
+**Never enter a seed phrase or private key into XRPet.** Wallet Watch accepts a public XRPL classic address only. Future transaction signing should use an external wallet handoff such as Xaman or another reputable XRPL wallet.
 
-The current `/api/companion` endpoint is deliberately provider-neutral and works without an API key. Later, replace the local rules with an SI/LLM provider while preserving these safety rules:
+## SI design
 
-1. Primary-source facts outrank secondary sources.
-2. Label output as CONFIRMED / LIKELY / SPECULATION / RUMOR / MISLEADING.
-3. Never claim price certainty or guaranteed returns.
-4. Never request XRPL seed phrases or private keys.
-5. Quote minimally; link to the source.
-6. Separate Ripple-the-company news from XRPL protocol activity and XRP market activity.
+The v1.0 SI layer is grounded and provider-neutral. It prioritizes:
+1. live XRPL data,
+2. public XRP market data,
+3. official Ripple/XRPL sources,
+4. explicit uncertainty labels.
 
-## Next production upgrades
+A model provider can later be plugged into the same server endpoint for broader natural-language reasoning without changing the front end.
 
-- Persistent users and companion state
-- Secure auth
-- Xaman/GemWallet wallet connection using signing handoff only
-- Real XRP market data provider
-- Notification preferences
-- Scheduled official-source ingestion + database
-- Model-backed SI summarization and claim verification
-- Companion evolution and cosmetics
-- Push notifications
-- Companion rooms and cosmetics
+## Evolution
 
-## v0.2 additions
+Drop → Ripple → Wave → Surge → Nexus → Titan → Legend
 
-- Installable PWA manifest + service worker
-- Persistent watched address, mood, streak and XP in local storage
-- Offline shell for the core companion UI
-- App icon asset
+Evolution is driven by participation and learning, not investment size.
+
+## Low-maintenance design
+
+The app automatically reads public feeds and live XRPL events. It does not require the creator to manually post content each day.
+
+## Not financial advice
+
+XRPet reports market data and ecosystem information. It does not promise returns or price outcomes.
