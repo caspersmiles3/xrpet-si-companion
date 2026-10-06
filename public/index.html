@@ -8,11 +8,19 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=4.4.0">
+  <link rel="stylesheet" href="/styles.css?v=4.5.0">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
   <div class="launch-space" aria-hidden="true">
+    <div class="launch-cinema-stage">
+      <div class="launch-ripple-arc arc-one"></div>
+      <div class="launch-ripple-arc arc-two"></div>
+      <div class="launch-ripple-arc arc-three"></div>
+      <div class="launch-xrp-monolith"><span></span><i></i></div>
+      <div class="launch-ripplet-silhouette"><b></b><i></i></div>
+      <div class="launch-floor-reflection"></div>
+    </div>
     <span class="launch-orbit orbit-a"></span>
     <span class="launch-orbit orbit-b"></span>
     <span class="launch-orbit orbit-c"></span>
@@ -24,9 +32,9 @@
 
   <div class="launch-content">
     <div class="launch-brand"><span class="launch-brand-mark">X</span><div><strong>XRPet</strong><small>SI COMPANION · XRP LEDGER</small></div></div>
-    <p class="launch-kicker">LEDGER GATE // GENESIS LINK</p>
-    <h1 id="launchTitle">Wake your companion.</h1>
-    <p id="launchStatus" class="launch-status" aria-live="polite">Press and hold the XRP core to synchronize.</p>
+    <p class="launch-kicker">RIPPLE SIGNAL // XRPL MAINNET</p>
+    <h1 id="launchTitle">Enter the XRP Ledger.</h1>
+    <p id="launchStatus" class="launch-status" aria-live="polite">Synchronize Ripple signal, XRP market data, XRPL telemetry, and Ripplet.</p>
 
     <button id="launchCore" class="launch-core" type="button" aria-label="Press and hold to open XRPet">
       <span class="core-shell"><i class="core-x">X</i><b class="core-energy"></b></span>
@@ -36,7 +44,7 @@
 
     <div class="launch-progress" aria-hidden="true"><span id="launchProgressBar"></span></div>
     <div class="launch-readout"><strong id="launchPercent">0%</strong><span id="launchPhase">XRPL LINK STANDBY</span></div>
-    <p class="launch-instruction">PRESS + HOLD TO SYNC</p>
+    <p class="launch-instruction">HOLD TO ENTER XRPL</p>
     <button id="launchEnter" class="launch-enter" type="button" hidden>Enter XRPet</button>
   </div>
 </div>
@@ -69,12 +77,12 @@
         </div>
       </details>
       <button class="side-link" data-primary-view="announcements"><span>◌</span>Announcements</button>
+      <button class="side-link" data-primary-view="ripplet"><span>✦</span>Ripplet</button>
     </nav>
 
     <details class="settings-wrap customize-wrap" id="customizeDetails">
       <summary class="settings-trigger customize-trigger"><span>✦</span><b>Companion & Tools</b><i>⌄</i></summary>
       <div class="settings-menu customize-menu">
-        <button type="button" class="menu-action" data-customize-target="companionSection">Ripplet</button>
         <button type="button" class="menu-action" data-customize-target="roomsSection">Rooms</button>
         <button type="button" class="menu-action" data-customize-target="walletPanel">NFT Companion Override</button>
         <button type="button" class="menu-action" data-customize-target="chatPanel">Ripplet Chat</button>
@@ -114,13 +122,37 @@
   </aside>
 
   <main class="main-shell">
-    <div class="global-xrp-strip" aria-label="XRP price always visible">
+    <div class="global-command-bar" id="globalCommandBar">
       <button type="button" data-primary-view="live" class="global-xrp-price-button">
         <span>XRP / USD</span>
         <strong id="globalXrpPrice">—</strong>
         <small id="globalXrpChange">Loading</small>
       </button>
-      <span class="global-xrp-live"><i></i> LIVE</span>
+
+      <div class="ecosystem-strip" aria-label="Ripplet live ecosystem">
+        <button class="ecosystem-station ecosystem-water" data-life-action="drink" type="button" aria-label="Water fountain">
+          <span class="eco-scene"><i class="fountain-basin"></i><i class="fountain-column"></i><i class="fountain-water"></i></span>
+          <span class="eco-copy"><strong>Water</strong><small id="waterSignal">XRPL flow</small></span>
+        </button>
+        <button class="ecosystem-station ecosystem-food" data-life-action="eat" type="button" aria-label="Food station">
+          <span class="eco-scene"><i class="food-platform"></i><i class="food-core"></i><i class="food-glow"></i></span>
+          <span class="eco-copy"><strong>Food</strong><small id="foodSignal">XRP movement</small></span>
+        </button>
+        <button class="ecosystem-station ecosystem-sleep" data-life-action="sleep" type="button" aria-label="Sleep pod">
+          <span class="eco-scene"><i class="sleep-shell"></i><i class="sleep-bed"></i><i class="sleep-light"></i></span>
+          <span class="eco-copy"><strong>Sleep</strong><small id="sleepSignal">Network quiet</small></span>
+        </button>
+        <button class="ecosystem-station ecosystem-friend" data-life-action="socialize" type="button" aria-label="Signal friend">
+          <span class="eco-scene"><i class="friend-ring"></i><i class="friend-core"></i><i class="friend-beam"></i></span>
+          <span class="eco-copy"><strong>Signal Friend</strong><small id="friendSignal">Events</small></span>
+        </button>
+      </div>
+
+      <div class="ecosystem-status">
+        <span class="global-xrp-live"><i></i> LIVE</span>
+        <strong id="lifeMode">Exploring</strong>
+        <button id="lifeSitStay" type="button">Sit & Stay</button>
+      </div>
     </div>
     <header class="topbar">
       <form id="globalSearchForm" class="global-search">
@@ -135,42 +167,9 @@
         </div>
       </div>
     </header>
-
-    
-
-    
-
-    
-
-    
-
-    <section id="homeSection" class="flow-section home-section signal-command-home primary-view-section" data-view-section="home">
-      <section class="ripplet-habitat" aria-label="Ripplet life habitat">
-        <div class="habitat-head">
-          <div>
-            <span class="eyebrow">RIPPLET // LIFE SYSTEM</span>
-            <h2>Ripplet lives here.</h2>
-            <p>He chooses when to eat, drink, rest, explore, socialize, and watch the XRP Ledger based on his simulated needs and routine.</p>
-          </div>
-          <div class="life-mode"><i></i><span id="lifeMode">Thinking</span></div>
-        </div>
-
-        <div class="habitat-world" id="habitatWorld">
-          <button class="habitat-station water-station" data-life-action="drink" type="button">
-            <span class="station-icon">◉</span><strong>Water Fountain</strong><small>Hydration</small>
-          </button>
-          <button class="habitat-station food-station" data-life-action="eat" type="button">
-            <span class="station-icon">◇</span><strong>Food Station</strong><small>Energy</small>
-          </button>
-          <button class="habitat-station sleep-station" data-life-action="sleep" type="button">
-            <span class="station-icon">⌒</span><strong>Sleep Pod</strong><small>Rest</small>
-          </button>
-          <button class="habitat-station friend-station" data-life-action="socialize" type="button">
-            <span class="station-icon">✦</span><strong>Signal Friend</strong><small>Social time</small>
-          </button>
-
-          <div id="lifeAvatar" class="life-avatar life-avatar-3d" aria-label="Ripplet roaming position">
-            <div id="persistentCompanionLayer" class="persistent-companion-layer home-companion-layer" data-home-companion aria-label="Ripplet companion">
+    <div id="rippletRoamLayer" class="ripplet-roam-layer" aria-hidden="false">
+      <div id="lifeAvatar" class="life-avatar global-life-avatar" aria-label="Ripplet roaming through XRPet">
+        <div id="persistentCompanionLayer" class="persistent-companion-layer home-companion-layer" data-home-companion aria-label="Ripplet companion">
       <div id="floatingCompanion" class="floating-companion persistent-ripplet" aria-label="Floating interactive XRPet">
   <div id="nftFloatingCompanion" class="nft-floating-companion hidden" aria-hidden="true">
     <img id="nftFloatingImage" alt="">
@@ -189,25 +188,18 @@
   </div>
 </div>
     </div>
-          </div>
-          <div class="habitat-path" aria-hidden="true"></div>
-        </div>
+      </div>
+    </div>
 
-        <div class="life-status-grid">
-          <article><span>FOOD</span><strong id="lifeFood">100%</strong><div><i id="lifeFoodBar"></i></div></article>
-          <article><span>WATER</span><strong id="lifeWater">100%</strong><div><i id="lifeWaterBar"></i></div></article>
-          <article><span>REST</span><strong id="lifeRest">100%</strong><div><i id="lifeRestBar"></i></div></article>
-          <article><span>SOCIAL</span><strong id="lifeSocial">100%</strong><div><i id="lifeSocialBar"></i></div></article>
-        </div>
+    
 
-        <div class="life-thought-row">
-          <div><span>RIPPLET'S CURRENT THOUGHT</span><strong id="lifeThought">Checking the Ledger and deciding what to do next.</strong></div>
-          <div class="life-controls">
-            <button id="lifeRoamToggle" class="mini-button" type="button">Roam: On</button>
-            <button id="lifeSitStay" class="mini-button secondary" type="button">Sit & Stay</button>
-          </div>
-        </div>
-      </section>
+    
+
+    
+
+    
+
+    <section id="homeSection" class="flow-section home-section signal-command-home primary-view-section" data-view-section="home">
       <div class="home-command-grid">
         <div class="section-copy home-command-copy">
           <div class="signal-kicker-row"><span class="eyebrow">XRPet // HOME</span><span class="verified-pill">MAINNET // LIVE</span></div>
@@ -382,24 +374,23 @@
       <form id="chatForm" class="composer"><input id="message" maxlength="500" autocomplete="off" placeholder="Message XRPet…"><button>Send</button></form>
     </section>
 
-<section id="companionSection" class="flow-section customization-panel in-app-workspace ripplet-page" data-customization-panel>
-      <div class="workspace-nav"><button type="button" class="workspace-back" data-customize-close>← Back to XRP Interface</button><span>COMPANION // RIPPLET</span></div>
+<section id="companionSection" class="flow-section ripplet-page primary-view-section" data-view-section="ripplet">
 
       <div class="ripplet-page-column">
         <div class="section-heading">
           <div>
             <span class="eyebrow">OFFICIAL COMPANION // RIPPLET</span>
             <h2>Ripplet</h2>
-            <p class="section-subcopy">The single official XRPet companion. This page is intentionally simple so the current placeholder can be replaced by the finished interactive 3D character without rebuilding the rest of the interface.</p>
+            <p class="section-subcopy">Ripplet’s home base. He roams throughout XRPet, but this tab holds his identity, memory, reactions, daily pulse, and companion controls.</p>
           </div>
           <span id="personalityChip" class="chip">Guardian</span>
         </div>
 
         <article class="detail-card ripplet-character-slot">
           <div>
-            <span class="command-label">3D COMPANION SLOT</span>
-            <h3>Interactive Ripplet will live here.</h3>
-            <p>The existing procedural appearance controls have been removed. This area is reserved for the final interactive 3D Ripplet model.</p>
+            <span class="command-label">RIPPLET // HOME BASE</span>
+            <h3>One companion. Alive across the interface.</h3>
+            <p>Ripplet walks throughout XRPet and visits the permanent ecosystem stations above. This home base remains ready for the final interactive 3D character model.</p>
           </div>
           <div class="ripplet-slot-mark" aria-hidden="true"><span>R</span></div>
         </article>
@@ -525,9 +516,17 @@
       </div>
     </section>
 
-    <section id="announcementsSection" class="flow-section announcements-section primary-view-section" data-view-section="announcements">
-      <div class="section-heading"><div><span class="eyebrow">OFFICIAL ANNOUNCEMENTS</span><h2>Ripple + XRPL announcements</h2><p class="section-subcopy">Official Ripple and XRP Ledger updates, refreshed automatically.</p></div><button id="refreshNews" class="mini-button">Refresh</button></div>
-      <div id="updates" class="updates updates-large"><p class="muted">Loading official sources…</p></div>
+    <section id="announcementsSection" class="flow-section announcements-section primary-view-section announcements-clean" data-view-section="announcements">
+      <div class="announcements-hero">
+        <div><span class="eyebrow">OFFICIAL SIGNAL FEED</span><h1>Announcements</h1><p>Official Ripple and XRP Ledger updates in one clean feed. Auto-refreshes every minute.</p></div>
+        <div class="announcement-actions"><span class="truth-label">PRIMARY SOURCES</span><button id="refreshNews" class="mini-button">Refresh now</button></div>
+      </div>
+      <div class="announcement-summary">
+        <article><span>FEED</span><strong>Ripple + XRPL</strong><small>Official sources only</small></article>
+        <article><span>REFRESH</span><strong>60 seconds</strong><small>While XRPet is open</small></article>
+        <article><span>STATUS</span><strong id="announcementStatus">Checking</strong><small id="announcementUpdated">Waiting for feed</small></article>
+      </div>
+      <div id="updates" class="updates announcement-feed"><p class="muted">Loading official sources…</p></div>
     </section>
 
     <section class="flow-section utility-panel-hidden">
@@ -535,12 +534,12 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 4.4.0 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 4.5.0 · XRP Ledger companion</footer>
   </main>
 </div>
 
-<script src="/app.js?v=4.4.0"></script>
-<script src="/timeline.js?v=4.4.0"></script>
-<script type="module" src="/companion3d.js?v=4.4.0"></script>
+<script src="/app.js?v=4.5.0"></script>
+<script src="/timeline.js?v=4.5.0"></script>
+<script type="module" src="/companion3d.js?v=4.5.0"></script>
 </body>
 </html>

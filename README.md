@@ -1,4 +1,4 @@
-# XRPet SI Companion™ — v4.4.0
+# XRPet SI Companion™ — v4.5.0
 
 **Don't watch the Ledger. Live with it.**
 
@@ -8,7 +8,7 @@ XRPet is a lightweight, installable companion built around Ripple, XRP and the X
 
 Render service: https://xrpet-si-companion.onrender.com
 
-## v4.4 capabilities
+## v4.5 capabilities
 
 - Live XRPL ledger + fee signals
 - XRP/USD market snapshot with public-data fallback
@@ -135,3 +135,22 @@ The live 3D Ripplet layer is mounted inside the habitat instead of roaming over 
 - Added a live public XRPL transaction stream with transaction type, delivered amount, sender, destination, ledger index, sequence, fee, result/status, flags, destination tag when present, ticket sequence when present, and transaction hash.
 - XRPet never displays or requests XRPL wallet seeds/private keys; those are secret signing credentials and are not part of public ledger transaction data.
 - A compact XRP/USD ticker now stays at the top of every XRPet screen and links back to XRP Live.
+
+
+## v4.5 cinematic companion upgrade
+
+- Added a cinematic Ripple/XRP launch gate with depth, Ripple-style energy arcs, a metallic XRP-inspired monolith, floor reflection, and Ripplet reveal.
+- Added **Ripplet** as its own primary left-side tab. The tab is Ripplet's home base for identity, memory, reactions, daily pulse, and NFT override.
+- Ripplet itself now lives across XRPet in one transparent global roaming layer bounded to the main interface. The layer cannot enter the left sidebar or leave the XRPet workspace.
+- Removed the visible companion box/frame from the roaming layer and retained the Three.js alpha renderer.
+- Replaced the Home-only pet habitat with a permanent top ecosystem bar visible on every primary screen.
+- The ecosystem stations are now visually modeled as cinematic hardware: a metallic/glass Water Fountain, energy Food Station, illuminated Sleep Pod, and holographic Signal Friend dock.
+- Ripplet behavior is tied to live data:
+  - **Water** reacts to XRPL transaction flow.
+  - **Food** reacts to XRP price movement.
+  - **Sleep** reacts to extended transaction quiet.
+  - **Signal Friend** reacts to new official Ripple/XRPL announcements.
+- Ripplet returns to roaming after short Water/Food/Signal Friend visits and can still be pinned with **Sit & Stay**.
+- XRP Live remains the large data workspace and its transaction cards now include public timestamp and memo data when present, in addition to type, amount, sender, destination, tags, ledger, sequence, fee, status, flags, tickets, and hash.
+- Announcements now use a cleaner official-feed layout with primary-source status and last refresh time.
+- The XRP/USD strip and Ripplet ecosystem remain at the top across Home, XRP Live, History, Announcements, and Ripplet.
