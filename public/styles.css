@@ -498,3 +498,29 @@ body.launch-locked{overflow:hidden}
   color:#fff;
   box-shadow:0 0 16px color-mix(in srgb,var(--cyan) 20%,transparent);
 }
+
+
+/* XRPet v3.2 rigged-model runtime */
+.rigged-badge{
+  grid-column:2;
+  justify-self:start;
+  margin-top:4px;
+  padding:3px 6px;
+  border-radius:99px;
+  border:1px solid #3c7e92;
+  color:#8df4ff;
+  font-size:.44rem;
+  letter-spacing:.1em;
+}
+.model-runtime-status{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:11px;
+  padding-top:10px;
+  border-top:1px solid var(--line);
+}
+.model-runtime-status span{font-size:.52rem;color:#657c88;text-transform:uppercase;letter-spacing:.12em}
+.model-runtime-status strong{font-size:.61rem;color:#a6f6ff}
+.model-credit{margin:7px 0 0;color:#4f6672;font-size:.49rem;line-height:1.45}
