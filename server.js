@@ -40,7 +40,7 @@ app.use(express.static('public',{
   etag:true,
   maxAge:'1h',
   setHeaders:(res,filePath)=>{
-    if(filePath.endsWith('app.js')||filePath.endsWith('bootstrap.js')||filePath.endsWith('sw.js')||filePath.endsWith('index.html')){
+    if(/(?:index\.html|styles\.css|app\.js|ui-shell\.js|games\.js|ecosystem\.js|timeline\.js|music-player\.js|ripplet2d\.js|launch-enhance\.js|contact-directory\.js|sw\.js)$/.test(filePath)){
       res.setHeader('Cache-Control','no-cache, no-store, must-revalidate');
     }
   }
@@ -149,8 +149,19 @@ async function getUpdates() {
   const items = settled.flatMap(x => x.status === 'fulfilled' ? x.value : []);
   const seen = new Set();
   const unique = items.filter(x => !seen.has(x.url) && seen.add(x.url)).slice(0, 18);
-  cache.updates = { at: Date.now(), data: unique };
-  return unique;
+  if (unique.length) {
+    cache.updates = { at: Date.now(), data: unique };
+    return unique;
+  }
+  if (cache.updates.data.length) return cache.updates.data;
+  return OFFICIAL_SOURCES.map(source=>({
+    title:'Open '+source.name+' — official live source',
+    url:source.url,
+    source:source.name,
+    label:'CONFIRMED',
+    importance:'normal',
+    reason:'Official source link available while XRPet retries article discovery.'
+  }));
 }
 
 
@@ -257,18 +268,29 @@ async function getCompositeMarket(){
     generatedAt:new Date().toISOString()
   };
 }
+async function getFallbackXrpMarket(){
+  const cg=await fetchJsonWithTimeout('https://api.coingecko.com/api/v3/simple/price?ids=ripple&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_market_cap=true',{},8000);
+  const price=Number(cg?.ripple?.usd),change24h=Number(cg?.ripple?.usd_24h_change);
+  if(!Number.isFinite(price))throw new Error('Fallback XRP price unavailable');
+  return {
+    exchange:'fallback',exchangeName:'XRP market fallback',pair:'XRP/USD',quote:'USD',
+    price,change24h:Number.isFinite(change24h)?change24h:null,
+    open24h:null,volume24hXrp:null,volume24hUsd:Number(cg?.ripple?.usd_24h_vol),
+    high24h:null,low24h:null,range24hPct:null,bestBid:null,bestAsk:null,spread:null,spreadBps:null,
+    marketCapUsd:Number(cg?.ripple?.usd_market_cap),
+    source:'CoinGecko public XRP market fallback',
+    generatedAt:new Date().toISOString()
+  };
+}
 async function getMarket(exchangeId='coinbase'){
   try{
     return exchangeId==='all'?await getCompositeMarket():await getExchangeMarket(exchangeId);
   }catch(e){
-    if(exchangeId!=='coinbase')throw e;
-    const cg=await fetchJson('https://api.coingecko.com/api/v3/simple/price?ids=ripple&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_market_cap=true');
+    const fallback=await getFallbackXrpMarket();
     return {
-      exchange:'coingecko',exchangeName:'CoinGecko fallback',pair:'XRP/USD',quote:'USD',
-      price:Number(cg?.ripple?.usd),change24h:Number(cg?.ripple?.usd_24h_change),
-      open24h:null,volume24hXrp:null,volume24hUsd:Number(cg?.ripple?.usd_24h_vol),
-      high24h:null,low24h:null,range24hPct:null,bestBid:null,bestAsk:null,spread:null,spreadBps:null,
-      marketCapUsd:Number(cg?.ripple?.usd_market_cap),source:'CoinGecko public market fallback',generatedAt:new Date().toISOString()
+      ...fallback,
+      exchange:exchangeId==='all'?'all':'fallback',
+      exchangeName:exchangeId==='all'?'All Exchanges · fallback':'XRP market fallback'
     };
   }
 }
@@ -606,11 +628,19 @@ app.get('/api/exchange-board', async (_req,res)=>{
   });
   const live=venues.filter(v=>v.available&&Number.isFinite(v.price));
   const prices=live.map(v=>v.price).sort((a,b)=>a-b);
-  const compositePrice=prices.length?prices[Math.floor(prices.length/2)]:null;
   const changes=live.map(v=>v.change24h).filter(Number.isFinite).sort((a,b)=>a-b);
-  const compositeChange=changes.length?changes[Math.floor(changes.length/2)]:null;
+  let fallback=null;
+  if(!live.length){
+    try{fallback=await getFallbackXrpMarket()}catch{}
+  }
+  const compositePrice=prices.length?prices[Math.floor(prices.length/2)]:(Number.isFinite(fallback?.price)?fallback.price:null);
+  const compositeChange=changes.length?changes[Math.floor(changes.length/2)]:(Number.isFinite(fallback?.change24h)?fallback.change24h:null);
   res.json({
-    composite:{id:'all',name:'All Exchanges',pair:'XRP/USD + XRP/USDT',price:compositePrice,change24h:compositeChange,venueCount:live.length},
+    composite:{
+      id:'all',name:'All Exchanges',pair:'XRP/USD + XRP/USDT',
+      price:compositePrice,change24h:compositeChange,venueCount:live.length,
+      fallback:Boolean(fallback),source:fallback?.source||'Composite live exchange median'
+    },
     venues,
     generatedAt:new Date().toISOString()
   });
@@ -817,7 +847,7 @@ app.get('/api/self-test', (_req, res) => {
 });
 
 app.get('/api/health', (_req, res) => res.json({
-  ok:true, product:'XRPet SI Companion', version:'5.5.1',
+  ok:true, product:'XRPet SI Companion', version:'5.5.31',
   capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch','gemwallet','xaman-hook','web-push','capacitor-mobile','external-si-hook','interactive-webgl-companion','signal-589-community-layer','equipment-matrix','full-audio-engine','room-environments','rigged-glb-roster','glass-studio-ui','orbit-camera','ssao','bloom','adaptive-render-quality','ripple-xrp-living-archive','auto-updating-history','ripplet-single-companion','nft-companion-override','persistent-ripplet','in-app-companion-workspaces','audio-default-on','isolated-primary-views','one-minute-live-refresh','simplified-ripplet-page','ripplet-life-system','bounded-companion-habitat','live-xrpl-transactions','sidebar-history-routing','global-xrp-ticker','cinematic-ripple-launch','global-ripplet-ecosystem','data-driven-companion-life','bounded-roaming-companion','ripplet-primary-tab','varied-live-reactions','visitor-counter','clean-home','clean-xrpl-live','expressive-ripplet-limbs','life-reaction-sounds','visible-ripplet-feet','free-roam-companion','live-reaction-overlays','spontaneous-companion-actions','xrpet-custom-cursor','ripplet-walk-cycle','autonomous-companion-mind','si-behavior-decisions','xrp-market-history','live-market-chart','ripplet-2-runtime','global-eye-tracking','organic-companion-anatomy','xrpet-games','ledger-rush','xrp-flow-game','consensus-80-game','ripplet-3-runtime','superellipsoid-shell-geometry','unified-head-rig','randomized-natural-blink','transparent-direct-alpha-render','high-detail-micro-hardware','validated-mainnet-transaction-feed','xrpl-source-failover','live-bid-ask-spread','24h-market-detail','viewport-layout-guard','physical-motor-cortex','run-gait','jump-arc','climb-cycle','reach-grab-carry','crouch-balance','autonomous-physical-motion','viewport-contained-scroll','grounded-free-roam','no-ground-ring','advanced-arcade-difficulty','arcade-combos-and-hazards','music-waveform','x-api-posting','xrpl-http-transaction-fallback','ecosystem-last-good-cache','ecosystem-retry-fallback','ripplet-v6-skinned-rig','native-animation-library','native-emote-library'],
   integrations:{ xaman:Boolean(process.env.XAMAN_API_KEY), push:Boolean(VAPID_PUBLIC_KEY&&VAPID_PRIVATE_KEY), si:Boolean(process.env.SI_PROVIDER_KEY) }
 }));
