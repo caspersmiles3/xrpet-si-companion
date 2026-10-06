@@ -893,7 +893,16 @@ const BUILTIN_MODELS={
     url:'/models/Ripplet.glb',
     credit:'Ripplet — XRPet canonical Ripple + XRP companion',
     rotationY:0,targetHeight:3.15,
-    actions:{idle:['idle'],greet:['greet','wave'],happy:['happy'],celebrate:['celebrate'],alert:['alert'],sleep:['sleep'],wake:['wake'],focus:['focus'],scan:['scan'],orbit:['orbit']}
+    actions:{
+      idle:['Idle'],greet:['Greet','Wave'],happy:['Happy','Emote_Excited'],
+      celebrate:['Celebrate','Emote_Cheer','Emote_Victory'],alert:['Alert'],
+      sleep:['Sleep'],wake:['Wake'],focus:['Focus'],scan:['Scan'],orbit:['Emote_Dance','LookAround'],
+      walk:['Walk'],run:['Run'],wave:['Wave'],dance:['Emote_Dance'],
+      cheer:['Emote_Cheer'],laugh:['Emote_Laugh'],shrug:['Emote_Shrug'],
+      confused:['Emote_Confused'],sad:['Emote_Sad'],excited:['Emote_Excited'],
+      point:['Emote_Point'],salute:['Emote_Salute'],thinking:['Emote_Thinking'],
+      victory:['Emote_Victory'],surprised:['Emote_Surprised']
+    }
   },
   nexus:{
     url:'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/RobotExpressive/RobotExpressive.glb',
@@ -935,7 +944,7 @@ const BUILTIN_MODELS={
 
 let currentKind='ripplet', currentGender='neutral', currentCosmetic='classic';
 let targetRotY=0,targetRotX=0,dragging=false,lastX=0,lastY=0,pointerX=0,pointerY=0,globalClientX=innerWidth*.5,globalClientY=innerHeight*.5,gazeX=0,gazeY=0,boost=0,lastInteract=0;
-let action='idle',actionUntil=0,actionStarted=0,externalModel=null,externalMixer=null,externalKind=null,externalActions={},externalActiveAction=null,externalLoadToken=0,externalLoadingKind=null,externalLoadingPromise=null,externalParts={};
+let action='idle',actionUntil=0,actionStarted=0,externalModel=null,externalMixer=null,externalKind=null,externalActions={},externalActiveAction=null,externalBlinkAction=null,externalNextBlinkAt=0,externalNativeRig=false,externalLoadToken=0,externalLoadingKind=null,externalLoadingPromise=null,externalParts={};
 const motor={
   mode:'idle', speed:0, targetSpeed:0, phase:0, verticalVelocity:0,
   grounded:true, grip:0, reachSide:1, turn:0, carry:false
@@ -1042,7 +1051,7 @@ function applyRoom(room){
   renderer.toneMappingExposure=r[2];
 }
 function performAction(name='greet',options={}){
-  const allowed=new Set(['greet','celebrate','alert','sleep','wake','happy','focus','scan','orbit','walk','run','jump','climb','reach','grab','carry','crouch','turn','sip','gulp','splash','bite','taste','charge','curl','dream','snore','wave','highfive','dance']);
+  const allowed=new Set(['greet','celebrate','alert','sleep','wake','happy','focus','scan','orbit','walk','run','jump','climb','reach','grab','carry','crouch','turn','sip','gulp','splash','bite','taste','charge','curl','dream','snore','wave','highfive','dance','cheer','laugh','shrug','confused','sad','excited','point','salute','thinking','victory','surprised']);
   action=allowed.has(name)?name:'greet';
   actionStarted=performance.now();
   actionUntil=actionStarted+(['sleep','curl','dream','snore'].includes(action)?9000:action==='walk'?5000:action==='orbit'||action==='dance'?5200:action==='scan'||action==='gulp'||action==='taste'?3200:action==='focus'||action==='charge'?4200:action==='celebrate'||action==='splash'||action==='highfive'?2800:action==='alert'?2200:motorDuration(action));
@@ -1053,7 +1062,7 @@ function performAction(name='greet',options={}){
   motor.grip=(action==='grab'||action==='carry')?1:0;
   lastInteract=performance.now();
   if(action==='wake')actionUntil=performance.now()+700;
-  if(['happy','greet','celebrate','splash','bite','charge','wave','highfive','dance','sip','gulp','taste'].includes(action))boost=1;
+  if(['happy','greet','celebrate','splash','bite','charge','wave','highfive','dance','sip','gulp','taste','cheer','laugh','excited','victory','surprised'].includes(action))boost=1;
   playExternalAction(action);
 }
 function currentAction(){
@@ -1094,7 +1103,7 @@ function poseExternalPart(name,opts={},speed=.14){
   o.scale.z+=(b.scale.z*sp[2]-o.scale.z)*speed;
 }
 function animateExternalRipplet(t,state){
-  if(externalKind!=='ripplet'||!externalModel)return;
+  if(externalKind!=='ripplet'||!externalModel||externalNativeRig)return;
   const s=Math.sin(t*2.2), slow=Math.sin(t*.72), walk=Math.sin(t*6.2);
   const blinkPhase=t%4.7;
   const blink=blinkPhase>.05&&blinkPhase<.14?.10:1;
@@ -1228,7 +1237,7 @@ async function loadExternalModel(url,options={}){
     root.remove(externalModel);
     externalModel.traverse(o=>{if(o.geometry)o.geometry.dispose?.()});
   }
-  externalActions={};externalActiveAction=null;
+  externalActions={};externalActiveAction=null;externalBlinkAction=null;externalNativeRig=false;
   externalModel=gltf.scene;
   externalKind=options.kind||null;
   externalModel.userData.xrpetActionMap=options.actions||{};
@@ -1276,6 +1285,10 @@ async function loadExternalModel(url,options={}){
   externalMixer=gltf.animations?.length?new THREE.AnimationMixer(externalModel):null;
   if(externalMixer){
     for(const clip of gltf.animations)externalActions[clip.name]=externalMixer.clipAction(clip);
+    const names=(gltf.animations||[]).map(a=>a.name);
+    externalNativeRig=externalKind==='ripplet'&&['Idle','Blink','Walk','Run','Wave'].every(n=>names.includes(n));
+    externalBlinkAction=externalNativeRig?findExternalAction(['Blink']):null;
+    externalNextBlinkAt=performance.now()+1800+Math.random()*2600;
     const preferred=(options.actions?.idle?.length?options.actions.idle:['idle','survey','standing','walk','fly']);
     const first=findExternalAction(preferred)||Object.values(externalActions)[0];
     if(first){first.reset().fadeIn(.15).play();externalActiveAction=first}
@@ -1294,24 +1307,30 @@ function findExternalAction(patterns=[]){
 function playExternalAction(name){
   if(!externalMixer)return;
   const fallback={
-    idle:['idle','survey','standing','fly'],
-    greet:['wave','yes','idle','survey','fly'],
-    happy:['thumbsup','yes','dance','survey','walk','fly'],
-    celebrate:['dance','run','yes','thumbsup','fly'],
-    alert:['run','walk','no','survey','fly'],
-    sleep:['sitting','idle','survey'],
-    wake:['standing','idle','survey','fly'],
-    focus:['idle','survey','standing'],
-    scan:['survey','walk','fly','idle'],
-    orbit:['dance','run','walk','fly','survey'],
-    run:['run','walk'],jump:['jump','run','walk'],climb:['climb','run','walk'],reach:['reach','wave','idle'],grab:['grab','reach','idle'],carry:['carry','walk','idle'],crouch:['crouch','sitting','idle'],turn:['turn','walk','idle']
+    idle:['Idle','idle','survey','standing','fly'],
+    greet:['Greet','Wave','wave','yes','idle'], happy:['Happy','Emote_Excited','thumbsup','yes','dance'],
+    celebrate:['Celebrate','Emote_Cheer','Emote_Victory','dance','run'], alert:['Alert','run','walk','no'],
+    sleep:['Sleep','sitting','idle'], wake:['Wake','standing','idle'], focus:['Focus','idle','survey'],
+    scan:['Scan','survey','walk'], orbit:['Emote_Dance','LookAround','dance','walk'],
+    walk:['Walk','walk'], run:['Run','run','walk'], wave:['Wave','wave'],
+    jump:['Emote_Excited','Celebrate','jump','run'], climb:['Run','climb','walk'],
+    reach:['Emote_Point','reach','wave'], grab:['Emote_Point','grab','reach'],
+    carry:['Walk','carry','walk'], crouch:['Emote_Sad','crouch','sitting'], turn:['LookAround','turn','walk'],
+    highfive:['Emote_Victory','Wave'], dance:['Emote_Dance','dance'],
+    cheer:['Emote_Cheer'], laugh:['Emote_Laugh'], shrug:['Emote_Shrug'], confused:['Emote_Confused'],
+    sad:['Emote_Sad'], excited:['Emote_Excited'], point:['Emote_Point'], salute:['Emote_Salute'],
+    thinking:['Emote_Thinking'], victory:['Emote_Victory'], surprised:['Emote_Surprised']
   };
   const custom=externalModel?.userData?.xrpetActionMap||{};
   const patterns=(custom[name]&&custom[name].length?custom[name]:fallback[name])||fallback.idle;
   const next=findExternalAction(patterns);
   if(!next||next===externalActiveAction)return;
-  next.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).fadeIn(.18).play();
-  if(externalActiveAction)externalActiveAction.fadeOut(.18);
+  next.reset().setEffectiveTimeScale(1).setEffectiveWeight(1);
+  const looping=new Set(['idle','walk','run','dance','orbit']);
+  if(looping.has(name)){next.setLoop(THREE.LoopRepeat,Infinity);next.clampWhenFinished=false}
+  else{next.setLoop(THREE.LoopOnce,1);next.clampWhenFinished=true}
+  next.fadeIn(.18).play();
+  if(externalActiveAction&&externalActiveAction!==externalBlinkAction)externalActiveAction.fadeOut(.18);
   externalActiveAction=next;
 }
 async function ensureBuiltInModel(kind){
@@ -1345,7 +1364,7 @@ async function ensureBuiltInModel(kind){
 function useProceduralModel(kind=currentKind){
   externalLoadToken++;
   if(externalModel){root.remove(externalModel);externalModel=null}
-  externalMixer=null;externalKind=null;externalActions={};externalActiveAction=null;externalLoadingKind=null;externalLoadingPromise=null;
+  externalMixer=null;externalKind=null;externalActions={};externalActiveAction=null;externalBlinkAction=null;externalNativeRig=false;externalLoadingKind=null;externalLoadingPromise=null;
   pet.visible=true;externalPresentation.visible=false;
   window.dispatchEvent(new CustomEvent('xrpet:model-ready',{detail:{kind,mode:'ripplet-3.0-runtime',animations:[],credit:'XRPet Ripplet 3.0 high-detail runtime model'}}));
 }
@@ -1358,7 +1377,7 @@ function setAppearance(detail={}){
   configureEquipment(detail);
   applyRoom(detail.room||'nexus');
   clearTimeout(modelLoadTimer);
-  useProceduralModel('ripplet');
+  ensureBuiltInModel('ripplet');
 }
 window.addEventListener('xrpet:appearance',e=>setAppearance(e.detail||{}));
 setAppearance({room:'nexus',cosmetic:'classic'});
@@ -1417,6 +1436,9 @@ window.XRPet3D={
   useProcedural:useProceduralModel,
   cameraPreset:setCameraPreset,
   reset(){targetRotX=0;targetRotY=0;setCameraPreset('front')},
+  emote(name='cheer'){performAction(name)},
+  animationNames(){return Object.keys(externalActions)},
+  nativeRig(){return externalNativeRig},
   visible(){return renderer.domElement.isConnected}
 };
 
@@ -1462,7 +1484,13 @@ function renderFrame(){
     camera.lookAt(targetGoal);
   }
 
-  if(externalMixer)externalMixer.update(dt);
+  if(externalMixer){
+    externalMixer.update(dt);
+    if(externalNativeRig&&externalBlinkAction&&!['sleep','focus','scan'].includes(state)&&performance.now()>=externalNextBlinkAt){
+      externalBlinkAction.reset().setLoop(THREE.LoopOnce,1).setEffectiveWeight(1).play();
+      externalNextBlinkAt=performance.now()+1900+Math.random()*3600;
+    }
+  }
   animateExternalRipplet(t,state);
   if(externalModel){
     const extSleep=state==='sleep',extCelebrate=state==='celebrate',extAlert=state==='alert',extFocus=state==='focus',extScan=state==='scan',extOrbit=state==='orbit',extRun=state==='run',extJump=state==='jump',extClimb=state==='climb',extCrouch=state==='crouch';
