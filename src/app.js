@@ -1704,10 +1704,41 @@ window.addEventListener('xrpet:gameEvent',e=>{
 });
 
 if('serviceWorker' in navigator){
-  window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('/sw.js').catch(err=>console.warn('XRPet service worker registration failed',err));
+  window.addEventListener('load',async()=>{
+    // XRPet is under active development: remove old offline workers/caches so UI and companion changes cannot stay stale.
+    try{
+      const regs=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(reg=>reg.unregister()));
+    }catch{}
+    try{
+      const keys=await caches.keys();
+      await Promise.all(keys.filter(key=>key.startsWith('xrpet-')).map(key=>caches.delete(key)));
+    }catch{}
   },{once:true});
 }
+
+const XRPetClientBuild=document.documentElement.dataset.xrpetBuild||'0.0.0';
+function xrpetVersionParts(v){return String(v).split('.').map(n=>Number(n)||0)}
+function xrpetVersionNewer(a,b){
+  const A=xrpetVersionParts(a),B=xrpetVersionParts(b),n=Math.max(A.length,B.length);
+  for(let i=0;i<n;i++){const x=A[i]||0,y=B[i]||0;if(x!==y)return x>y}
+  return false;
+}
+async function checkXRPetBuild(){
+  try{
+    const r=await fetch('/api/health?ts='+Date.now(),{cache:'no-store'});
+    if(!r.ok)return;
+    const data=await r.json();
+    const serverBuild=String(data.version||'');
+    if(!serverBuild||!xrpetVersionNewer(serverBuild,XRPetClientBuild))return;
+    const key='xrpet-reloaded-'+serverBuild;
+    if(sessionStorage.getItem(key)==='1')return;
+    sessionStorage.setItem(key,'1');
+    location.reload();
+  }catch{}
+}
+setTimeout(checkXRPetBuild,4000);
+setInterval(checkXRPetBuild,20000);
 
 function closeCustomizationPanels(){
   qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));
