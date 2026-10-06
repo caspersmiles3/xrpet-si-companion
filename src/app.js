@@ -18,7 +18,7 @@ function persist(){safe(()=>localStorage.setItem(STORE,JSON.stringify({...state,
 function form(){return [...FORMS].reverse().find(x=>state.xp>=x[1])||FORMS[0]}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function setText(sel,text){const el=q(sel);if(el)el.textContent=text}
-function mood(label,speech,cls='calm'){setText('#petMood',label);setText('#petSpeech',speech);const p=q('#pet');if(p){p.classList.remove('calm','energized','alert');p.classList.add(cls)}}
+function mood(label,speech,cls='calm'){setText('#petMood',label);setText('#petSpeech',speech);window.XRPet3D?.react?.();window.dispatchEvent(new CustomEvent('xrpet:appearance',{detail:{room:state.room,cosmetic:state.cosmetic,mood:cls}}))}
 function render(){
   const [name,min]=form(); const i=FORMS.findIndex(x=>x[0]===name); const next=FORMS[Math.min(i+1,FORMS.length-1)];
   setText('#petName',state.petName);setText('#chatPetName',state.petName);setText('#topPetName',state.petName);setText('#stripPetName',state.petName);setText('#evolution',name.toUpperCase());
@@ -37,6 +37,7 @@ function render(){
   setText('#unlocksChip',(['nexus','ocean','vault'].length+(FORMS.findIndex(x=>x[0]===name)>=2?1:0)+(FORMS.findIndex(x=>x[0]===name)>=5?1:0))+' unlocked');
   if(q('#explainLevel'))q('#explainLevel').value=state.explainLevel;if(q('#notifyLevel'))q('#notifyLevel').value=state.notifyLevel;
   if(q('#truthToggle'))q('#truthToggle').checked=state.truthMode;if(q('#marketMoodToggle'))q('#marketMoodToggle').checked=state.marketMood;
+  window.dispatchEvent(new CustomEvent('xrpet:appearance',{detail:{room:state.room,cosmetic:state.cosmetic,mood:state.networkMood||'calm'}}));
   renderMemory();
 }
 function renderMemory(){const box=q('#memoryList');if(!box)return;box.innerHTML=state.memories.length?state.memories.map((m,i)=>'<span class="memory-chip">'+esc(m)+' <button type="button" data-rm="'+i+'">×</button></span>').join(''):'<span class="muted">No saved preferences.</span>';qa('[data-rm]').forEach(b=>b.addEventListener('click',()=>{state.memories.splice(Number(b.dataset.rm),1);persist();renderMemory()}))}
@@ -100,5 +101,6 @@ qa('.side-link').forEach(b=>b.addEventListener('click',()=>{
 }));
 
 qa('.variant-dot').forEach(b=>b.addEventListener('click',()=>{state.cosmetic=b.dataset.cosmetic;persist();render();mood('Customized','Companion variant updated.','energized')}));
-bind('#pet','click',()=>{mood('Responsive','Core pulse received.','energized');setTimeout(()=>mood('Connected','Live XRPL data is flowing.','calm'),900)});
+window.addEventListener('xrpet:petInteract',()=>{mood('Responsive','Core pulse received. Drag me to rotate, click to react.','energized');setTimeout(()=>mood('Connected','Live XRPL data is flowing.','calm'),900)});
+window.addEventListener('xrpet:3d-ready',()=>render());
 dailyVisit();render();connectLedger();loadMarket();loadUpdates();integrationCheck();setInterval(loadMarket,120000);setInterval(integrationCheck,60000);
