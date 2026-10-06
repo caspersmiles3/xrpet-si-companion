@@ -17,10 +17,10 @@ const lowPower=savedGraphics==='performance'?true:savedGraphics==='full'?false:a
 const XRPetQuality={
   mode:savedGraphics,
   lowPower,
-  pixelRatio:lowPower?1:Math.min(window.devicePixelRatio||1,1.35),
+  pixelRatio:lowPower?1:Math.min(window.devicePixelRatio||1,1.75),
   shadows:!lowPower,
   reflections:!lowPower,
-  fps:lowPower?24:30
+  fps:lowPower?24:45
 };
 
 let renderer;
@@ -222,79 +222,166 @@ function add(geo,mat,parent=root,name=''){
 function tag(obj,role){obj.userData.role=role;return obj}
 function hideGroup(g){g.visible=false;return g}
 
+function signedPow(v,p){return Math.sign(v)*Math.pow(Math.abs(v),p)}
+function makeSuperellipsoidGeometry(rx,ry,rz,pLat=.62,pLon=.62,segU=72,segV=48){
+  const positions=[],uvs=[],indices=[];
+  for(let iy=0;iy<=segV;iy++){
+    const v=-Math.PI/2+(iy/segV)*Math.PI;
+    const cv=Math.cos(v),sv=Math.sin(v);
+    for(let ix=0;ix<=segU;ix++){
+      const u=-Math.PI+(ix/segU)*Math.PI*2;
+      const cu=Math.cos(u),su=Math.sin(u);
+      const radial=signedPow(cv,pLat);
+      positions.push(
+        rx*radial*signedPow(cu,pLon),
+        ry*signedPow(sv,pLat),
+        rz*radial*signedPow(su,pLon)
+      );
+      uvs.push(ix/segU,iy/segV);
+    }
+  }
+  for(let iy=0;iy<segV;iy++){
+    for(let ix=0;ix<segU;ix++){
+      const a=iy*(segU+1)+ix,b=a+1,c=(iy+1)*(segU+1)+ix,d=c+1;
+      indices.push(a,c,b,b,c,d);
+    }
+  }
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+  g.setIndex(indices);g.computeVertexNormals();g.computeBoundingSphere();
+  return g;
+}
+function bevelBoxGeometry(w,h,d,r=.08,curveSegments=8){
+  const shape=new THREE.Shape();
+  const x=-w/2,y=-h/2;
+  shape.moveTo(x+r,y);shape.lineTo(x+w-r,y);shape.quadraticCurveTo(x+w,y,x+w,y+r);
+  shape.lineTo(x+w,y+h-r);shape.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  shape.lineTo(x+r,y+h);shape.quadraticCurveTo(x,y+h,x,y+h-r);
+  shape.lineTo(x,y+r);shape.quadraticCurveTo(x,y,x+r,y);
+  const g=new THREE.ExtrudeGeometry(shape,{depth:d,bevelEnabled:true,bevelThickness:r*.35,bevelSize:r*.3,bevelSegments:2,curveSegments});
+  g.center();return g;
+}
+
 const pet=new THREE.Group();
 pet.scale.setScalar(.82);
 root.add(pet);
 
 // --- cinematic base anatomy ---
-const pelvis=tag(add(new THREE.SphereGeometry(.55,48,32),shellDarkMat,pet,'pelvis'),'pelvis');
+const pelvis=tag(add(makeSuperellipsoidGeometry(.52,.34,.44,.58,.62,56,36),shellDarkMat,pet,'pelvis'),'pelvis');
 pelvis.scale.set(.9,.54,.78);pelvis.position.set(0,-.87,.02);
 
-const torso=tag(add(new THREE.SphereGeometry(.84,64,48),shellMat,pet,'torso'),'torso');
+const torso=tag(add(makeSuperellipsoidGeometry(.74,.82,.57,.54,.58,72,50),shellMat,pet,'torso'),'torso');
 torso.scale.set(.9,.9,.78);torso.position.set(0,-.36,.03);
 
-const chestPanel=tag(add(new THREE.SphereGeometry(.48,48,32),shellDarkMat,pet,'chest'),'chest');
+const chestPanel=tag(add(makeSuperellipsoidGeometry(.47,.39,.18,.52,.58,56,36),shellDarkMat,pet,'chest'),'chest');
 chestPanel.scale.set(1.08,.8,.5);chestPanel.position.set(0,-.3,.64);
 
 const neck=add(new THREE.CylinderGeometry(.31,.39,.34,40),shellDarkMat,pet,'neck');
 neck.position.set(0,.28,.02);
 
-const head=tag(add(new THREE.SphereGeometry(1.08,72,56),shellMat,pet,'head'),'head');
+const headRig=new THREE.Group();headRig.name='headRig';pet.add(headRig);
+const head=tag(add(makeSuperellipsoidGeometry(.99,.83,.86,.48,.56,88,60),shellMat,headRig,'head'),'head');
 head.scale.set(1,.82,.9);head.position.set(0,1.06,.04);
 
-const face=tag(add(new THREE.SphereGeometry(.96,64,48),shellDarkMat,pet,'face'),'face');
+const face=tag(add(makeSuperellipsoidGeometry(.84,.55,.36,.5,.6,72,48),shellDarkMat,headRig,'face'),'face');
 face.scale.set(.96,.66,.73);face.position.set(0,.99,.63);
 
-const muzzle=tag(add(new THREE.SphereGeometry(.32,36,24),softMat,pet,'muzzle'),'muzzle');
+const muzzle=tag(add(makeSuperellipsoidGeometry(.31,.16,.18,.56,.62,44,28),softMat,headRig,'muzzle'),'muzzle');
 muzzle.scale.set(1.08,.52,.65);muzzle.position.set(0,.7,1.35);
 
-const nose=tag(add(new THREE.SphereGeometry(.095,28,20),blackMat,pet,'nose'),'nose');
+const nose=tag(add(new THREE.SphereGeometry(.095,28,20),blackMat,headRig,'nose'),'nose');
 nose.scale.set(1.05,.68,.75);nose.position.set(0,.71,1.58);
 
-const mouth=add(new THREE.TorusGeometry(.13,.015,8,28,Math.PI),accentMat,pet,'mouth');
+const mouth=add(new THREE.TorusGeometry(.13,.015,8,28,Math.PI),accentMat,headRig,'mouth');
 mouth.position.set(0,.55,1.56);mouth.rotation.z=Math.PI;
 
 // shell seam details
 for(const x of [-.48,.48]){
-  const cheek=add(new THREE.TorusGeometry(.19,.018,10,38,Math.PI*1.15),accentMat,pet,'cheekSeam');
+  const cheek=add(new THREE.TorusGeometry(.19,.018,10,38,Math.PI*1.15),accentMat,headRig,'cheekSeam');
   cheek.position.set(x,.72,1.14);cheek.rotation.z=x<0?.72:-.72;
 }
-const browBridge=add(new THREE.BoxGeometry(.55,.035,.04),accentMat,pet,'browBridge');
+const browBridge=add(new THREE.BoxGeometry(.55,.035,.04),accentMat,headRig,'browBridge');
 browBridge.position.set(0,1.37,1.19);
 
 // eyes with cornea + pupil
-const eyes=[], pupils=[], lids=[];
+const eyes=[], pupils=[], irises=[], glints=[], lids=[];
 for(const x of [-.42,.42]){
-  const eye=add(new THREE.SphereGeometry(.285,48,36),glassMat,pet,'eye');
+  const eye=add(new THREE.SphereGeometry(.285,48,36),glassMat,headRig,'eye');
   eye.scale.set(1,.92,.48);eye.position.set(x,1.11,1.29);eyes.push(eye);
 
-  const pupil=add(new THREE.SphereGeometry(.105,30,22),blackMat,pet,'pupil');
+  const pupil=add(new THREE.SphereGeometry(.105,30,22),blackMat,headRig,'pupil');
   pupil.scale.set(.74,1,.4);pupil.position.set(x,1.11,1.52);pupils.push(pupil);
 
-  const iris=add(new THREE.SphereGeometry(.145,40,28),irisMat,pet,'iris');
+  const iris=add(new THREE.SphereGeometry(.145,40,28),irisMat,headRig,'iris');
   iris.scale.set(.9,1,.28);iris.position.set(x,1.11,1.49);
-  iris.userData.eyeIndex=eyes.length-1;
+  iris.userData.eyeIndex=eyes.length-1;irises.push(iris);
 
-  const cornea=add(new THREE.SphereGeometry(.292,48,36),glassMat,pet,'cornea');
+  const cornea=add(new THREE.SphereGeometry(.292,48,36),glassMat,headRig,'cornea');
   cornea.scale.set(1.01,.93,.5);cornea.position.set(x,1.11,1.3);cornea.material=cornea.material.clone();
   cornea.material.opacity=.24;cornea.material.transparent=true;cornea.material.depthWrite=false;
 
-  const glint=add(new THREE.SphereGeometry(.032,14,10),new THREE.MeshBasicMaterial({color:0xffffff}),pet,'glint');
-  glint.position.set(x-.035,1.2,1.58);
+  const glint=add(new THREE.SphereGeometry(.032,14,10),new THREE.MeshBasicMaterial({color:0xffffff}),headRig,'glint');
+  glint.position.set(x-.035,1.2,1.58);glints.push(glint);
 
-  const lid=add(new THREE.SphereGeometry(.295,48,30,0,Math.PI*2,0,Math.PI/2),shellDarkMat,pet,'lid');
+  const lid=add(new THREE.SphereGeometry(.295,48,30,0,Math.PI*2,0,Math.PI/2),shellDarkMat,headRig,'lid');
   lid.scale.set(1.02,.16,.51);lid.position.set(x,1.32,1.28);lids.push(lid);
 }
 
 
-const foreheadPlate=tag(add(new THREE.SphereGeometry(.74,56,38),shellMat,pet,'foreheadPlate'),'foreheadPlate');
+const eyeSocketRings=[],browPlates=[];
+for(const [x,sgn] of [[-.42,-1],[.42,1]]){
+  const ring=add(new THREE.TorusGeometry(.31,.026,12,52),skinJointMat,headRig,'eyeSocketRing');
+  ring.position.set(x,1.11,1.34);ring.rotation.x=Math.PI/2;eyeSocketRings.push(ring);
+
+  const brow=add(bevelBoxGeometry(.42,.09,.08,.045),shellMat,headRig,'browPlate');
+  brow.position.set(x,1.43,1.22);brow.rotation.z=sgn*.08;brow.rotation.x=-.08;browPlates.push(brow);
+}
+const foreheadPlate=tag(add(new THREE.SphereGeometry(.74,56,38),shellMat,headRig,'foreheadPlate'),'foreheadPlate');
 foreheadPlate.scale.set(1,.28,.72);foreheadPlate.position.set(0,1.53,.56);
-const jawPlate=tag(add(new THREE.SphereGeometry(.62,52,36),shellMat,pet,'jawPlate'),'jawPlate');
+const jawPlate=tag(add(new THREE.SphereGeometry(.62,52,36),shellMat,headRig,'jawPlate'),'jawPlate');
 jawPlate.scale.set(1,.24,.55);jawPlate.position.set(0,.64,.72);
 for(const x of [-.56,.56]){
-  const temple=tag(add(new THREE.SphereGeometry(.28,38,28),shellMat,pet,'templePlate'),'templePlate');
+  const temple=tag(add(new THREE.SphereGeometry(.28,38,28),shellMat,headRig,'templePlate'),'templePlate');
   temple.scale.set(.62,1.05,.5);temple.position.set(x,1.12,.72);
 }
+// Ripplet 3.0 hard-surface micro detailing
+const microDetails=new THREE.Group();microDetails.name='ripplet3BodyDetails';pet.add(microDetails);
+const headDetails=new THREE.Group();headDetails.name='ripplet3HeadDetails';headRig.add(headDetails);
+const microShellMat=shellMat.clone();microShellMat.metalness=.48;microShellMat.roughness=.3;
+const microDarkMat=shellDarkMat.clone();microDarkMat.metalness=.62;microDarkMat.roughness=.28;
+
+for(const sgn of [-1,1]){
+  const templeRail=add(bevelBoxGeometry(.12,.46,.07,.035),microShellMat,headDetails,'templeRail');
+  templeRail.position.set(sgn*.73,1.12,.78);templeRail.rotation.z=sgn*.12;templeRail.rotation.y=sgn*.08;
+
+  const jawRail=add(bevelBoxGeometry(.13,.33,.075,.035),microDarkMat,headDetails,'jawRail');
+  jawRail.position.set(sgn*.56,.72,1.05);jawRail.rotation.z=sgn*.26;
+
+  for(let i=0;i<3;i++){
+    const vent=add(bevelBoxGeometry(.12,.025,.045,.012),accentMat,headDetails,'cheekVent');
+    vent.position.set(sgn*(.50+i*.03),.77-i*.055,1.23);
+    vent.rotation.z=sgn*.24;
+  }
+
+  const shoulderPlate=add(bevelBoxGeometry(.36,.24,.11,.065),microShellMat,microDetails,'shoulderArmor');
+  shoulderPlate.position.set(sgn*.74,-.12,.37);shoulderPlate.rotation.z=sgn*.12;shoulderPlate.rotation.x=-.06;
+
+  for(let i=0;i<2;i++){
+    const bolt=add(new THREE.CylinderGeometry(.025,.025,.018,20),accentMat,microDetails,'microBolt');
+    bolt.rotation.x=Math.PI/2;bolt.position.set(sgn*(.62+i*.12),-.08,.45);
+  }
+
+  const shinPlate=add(bevelBoxGeometry(.16,.30,.07,.035),microShellMat,microDetails,'shinArmor');
+  shinPlate.position.set(sgn*.29,-1.28,.35);
+}
+for(let i=0;i<4;i++){
+  const chestRail=add(bevelBoxGeometry(.055,.28,.045,.025),i%2?microShellMat:accentMat,microDetails,'chestRail');
+  chestRail.position.set((i-1.5)*.13,-.36,.84);
+}
+const collar=add(new THREE.TorusGeometry(.35,.045,16,56),microDarkMat,microDetails,'collarRing');
+collar.position.set(0,.29,.05);collar.rotation.x=Math.PI/2;
+
 // ears
 const ears=[];
 for(const [x,s] of [[-.72,-1],[.72,1]]){
@@ -326,7 +413,7 @@ for(const [x,sgn] of [[-.78,-1],[.78,1]]){
   const elbow=tag(add(new THREE.SphereGeometry(.17,36,28),skinJointMat,pet,'elbow'),'elbow');
   elbow.scale.set(1,.82,.92);elbow.position.set(sgn*.86,-.71,.12);
 
-  const hand=tag(add(new THREE.SphereGeometry(.21,42,32),shellMat,pet,'hand'),'hand');
+  const hand=tag(add(makeSuperellipsoidGeometry(.19,.15,.14,.5,.58,42,28),shellMat,pet,'hand'),'hand');
   hand.scale.set(.92,.7,.82);hand.position.set(sgn*.94,-.96,.2);hands.push(hand);
 
   for(let n=0;n<3;n++){
@@ -334,6 +421,11 @@ for(const [x,sgn] of [[-.78,-1],[.78,1]]){
     pad.scale.set(.7,1.15,.62);
     pad.position.set(sgn*(.88+.06*n),-.99-.03*n,.37+.015*n);
     fingerPads.push(pad);
+
+    const digit=tag(add(new THREE.CapsuleGeometry(.035,.13,6,14),shellDarkMat,pet,'fingerDigit'),'fingerDigit');
+    digit.position.set(sgn*(.89+.055*n),-1.045-.025*n,.31+.012*n);
+    digit.rotation.z=sgn*(.18+.03*n);
+    digit.rotation.x=-.18;
   }
 }
 
@@ -344,7 +436,7 @@ for(const [x,s] of [[-.37,-1],[.37,1]]){
   thigh.position.set(x,-1.18,.02);thigh.rotation.z=s*.04;legs.push(thigh);
   const ankle=add(new THREE.TorusGeometry(.16,.03,12,32),accentMat,pet,'ankleLight');
   ankle.position.set(x,-1.49,.14);ankle.rotation.x=Math.PI/2;
-  const foot=tag(add(new THREE.SphereGeometry(.25,30,20),shellDarkMat,pet,'foot'),'foot');
+  const foot=tag(add(makeSuperellipsoidGeometry(.24,.12,.34,.5,.56,44,28),shellDarkMat,pet,'foot'),'foot');
   foot.scale.set(1.18,.38,1.35);foot.position.set(x,-1.6,.23);feet.push(foot);
 }
 
@@ -353,7 +445,7 @@ const calves=[],toeCaps=[];
 for(const [x,sgn] of [[-.29,-1],[.29,1]]){
   const calf=tag(add(new THREE.CapsuleGeometry(.13,.31,12,28),shellDarkMat,pet,'calf'),'calf');
   calf.position.set(x,-1.26,.1);calf.scale.set(.9,1.08,.84);calves.push(calf);
-  const toe=tag(add(new THREE.SphereGeometry(.18,34,24),shellMat,pet,'toeCap'),'toeCap');
+  const toe=tag(add(makeSuperellipsoidGeometry(.17,.08,.24,.48,.56,38,24),shellMat,pet,'toeCap'),'toeCap');
   toe.scale.set(1.18,.35,1.5);toe.position.set(x,-1.5,.36);toeCaps.push(toe);
 }
 
@@ -779,6 +871,20 @@ contactShadow.position.set(0,-1.72,.1);
 contactShadow.receiveShadow=true;
 
 
+let nextBlinkAt=performance.now()+1800+Math.random()*2400;
+let blinkStart=0,secondBlinkQueued=false;
+function naturalBlinkAmount(now){
+  if(!blinkStart&&now>=nextBlinkAt){blinkStart=now;secondBlinkQueued=Math.random()<.14}
+  if(blinkStart){
+    const p=(now-blinkStart)/190;
+    if(p<1)return Math.sin(p*Math.PI);
+    blinkStart=0;
+    if(secondBlinkQueued){secondBlinkQueued=false;nextBlinkAt=now+135}
+    else nextBlinkAt=now+1700+Math.random()*4200;
+  }
+  return 0;
+}
+
 // state
 const BUILTIN_MODELS={
   ripplet:{
@@ -1180,7 +1286,7 @@ function useProceduralModel(kind=currentKind){
   if(externalModel){root.remove(externalModel);externalModel=null}
   externalMixer=null;externalKind=null;externalActions={};externalActiveAction=null;externalLoadingKind=null;externalLoadingPromise=null;
   pet.visible=true;externalPresentation.visible=false;
-  window.dispatchEvent(new CustomEvent('xrpet:model-ready',{detail:{kind,mode:'ripplet-2.0-runtime',animations:[],credit:'XRPet Ripplet 2.0 runtime model'}}));
+  window.dispatchEvent(new CustomEvent('xrpet:model-ready',{detail:{kind,mode:'ripplet-3.0-runtime',animations:[],credit:'XRPet Ripplet 3.0 high-detail runtime model'}}));
 }
 
 let modelLoadTimer=0;
@@ -1347,18 +1453,18 @@ function renderFrame(){
   pointerX=gazeX;pointerY=gazeY;
   const headFollowX=sleeping?.13:pointerY*.12;
   const headFollowY=sleeping?0:pointerX*.19;
-  head.rotation.x+=(headFollowX-head.rotation.x)*.085;
-  head.rotation.y+=(headFollowY-head.rotation.y)*.085;
+  headRig.rotation.x+=(headFollowX-headRig.rotation.x)*.085;
+  headRig.rotation.y+=(headFollowY-headRig.rotation.y)*.085;
   torso.rotation.y+=( (sleeping?0:pointerX*.035)-torso.rotation.y)*.05;
-  head.rotation.z+=( (sleeping?.08:Math.sin(t*.48)*.012) - head.rotation.z)*.07;
-  if(greeting)head.rotation.z+=Math.sin(t*4)*.018;
-  if(sipping)head.rotation.x+=.18+Math.sin(t*3)*.025;
-  if(gulping)head.rotation.x+=.24+Math.sin(t*6)*.04;
-  if(splashing)head.rotation.z+=Math.sin(t*8)*.055;
-  if(tasting)head.rotation.y+=Math.sin(t*3.4)*.08;
-  if(curling||dreaming||snoring)head.rotation.z+=.10;
-  if(highfiving)head.rotation.z+=Math.sin(t*5)*.035;
-  if(dancing)head.rotation.z+=Math.sin(t*7)*.06;
+  headRig.rotation.z+=( (sleeping?.08:Math.sin(t*.48)*.012) - headRig.rotation.z)*.07;
+  if(greeting)headRig.rotation.z+=Math.sin(t*4)*.018;
+  if(sipping)headRig.rotation.x+=.18+Math.sin(t*3)*.025;
+  if(gulping)headRig.rotation.x+=.24+Math.sin(t*6)*.04;
+  if(splashing)headRig.rotation.z+=Math.sin(t*8)*.055;
+  if(tasting)headRig.rotation.y+=Math.sin(t*3.4)*.08;
+  if(curling||dreaming||snoring)headRig.rotation.z+=.10;
+  if(highfiving)headRig.rotation.z+=Math.sin(t*5)*.035;
+  if(dancing)headRig.rotation.z+=Math.sin(t*7)*.06;
 
   // eye tracking + pupil response
   pupils.forEach((p,i)=>{
@@ -1369,8 +1475,25 @@ function renderFrame(){
     const ps=alerting?1.12:sleeping?.82:1;
     p.scale.set(.74*ps,1*ps,.4);
   });
+  irises.forEach((iris,i)=>{
+    const bx=i===0?-.42:.42;
+    iris.position.x=bx+(sleeping?0:pointerX*.052);
+    iris.position.y=1.11-(sleeping?0:pointerY*.041);
+    iris.position.z=1.49-Math.min(.018,Math.abs(pointerX)*.008+Math.abs(pointerY)*.008);
+  });
+  glints.forEach((g,i)=>{
+    const bx=i===0?-.455:.385;
+    g.position.x=bx+(sleeping?0:pointerX*.022);
+    g.position.y=1.20-(sleeping?0:pointerY*.018);
+  });
+  browPlates.forEach((b,i)=>{
+    const side=i===0?-1:1;
+    const targetZ=(alerting?side*.02:focusing?side*.11:greeting?side*.05:side*.08);
+    b.rotation.z+=(targetZ-b.rotation.z)*.08;
+    b.position.y=1.43+(alerting?.035:focusing?-.018:0);
+  });
 
-  const naturalBlink=Math.max(0,Math.sin(t*.43+2.45))**42;
+  const naturalBlink=naturalBlinkAmount(performance.now());
   const expressiveBlink=sipping?Math.max(0,Math.sin(t*5))*.35:gulping?Math.max(0,Math.sin(t*8))*.48:tasting?Math.max(0,Math.sin(t*4.5))*.28:highfiving?Math.max(0,Math.sin(t*6))*.25:dancing?Math.max(0,Math.sin(t*7))*.2:0;
   const lidClose=(sleeping||curling||dreaming||snoring)?.96:Math.max(naturalBlink*.72,expressiveBlink);
   lids.forEach(l=>l.scale.y=.16+lidClose);
@@ -1379,7 +1502,7 @@ function renderFrame(){
   mouth.scale.x=greeting?1.28:alerting?.9:sleeping?.82:1;
   mouth.scale.y=greeting?1.14:1;
   coreRing.rotation.z=celebrating?t*2.1:Math.sin(t*.5)*.02;
-  coreBall.scale.setScalar((currentCosmetic==='solar'?1.45:1)*(alerting?1.18:celebrating?1.24:charging?1.38:splashing?1.2:1));
+  coreBall.scale.setScalar((currentCosmetic==='solar'?1.45:1)*(alerting?1.18:celebrating?1.24:charging?1.38:splashing?1.2:1)*(1+Math.sin(t*1.8)*.025));
 
   // expressive Ripplet arms / hands / legs / feet
   shoulders.forEach((sh,i)=>{
@@ -1396,6 +1519,25 @@ function renderFrame(){
     if(dancing){rz=side*(.45+Math.sin(t*7+i*Math.PI)*.32)}
     sh.rotation.z+=(rz-sh.rotation.z)*.18;sh.rotation.x+=(rx-sh.rotation.x)*.18;
   });
+  if(idle&&!sleeping){
+    const breathe=Math.sin(t*1.35)*.012;
+    torso.scale.y+=(1+breathe-torso.scale.y)*.05;
+    pelvis.rotation.z+=(Math.sin(t*.47)*.008-pelvis.rotation.z)*.04;
+    shoulders.forEach((sh,i)=>{
+      const side=i===0?-1:1;
+      sh.rotation.x+=(Math.sin(t*.72+i)*.018-sh.rotation.x)*.035;
+      sh.rotation.z+=(side*(.02+Math.sin(t*.51+i)*.012)-sh.rotation.z)*.035;
+    });
+    hands.forEach((hand,i)=>{
+      const side=i===0?-1:1;
+      hand.rotation.y+=(side*Math.sin(t*.83+i)*.045-hand.rotation.y)*.04;
+      hand.rotation.x+=(Math.sin(t*.67+i)*.025-hand.rotation.x)*.04;
+    });
+    fingerPads.forEach((pad,i)=>{
+      const pulse=1+Math.sin(t*1.1+i*.7)*.025;
+      pad.scale.y+=(1.15*pulse-pad.scale.y)*.05;
+    });
+  }
   upperArms.forEach((arm,i)=>{
     const side=i===0?-1:1;let rz=side*.04,rx=0;
     if(walking){rz=side*Math.sin(t*7+i*Math.PI)*.16;rx=Math.sin(t*7+i*Math.PI)*.09}
@@ -1501,7 +1643,11 @@ function renderFrame(){
     pet.scale.lerp(new THREE.Vector3(.82,.82,.82),.1);
   }
 
-  if(externalKind==='ripplet'){
+  if(currentKind==='ripplet'&&!externalModel){
+    renderer.setClearColor(0x000000,0);
+    renderer.setClearAlpha(0);
+    renderer.render(scene,camera);
+  }else if(externalKind==='ripplet'){
     renderer.setClearColor(0x000000,0);
     renderer.setClearAlpha(0);
     renderer.render(scene,camera);
