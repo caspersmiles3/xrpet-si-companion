@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=5.1.0">
+  <link rel="stylesheet" href="/styles.css?v=5.1.1">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate clean-launch" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
@@ -704,7 +704,7 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 5.1.0 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 5.1.1 · XRP Ledger companion</footer>
   </main>
 </div>
 
@@ -721,12 +721,42 @@
   <span class="music-volume-icon" aria-hidden="true">🔊</span><input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.75" aria-label="Music volume">
 </div>
 
-<script src="/music-player.js?v=5.1.0"></script>
-<script src="/games.js?v=5.1.0"></script>
-<script src="/ecosystem.js?v=5.1.0"></script>
-<script src="/app.js?v=5.1.0"></script>
-<script src="/timeline.js?v=5.1.0"></script>
-<script type="module" src="/companion3d.js?v=5.1.0"></script>
+<script>
+(()=>{
+  const gate=document.getElementById('launchGate');
+  const enter=document.getElementById('launchEnter');
+  if(!gate){document.body.classList.remove('launch-locked');return;}
+  let released=false;
+  const release=()=>{
+    if(released)return;
+    released=true;
+    document.body.classList.remove('launch-locked');
+    gate.classList.add('launch-complete');
+    const status=document.getElementById('launchStatus');
+    if(status)status.textContent='XRPet ready.';
+    const bar=document.getElementById('launchProgressBar');
+    if(bar)bar.style.width='100%';
+    setTimeout(()=>gate.remove(),450);
+    window.dispatchEvent(new CustomEvent('xrpet:launch-failsafe-release'));
+  };
+  enter?.addEventListener('click',release,{capture:true});
+  gate.addEventListener('keydown',e=>{
+    if(e.key==='Enter'||e.key===' '){e.preventDefault();release();}
+  });
+  setTimeout(()=>{
+    if(released)return;
+    const status=document.getElementById('launchStatus');
+    if(status)status.textContent='Ready. Entering XRPet…';
+    release();
+  },6000);
+})();
+</script>
+<script src="/music-player.js?v=5.1.1"></script>
+<script src="/games.js?v=5.1.1"></script>
+<script src="/ecosystem.js?v=5.1.1"></script>
+<script src="/app.js?v=5.1.1"></script>
+<script src="/timeline.js?v=5.1.1"></script>
+<script type="module" src="/companion3d.js?v=5.1.1"></script>
 
 </body>
 </html>
