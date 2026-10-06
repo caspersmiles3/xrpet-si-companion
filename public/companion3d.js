@@ -406,9 +406,24 @@ const sideWarm=new THREE.PointLight(0x9ad7ff,5.5,7,2);sideWarm.position.set(3.4,
 
 
 // state
+const BUILTIN_MODELS={
+  nexus:{
+    url:'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/RobotExpressive/RobotExpressive.glb',
+    credit:'RobotExpressive — Tomás Laulhé / Don McCurdy, CC0 1.0',
+    rotationY:Math.PI,
+    targetHeight:3.25
+  },
+  fox:{
+    url:'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Fox/glTF-Binary/Fox.glb',
+    credit:'Fox — PixelMannen / tomkranis / AsoboStudio / scurest, CC0 + CC BY 4.0',
+    rotationY:0,
+    targetHeight:3.0
+  }
+};
+
 let currentKind='nexus', currentGender='boy', currentCosmetic='classic';
 let targetRotY=0,targetRotX=0,dragging=false,lastX=0,lastY=0,pointerX=0,pointerY=0,boost=0,lastInteract=0;
-let action='idle',actionUntil=0,externalModel=null,externalMixer=null;
+let action='idle',actionUntil=0,externalModel=null,externalMixer=null,externalKind=null,externalActions={},externalActiveAction=null,externalLoadToken=0;
 const baseEarTransforms=ears.map(e=>({scale:e.scale.clone(),rot:e.rotation.clone()}));
 
 function resetBaseShape(){
@@ -502,49 +517,127 @@ function performAction(name='greet'){
   action=allowed.has(name)?name:'greet';
   actionUntil=performance.now()+(action==='sleep'?12000:action==='celebrate'?2600:action==='alert'?2200:1800);
   lastInteract=performance.now();
-  if(action==='wake') actionUntil=performance.now()+700;
+  if(action==='wake')actionUntil=performance.now()+700;
   if(action==='happy'||action==='greet'||action==='celebrate')boost=1;
+  playExternalAction(action);
 }
 function currentAction(){
   if(action!=='idle'&&performance.now()>actionUntil){action='idle'}
   return action;
 }
 
-async function loadExternalModel(url){
+async function loadExternalModel(url,options={}){
   if(!url)throw new Error('A GLB/GLTF URL is required.');
   const mod=await import('https://esm.sh/three@0.169.0/examples/jsm/loaders/GLTFLoader.js?deps=three@0.169.0');
   const loader=new mod.GLTFLoader();
   const gltf=await new Promise((resolve,reject)=>loader.load(url,resolve,undefined,reject));
+
   if(externalModel){
     root.remove(externalModel);
     externalModel.traverse(o=>{if(o.geometry)o.geometry.dispose?.()});
   }
+  externalActions={};externalActiveAction=null;
   externalModel=gltf.scene;
-  externalModel.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+  externalKind=options.kind||null;
+
+  externalModel.traverse(o=>{
+    if(o.isMesh){
+      o.castShadow=true;o.receiveShadow=true;
+      if(o.material){
+        const mats=Array.isArray(o.material)?o.material:[o.material];
+        mats.forEach(mat=>{
+          if('envMapIntensity'in mat)mat.envMapIntensity=1.15;
+          if('roughness'in mat)mat.roughness=Math.max(.2,Math.min(.78,mat.roughness));
+          mat.needsUpdate=true;
+        });
+      }
+    }
+  });
+
   const box=new THREE.Box3().setFromObject(externalModel);
   const size=new THREE.Vector3(),center=new THREE.Vector3();box.getSize(size);box.getCenter(center);
-  const maxDim=Math.max(size.x,size.y,size.z)||1;
-  externalModel.scale.setScalar(3.3/maxDim);
-  externalModel.position.sub(center.multiplyScalar(3.3/maxDim));
-  externalModel.position.y+=.15;
-  root.add(externalModel);pet.visible=false;holo.visible=true;
+  const height=Math.max(.001,size.y);
+  const targetHeight=options.targetHeight||3.1;
+  const scale=targetHeight/height;
+  externalModel.scale.setScalar(scale);
+  externalModel.position.set(-center.x*scale,.08-center.y*scale,-center.z*scale);
+  externalModel.rotation.y=options.rotationY||0;
+  root.add(externalModel);
+
+  pet.visible=false;holo.visible=true;
   externalMixer=gltf.animations?.length?new THREE.AnimationMixer(externalModel):null;
   if(externalMixer){
-    const idleClip=gltf.animations.find(a=>/idle/i.test(a.name))||gltf.animations[0];
-    externalMixer.clipAction(idleClip).play();
+    for(const clip of gltf.animations)externalActions[clip.name]=externalMixer.clipAction(clip);
+    const first=findExternalAction(['idle','survey','standing','walk'])||Object.values(externalActions)[0];
+    if(first){first.reset().fadeIn(.15).play();externalActiveAction=first}
   }
-  return {animations:(gltf.animations||[]).map(a=>a.name)};
+  return {animations:(gltf.animations||[]).map(a=>a.name),credit:options.credit||''};
+}
+
+function findExternalAction(patterns=[]){
+  const entries=Object.entries(externalActions);
+  for(const p of patterns){
+    const hit=entries.find(([name])=>name.toLowerCase().includes(p.toLowerCase()));
+    if(hit)return hit[1];
+  }
+  return null;
+}
+function playExternalAction(name){
+  if(!externalMixer)return;
+  const map={
+    idle:['idle','survey','standing'],
+    greet:['wave','yes','idle','survey'],
+    happy:['thumbsup','yes','dance','survey'],
+    celebrate:['dance','run','yes','thumbsup'],
+    alert:['run','walk','no','survey'],
+    sleep:['sitting','idle','survey'],
+    wake:['standing','idle','survey']
+  };
+  const next=findExternalAction(map[name]||map.idle);
+  if(!next||next===externalActiveAction)return;
+  next.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).fadeIn(.18).play();
+  if(externalActiveAction)externalActiveAction.fadeOut(.18);
+  externalActiveAction=next;
+}
+async function ensureBuiltInModel(kind){
+  const cfg=BUILTIN_MODELS[kind];
+  const token=++externalLoadToken;
+  if(!cfg){useProceduralModel();return false}
+  if(externalModel&&externalKind===kind){return true}
+  try{
+    const result=await loadExternalModel(cfg.url,{...cfg,kind});
+    if(token!==externalLoadToken){return false}
+    window.dispatchEvent(new CustomEvent('xrpet:model-ready',{detail:{kind,mode:'rigged',animations:result.animations,credit:cfg.credit}}));
+    playExternalAction('idle');
+    return true;
+  }catch(err){
+    console.warn('Rigged companion failed; using procedural fallback',kind,err);
+    if(token===externalLoadToken){
+      useProceduralModel();
+      window.dispatchEvent(new CustomEvent('xrpet:model-fallback',{detail:{kind,error:String(err?.message||err)}}));
+    }
+    return false;
+  }
 }
 function useProceduralModel(){
+  externalLoadToken++;
+  if(externalModel){root.remove(externalModel);externalModel=null}
+  externalMixer=null;externalKind=null;externalActions={};externalActiveAction=null;
+  pet.visible=true;
+}
+{
   if(externalModel){root.remove(externalModel);externalModel=null;externalMixer=null}
   pet.visible=true;
 }
 
 function setAppearance(detail={}){
-  configureSpecies(detail.companionKind||currentKind);
+  const kind=detail.companionKind||currentKind;
+  configureSpecies(kind);
   configureGender(detail.companionGender||currentGender);
   configureCosmetic(detail.cosmetic||currentCosmetic);
   applyRoom(detail.room||'nexus');
+  if(BUILTIN_MODELS[kind])ensureBuiltInModel(kind);
+  else useProceduralModel();
 }
 window.addEventListener('xrpet:appearance',e=>setAppearance(e.detail||{}));
 
@@ -594,7 +687,8 @@ function animate(){
   const dt=Math.min(.05,clock.getDelta());
   const t=clock.elapsedTime;
   const idle=performance.now()-lastInteract>1600;
-  const state=currentAction();
+  const beforeAction=action;const state=currentAction();
+  if(beforeAction!=='idle'&&state==='idle')playExternalAction('idle');
 
   if(externalMixer)externalMixer.update(dt);
 
