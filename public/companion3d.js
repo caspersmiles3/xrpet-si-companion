@@ -264,7 +264,7 @@ function bevelBoxGeometry(w,h,d,r=.08,curveSegments=8){
 }
 
 const pet=new THREE.Group();
-pet.scale.setScalar(.82);
+pet.scale.setScalar(.72);
 root.add(pet);
 
 // --- cinematic base anatomy ---
@@ -364,16 +364,17 @@ for(const sgn of [-1,1]){
     vent.rotation.z=sgn*.24;
   }
 
-  const shoulderPlate=add(bevelBoxGeometry(.36,.24,.11,.065),microShellMat,microDetails,'shoulderArmor');
-  shoulderPlate.position.set(sgn*.74,-.12,.37);shoulderPlate.rotation.z=sgn*.12;shoulderPlate.rotation.x=-.06;
+  const shoulderPlate=add(bevelBoxGeometry(.29,.18,.08,.055),microShellMat,microDetails,'shoulderArmor');
+  shoulderPlate.position.set(sgn*.63,-.13,.34);shoulderPlate.rotation.z=sgn*.10;shoulderPlate.rotation.x=-.04;
 
   for(let i=0;i<2;i++){
     const bolt=add(new THREE.CylinderGeometry(.025,.025,.018,20),accentMat,microDetails,'microBolt');
     bolt.rotation.x=Math.PI/2;bolt.position.set(sgn*(.62+i*.12),-.08,.45);
   }
 
-  const shinPlate=add(bevelBoxGeometry(.16,.30,.07,.035),microShellMat,microDetails,'shinArmor');
-  shinPlate.position.set(sgn*.29,-1.28,.35);
+  const shinPlate=add(bevelBoxGeometry(.13,.20,.055,.03),microShellMat,microDetails,'shinArmor');
+  shinPlate.position.set(sgn*.25,-1.38,.30);
+  shinPlate.visible=false;
 }
 for(let i=0;i<4;i++){
   const chestRail=add(bevelBoxGeometry(.055,.28,.045,.025),i%2?microShellMat:accentMat,microDetails,'chestRail');
@@ -993,21 +994,60 @@ function configureSpecies(){
   species.ripplet.visible=true;
   resetBaseShape();
 
-  // Ripplet: oversized smooth head, tiny floating body, no animal muzzle/legs.
-  head.scale.set(1.03,.94,.98);
-  face.scale.set(1,.76,.84);
-  torso.scale.set(.78,.88,.72);
-  pelvis.scale.set(.72,.48,.66);
+  // Ripplet 4.0: compact connected silhouette with natural two-segment limbs.
+  head.scale.set(.91,.84,.88);
+  face.scale.set(.92,.70,.78);
+  head.position.y=.96;
+  face.position.y=.91;
+  torso.scale.set(.86,1.02,.78);
+  pelvis.scale.set(.84,.62,.74);
+  neck.scale.set(.88,1.05,.88);
   muzzle.visible=false;
   nose.visible=false;
-  ears.forEach(e=>e.visible=false);
-  legs.forEach((e,i)=>{e.visible=true;e.scale.set(.58,.54,.58);e.position.set(i===0?-.28:.28,-1.08,.02)});
-  feet.forEach((o,i)=>{o.visible=true;o.scale.set(.72,.28,.9);o.position.set(i===0?-.29:.29,-1.42,.2)});
-  shoulders.forEach((o,i)=>{o.scale.set(.68,.82,.62);o.position.set(i===0?-.7:.7,-.2,.08)});
-  upperArms.forEach((o,i)=>{o.visible=true;o.position.x=i===0?-.77:.77});
-  forearms.forEach((o,i)=>{o.visible=true;o.position.x=i===0?-.88:.88});
-  hands.forEach((o,i)=>{o.visible=true;o.position.x=i===0?-.94:.94});
-  calves.forEach(o=>o.visible=true);toeCaps.forEach(o=>o.visible=true);
+
+  // Ears are attached close to the head shell instead of floating wide.
+  ears.forEach((e,i)=>{
+    e.visible=true;
+    e.scale.set(.48,.44,.5);
+    e.position.set(i===0?-.61:.61,1.52,.02);
+    e.rotation.z=i===0?-.18:.18;
+    e.rotation.x=-.08;
+  });
+
+  // Arms overlap at shoulder/elbow/wrist so they read as one connected limb.
+  shoulders.forEach((o,i)=>{
+    o.visible=true;o.scale.set(.60,.76,.60);
+    o.position.set(i===0?-.67:.67,-.18,.06);
+  });
+  upperArms.forEach((o,i)=>{
+    o.visible=true;o.scale.set(1.02,1.32,1.0);
+    o.position.set(i===0?-.72:.72,-.48,.08);
+  });
+  forearms.forEach((o,i)=>{
+    o.visible=true;o.scale.set(1.0,1.34,1.0);
+    o.position.set(i===0?-.78:.78,-.78,.12);
+  });
+  hands.forEach((o,i)=>{
+    o.visible=true;o.scale.set(.86,.72,.82);
+    o.position.set(i===0?-.80:.80,-1.05,.18);
+  });
+  fingerPads.forEach(o=>o.visible=false);
+  fingerDigits.forEach(o=>o.visible=false);
+
+  // Legs begin directly under the pelvis and overlap through the knee/ankle.
+  legs.forEach((o,i)=>{
+    o.visible=true;o.scale.set(.82,1.26,.82);
+    o.position.set(i===0?-.25:.25,-1.08,.02);
+  });
+  calves.forEach((o,i)=>{
+    o.visible=true;o.scale.set(.96,1.42,.92);
+    o.position.set(i===0?-.25:.25,-1.39,.08);
+  });
+  feet.forEach((o,i)=>{
+    o.visible=true;o.scale.set(.96,.42,1.14);
+    o.position.set(i===0?-.25:.25,-1.66,.20);
+  });
+  toeCaps.forEach(o=>o.visible=false);
 }
 function configureGender(){
   currentGender='neutral';
@@ -1636,7 +1676,7 @@ function setAppearance(detail={}){
   configureEquipment(detail);
   applyRoom(detail.room||'nexus');
   clearTimeout(modelLoadTimer);
-  ensureBuiltInModel('ripplet');
+  useProceduralModel('ripplet');
 }
 window.addEventListener('xrpet:appearance',e=>setAppearance(e.detail||{}));
 setAppearance({room:'nexus',cosmetic:'classic'});
@@ -2051,9 +2091,9 @@ function renderFrame(){
   accentMat.emissiveIntensity+=(targetEmissive-accentMat.emissiveIntensity)*.12;
 
   if(boost>0){
-    boost*=.89;pet.scale.setScalar(.82+boost*.04);
+    boost*=.89;pet.scale.setScalar(.72+boost*.035);
   }else{
-    pet.scale.lerp(new THREE.Vector3(.82,.82,.82),.1);
+    pet.scale.lerp(new THREE.Vector3(.72,.72,.72),.1);
   }
 
   if(currentKind==='ripplet'&&!externalModel){
