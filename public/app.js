@@ -1719,39 +1719,79 @@ qa('[data-customize-close]').forEach(b=>b.addEventListener('click',closeCustomiz
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCustomizationPanels()});
 
 let primaryView='home';
+const PRIMARY_VIEW_TARGETS={
+  home:'homeSection',
+  live:'xrplPanel',
+  exchanges:'exchangesSection',
+  history:'xrpHistorySection',
+  learn:'learnSection',
+  announcements:'announcementsSection',
+  ripplet:'companionSection',
+  ecosystem:'ecosystemSection',
+  games:'gamesSection'
+};
 function ensurePrimaryViewVisible(){
+  const active=qa('.primary-view-section.view-active');
+  if(active.length)return;
   const home=q('#homeSection');
-  if(!qa('.primary-view-section.view-active').length&&home){
+  if(home){
     home.classList.add('view-active');
+    home.hidden=false;
     document.body.dataset.primaryView='home';
   }
 }
 ensurePrimaryViewVisible();
 function setPrimaryView(view='home'){
-  if(lifeAvatar&&!roamDocked){
-    lifeAvatar.classList.remove('page-hop');
-    void lifeAvatar.offsetWidth;
-    lifeAvatar.classList.add('page-hop');
-    window.XRPet3D?.motor?.('jump');
-  }
-  primaryView=view;
-  qa('[data-view-section]').forEach(section=>section.classList.toggle('view-active',section.dataset.viewSection===view));
-  qa('[data-primary-view]').forEach(b=>b.classList.toggle('active',b.dataset.primaryView===view));
-  document.body.dataset.primaryView=view;
+  const next=PRIMARY_VIEW_TARGETS[view]?view:'home';
+  const target=PRIMARY_VIEW_TARGETS[next];
+
+  // Switch the interface first. Companion animation is optional and must never block navigation.
+  primaryView=next;
+  qa('[data-view-section]').forEach(section=>{
+    const active=section.dataset.viewSection===next;
+    section.classList.toggle('view-active',active);
+    section.hidden=!active;
+    if(active){
+      section.style.removeProperty('display');
+      section.style.removeProperty('visibility');
+      section.style.removeProperty('opacity');
+    }
+  });
+  qa('[data-primary-view]').forEach(b=>b.classList.toggle('active',b.dataset.primaryView===next));
+  document.body.dataset.primaryView=next;
   qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));
   document.body.classList.remove('workspace-open','customization-open');
-  const target=view==='home'?'homeSection':view==='live'?'xrplPanel':view==='learn'?'learnSection':view==='announcements'?'announcementsSection':view==='ripplet'?'companionSection':view==='ecosystem'?'ecosystemSection':view==='games'?'gamesSection':'xrpHistorySection';
-  ['historyNavDetails','exchangeNavDetails','rippletNavDetails','ecosystemNavDetails','gamesNavDetails','customizeDetails','settingsDetails'].forEach(id=>{q('#'+id)?.removeAttribute('open')});
-  const pane=q('#'+target);if(pane)pane.scrollTop=0;
-  setTimeout(()=>{
-    scrollSectionTop(target);
-    syncRoamBounds();
-    if(!roamDocked)setTimeout(()=>{
-      if(rippletPointer.active)followRippletPointer(true);
-      else playWithInterface(true);
-      lifeAvatar?.classList.remove('page-hop');
-    },180);
-  },0);
+
+  ['historyNavDetails','exchangeNavDetails','rippletNavDetails','ecosystemNavDetails','gamesNavDetails','customizeDetails','settingsDetails']
+    .forEach(id=>q('#'+id)?.removeAttribute('open'));
+
+  const pane=q('#'+target);
+  if(pane){
+    pane.hidden=false;
+    pane.scrollTop=0;
+  }
+  const shell=q('.main-shell');
+  if(shell)shell.scrollTop=0;
+
+  requestAnimationFrame(()=>{
+    try{scrollSectionTop(target)}catch{}
+    try{
+      if(lifeAvatar&&!roamDocked){
+        lifeAvatar.classList.remove('page-hop');
+        void lifeAvatar.offsetWidth;
+        lifeAvatar.classList.add('page-hop');
+        window.XRPet3D?.motor?.('jump');
+      }
+      syncRoamBounds?.();
+      if(!roamDocked)setTimeout(()=>{
+        try{
+          if(rippletPointer?.active)followRippletPointer?.(true);
+          else playWithInterface?.(true);
+          lifeAvatar?.classList.remove('page-hop');
+        }catch{}
+      },120);
+    }catch{}
+  });
 }
 qa('[data-primary-view]').forEach(b=>b.addEventListener('click',()=>setPrimaryView(b.dataset.primaryView)));
 
