@@ -1047,18 +1047,17 @@ let roamPinned=false,roamDocked=false,roamX=.72,roamY=.72,roamTimer=0;
 
 function syncRoamBounds(){
   const shell=q('.main-shell');if(!shell||!roamLayer)return;
-  const r=shell.getBoundingClientRect();
-  roamLayer.style.left=Math.max(0,r.left)+'px';
-  roamLayer.style.top=Math.max(0,r.top)+'px';
-  roamLayer.style.width=Math.max(0,r.width)+'px';
-  roamLayer.style.height=Math.max(0,r.height)+'px';
+  roamLayer.style.left='0px';
+  roamLayer.style.top='0px';
+  roamLayer.style.width=Math.max(shell.clientWidth,shell.scrollWidth)+'px';
+  roamLayer.style.height=Math.max(shell.clientHeight,shell.scrollHeight)+'px';
 }
 function setRoamPosition(x,y,activity='explore'){
   if(!lifeAvatar||!roamLayer)return;
   const layer=roamLayer.getBoundingClientRect(),avatar=lifeAvatar.getBoundingClientRect();
   const maxX=Math.max(0,layer.width-avatar.width-10),maxY=Math.max(0,layer.height-avatar.height-10);
   const px=Math.max(8,Math.min(maxX,x)),py=Math.max(12,Math.min(maxY,y));
-  lifeAvatar.style.transitionDuration=activity==='run'?'1.35s':activity==='jump'?'1.05s':'2.8s';
+  lifeAvatar.style.transitionDuration=activity==='run'?'.72s':activity==='jump'?'.58s':activity==='climb'?'1s':'1.18s';
   lifeAvatar.style.transform='translate3d('+px+'px,'+py+'px,0)';
   lifeAvatar.dataset.activity=activity;
   roamX=maxX?px/maxX:.5;roamY=maxY?py/maxY:.5;
@@ -1143,6 +1142,40 @@ const RIPPLET_PLAY_PROPS=[
 ];
 let heldPlayProp=null,playPropDropTimer=0,lastInterfacePlayAt=0;
 
+function visibleTextTerrain(){
+  const shell=q('.main-shell')?.getBoundingClientRect();
+  const active=q('.primary-view-section.view-active');
+  if(!shell||!active)return[];
+  const walker=document.createTreeWalker(active,NodeFilter.SHOW_TEXT,{
+    acceptNode(node){
+      const parent=node.parentElement;
+      const text=(node.nodeValue||'').trim();
+      if(!parent||text.length<2)return NodeFilter.FILTER_REJECT;
+      if(parent.closest('script,style,textarea,input,select,option,.muted[hidden]'))return NodeFilter.FILTER_REJECT;
+      const cs=getComputedStyle(parent);
+      if(cs.display==='none'||cs.visibility==='hidden'||Number(cs.opacity)===0)return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  const terrain=[];
+  while(walker.nextNode()&&terrain.length<90){
+    const node=walker.currentNode,text=node.nodeValue||'';
+    const re=/\S+/g;let m,count=0;
+    while((m=re.exec(text))&&terrain.length<90){
+      if(count++%2===1)continue;
+      try{
+        const range=document.createRange();
+        range.setStart(node,m.index);
+        range.setEnd(node,m.index+m[0].length);
+        const r=range.getBoundingClientRect();
+        if(r.width<5||r.height<6)continue;
+        if(r.bottom<shell.top+54||r.top>shell.bottom-8||r.right<shell.left+8||r.left>shell.right-8)continue;
+        terrain.push({__terrain:'word',__rect:r,tagName:'TEXTWORD',label:m[0],classList:null});
+      }catch{}
+    }
+  }
+  return terrain;
+}
 function visibleInterfaceTargets(){
   const layer=roamLayer?.getBoundingClientRect(),shell=q('.main-shell')?.getBoundingClientRect();
   if(!layer||!shell)return[];
@@ -1167,13 +1200,13 @@ function visibleInterfaceTargets(){
   });
 }
 function interfaceTargetPosition(el,mode='perch'){
-  const layer=roamLayer?.getBoundingClientRect(),avatar=lifeAvatar?.getBoundingClientRect(),r=el?.getBoundingClientRect();
+  const layer=roamLayer?.getBoundingClientRect(),avatar=lifeAvatar?.getBoundingClientRect(),r=el?.__rect||el?.getBoundingClientRect?.();
   if(!layer||!r)return null;
   const aw=Math.max(54,avatar?.width||70),ah=Math.max(66,avatar?.height||86);
   const localLeft=r.left-layer.left,localTop=r.top-layer.top;
   const centerX=localLeft+r.width*.5-aw*.5;
   const rightEdge=localLeft+r.width-aw*.78;
-  const textLike=/^(H1|H2|H3|P|SPAN|STRONG|SMALL|BUTTON)$/.test(el.tagName);
+  const textLike=/^(H1|H2|H3|P|SPAN|STRONG|SMALL|BUTTON|TEXTWORD)$/.test(el.tagName);
   if(mode==='climb'){
     return {
       x:Math.max(8,localLeft-aw*.56),
@@ -1230,20 +1263,28 @@ function dropPlayProp(){
 function makeInterfaceEcho(){return null;}
 function playWithInterface(force=false){
   if(roamDocked||!lifeAvatar||!roamLayer)return false;
-  if(!force&&Date.now()-lastInterfacePlayAt<4200)return false;
-  const targets=visibleInterfaceTargets();if(!targets.length)return false;
+  if(!force&&Date.now()-lastInterfacePlayAt<2600)return false;
+
+  const words=visibleTextTerrain();
+  const elements=visibleInterfaceTargets();
+  if(!words.length&&!elements.length)return false;
   lastInterfacePlayAt=Date.now();
 
-  const target=targets[Math.floor(Math.random()*targets.length)];
-  const tag=target.tagName;
-  const heading=/^H[1-3]$/.test(tag);
-  const textLike=heading||tag==='P'||tag==='SPAN'||tag==='STRONG'||tag==='SMALL';
+  const preferWord=words.length&&(Math.random()<.72||!elements.length);
+  const target=preferWord
+    ? words[Math.floor(Math.random()*words.length)]
+    : elements[Math.floor(Math.random()*elements.length)];
+  if(!target)return false;
+
+  const heading=!target.__terrain&&/^H[1-3]$/.test(target.tagName);
+  const card=!target.__terrain&&Boolean(target.matches?.('article,.detail-card,.contact-card,.ecosystem-token-card,.game-panel,button'));
   const roll=Math.random();
 
   let mode='perch',action='walk';
-  if(heading&&roll<.48){mode='climb';action='climb'}
-  else if(textLike&&roll<.76){mode='hop';action='jump'}
-  else if(roll<.34){mode='inspect';action='walk'}
+  if(target.__terrain){mode='hop';action=roll<.68?'jump':'walk'}
+  else if(heading&&roll<.55){mode='climb';action='climb'}
+  else if(card&&roll<.38){mode='climb';action='climb'}
+  else if(roll<.62){mode='hop';action='jump'}
 
   const p=interfaceTargetPosition(target,mode);if(!p)return false;
   markInterfaceTarget(target,true);
@@ -1251,24 +1292,27 @@ function playWithInterface(force=false){
   if(action==='jump'){
     window.XRPet3D?.motor?.('jump');
     setRoamPosition(p.x,p.y,'jump');
-    setText('#mindAction','Jumping over text');
-    setText('#mindThought','I am moving through the page like it is my terrain.');
+    setText('#mindAction','Word hopping');
+    setText('#mindThought','I am using the page text as terrain.');
   }else if(action==='climb'){
     window.XRPet3D?.motor?.('climb');
     setRoamPosition(p.x,p.y,'climb');
-    setText('#mindAction','Climbing the page');
-    setText('#mindThought','I found an edge in the interface and climbed it.');
+    setText('#mindAction','Climbing the interface');
+    setText('#mindThought','I am climbing a heading or box edge.');
   }else{
     window.XRPet3D?.motor?.('walk');
     setRoamPosition(p.x,p.y,'walk');
-    setText('#mindAction','Exploring the page');
-    setText('#mindThought','I am walking between the words and interface elements.');
+    setText('#mindAction',target.__terrain?'Walking on words':'Exploring the page');
+    setText('#mindThought',target.__terrain?'I found another word to stand on.':'I am moving through this page on my own.');
   }
 
   setTimeout(()=>{
     markInterfaceTarget(target,false);
-    if(!roamDocked&&Math.random()<.5)window.XRPet3D?.perform?.(Math.random()<.5?'wave':'thinking');
-  },1800);
+    if(!roamDocked&&Math.random()<.55){
+      const emotes=['wave','thinking','happy','salute','shrug'];
+      window.XRPet3D?.perform?.(emotes[Math.floor(Math.random()*emotes.length)]);
+    }
+  },1200);
 
   return true;
 }
@@ -1302,9 +1346,9 @@ function roamingStep(){
     return;
   }
   const roll=Math.random();
-  if(roll<.68)playWithInterface();
+  if(roll<.86)playWithInterface();
   else goRipplet('explore');
-  roamTimer=setTimeout(roamingStep,3800+Math.random()*4200);
+  roamTimer=setTimeout(roamingStep,2200+Math.random()*3200);
 }
 function renderMind(){
   const labels={roam:'Roaming',dock:'Docked',socialize:'Signal Friend',scan:'Scanning XRPL',wave:'Waving',dance:'Dancing',focus:'Focused',run:'Running',jump:'Jumping',climb:'Climbing',reach:'Reaching',grab:'Grabbing',carry:'Carrying',crouch:'Crouching',turn:'Turning'};
@@ -1387,8 +1431,17 @@ window.XRPetRoam={go:goRipplet,pin:()=>setRoamPinned(false),dock:dockRipplet,und
 q('#dockRipplet')?.addEventListener('click',dockRipplet);
 q('#undockRipplet')?.addEventListener('click',undockRipplet);
 q('#rippletDock')?.addEventListener('dblclick',()=>roamDocked?undockRipplet():dockRipplet());
-addEventListener('resize',()=>{syncRoamBounds();if(roamDocked){const p=dockPosition();if(p)setRoamPosition(p.x,p.y,'dock')}else goRipplet(state.lifeActivity||'explore')});
-q('.main-shell')?.addEventListener('scroll',()=>{syncRoamBounds();if(roamDocked){const p=dockPosition();if(p)setRoamPosition(p.x,p.y,'dock')}},{passive:true});
+let roamScrollTimer=0;
+addEventListener('resize',()=>{syncRoamBounds();if(roamDocked){const p=dockPosition();if(p)setRoamPosition(p.x,p.y,'dock')}else playWithInterface(true)});
+q('.main-shell')?.addEventListener('scroll',()=>{
+  syncRoamBounds();
+  if(roamDocked){
+    const p=dockPosition();if(p)setRoamPosition(p.x,p.y,'dock');
+    return;
+  }
+  clearTimeout(roamScrollTimer);
+  roamScrollTimer=setTimeout(()=>playWithInterface(true),260);
+},{passive:true});
 syncRoamBounds();setTimeout(()=>goRipplet('explore'),300);roamingStep();spontaneousRippletReaction();applyNftCompanion();
 qa('[data-life-action]').forEach(b=>b.addEventListener('click',()=>performLifeActivity(b.dataset.lifeAction,true,false)));
 setInterval(lifeTick,15000);
@@ -1454,7 +1507,11 @@ function setPrimaryView(view='home'){
   const target=view==='home'?'homeSection':view==='live'?'xrplPanel':view==='announcements'?'announcementsSection':view==='ripplet'?'companionSection':view==='ecosystem'?'ecosystemSection':view==='games'?'gamesSection':'xrpHistorySection';
   ['historyNavDetails','exchangeNavDetails','rippletNavDetails','ecosystemNavDetails','gamesNavDetails','customizeDetails','settingsDetails'].forEach(id=>{q('#'+id)?.removeAttribute('open')});
   const pane=q('#'+target);if(pane)pane.scrollTop=0;
-  setTimeout(()=>scrollSectionTop(target),0);
+  setTimeout(()=>{
+    scrollSectionTop(target);
+    syncRoamBounds();
+    if(!roamDocked)setTimeout(()=>playWithInterface(true),180);
+  },0);
 }
 qa('[data-primary-view]').forEach(b=>b.addEventListener('click',()=>setPrimaryView(b.dataset.primaryView)));
 
