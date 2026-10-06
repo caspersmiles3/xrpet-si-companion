@@ -638,6 +638,8 @@ async function loadExternalModel(url,options={}){
   externalModel.position.set(-center.x*scale,.08-center.y*scale,-center.z*scale);
   externalModel.userData.xrpetBaseY=externalModel.position.y;
   externalModel.rotation.y=options.rotationY||0;
+  externalModel.userData.xrpetBaseRotY=externalModel.rotation.y;
+  externalModel.userData.xrpetBaseRotX=externalModel.rotation.x;
   root.add(externalModel);
 
   pet.visible=false;holo.visible=true;externalPresentation.visible=true;
@@ -690,7 +692,7 @@ async function ensureBuiltInModel(kind){
     try{
       const result=await loadExternalModel(cfg.url,{...cfg,kind,token});
       if(result?.stale||token!==externalLoadToken)return false;
-      window.dispatchEvent(new CustomEvent('xrpet:model-ready',{detail:{kind,mode:'rigged',animations:result.animations,credit:cfg.credit}}));
+      window.dispatchEvent(new CustomEvent('xrpet:model-ready',{detail:{kind,mode:(result.animations?.length?'rigged':'real'),animations:result.animations,credit:cfg.credit}}));
       playExternalAction('idle');
       return true;
     }catch(err){
@@ -788,6 +790,12 @@ function animate(){
   if(!dragging&&idle&&state!=='alert'&&state!=='sleep') targetRotY=Math.sin(t*.28)*.15;
   pet.rotation.y+=(targetRotY-pet.rotation.y)*.07;
   pet.rotation.x+=(targetRotX-pet.rotation.x)*.07;
+  if(externalModel){
+    const baseY=externalModel.userData.xrpetBaseRotY??0;
+    const baseX=externalModel.userData.xrpetBaseRotX??0;
+    externalModel.rotation.y+=(baseY+targetRotY-externalModel.rotation.y)*.07;
+    externalModel.rotation.x+=(baseX+targetRotX-externalModel.rotation.x)*.07;
+  }
 
   const sleeping=state==='sleep';
   const celebrating=state==='celebrate';
