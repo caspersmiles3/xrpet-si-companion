@@ -1,4 +1,4 @@
-# XRPet SI Companion™ — v3.8.0
+# XRPet SI Companion™ — v3.9.0
 
 **Don't watch the Ledger. Live with it.**
 
@@ -8,7 +8,7 @@ XRPet is a lightweight, installable companion built around Ripple, XRP and the X
 
 Render service: https://xrpet-si-companion.onrender.com
 
-## v3.8 capabilities
+## v3.9 capabilities
 
 - Live XRPL ledger + fee signals
 - XRP/USD market snapshot with public-data fallback
@@ -78,3 +78,12 @@ XRPet reports market data and ecosystem information. It does not promise returns
 ## v3.8 data-first interface
 
 The normal XRPet interface is now focused on XRPL Live telemetry, Ripple/XRP settlement and history intelligence, and official announcements. Companion selection, rooms, cosmetics/equipment, wallet/NFT companion controls, and companion chat are moved behind the **Companion & Cosmetics** menu so they no longer crowd the primary information dashboard.
+
+
+## v3.9 Ripplet companion
+
+XRPet now has one official built-in companion: **Ripplet**. Ripplet is a small floating Ripple/XRP-inspired signal character with a white-silver shell, graphite seams, cyan energy, Ripple-style side-flow fins, and an XRP chest core.
+
+The old built-in species roster and boy/girl companion selector are removed. Ripplet's identity is fixed so the app has one recognizable mascot. Users can still connect an XRPL account and optionally use eligible NFT artwork as a personal companion override, then restore Ripplet at any time.
+
+Ripplet reacts to XRPL connection state, wallet activity, XRP market movement, announcements, scans, alerts, celebrations, and companion interactions. Rooms and subtle signal accents remain personalization layers without creating alternate built-in mascots.
