@@ -704,15 +704,39 @@ bind('#applyRoom','click',()=>{
   mood('Theme changed','The entire XRPet interface is now running '+(ROOM_NAMES[state.room]||state.room)+'.','calm');
   closeCustomizationPanels();
 }); qa('.cosmetic-choice').forEach(b=>b.addEventListener('click',()=>{state.cosmetic=b.dataset.cosmetic;state.nftCompanion=null;persist();applyNftCompanion();render();mood('Reconfigured','Companion build changed to '+b.querySelector('strong')?.textContent+'.','energized')}));
+const sidebar=q('#xrpetSidebar');
+const sidebarToggle=q('#sidebarToggle');
+function setSidebarCollapsed(collapsed){
+  document.body.classList.toggle('sidebar-collapsed',Boolean(collapsed));
+  sidebarToggle?.setAttribute('aria-expanded',collapsed?'false':'true');
+  sidebarToggle?.setAttribute('aria-label',collapsed?'Expand sidebar':'Minimize sidebar');
+  sidebarToggle?.setAttribute('title',collapsed?'Expand sidebar':'Minimize sidebar');
+  const arrow=sidebarToggle?.querySelector('span');if(arrow)arrow.textContent=collapsed?'›':'‹';
+  try{localStorage.setItem('xrpet-sidebar-collapsed',collapsed?'1':'0')}catch{}
+  setTimeout(()=>{
+    syncRoamBounds?.();
+    if(!roamDocked){
+      if(rippletPointer?.active)followRippletPointer?.(true);
+      else playWithInterface?.(true);
+    }
+  },180);
+}
+let savedSidebarCollapsed=false;
+try{savedSidebarCollapsed=localStorage.getItem('xrpet-sidebar-collapsed')==='1'}catch{}
+setSidebarCollapsed(savedSidebarCollapsed);
+sidebarToggle?.addEventListener('click',()=>setSidebarCollapsed(!document.body.classList.contains('sidebar-collapsed')));
+
 function scrollSectionTop(id){
   const target=q('#'+id);if(!target)return;
   const shell=q('.main-shell');
+  const deck=q('#topCommandDeck');
+  const headerGap=(deck?.offsetHeight||0)+14;
   if(shell){
-    const y=Math.max(0,target.offsetTop-10);
+    const y=Math.max(0,target.offsetTop-headerGap);
     shell.scrollTo({top:y,behavior:'auto'});
     return;
   }
-  const y=Math.max(0,target.getBoundingClientRect().top+window.scrollY-10);
+  const y=Math.max(0,target.getBoundingClientRect().top+window.scrollY-headerGap);
   window.scrollTo({top:y,behavior:'auto'});
 }
 qa('[data-scroll]').forEach(b=>b.addEventListener('click',()=>{
