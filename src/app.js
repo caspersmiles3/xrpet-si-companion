@@ -788,6 +788,7 @@ function goRipplet(activity='explore'){
   if(activity==='ledger'){setRoamPosition(layer.width*.72,Math.max(165,layer.height*.34),'ledger');return}
   const x=70+Math.random()*Math.max(60,layer.width-300);
   const y=190+Math.random()*Math.max(40,layer.height-430);
+  window.XRPet3D?.perform?.('walk');
   setRoamPosition(x,y,'walk');
 }
 function roamingStep(){
