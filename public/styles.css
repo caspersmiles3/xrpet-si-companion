@@ -1574,3 +1574,12 @@ body.room-genesis .update,body.room-city .update,body.room-quantum .update,body.
   .history-jump-panel select,.history-jump-panel p{grid-column:1;grid-row:auto}
   .room-apply-bar{flex-direction:column;align-items:stretch}
 }
+
+.xrp-event-details{margin-top:10px;border-top:1px solid rgba(120,221,255,.12);padding-top:9px}
+.xrp-event-details summary{cursor:pointer;color:#9cecff;font-size:.8rem;list-style:none}
+.xrp-event-details summary::-webkit-details-marker{display:none}
+.xrp-event-details summary:after{content:" +";opacity:.65}
+.xrp-event-details[open] summary:after{content:" −"}
+.xrp-event-details>div{margin-top:9px;padding:11px;border:1px solid rgba(119,218,255,.11);border-radius:10px;background:rgba(4,12,18,.55)}
+.xrp-event-details>div strong{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:#a9efff}
+.xrp-event-details>div p{margin:7px 0;font-size:.84rem}
