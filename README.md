@@ -1,4 +1,4 @@
-# XRPet SI Companion™ — v5.4.0
+# XRPet SI Companion™ — v5.5.1
 
 **Don't watch the Ledger. Live with it.**
 
@@ -292,3 +292,16 @@ Mini-game events feed back into Ripplet's animation/sound system and award small
 - XRP Flow now includes escalating packet speed, increasing congestion probability, combo multipliers, shield packets, and longer survival pressure.
 - Consensus 80 now adds a shrinking response clock, faster validator playback, and extra signals at higher rounds.
 - Arcade events remain local entertainment only: no XRP, tokens, cash, or financial rewards.
+
+
+## v5.5 waveform + X API + resilient live data
+
+- The bottom soundtrack player now includes a live animated waveform. It uses the Web Audio analyser when available and falls back to a synchronized visual waveform when browser/audio-origin restrictions prevent direct analysis.
+- Added a server-side X API v2 integration status endpoint and an XRPet X composer.
+- X reading uses `X_BEARER_TOKEN`; X posting uses a separate server-only `X_USER_ACCESS_TOKEN` with user-context write permission. Tokens are never exposed to browser JavaScript.
+- The default X read query is `(XRPL OR "XRP Ledger") -is:retweet lang:en` and can be overridden with `XRPL_X_QUERY`.
+- Added `POST /api/x/post` for creating text-only X posts from XRPet after write access is configured.
+- Added `GET /api/xrpl/recent-transactions` using validated XRPL JSON-RPC ledger data as a backup when the browser WebSocket transaction stream is quiet or unavailable.
+- The client polls that fallback only when needed and de-duplicates transactions by real XRPL transaction hash.
+- XRPL Meta ecosystem requests now have timeouts, retry without expanded metadata, five-minute server caching, and last-known-good responses.
+- Ecosystem pagination is reduced to 24 items per request to lower upstream load; the UI retries automatically and offers a manual Retry button instead of permanently showing “temporarily unavailable.”

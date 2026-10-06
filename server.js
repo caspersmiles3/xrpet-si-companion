@@ -55,7 +55,9 @@ const OFFICIAL_SOURCES = [
 const cache = {
   updates: { at: 0, data: [] },
   market: { at: 0, data: null },
-  marketHistory: { at: 0, data: [] }
+  marketHistory: { at: 0, data: [] },
+  ecosystemStats: { at: 0, data: null },
+  ecosystemTokens: new Map()
 };
 const MARKET_CACHE_MS = 15 * 1000;
 const TEN_MIN = 15 * 1000;
@@ -74,6 +76,37 @@ async function fetchJson(url, options={}) {
   if (!r.ok) throw new Error(`${r.status} ${url}`);
   return r.json();
 }
+async function fetchJsonWithTimeout(url, options={}, timeoutMs=9000) {
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),timeoutMs);
+  try{
+    return await fetchJson(url,{...options,signal:controller.signal});
+  }finally{clearTimeout(timer)}
+}
+async function fetchFirstJson(urls, options={}, timeoutMs=9000){
+  let lastError;
+  for(const url of urls){
+    try{return {data:await fetchJsonWithTimeout(url,options,timeoutMs),url}}
+    catch(e){lastError=e}
+  }
+  throw lastError||new Error('All upstream sources failed');
+}
+async function xrplRpc(method,params=[{}]){
+  const endpoints=['https://s1.ripple.com:51234/','https://xrplcluster.com/'];
+  const body=JSON.stringify({method,params});
+  let lastError;
+  for(const url of endpoints){
+    try{
+      const r=await fetch(url,{method:'POST',headers:{'content-type':'application/json','user-agent':'XRPetSI/1.0'},body});
+      if(!r.ok)throw new Error('XRPL RPC '+r.status);
+      const d=await r.json();
+      if(d?.result?.status&&d.result.status!=='success')throw new Error(d.result.error_message||d.result.error||'XRPL RPC error');
+      return {result:d.result,source:url};
+    }catch(e){lastError=e}
+  }
+  throw lastError||new Error('XRPL RPC unavailable');
+}
+
 async function fetchPage(url) {
   const r = await fetch(url, { headers: { 'user-agent': 'XRPetSI/1.0 (+xrpl companion)' }});
   if (!r.ok) throw new Error(`${r.status} ${url}`);
@@ -327,30 +360,74 @@ app.get('/xaman/callback', (_req, res) => {
 
 
 const XRPL_META_BASE='https://s1.xrplmeta.org/v2';
+const ECOSYSTEM_CACHE_MS=5*60*1000;
 app.get('/api/ecosystem/stats', async (_req,res)=>{
   try{
-    const data=await fetchJson(XRPL_META_BASE+'/server');
-    res.json({source:'XRPL Meta',...data});
-  }catch(e){res.status(502).json({error:'XRPL ecosystem stats unavailable',detail:e.message})}
+    if(cache.ecosystemStats.data&&Date.now()-cache.ecosystemStats.at<ECOSYSTEM_CACHE_MS){
+      return res.json({...cache.ecosystemStats.data,cached:true});
+    }
+    const data=await fetchJsonWithTimeout(XRPL_META_BASE+'/server',{},8000);
+    const payload={source:'XRPL Meta',...data,generatedAt:new Date().toISOString()};
+    cache.ecosystemStats={at:Date.now(),data:payload};res.json(payload);
+  }catch(e){
+    if(cache.ecosystemStats.data)return res.json({...cache.ecosystemStats.data,cached:true,stale:true,warning:'Serving last-known-good XRPL Meta stats'});
+    try{
+      const {result,source}=await xrplRpc('server_info',[{}]);
+      return res.json({source:'XRPL mainnet fallback',ledger_index:result?.info?.validated_ledger?.seq||null,network_id:result?.info?.network_id||0,degraded:true,generatedAt:new Date().toISOString(),rpcSource:source});
+    }catch{}
+    res.status(502).json({error:'XRPL ecosystem stats unavailable',detail:e.message})
+  }
 });
 app.get('/api/ecosystem/tokens', async (req,res)=>{
+  const limit=Math.max(1,Math.min(60,Number(req.query.limit)||24));
+  const offset=Math.max(0,Number(req.query.offset)||0);
+  const sortAllowed=new Set(['holders','supply','marketcap','price_percent_24h','price_percent_7d','volume_24h','volume_7d','exchanges_24h','exchanges_7d','takers_24h','takers_7d']);
+  const sort=sortAllowed.has(String(req.query.sort))?String(req.query.sort):'holders';
+  const search=clean(req.query.q||'').slice(0,80);
+  const trust=clean(req.query.trust||'0,1,2,3');
+  const key=JSON.stringify({limit,offset,sort,search,trust});
+  const cached=cache.ecosystemTokens.get(key);
+  if(cached&&Date.now()-cached.at<ECOSYSTEM_CACHE_MS)return res.json({...cached.data,cached:true});
+  const params=new URLSearchParams({limit:String(limit),offset:String(offset),sort_by:sort,decode_currency:'true',expand_meta:'true'});
+  if(search)params.set('name_like',search);
+  if(/^[0-3](,[0-3])*$/.test(trust))params.set('trust_level',trust);
   try{
-    const limit=Math.max(1,Math.min(100,Number(req.query.limit)||48));
-    const offset=Math.max(0,Number(req.query.offset)||0);
-    const sortAllowed=new Set(['holders','supply','marketcap','price_percent_24h','price_percent_7d','volume_24h','volume_7d','exchanges_24h','exchanges_7d','takers_24h','takers_7d']);
-    const sort=sortAllowed.has(String(req.query.sort))?String(req.query.sort):'holders';
-    const params=new URLSearchParams({limit:String(limit),offset:String(offset),sort_by:sort,decode_currency:'true',expand_meta:'true'});
-    const search=clean(req.query.q||'');if(search)params.set('name_like',search.slice(0,80));
-    const trust=clean(req.query.trust||'0,1,2,3');if(/^[0-3](,[0-3])*$/.test(trust))params.set('trust_level',trust);
-    const data=await fetchJson(XRPL_META_BASE+'/tokens?'+params.toString());
-    res.json({source:'XRPL Meta',...data});
-  }catch(e){res.status(502).json({error:'XRPL token directory unavailable',detail:e.message})}
+    let data;
+    try{data=await fetchJsonWithTimeout(XRPL_META_BASE+'/tokens?'+params.toString(),{},10000)}
+    catch{
+      params.set('expand_meta','false');
+      data=await fetchJsonWithTimeout(XRPL_META_BASE+'/tokens?'+params.toString(),{},8000);
+    }
+    const payload={source:'XRPL Meta',...data,generatedAt:new Date().toISOString()};
+    cache.ecosystemTokens.set(key,{at:Date.now(),data:payload});
+    res.json(payload);
+  }catch(e){
+    if(cached)return res.json({...cached.data,cached:true,stale:true,warning:'Serving last-known-good XRPL Meta token directory'});
+    res.status(502).json({error:'XRPL token directory unavailable',detail:e.message,retryable:true});
+  }
+});
+
+app.get('/api/xrpl/recent-transactions', async (_req,res)=>{
+  try{
+    const {result,source}=await xrplRpc('ledger',[{ledger_index:'validated',transactions:true,expand:true,api_version:2}]);
+    const ledger=result?.ledger||result;
+    const ledgerIndex=Number(result?.ledger_index||ledger?.ledger_index||ledger?.seqNum);
+    const txs=Array.isArray(ledger?.transactions)?ledger.transactions:[];
+    const transactions=txs.slice(-40).reverse().map(item=>({
+      transaction:item?.tx_json||item?.tx||item,
+      meta:item?.meta||item?.metaData||null,
+      hash:item?.hash||item?.tx_hash||item?.tx_json?.hash||'',
+      ledger_index:ledgerIndex,
+      validated:result?.validated===true||ledger?.validated===true
+    })).filter(x=>x.hash&&x.validated);
+    res.json({validated:true,ledgerIndex,transactions,source,generatedAt:new Date().toISOString()});
+  }catch(e){res.status(502).json({error:'XRPL recent transaction fallback unavailable',detail:e.message})}
 });
 
 async function getXrplXFeed(){
   const token=process.env.X_BEARER_TOKEN||'';
-  const query=clean(process.env.XRPL_X_QUERY||'');
-  if(!token||!query)return {enabled:false,items:[],reason:'X_BEARER_TOKEN and XRPL_X_QUERY are not configured'};
+  const query=clean(process.env.XRPL_X_QUERY||'(XRPL OR "XRP Ledger") -is:retweet lang:en');
+  if(!token)return {enabled:false,items:[],reason:'X_BEARER_TOKEN is not configured'};
   const params=new URLSearchParams({
     query:query.slice(0,512),
     max_results:'20',
@@ -373,6 +450,33 @@ async function getXrplXFeed(){
 app.get('/api/ecosystem/x-feed', async (_req,res)=>{
   try{res.json(await getXrplXFeed())}
   catch(e){res.status(502).json({enabled:true,items:[],error:'X feed unavailable',detail:e.message})}
+});
+
+app.get('/api/x/status', (_req,res)=>{
+  res.json({
+    readEnabled:Boolean(process.env.X_BEARER_TOKEN),
+    writeEnabled:Boolean(process.env.X_USER_ACCESS_TOKEN),
+    query:clean(process.env.XRPL_X_QUERY||'(XRPL OR "XRP Ledger") -is:retweet lang:en'),
+    provider:'X API v2'
+  });
+});
+app.post('/api/x/post',rateLimit(8,60*1000),async(req,res)=>{
+  const token=process.env.X_USER_ACCESS_TOKEN||'';
+  if(!token)return res.status(503).json({error:'X posting is not configured',code:'X_WRITE_NOT_CONFIGURED'});
+  const text=clean(req.body?.text||'');
+  if(!text)return res.status(400).json({error:'Post text is required'});
+  if(text.length>280)return res.status(400).json({error:'Post is too long for this XRPet composer'});
+  try{
+    const r=await fetch('https://api.x.com/2/tweets',{
+      method:'POST',
+      headers:{authorization:'Bearer '+token,'content-type':'application/json','user-agent':'XRPetSI/1.0'},
+      body:JSON.stringify({text})
+    });
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(d?.detail||d?.title||d?.errors?.[0]?.message||('X API '+r.status));
+    const id=d?.data?.id;
+    res.json({ok:true,id,text:d?.data?.text||text,url:id?'https://x.com/i/web/status/'+id:null});
+  }catch(e){res.status(502).json({error:'X post failed',detail:e.message})}
 });
 
 app.get('/api/updates', async (_req, res) => {
@@ -584,8 +688,8 @@ app.get('/api/self-test', (_req, res) => {
 });
 
 app.get('/api/health', (_req, res) => res.json({
-  ok:true, product:'XRPet SI Companion', version:'5.5.0',
-  capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch','gemwallet','xaman-hook','web-push','capacitor-mobile','external-si-hook','interactive-webgl-companion','signal-589-community-layer','equipment-matrix','full-audio-engine','room-environments','rigged-glb-roster','glass-studio-ui','orbit-camera','ssao','bloom','adaptive-render-quality','ripple-xrp-living-archive','auto-updating-history','ripplet-single-companion','nft-companion-override','persistent-ripplet','in-app-companion-workspaces','audio-default-on','isolated-primary-views','one-minute-live-refresh','simplified-ripplet-page','ripplet-life-system','bounded-companion-habitat','live-xrpl-transactions','sidebar-history-routing','global-xrp-ticker','cinematic-ripple-launch','global-ripplet-ecosystem','data-driven-companion-life','bounded-roaming-companion','ripplet-primary-tab','varied-live-reactions','visitor-counter','clean-home','clean-xrpl-live','expressive-ripplet-limbs','life-reaction-sounds','visible-ripplet-feet','free-roam-companion','live-reaction-overlays','spontaneous-companion-actions','xrpet-custom-cursor','ripplet-walk-cycle','autonomous-companion-mind','si-behavior-decisions','xrp-market-history','live-market-chart','ripplet-2-runtime','global-eye-tracking','organic-companion-anatomy','xrpet-games','ledger-rush','xrp-flow-game','consensus-80-game','ripplet-3-runtime','superellipsoid-shell-geometry','unified-head-rig','randomized-natural-blink','transparent-direct-alpha-render','high-detail-micro-hardware','validated-mainnet-transaction-feed','xrpl-source-failover','live-bid-ask-spread','24h-market-detail','viewport-layout-guard','physical-motor-cortex','run-gait','jump-arc','climb-cycle','reach-grab-carry','crouch-balance','autonomous-physical-motion','viewport-contained-scroll','grounded-free-roam','no-ground-ring','advanced-arcade-difficulty','arcade-combos-and-hazards','ripplet-v6-skinned-rig','native-animation-library','native-emote-library'],
+  ok:true, product:'XRPet SI Companion', version:'5.5.1',
+  capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch','gemwallet','xaman-hook','web-push','capacitor-mobile','external-si-hook','interactive-webgl-companion','signal-589-community-layer','equipment-matrix','full-audio-engine','room-environments','rigged-glb-roster','glass-studio-ui','orbit-camera','ssao','bloom','adaptive-render-quality','ripple-xrp-living-archive','auto-updating-history','ripplet-single-companion','nft-companion-override','persistent-ripplet','in-app-companion-workspaces','audio-default-on','isolated-primary-views','one-minute-live-refresh','simplified-ripplet-page','ripplet-life-system','bounded-companion-habitat','live-xrpl-transactions','sidebar-history-routing','global-xrp-ticker','cinematic-ripple-launch','global-ripplet-ecosystem','data-driven-companion-life','bounded-roaming-companion','ripplet-primary-tab','varied-live-reactions','visitor-counter','clean-home','clean-xrpl-live','expressive-ripplet-limbs','life-reaction-sounds','visible-ripplet-feet','free-roam-companion','live-reaction-overlays','spontaneous-companion-actions','xrpet-custom-cursor','ripplet-walk-cycle','autonomous-companion-mind','si-behavior-decisions','xrp-market-history','live-market-chart','ripplet-2-runtime','global-eye-tracking','organic-companion-anatomy','xrpet-games','ledger-rush','xrp-flow-game','consensus-80-game','ripplet-3-runtime','superellipsoid-shell-geometry','unified-head-rig','randomized-natural-blink','transparent-direct-alpha-render','high-detail-micro-hardware','validated-mainnet-transaction-feed','xrpl-source-failover','live-bid-ask-spread','24h-market-detail','viewport-layout-guard','physical-motor-cortex','run-gait','jump-arc','climb-cycle','reach-grab-carry','crouch-balance','autonomous-physical-motion','viewport-contained-scroll','grounded-free-roam','no-ground-ring','advanced-arcade-difficulty','arcade-combos-and-hazards','music-waveform','x-api-posting','xrpl-http-transaction-fallback','ecosystem-last-good-cache','ecosystem-retry-fallback','ripplet-v6-skinned-rig','native-animation-library','native-emote-library'],
   integrations:{ xaman:Boolean(process.env.XAMAN_API_KEY), push:Boolean(VAPID_PUBLIC_KEY&&VAPID_PRIVATE_KEY), si:Boolean(process.env.SI_PROVIDER_KEY) }
 }));
 
@@ -604,7 +708,7 @@ setInterval(async () => {
 }, 10 * 60 * 1000);
 
 app.listen(PORT, () => {
-  console.log(`XRPet // Signal 589 v5.4 running on http://localhost:${PORT}`);
+  console.log(`XRPet // Signal 589 v5.5.1 running on http://localhost:${PORT}`);
   console.log('Integration readiness:', {
     xaman:Boolean(process.env.XAMAN_API_KEY),
     push:Boolean(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY),

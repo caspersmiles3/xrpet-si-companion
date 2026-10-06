@@ -4,7 +4,7 @@
   const grid=q('#ecosystemTokenGrid');
   if(!grid)return;
 
-  const PAGE=48;
+  const PAGE=24;
   let offset=0,count=0,search='',sort='holders',trust='0,1,2,3';
   const nftEvents=[];
 
@@ -71,8 +71,9 @@
       const r=await fetch('/api/ecosystem/stats',{cache:'no-store'}),d=await r.json();
       const total=d.total_tokens??d.tokens??d.token_count;
       const nfts=d.total_nfts??d.nfts??d.nft_count;
-      if(total!=null)q('#ecosystemAssetCount').textContent=number(total)+' assets indexed';
-      if(nfts!=null)q('#ecosystemNftCount').textContent=number(nfts)+' NFTs indexed';
+      if(total!=null)q('#ecosystemAssetCount').textContent=number(total)+' assets indexed'+(d.stale?' · cached':'');
+      else if(d.degraded&&d.ledger_index)q('#ecosystemAssetCount').textContent='XRPL ledger '+number(d.ledger_index)+' live';
+      if(nfts!=null)q('#ecosystemNftCount').textContent=number(nfts)+' NFTs indexed'+(d.stale?' · cached':'');
     }catch{}
   }
 
@@ -88,31 +89,63 @@
       grid.innerHTML=tokens.length?tokens.map(renderToken).join(''):'<p class="muted">No matching XRPL assets found.</p>';
       const page=Math.floor(offset/PAGE)+1,pages=Math.max(1,Math.ceil(count/PAGE));
       q('#ecosystemPage').textContent='Page '+page+' of '+pages;
-      q('#ecosystemShowing').textContent=tokens.length+' of '+number(count);
+      q('#ecosystemShowing').textContent=tokens.length+' of '+number(count)+(d.stale?' · cached':d.cached?' · cached':'');
       q('#ecosystemPrev').disabled=offset<=0;
       q('#ecosystemNext').disabled=offset+PAGE>=count;
     }catch(e){
-      grid.innerHTML='<p class="muted">The XRPL ecosystem directory is temporarily unavailable. Live ledger data is still running.</p>';
+      grid.innerHTML='<div class="ecosystem-retry"><p class="muted">XRPL Meta is not responding right now. XRPet will keep retrying, and validated XRPL live data remains available.</p><button id="ecosystemRetryNow" type="button" class="secondary">Retry directory now</button></div>';
+      q('#ecosystemShowing').textContent='Retrying directory';
+      q('#ecosystemRetryNow')?.addEventListener('click',loadTokens,{once:true});
+      setTimeout(()=>{if(grid.querySelector('#ecosystemRetryNow'))loadTokens()},12000);
     }
   }
 
   async function loadX(){
     const box=q('#ecosystemXFeed'),badge=q('#ecosystemXBadge'),status=q('#ecosystemSocialStatus');
     try{
-      const r=await fetch('/api/ecosystem/x-feed',{cache:'no-store'}),d=await r.json();
+      const [feedRes,statusRes]=await Promise.all([
+        fetch('/api/ecosystem/x-feed',{cache:'no-store'}),
+        fetch('/api/x/status',{cache:'no-store'})
+      ]);
+      const d=await feedRes.json(),xs=await statusRes.json();
+      const write=q('#xWriteStatus'),button=q('#xPostButton');
+      if(write)write.textContent=xs.writeEnabled?'X WRITE CONNECTED':'X WRITE NOT CONFIGURED';
+      if(button)button.disabled=!xs.writeEnabled;
       if(!d.enabled){
-        badge.textContent='METADATA LINKS';
-        status.textContent='Metadata links';
-        box.innerHTML='<p class="muted">Live X posts are ready to connect. Until an X API source is configured, XRPet shows each project’s published X/social link directly on its asset card.</p>';
+        badge.textContent='X NOT CONNECTED';status.textContent='Metadata links';
+        box.innerHTML='<p class="muted">Add X_BEARER_TOKEN on the server to load live XRPL/XRP posts. Project-published X/social links remain available on asset cards.</p>';
         return;
       }
       badge.textContent='X LIVE';status.textContent='X feed connected';
       const items=d.items||[];
       box.innerHTML=items.length?items.map(x=>'<article class="ecosystem-x-item"><span>@'+esc(x.username||x.author)+'</span><p>'+esc(x.text)+'</p><a href="'+esc(x.url)+'" target="_blank" rel="noopener">Open on X ↗</a></article>').join(''):'<p class="muted">No recent posts matched the configured XRPL X feed.</p>';
     }catch{
-      badge.textContent='X RETRYING';box.innerHTML='<p class="muted">X feed is temporarily unavailable.</p>';
+      badge.textContent='X RETRYING';box.innerHTML='<p class="muted">X feed is temporarily unavailable. XRPet will retry automatically.</p>';
     }
   }
+
+  const xText=q('#xPostText'),xForm=q('#xPostForm'),xResult=q('#xPostResult'),xCount=q('#xPostCount');
+  xText?.addEventListener('input',()=>{if(xCount)xCount.textContent=String(xText.value.length)});
+  xForm?.addEventListener('submit',async e=>{
+    e.preventDefault();
+    const text=(xText?.value||'').trim();if(!text)return;
+    const button=q('#xPostButton');if(button)button.disabled=true;
+    if(xResult)xResult.textContent='Posting to X…';
+    try{
+      const r=await fetch('/api/x/post',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({text})});
+      const d=await r.json();if(!r.ok)throw new Error(d.detail||d.error||'X post failed');
+      if(xResult)xResult.innerHTML='Posted successfully'+(d.url?' · <a href="'+esc(d.url)+'" target="_blank" rel="noopener">Open on X ↗</a>':'');
+      if(xText)xText.value='';if(xCount)xCount.textContent='0';
+      loadX();
+    }catch(err){
+      if(xResult)xResult.textContent=err.message||'X post failed';
+    }finally{
+      try{
+        const r=await fetch('/api/x/status',{cache:'no-store'}),d=await r.json();
+        if(button)button.disabled=!d.writeEnabled;
+      }catch{if(button)button.disabled=false}
+    }
+  });
 
   function renderNftActivity(){
     const box=q('#ecosystemNftActivity');if(!box)return;
