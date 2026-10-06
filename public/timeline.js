@@ -96,7 +96,7 @@
     const root=el('#xrpHistorySection'); if(!root)return;
     try{
       archive=await fetch('/xrp-history.json',{cache:'no-store'}).then(r=>r.json());
-      renderPeople();renderFilters();renderTimeline();
+      renderPeople();renderFilters();setView(window.XRPetHistoryPending||'All');
       const input=el('#xrpHistorySearch');
       input?.addEventListener('input',()=>{query=input.value;renderTimeline()});
       el('#xrpRefreshHistory')?.addEventListener('click',refreshLive);
