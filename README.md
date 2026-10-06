@@ -1,4 +1,4 @@
-# XRPet SI Companion™ — v4.3.0
+# XRPet SI Companion™ — v4.4.0
 
 **Don't watch the Ledger. Live with it.**
 
@@ -8,7 +8,7 @@ XRPet is a lightweight, installable companion built around Ripple, XRP and the X
 
 Render service: https://xrpet-si-companion.onrender.com
 
-## v4.3 capabilities
+## v4.4 capabilities
 
 - Live XRPL ledger + fee signals
 - XRP/USD market snapshot with public-data fallback
@@ -125,3 +125,13 @@ Ripplet reacts to XRPL connection state, wallet activity, XRP market movement, a
 Home now includes a bounded companion habitat with a water fountain, food station, sleep pod, and Signal Friend social area. Ripplet has persistent simulated needs for food, water, rest, and social interaction. A lightweight autonomous behavior engine chooses activities from those needs, can roam between stations, watch the XRP Ledger, sleep, eat, drink, or socialize, and stores its state locally so time away from the app affects the routine.
 
 The live 3D Ripplet layer is mounted inside the habitat instead of roaming over the whole application. Its renderer remains transparent and its movement container is clipped to the main Home habitat, preventing it from entering the sidebar or leaving the interface. Users can toggle roaming or use **Sit & Stay** to pin Ripplet's routine.
+
+
+## v4.4 XRPL Live + history navigation
+
+- Removed the duplicate **Explore the Archive** selector. The left-side **Settlements + History** dropdown is now the sole archive navigator.
+- Selecting Origins / Genesis, Ripple, XRP, XRPL, Legal, Market, Adoption, Acquisitions, or People opens a dedicated view containing only that subject. Overview + Full Timeline retains the complete archive.
+- XRPL Live has been expanded into a larger data workspace with larger market/network cards.
+- Added a live public XRPL transaction stream with transaction type, delivered amount, sender, destination, ledger index, sequence, fee, result/status, flags, destination tag when present, ticket sequence when present, and transaction hash.
+- XRPet never displays or requests XRPL wallet seeds/private keys; those are secret signing credentials and are not part of public ledger transaction data.
+- A compact XRP/USD ticker now stays at the top of every XRPet screen and links back to XRP Live.
