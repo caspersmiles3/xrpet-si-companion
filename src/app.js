@@ -1562,68 +1562,69 @@ function visibleCollisionRects(ignoreTarget=null){
     );
   });
 }
-function surfacePositionIsClear(x,y,ignoreTarget=null){
+function positionInsideMovementBounds(x,y,allowShell=false){
+  const avatar=lifeAvatar?.getBoundingClientRect(),b=rippletMovementBounds(allowShell);
+  const aw=Math.max(52,avatar?.width||52),ah=Math.max(72,avatar?.height||72);
+  return x>=b.left&&y>=b.top&&x+aw<=b.right&&y+ah<=b.bottom;
+}
+function surfacePositionIsClear(x,y,ignoreTarget=null,allowShell=false){
+  if(!positionInsideMovementBounds(x,y,allowShell))return false;
   const a=avatarRectAt(x,y);
   return !visibleCollisionRects(ignoreTarget).some(r=>rectsOverlap(a,r,1));
 }
-function pathIsClear(a,b,ignoreTarget=null){
+function pathIsClear(a,b,ignoreTarget=null,allowShell=false){
   const distance=Math.hypot(b.x-a.x,b.y-a.y);
   const steps=Math.max(1,Math.ceil(distance/12));
   for(let i=1;i<=steps;i++){
     const t=i/steps;
     const x=a.x+(b.x-a.x)*t,y=a.y+(b.y-a.y)*t;
     const allowTarget=i===steps?ignoreTarget:null;
-    if(!surfacePositionIsClear(x,y,allowTarget))return false;
+    if(!surfacePositionIsClear(x,y,allowTarget,allowShell))return false;
   }
   return true;
 }
-function findNearestClearPosition(x,y,ignoreTarget=null){
-  const shell=q('.main-shell'),avatar=lifeAvatar?.getBoundingClientRect();
-  if(!shell)return null;
+function findNearestClearPosition(x,y,ignoreTarget=null,allowShell=false){
+  const avatar=lifeAvatar?.getBoundingClientRect(),b=rippletMovementBounds(allowShell);
   const aw=Math.max(52,avatar?.width||52),ah=Math.max(72,avatar?.height||72);
-  const maxX=Math.max(4,shell.scrollWidth-aw-4),maxY=Math.max(4,shell.scrollHeight-ah-4);
-  const clampPoint=(px,py)=>({x:Math.max(4,Math.min(maxX,px)),y:Math.max(4,Math.min(maxY,py))});
+  const minX=b.left,minY=b.top,maxX=Math.max(minX,b.right-aw),maxY=Math.max(minY,b.bottom-ah);
+  const clampPoint=(px,py)=>({x:Math.max(minX,Math.min(maxX,px)),y:Math.max(minY,Math.min(maxY,py))});
   let p=clampPoint(x,y);
-  if(surfacePositionIsClear(p.x,p.y,ignoreTarget))return p;
+  if(surfacePositionIsClear(p.x,p.y,ignoreTarget,allowShell))return p;
   const dirs=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]];
-  for(let radius=18;radius<=240;radius+=18){
+  for(let radius=14;radius<=260;radius+=14){
     for(const [dx,dy] of dirs){
       p=clampPoint(x+dx*radius,y+dy*radius);
-      if(surfacePositionIsClear(p.x,p.y,ignoreTarget))return p;
+      if(surfacePositionIsClear(p.x,p.y,ignoreTarget,allowShell))return p;
     }
   }
   return null;
 }
-function findClearRoute(start,end,ignoreTarget=null){
-  const shell=q('.main-shell'),avatar=lifeAvatar?.getBoundingClientRect();
-  if(!shell)return null;
+function findClearRoute(start,end,ignoreTarget=null,allowShell=false){
+  const avatar=lifeAvatar?.getBoundingClientRect(),b=rippletMovementBounds(allowShell);
   const aw=Math.max(52,avatar?.width||52),ah=Math.max(72,avatar?.height||72);
-  const maxX=Math.max(4,shell.scrollWidth-aw-4),maxY=Math.max(4,shell.scrollHeight-ah-4);
-  const clampPoint=p=>({x:Math.max(4,Math.min(maxX,p.x)),y:Math.max(4,Math.min(maxY,p.y))});
+  const minX=b.left,minY=b.top,maxX=Math.max(minX,b.right-aw),maxY=Math.max(minY,b.bottom-ah);
+  const clampPoint=p=>({x:Math.max(minX,Math.min(maxX,p.x)),y:Math.max(minY,Math.min(maxY,p.y))});
   const candidates=[];
 
-  // Never plan a long diagonal "flight". Direct routes are only allowed when
-  // they are effectively horizontal or vertical. Other routes use right-angle
-  // segments so Ripplet can walk/run horizontally and climb vertically.
   if(Math.abs(end.x-start.x)<=8||Math.abs(end.y-start.y)<=8)candidates.push([end]);
   candidates.push(
     [{x:start.x,y:end.y},end],
     [{x:end.x,y:start.y},end],
-    [{x:4,y:start.y},{x:4,y:end.y},end],
+    [{x:minX,y:start.y},{x:minX,y:end.y},end],
     [{x:maxX,y:start.y},{x:maxX,y:end.y},end],
-    [{x:start.x,y:4},{x:end.x,y:4},end],
+    [{x:start.x,y:minY},{x:end.x,y:minY},end],
     [{x:start.x,y:maxY},{x:end.x,y:maxY},end]
   );
 
-  const blockers=visibleCollisionRects().sort((a,b)=>{
+  const blockers=visibleCollisionRects().sort((a,bx)=>{
     const ac=Math.hypot((a.left+a.right)*.5-start.x,(a.top+a.bottom)*.5-start.y);
-    const bc=Math.hypot((b.left+b.right)*.5-start.x,(b.top+b.bottom)*.5-start.y);
+    const bc=Math.hypot((bx.left+bx.right)*.5-start.x,(bx.top+bx.bottom)*.5-start.y);
     return ac-bc;
   }).slice(0,40);
 
   for(const r of blockers){
-    const top=Math.max(4,r.top-ah-6),bottom=Math.min(maxY,r.bottom+6);
-    const left=Math.max(4,r.left-aw-6),right=Math.min(maxX,r.right+6);
+    const top=Math.max(minY,r.top-ah-6),bottom=Math.min(maxY,r.bottom+6);
+    const left=Math.max(minX,r.left-aw-6),right=Math.min(maxX,r.right+6);
     candidates.push(
       [{x:start.x,y:top},{x:end.x,y:top},end],
       [{x:start.x,y:bottom},{x:end.x,y:bottom},end],
@@ -1646,7 +1647,7 @@ function findClearRoute(start,end,ignoreTarget=null){
     let from=start,total=0,ok=true;
     for(let i=0;i<route.length;i++){
       const to=route[i],final=i===route.length-1;
-      if(!pathIsClear(from,to,final?ignoreTarget:null)){ok=false;break}
+      if(!pathIsClear(from,to,final?ignoreTarget:null,allowShell)){ok=false;break}
       total+=Math.hypot(to.x-from.x,to.y-from.y);
       from=to;
     }
@@ -1707,20 +1708,21 @@ function currentTerrainCollision(current){
   const a=avatarRectAt(current.x,current.y);
   return visibleCollisionRects().find(r=>rectsOverlap(a,r,1))||null;
 }
-function recoverRippletFromCollision(current,goal,activity,ignoreTarget){
-  const shell=q('.main-shell'),avatar=lifeAvatar?.getBoundingClientRect(),blocker=currentTerrainCollision(current);
-  if(!shell||!avatar||!blocker)return false;
+function recoverRippletFromCollision(current,goal,activity,ignoreTarget,allowShell=false){
+  const avatar=lifeAvatar?.getBoundingClientRect(),blocker=currentTerrainCollision(current),b=rippletMovementBounds(allowShell);
+  if(!avatar||!blocker)return false;
   const aw=Math.max(52,avatar.width||52),ah=Math.max(72,avatar.height||72);
-  const maxX=Math.max(4,shell.scrollWidth-aw-4),maxY=Math.max(4,shell.scrollHeight-ah-4);
+  const minX=b.left,minY=b.top,maxX=Math.max(minX,b.right-aw),maxY=Math.max(minY,b.bottom-ah);
   const candidates=[
-    {x:Math.max(4,Math.min(maxX,current.x)),y:Math.max(4,blocker.top-ah-3)},
-    {x:Math.max(4,blocker.left-aw-3),y:Math.max(4,Math.min(maxY,current.y))},
-    {x:Math.min(maxX,blocker.right+3),y:Math.max(4,Math.min(maxY,current.y))},
-    {x:Math.max(4,Math.min(maxX,current.x)),y:Math.min(maxY,blocker.bottom+3)}
-  ].filter(p=>surfacePositionIsClear(p.x,p.y,blocker.target));
+    {x:Math.max(minX,Math.min(maxX,current.x)),y:Math.max(minY,blocker.top-ah-3)},
+    {x:Math.max(minX,blocker.left-aw-3),y:Math.max(minY,Math.min(maxY,current.y))},
+    {x:Math.min(maxX,blocker.right+3),y:Math.max(minY,Math.min(maxY,current.y))},
+    {x:Math.max(minX,Math.min(maxX,current.x)),y:Math.min(maxY,blocker.bottom+3)}
+  ].filter(p=>surfacePositionIsClear(p.x,p.y,blocker.target,allowShell));
   if(!candidates.length)return false;
-  candidates.sort((a,b)=>Math.hypot(a.x-current.x,a.y-current.y)-Math.hypot(b.x-current.x,b.y-current.y));
+  candidates.sort((a,bx)=>Math.hypot(a.x-current.x,a.y-current.y)-Math.hypot(bx.x-current.x,bx.y-current.y));
   const escape=candidates[0],token=++rippletRouteToken;
+  rippletRouteAllowsShell=allowShell;
   rippletRouteUntil=performance.now()+720;
   window.XRPet2D?.motor?.('climb');
   setRoamPosition(escape.x,escape.y,'climb');
@@ -1735,32 +1737,34 @@ function routeRippletTo(x,y,activity='walk',ignoreTarget=null){
   if(!lifeAvatar||!roamLayer)return false;
   const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar.getBoundingClientRect();
   if(!shell||!sr)return false;
+  const allowShell=['dock','coin-return','page-enter'].includes(activity);
   const current={
     x:ar.left-sr.left+shell.scrollLeft,
     y:ar.top-sr.top+shell.scrollTop
   };
 
-  if(currentTerrainCollision(current)&&recoverRippletFromCollision(current,{x,y},activity,ignoreTarget))return true;
+  if(currentTerrainCollision(current)&&recoverRippletFromCollision(current,{x,y},activity,ignoreTarget,allowShell))return true;
 
   let end={x,y};
-  if(!surfacePositionIsClear(end.x,end.y,ignoreTarget)){
-    const adjusted=findNearestClearPosition(end.x,end.y,ignoreTarget);
-    if(!adjusted)return false;
+  if(!surfacePositionIsClear(end.x,end.y,ignoreTarget,allowShell)){
+    const adjusted=findNearestClearPosition(end.x,end.y,ignoreTarget,allowShell);
+    if(!adjusted){rippletRouteAllowsShell=false;return false}
     end=adjusted;
   }
 
   let route=null;
-  if(activity==='jump'&&canJumpOntoTarget(ignoreTarget,end)&&pathIsClear(current,end,ignoreTarget)){
+  if(activity==='jump'&&canJumpOntoTarget(ignoreTarget,end)&&pathIsClear(current,end,ignoreTarget,allowShell)){
     route=[end];
   }else{
-    route=findClearRoute(current,end,ignoreTarget);
+    route=findClearRoute(current,end,ignoreTarget,allowShell);
   }
-  if(!route)return false;
+  if(!route){rippletRouteAllowsShell=false;return false}
 
   const physicalRoute=expandPhysicalRoute(current,route);
-  if(!physicalRoute.length)return false;
+  if(!physicalRoute.length){rippletRouteAllowsShell=false;return false}
 
   const routeToken=++rippletRouteToken;
+  rippletRouteAllowsShell=allowShell;
   let delay=0,from=current;
   physicalRoute.forEach((point,index)=>{
     const final=index===physicalRoute.length-1;
@@ -1772,9 +1776,11 @@ function routeRippletTo(x,y,activity='walk',ignoreTarget=null){
       window.XRPet2D?.motor?.(stepActivity);
       setRoamPosition(point.x,point.y,stepActivity);
       if(final){
-        const finish=activity==='sit'?'sit':activity==='hang'?'hang':activity==='stand'?'stand':activity==='dock'?'stand':null;
+        const finish=activity==='sit'?'sit':activity==='hang'?'hang':
+          ['stand','dock','coin-return','page-enter'].includes(activity)?'stand':null;
         if(finish)window.XRPet2D?.motor?.(finish);
         rippletRouteUntil=0;
+        rippletRouteAllowsShell=false;
       }
     },delay);
     delay+=stepDelay;
