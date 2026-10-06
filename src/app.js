@@ -1120,6 +1120,50 @@ let rippletRouteToken=0;
 let rippletRouteUntil=0;
 let rippletMusicDancing=false;
 let rippletMusicDanceTimer=0;
+let rippletRouteAllowsShell=false;
+let heldCryptoCoin=null;
+let pendingCryptoCoin=null;
+let cryptoCoinMissionTimer=0;
+let cryptoCoinDeposits=0;
+
+const RIPPLET_CRYPTO_COINS=[
+  {symbol:'XRP',label:'XRP'},
+  {symbol:'XRP',label:'XRP'},
+  {symbol:'XRP',label:'XRP'},
+  {symbol:'BTC',label:'Bitcoin'},
+  {symbol:'ETH',label:'Ethereum'},
+  {symbol:'SOL',label:'Solana'},
+  {symbol:'XLM',label:'Stellar'},
+  {symbol:'HBAR',label:'Hedera'}
+];
+
+function activePageElement(){
+  return q('.primary-view-section.view-active:not([hidden])')||q('.primary-view-section.view-active');
+}
+function shellMovementBounds(){
+  const shell=q('.main-shell');
+  if(!shell)return {left:4,top:4,right:4,bottom:4};
+  return {left:4,top:4,right:Math.max(8,shell.scrollWidth-4),bottom:Math.max(8,shell.scrollHeight-4)};
+}
+function activePageBounds(pad=8){
+  const shell=q('.main-shell'),view=activePageElement();
+  if(!shell||!view)return shellMovementBounds();
+  const sr=shell.getBoundingClientRect(),vr=view.getBoundingClientRect();
+  const left=Math.max(4,vr.left-sr.left+shell.scrollLeft+pad);
+  const top=Math.max(4,vr.top-sr.top+shell.scrollTop+pad);
+  const right=Math.min(shell.scrollWidth-4,vr.right-sr.left+shell.scrollLeft-pad);
+  const bottom=Math.min(shell.scrollHeight-4,vr.bottom-sr.top+shell.scrollTop-pad);
+  if(right-left<70||bottom-top<90)return shellMovementBounds();
+  return {left,top,right,bottom};
+}
+function rippletMovementBounds(allowShell=false){
+  return allowShell?shellMovementBounds():activePageBounds(8);
+}
+function rippletPositionInsideActivePage(x,y){
+  const avatar=lifeAvatar?.getBoundingClientRect(),b=activePageBounds(8);
+  const aw=Math.max(52,avatar?.width||52),ah=Math.max(72,avatar?.height||72);
+  return x>=b.left&&y>=b.top&&x+aw<=b.right&&y+ah<=b.bottom;
+}
 
 function syncRoamBounds(){
   const shell=q('.main-shell');if(!shell||!roamLayer)return;
@@ -1130,19 +1174,24 @@ function syncRoamBounds(){
 }
 function setRoamPosition(x,y,activity='explore'){
   if(!lifeAvatar||!roamLayer)return;
-  const layer=roamLayer.getBoundingClientRect(),avatar=lifeAvatar.getBoundingClientRect();
-  const maxX=Math.max(0,layer.width-avatar.width-10),maxY=Math.max(0,layer.height-avatar.height-10);
-  const px=Math.max(8,Math.min(maxX,x)),py=Math.max(12,Math.min(maxY,y));
+  const avatar=lifeAvatar.getBoundingClientRect();
+  const allowShell=rippletRouteAllowsShell||['dock','coin-return','page-enter'].includes(activity);
+  const b=rippletMovementBounds(allowShell);
+  const minX=b.left,minY=b.top;
+  const maxX=Math.max(minX,b.right-avatar.width),maxY=Math.max(minY,b.bottom-avatar.height);
+  const px=Math.max(minX,Math.min(maxX,x)),py=Math.max(minY,Math.min(maxY,y));
   lifeAvatar.style.transitionDuration=activity==='run'?'.72s':activity==='jump'?'.58s':activity==='climb'?'1s':'1.18s';
   lifeAvatar.style.transform='translate3d('+px+'px,'+py+'px,0)';
   lifeAvatar.dataset.activity=activity;
-  roamX=maxX?px/maxX:.5;roamY=maxY?py/maxY:.5;
+  roamX=maxX>minX?(px-minX)/(maxX-minX):.5;
+  roamY=maxY>minY?(py-minY)/(maxY-minY):.5;
 }
 function cancelRippletRoute(){
   if(!lifeAvatar)return;
   const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar.getBoundingClientRect();
   ++rippletRouteToken;
   rippletRouteUntil=0;
+  rippletRouteAllowsShell=false;
   if(shell&&sr){
     const x=ar.left-sr.left+shell.scrollLeft;
     const y=ar.top-sr.top+shell.scrollTop;
