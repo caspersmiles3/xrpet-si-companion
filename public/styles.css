@@ -134,3 +134,97 @@ footer{text-align:center;color:#445561;font-size:.6rem;padding:26px 0 2px}
   .floating-tag span{display:none}
   .nft-companion-list{grid-template-columns:repeat(2,1fr)}
 }
+
+
+/* XRPet v2.6 full application room themes */
+.section-subcopy{margin:5px 0 0;max-width:720px;color:#738996;font-size:.68rem;line-height:1.5}
+.room-copy b,.cosmetic-card b{
+  display:inline-block;margin-top:8px;padding:3px 6px;border:1px solid currentColor;border-radius:99px;
+  color:var(--cyan);font-size:.46rem;letter-spacing:.12em;font-weight:800
+}
+body,.sidebar,.panel,.flow-section,.detail-card,.top-metrics article,.update,.integration-item,.detailed-room,.cosmetic-card{
+  transition:background .45s ease,border-color .45s ease,box-shadow .45s ease,color .45s ease
+}
+body.room-nexus{
+  --cyan:#4fe6ff;--cyan2:#a5f7ff;--line:#1a2a36;--line2:#274454;
+  background:
+    radial-gradient(circle at 78% 8%,rgba(52,217,255,.12),transparent 28%),
+    linear-gradient(180deg,#05080c,#04070a 76%);
+}
+body.room-nexus .sidebar{background:linear-gradient(180deg,#060b10,#05080b)}
+body.room-nexus .panel,body.room-nexus .flow-section{background:linear-gradient(180deg,rgba(10,17,23,.97),rgba(7,12,17,.99))}
+body.room-nexus .detail-card,body.room-nexus .top-metrics article,body.room-nexus .update,body.room-nexus .integration-item{background:#071017}
+
+body.room-ocean{
+  --cyan:#62e9ff;--cyan2:#cafaff;--line:#163748;--line2:#23627b;
+  background:
+    radial-gradient(circle at 72% -4%,rgba(36,207,240,.22),transparent 30%),
+    radial-gradient(circle at 14% 72%,rgba(17,108,141,.16),transparent 28%),
+    linear-gradient(180deg,#06141d,#06232d 48%,#041116 100%);
+}
+body.room-ocean .sidebar{background:linear-gradient(180deg,rgba(5,28,38,.98),rgba(4,17,23,.99));border-right-color:#164252}
+body.room-ocean .panel,body.room-ocean .flow-section{background:linear-gradient(180deg,rgba(8,35,47,.89),rgba(5,23,31,.95));border-color:#1b4a5d;box-shadow:inset 0 1px 0 #7ff5ff0b}
+body.room-ocean .detail-card,body.room-ocean .top-metrics article,body.room-ocean .update,body.room-ocean .integration-item,body.room-ocean .detailed-room,body.room-ocean .cosmetic-card{background:linear-gradient(160deg,#082632,#061a23);border-color:#184556}
+body.room-ocean .main-shell:before{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-radial-gradient(ellipse at 60% 90%,transparent 0 24px,#6beeff08 26px 27px);opacity:.6;z-index:-1}
+
+body.room-vault{
+  --cyan:#d8b76b;--cyan2:#ffe8a8;--line:#332d20;--line2:#67583a;
+  background:
+    radial-gradient(circle at 75% 8%,rgba(173,137,63,.12),transparent 24%),
+    linear-gradient(180deg,#0c0b09,#080806 55%,#050505);
+}
+body.room-vault .sidebar{background:linear-gradient(180deg,#11100c,#080807);border-right-color:#2b261b}
+body.room-vault .panel,body.room-vault .flow-section{background:linear-gradient(180deg,rgba(20,18,13,.96),rgba(10,10,8,.99));border-color:#362f20;box-shadow:0 16px 60px #0004,inset 0 1px 0 #ffe4a208}
+body.room-vault .detail-card,body.room-vault .top-metrics article,body.room-vault .update,body.room-vault .integration-item,body.room-vault .detailed-room,body.room-vault .cosmetic-card{background:linear-gradient(150deg,#16130d,#0b0b08);border-color:#332b1d}
+body.room-vault .brand-orb,body.room-vault .mini-avatar{filter:sepia(.7) hue-rotate(350deg) saturate(.8)}
+body.room-vault .primary,body.room-vault .inline-form button,body.room-vault .composer button{background:linear-gradient(180deg,#f0d391,#bd9953);border-color:#e4c271;color:#161006}
+
+body.room-aurora{
+  --cyan:#87efff;--cyan2:#e3fbff;--line:#2d3050;--line2:#605c8e;
+  background:
+    radial-gradient(circle at 20% 0%,rgba(76,234,255,.22),transparent 30%),
+    radial-gradient(circle at 82% 12%,rgba(169,124,255,.2),transparent 30%),
+    linear-gradient(180deg,#0b1623,#101326 58%,#070b12);
+}
+body.room-aurora .sidebar{background:linear-gradient(180deg,rgba(11,24,36,.97),rgba(11,10,24,.99));border-right-color:#2f3353}
+body.room-aurora .panel,body.room-aurora .flow-section{background:linear-gradient(145deg,rgba(13,31,45,.86),rgba(18,15,39,.91));border-color:#343957;box-shadow:inset 0 1px 0 #ccfaff0c}
+body.room-aurora .detail-card,body.room-aurora .top-metrics article,body.room-aurora .update,body.room-aurora .integration-item,body.room-aurora .detailed-room,body.room-aurora .cosmetic-card{background:linear-gradient(145deg,#0c1d2a,#151329);border-color:#323751}
+
+body.room-legend{
+  --cyan:#f2cf72;--cyan2:#fff0b7;--line:#352f42;--line2:#6d5b86;
+  background:
+    radial-gradient(circle at 76% 3%,rgba(243,201,96,.17),transparent 26%),
+    radial-gradient(circle at 24% 18%,rgba(118,91,255,.16),transparent 28%),
+    linear-gradient(180deg,#0a0811,#080811 55%,#040508);
+}
+body.room-legend .sidebar{background:linear-gradient(180deg,#100d18,#07070b);border-right-color:#302844}
+body.room-legend .panel,body.room-legend .flow-section{background:linear-gradient(145deg,rgba(19,16,29,.96),rgba(9,9,15,.99));border-color:#3b304d;box-shadow:0 16px 70px #0006,inset 0 1px 0 #ffe6a20b}
+body.room-legend .detail-card,body.room-legend .top-metrics article,body.room-legend .update,body.room-legend .integration-item,body.room-legend .detailed-room,body.room-legend .cosmetic-card{background:linear-gradient(145deg,#14101d,#090a10);border-color:#362d45}
+body.room-legend .primary,body.room-legend .inline-form button,body.room-legend .composer button{background:linear-gradient(180deg,#f3d57f,#caa857);border-color:#f0cf70;color:#160f03}
+
+body.room-ocean .floating-tag,body.room-vault .floating-tag,body.room-aurora .floating-tag,body.room-legend .floating-tag{
+  background:rgba(4,9,13,.46);backdrop-filter:blur(8px);border-color:color-mix(in srgb,var(--cyan) 35%,transparent)
+}
+
+/* richer room cards */
+.detailed-room{min-height:164px}
+.room-visual{height:138px}
+.room-visual i{position:absolute;inset:0;pointer-events:none}
+.nexus-room-visual i{background:linear-gradient(90deg,transparent 45%,#55eaff16 46% 47%,transparent 48%),linear-gradient(180deg,transparent 70%,#5de9ff15)}
+.ocean-room-visual i{background:radial-gradient(ellipse at 50% 88%,#73f1ff28,transparent 45%)}
+.vault-room-visual i{background:linear-gradient(90deg,transparent 20%,#d8b76b12 21% 22%,transparent 23% 77%,#d8b76b12 78% 79%,transparent 80%)}
+.aurora-room-visual i{background:linear-gradient(120deg,#4ff4ff18,transparent 35%,#b487ff1c 64%,transparent)}
+.legend-room-visual i{background:radial-gradient(circle at 30% 70%,#795cff22,transparent 26%)}
+
+/* cosmetic preview silhouettes */
+.cosmetic-model{position:relative;overflow:visible}
+.cosmetic-model:before,.cosmetic-model:after{content:"";position:absolute;top:-15px;width:28px;height:35px;background:inherit;filter:brightness(.86);clip-path:polygon(0 0,100% 34%,62% 100%,5% 73%)}
+.cosmetic-model:before{left:7px;transform:rotate(-13deg)}
+.cosmetic-model:after{right:7px;transform:scaleX(-1) rotate(-13deg)}
+.cosmetic-model i{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;border:2px solid currentColor;color:var(--cyan);box-shadow:0 0 14px currentColor}
+.cosmetic-model.aqua:before,.cosmetic-model.aqua:after{top:4px;width:38px;height:18px;clip-path:polygon(0 34%,100% 0,78% 100%,8% 80%)}
+.cosmetic-model.midnight:before,.cosmetic-model.midnight:after{top:-5px;width:34px;height:24px}
+.cosmetic-model.midnight{box-shadow:inset 9px 9px 20px #ffffff0b,inset -13px -15px 22px #000c,0 12px 26px #000a}
+.cosmetic-model.pearl i{width:54px;height:18px;border-radius:50%;top:7%;box-shadow:0 0 15px #bff8ff}
+.cosmetic-model.solar i{width:34px;height:34px;border-width:4px;color:#ffc65d;box-shadow:0 0 20px #ff9d42}
+.cosmetic-card{min-height:198px}
