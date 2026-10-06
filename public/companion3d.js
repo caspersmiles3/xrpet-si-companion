@@ -816,8 +816,8 @@ function configureSpecies(){
   muzzle.visible=false;
   nose.visible=false;
   ears.forEach(e=>e.visible=false);
-  legs.forEach(e=>e.visible=false);
-  pet.traverse(o=>{ if(o.name==='foot')o.visible=false; });
+  legs.forEach((e,i)=>{e.visible=true;e.scale.set(.58,.54,.58);e.position.set(i===0?-.28:.28,-1.08,.02)});
+  feet.forEach((o,i)=>{o.visible=true;o.scale.set(.72,.28,.9);o.position.set(i===0?-.29:.29,-1.42,.2)});
   shoulders.forEach((o,i)=>{o.scale.set(.62,.72,.52);o.position.set(i===0?-.72:.72,-.18,.08)});
 }
 function configureGender(){
