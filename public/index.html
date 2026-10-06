@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=4.0.0">
+  <link rel="stylesheet" href="/styles.css?v=4.1.0">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
@@ -71,13 +71,13 @@
     </nav>
 
     <details class="settings-wrap customize-wrap" id="customizeDetails">
-      <summary class="settings-trigger customize-trigger"><span>✦</span><b>Companion & Cosmetics</b><i>⌄</i></summary>
+      <summary class="settings-trigger customize-trigger"><span>✦</span><b>Companion & Tools</b><i>⌄</i></summary>
       <div class="settings-menu customize-menu">
         <button type="button" class="menu-action" data-customize-target="companionSection">Ripplet</button>
         <button type="button" class="menu-action" data-customize-target="roomsSection">Rooms</button>
         <button type="button" class="menu-action" data-customize-target="cosmeticsSection">Ripplet Appearance</button>
         <button type="button" class="menu-action" data-customize-target="walletPanel">NFT Companion Override</button>
-        <button type="button" class="menu-action" data-customize-target="chatPanel">Chat with Ripplet</button>
+        <button type="button" class="menu-action" data-customize-target="chatPanel">Ripplet Chat</button>
       </div>
     </details>
 
@@ -127,6 +127,26 @@
         </div>
       </div>
     </header>
+
+    <div id="persistentCompanionLayer" class="persistent-companion-layer" aria-label="Persistent Ripplet companion">
+      <div id="floatingCompanion" class="floating-companion studio-docked" aria-label="Floating interactive XRPet">
+  <div id="nftFloatingCompanion" class="nft-floating-companion hidden" aria-hidden="true">
+    <img id="nftFloatingImage" alt="">
+    <div class="nft-holo-ring"></div>
+  </div>
+  <div id="companion3d" class="companion3d-host" role="application" aria-label="Interactive 3D XRPet companion">
+    <div class="companion3d-loading"><span class="loading-orb"></span><small>INITIALIZING RIPPLET</small></div>
+  </div>
+  <div id="floatingHandle" class="floating-tag">
+    <strong id="floatingPetName">RIPPLET</strong>
+    <span id="floatingModeLabel">Move via this tag · Tap XRPet to show controls</span>
+    <div class="floating-controls">
+      <button id="toggleFloat" type="button">Pin</button>
+      <button id="centerFloat" type="button">Center</button>
+    </div>
+  </div>
+</div>
+    </div>
 
     
 
@@ -290,8 +310,8 @@
 
 
 
-<section id="chatPanel" class="top-chat panel customization-panel" data-customization-panel>
-      <button type="button" class="customization-close" data-customize-close aria-label="Close companion chat">×</button>
+<section id="chatPanel" class="top-chat panel customization-panel in-app-workspace" data-customization-panel>
+      <div class="workspace-nav"><button type="button" class="workspace-back" data-customize-close>← Back to XRP Interface</button><span>CHAT // RIPPLET</span></div>
       <div class="chat-head">
         <div class="chat-identity"><div class="mini-avatar">X</div><div><strong>Chat with <span id="chatPetName">Ripplet</span></strong><small><i></i> Online · grounded SI</small></div></div>
         <span class="truth-badge">TRUTH MODE</span>
@@ -306,7 +326,8 @@
       <form id="chatForm" class="composer"><input id="message" maxlength="500" autocomplete="off" placeholder="Message XRPet…"><button>Send</button></form>
     </section>
 
-<section id="companionSection" class="flow-section customization-panel" data-customization-panel>
+<section id="companionSection" class="flow-section customization-panel in-app-workspace" data-customization-panel>
+      <div class="workspace-nav"><button type="button" class="workspace-back" data-customize-close>← Back to XRP Interface</button><span>COMPANION // RIPPLET</span></div>
       <div class="section-heading">
         <div><span class="eyebrow">OFFICIAL COMPANION // RIPPLET</span><h2>Meet Ripplet—the one official XRPet companion.</h2><p class="section-subcopy">Ripplet combines Ripple-inspired flow with an XRP energy core: one small floating character that watches the ledger, reacts to live signals, and represents XRPet across the entire app.</p></div>
         <span id="personalityChip" class="chip">Guardian</span>
@@ -333,23 +354,10 @@
               <span class="studio-ring sr-two"></span>
               <span class="studio-grid-plane"></span>
             </div>
-            <div id="floatingCompanion" class="floating-companion studio-docked" aria-label="Floating interactive XRPet">
-  <div id="nftFloatingCompanion" class="nft-floating-companion hidden" aria-hidden="true">
-    <img id="nftFloatingImage" alt="">
-    <div class="nft-holo-ring"></div>
-  </div>
-  <div id="companion3d" class="companion3d-host" role="application" aria-label="Interactive 3D XRPet companion">
-    <div class="companion3d-loading"><span class="loading-orb"></span><small>INITIALIZING RIPPLET</small></div>
-  </div>
-  <div id="floatingHandle" class="floating-tag">
-    <strong id="floatingPetName">RIPPLET</strong>
-    <span id="floatingModeLabel">Move via this tag · Tap XRPet to show controls</span>
-    <div class="floating-controls">
-      <button id="toggleFloat" type="button">Pin</button>
-      <button id="centerFloat" type="button">Center</button>
-    </div>
-  </div>
-</div>
+            <div class="studio-companion-placeholder">
+              <strong>Ripplet is active in the main interface.</strong>
+              <small>Use the floating Ripplet companion while adjusting reactions, camera, and appearance.</small>
+            </div>
             <div class="studio-vignette" aria-hidden="true"></div>
           </div>
 
@@ -481,8 +489,8 @@
       </article>
     </section>
 
-    <section id="roomsSection" class="flow-section customization-panel" data-customization-panel>
-      <button type="button" class="customization-close" data-customize-close aria-label="Close rooms">×</button>
+    <section id="roomsSection" class="flow-section customization-panel in-app-workspace" data-customization-panel>
+      <div class="workspace-nav"><button type="button" class="workspace-back" data-customize-close>← Back to XRP Interface</button><span>ROOM ENVIRONMENTS</span></div>
       <div class="section-heading">
         <div><span class="eyebrow">ROOM ENVIRONMENTS</span><h2>Transform the entire XRPet command environment</h2><p class="section-subcopy">Rooms are now full interface themes. The panels, background, glow, atmosphere, and companion lighting all change together.</p></div>
         <span id="unlocksChip" class="chip">3 unlocked</span>
@@ -535,8 +543,8 @@
       </div>
     </section>
 
-    <section id="cosmeticsSection" class="flow-section customization-panel ripplet-appearance-section" data-customization-panel>
-      <button type="button" class="customization-close" data-customize-close aria-label="Close Ripplet appearance">×</button>
+    <section id="cosmeticsSection" class="flow-section customization-panel in-app-workspace ripplet-appearance-section" data-customization-panel>
+      <div class="workspace-nav"><button type="button" class="workspace-back" data-customize-close>← Back to XRP Interface</button><span>RIPPLET APPEARANCE</span></div>
       <div class="section-heading">
         <div><span class="eyebrow">RIPPLET // OFFICIAL APPEARANCE</span><h2>One character. One recognizable identity.</h2><p class="section-subcopy">Ripplet always keeps the official white-silver shell, graphite seams, Ripple-flow side fins, cyan signal light, and XRP core. Personalization is limited to subtle signal accents in the companion studio.</p></div>
         <span class="chip">LOCKED IDENTITY</span>
@@ -550,7 +558,8 @@
       <div class="signal-disclosure"><strong>OFFICIAL MASCOT RULE</strong><p>Appearance controls may add subtle effects, but they never turn Ripplet into another built-in species, gender, character, or mascot.</p></div>
     </section>
 
-    <section id="walletPanel" class="flow-section customization-panel" data-customization-panel>
+    <section id="walletPanel" class="flow-section customization-panel in-app-workspace" data-customization-panel>
+      <div class="workspace-nav"><button type="button" class="workspace-back" data-customize-close>← Back to XRP Interface</button><span>WALLET + NFT OVERRIDE</span></div>
       <div class="section-heading"><div><span class="eyebrow">WALLET</span><h2>Connect or watch an XRPL account</h2></div><span id="walletProvider" class="chip">Manual</span></div>
       <div class="wallet-layout">
         <article class="detail-card">
@@ -577,12 +586,12 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 4.0.0 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 4.1.0 · XRP Ledger companion</footer>
   </main>
 </div>
 
-<script src="/app.js?v=4.0.0"></script>
-<script src="/timeline.js?v=4.0.0"></script>
-<script type="module" src="/companion3d.js?v=4.0.0"></script>
+<script src="/app.js?v=4.1.0"></script>
+<script src="/timeline.js?v=4.1.0"></script>
+<script type="module" src="/companion3d.js?v=4.1.0"></script>
 </body>
 </html>
