@@ -231,6 +231,96 @@ document.addEventListener('click',e=>{
   playSound(b.dataset.room?'room':b.dataset.cosmetic||b.dataset.companion||b.dataset.gender?'cosmetic':'tap');
 });
 
+
+const launchGate=q('#launchGate'),launchCore=q('#launchCore'),launchEnter=q('#launchEnter');
+const launchBar=q('#launchProgressBar'),launchPercent=q('#launchPercent'),launchPhase=q('#launchPhase'),launchStatus=q('#launchStatus');
+let launchProgress=0,launchHolding=false,launchRAF=0,launchOpened=false,launchLast=0;
+
+function setLaunchVisual(p){
+  launchProgress=Math.max(0,Math.min(1,p));
+  launchGate?.style.setProperty('--sync',String(launchProgress));
+  if(launchBar)launchBar.style.width=Math.round(launchProgress*100)+'%';
+  setText('#launchPercent',Math.round(launchProgress*100)+'%');
+
+  launchGate?.classList.toggle('phase-1',launchProgress>=.18);
+  launchGate?.classList.toggle('phase-2',launchProgress>=.42);
+  launchGate?.classList.toggle('phase-3',launchProgress>=.7);
+
+  if(launchProgress<.18){
+    setText('#launchPhase','XRPL LINK STANDBY');
+    if(launchHolding)setText('#launchStatus','Establishing secure ledger link…');
+  }else if(launchProgress<.42){
+    setText('#launchPhase','NODE PATH VERIFIED');
+    setText('#launchStatus','XRPL path confirmed. Synchronizing ledger state…');
+  }else if(launchProgress<.7){
+    setText('#launchPhase','LEDGER SYNC');
+    setText('#launchStatus','Validated network signal acquired. Waking companion core…');
+  }else if(launchProgress<1){
+    setText('#launchPhase','COMPANION WAKE');
+    setText('#launchStatus','Companion identity and room state are coming online…');
+  }
+}
+
+function completeLaunch(fromFallback=false){
+  if(launchOpened)return;
+  launchOpened=true;launchHolding=false;cancelAnimationFrame(launchRAF);
+  setLaunchVisual(1);
+  launchGate?.classList.add('sync-complete');
+  setText('#launchPhase','XRPL LINK READY');
+  setText('#launchStatus',fromFallback?'Opening XRPet…':'Synchronization complete. Welcome to XRPet.');
+  try{if(state.soundEnabled)playSound('success',true)}catch{}
+  setTimeout(()=>{
+    launchGate?.classList.add('launch-complete');
+    document.body.classList.remove('launch-locked');
+    setTimeout(()=>launchGate?.remove(),850);
+    window.XRPet3D?.react?.();
+    window.dispatchEvent(new CustomEvent('xrpet:launch-complete'));
+  },560);
+}
+
+function launchTick(ts){
+  if(!launchHolding||launchOpened)return;
+  if(!launchLast)launchLast=ts;
+  const dt=Math.min(48,ts-launchLast);launchLast=ts;
+  const reduced=matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+  launchProgress+=dt/(reduced?650:1750);
+  setLaunchVisual(launchProgress);
+  if(launchProgress>=1){completeLaunch(false);return}
+  launchRAF=requestAnimationFrame(launchTick);
+}
+
+function beginLaunchHold(e){
+  if(launchOpened)return;
+  e?.preventDefault?.();
+  launchHolding=true;launchLast=0;
+  launchCore?.classList.add('is-holding');
+  try{if(state.soundEnabled)playSound('tap',true)}catch{}
+  cancelAnimationFrame(launchRAF);launchRAF=requestAnimationFrame(launchTick);
+}
+function endLaunchHold(){
+  if(launchOpened)return;
+  launchHolding=false;launchLast=0;launchCore?.classList.remove('is-holding');cancelAnimationFrame(launchRAF);
+  if(launchProgress<1){
+    setText('#launchStatus',launchProgress>.1?'Hold a little longer to complete the ledger sync.':'Press and hold the XRP core to synchronize.');
+  }
+}
+
+launchCore?.addEventListener('pointerdown',beginLaunchHold);
+launchCore?.addEventListener('pointerup',endLaunchHold);
+launchCore?.addEventListener('pointercancel',endLaunchHold);
+launchCore?.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')endLaunchHold()});
+launchCore?.addEventListener('keydown',e=>{if((e.key===' '||e.key==='Enter')&&!launchHolding)beginLaunchHold(e)});
+launchCore?.addEventListener('keyup',e=>{if(e.key===' '||e.key==='Enter')endLaunchHold()});
+launchEnter?.addEventListener('click',()=>completeLaunch(true));
+
+if(launchGate){
+  setLaunchVisual(0);
+  setTimeout(()=>{if(!launchOpened&&launchEnter){launchEnter.hidden=false;setText('#launchStatus','Hold the core to synchronize, or enter XRPet directly.')}},6500);
+}else{
+  document.body.classList.remove('launch-locked');
+}
+
+
 const floatEl=q('#floatingCompanion'),floatHandle=q('#floatingHandle');
 let floatPinned=state.floatingPinned,dragFloat=false,dragDX=0,dragDY=0,floatRAF=0;
 function clampFloat(){
