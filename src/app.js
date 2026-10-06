@@ -1138,6 +1138,23 @@ function setRoamPosition(x,y,activity='explore'){
   lifeAvatar.dataset.activity=activity;
   roamX=maxX?px/maxX:.5;roamY=maxY?py/maxY:.5;
 }
+function cancelRippletRoute(){
+  if(!lifeAvatar)return;
+  const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar.getBoundingClientRect();
+  ++rippletRouteToken;
+  rippletRouteUntil=0;
+  if(shell&&sr){
+    const x=ar.left-sr.left+shell.scrollLeft;
+    const y=ar.top-sr.top+shell.scrollTop;
+    lifeAvatar.style.transitionDuration='0s';
+    lifeAvatar.style.transform='translate3d('+x+'px,'+y+'px,0)';
+    void lifeAvatar.offsetWidth;
+    roamX=shell.scrollWidth?x/Math.max(1,shell.scrollWidth-ar.width):.5;
+    roamY=shell.scrollHeight?y/Math.max(1,shell.scrollHeight-ar.height):.5;
+  }
+}
+function rippletRouteBusy(){return performance.now()<rippletRouteUntil}
+
 function stationPosition(activity){
   const station=q('[data-life-action="'+activity+'"]'),layer=roamLayer?.getBoundingClientRect();
   if(!station||!layer)return null;
@@ -1405,7 +1422,8 @@ function pointerActionFor(hit){
   return {mode:'perch',action:'stand'};
 }
 function followRippletPointer(force=false){
-  if(roamDocked||!lifeAvatar||!roamLayer)return false;
+  if(roamDocked||rippletMusicDancing||!lifeAvatar||!roamLayer)return false;
+  if(rippletRouteBusy())return true;
   if(!rippletPointer.active&&!force)return false;
   const hits=terrainNearPointer();
   if(!hits.length)return false;
@@ -1461,7 +1479,7 @@ function updateRippletPointer(e){
   rippletPointer.active=true;
   rippletPointer.movedAt=Date.now();
   clearTimeout(rippletPointerTimer);
-  rippletPointerTimer=setTimeout(()=>followRippletPointer(),34);
+  rippletPointerTimer=setTimeout(()=>followRippletPointer(),120);
 }
 function rectsOverlap(a,b,pad=0){
   return !(a.right<=b.left+pad||a.left>=b.right-pad||a.bottom<=b.top+pad||a.top>=b.bottom-pad);
@@ -1815,7 +1833,8 @@ function dropPlayProp(){
 }
 function makeInterfaceEcho(){return null;}
 function playWithInterface(force=false){
-  if(roamDocked||!lifeAvatar||!roamLayer)return false;
+  if(roamDocked||rippletMusicDancing||!lifeAvatar||!roamLayer)return false;
+  if(rippletRouteBusy())return false;
   if(!force&&Date.now()-lastInterfacePlayAt<1900)return false;
 
   const words=visibleTextTerrain();
@@ -1837,77 +1856,72 @@ function playWithInterface(force=false){
   let mode='perch',action='walk';
 
   if(textual){
-    if(roll<.20){mode='hang';action='hang'}
-    else if(roll<.52){mode='climb';action='climb'}
-    else if(roll<.76){mode='hop';action='jump'}
+    const hop=interfaceTargetPosition(target,'hop');
+    const shortHop=hop&&canJumpOntoTarget(target,hop);
+    if(roll<.18){mode='hang';action='hang'}
+    else if(roll<.58){mode='climb';action='climb'}
+    else if(roll<.70&&shortHop){mode='hop';action='jump'}
     else{mode='perch';action='walk'}
   }else{
     const hop=interfaceTargetPosition(target,'hop');
-    if(roll<.58&&hop&&canJumpOntoTarget(target,hop)){mode='hop';action='jump'}
+    if(roll<.28&&hop&&canJumpOntoTarget(target,hop)){mode='hop';action='jump'}
     else{mode='side';action='walk'}
   }
 
-  const p=interfaceTargetPosition(target,mode);if(!p)return false;
+  let p=interfaceTargetPosition(target,mode);if(!p)return false;
+  if(action==='jump'&&!canJumpOntoTarget(target,p)){
+    action='climb';mode='climb';
+    p=interfaceTargetPosition(target,mode);
+    if(!p)return false;
+  }
   markInterfaceTarget(target,true);
 
   if(action==='hang'){
-    window.XRPet3D?.motor?.('hang');
     if(!routeRippletTo(p.x,p.y,'hang',target)){markInterfaceTarget(target,false);return false}
     setText('#mindAction',terrainKind==='line'?'Hanging from a line':'Hanging from letters');
-    setText('#mindThought','I grabbed the edge without crossing through it.');
+    setText('#mindThought','I reached the edge without crossing through it.');
     setTimeout(()=>{
-      if(roamDocked)return;
+      if(roamDocked||rippletMusicDancing||rippletRouteBusy())return;
       const up=interfaceTargetPosition(target,'perch');
-      if(up){
-        window.XRPet3D?.motor?.('climb');
-        routeRippletTo(up.x,up.y,'climb',target);
-      }
-    },1050);
+      if(up)routeRippletTo(up.x,up.y,'climb',target);
+    },1200);
   }else if(action==='jump'){
-    if(terrainKind==='box'&&!canJumpOntoTarget(target,p)){
-      markInterfaceTarget(target,false);
-      return false;
-    }
-    window.XRPet3D?.motor?.('jump');
     if(!routeRippletTo(p.x,p.y,'jump',target)){markInterfaceTarget(target,false);return false}
-    setText('#mindAction',terrainKind==='box'?'Jumping onto a box':'Jumping onto page terrain');
-    setText('#mindThought',terrainKind==='box'
-      ? 'That surface is inside my jump-height limit.'
-      : 'I am using the words and lines as little platforms.');
+    setText('#mindAction','Short hop');
+    setText('#mindThought','I only jump when the platform is close enough to reach physically.');
   }else if(action==='climb'){
-    window.XRPet3D?.motor?.('climb');
     if(!routeRippletTo(p.x,p.y,'climb',target)){markInterfaceTarget(target,false);return false}
-    setText('#mindAction',terrainKind==='line'?'Climbing a line':'Climbing letters and words');
-    setText('#mindThought','I am climbing along the outside edge instead of passing through it.');
+    setText('#mindAction',terrainKind==='line'?'Climbing a line':'Climbing page terrain');
+    setText('#mindThought','I am climbing the outside edge instead of passing through it.');
   }else{
-    window.XRPet3D?.motor?.('walk');
     if(!routeRippletTo(p.x,p.y,'stand',target)){markInterfaceTarget(target,false);return false}
-    setText('#mindAction',terrainKind==='box'?'Stopped beside a box':terrainKind==='line'?'Standing on a line':'Walking on words');
+    setText('#mindAction',terrainKind==='box'?'Walking around a box':terrainKind==='line'?'Standing on a line':'Walking to a word');
     setText('#mindThought',terrainKind==='box'
-      ? 'That box is too high to jump, so I am going around it.'
-      : 'The page itself is solid terrain now.');
+      ? 'The box is solid, so I am taking a grounded route around it.'
+      : 'Words and lines are solid platforms, not empty space.');
   }
 
   setTimeout(()=>{
     markInterfaceTarget(target,false);
-    if(!roamDocked&&Math.random()<.42){
+    if(!roamDocked&&!rippletMusicDancing&&!rippletRouteBusy()&&Math.random()<.42){
       const emotes=['wave','thinking','happy','salute'];
       window.XRPet3D?.perform?.(emotes[Math.floor(Math.random()*emotes.length)]);
     }
-  },1750);
+  },2200);
 
   return true;
 }
 function playWithObject(){
-  if(roamDocked)return false;
+  if(roamDocked||rippletMusicDancing||rippletRouteBusy())return false;
   const prop=nearestFreePlayProp();if(!prop)return false;
   const layer=roamLayer?.getBoundingClientRect(),r=prop.getBoundingClientRect(),avatar=lifeAvatar?.getBoundingClientRect();
   if(!layer||!avatar)return false;
   const x=r.left-layer.left-avatar.width*.55,y=r.top-layer.top-avatar.height*.55;
-  window.XRPet3D?.motor?.('walk');setRoamPosition(x,y,'walk');
-  setText('#mindAction','Playing');
-  setText('#mindThought','I spotted '+(prop.dataset.propLabel||'an object')+' and decided to pick it up.');
-  setTimeout(()=>carryProp(prop),1300);
+  if(!routeRippletTo(x,y,'walk'))return false;
+  setText('#mindAction','Walking to object');
+  setText('#mindThought','I spotted '+(prop.dataset.propLabel||'an object')+' and I am walking to it.');
+  const wait=Math.max(900,rippletRouteUntil-performance.now()+120);
+  setTimeout(()=>{if(!rippletMusicDancing&&!rippletRouteBusy())carryProp(prop)},wait);
   return true;
 }
 window.XRPetPlayground={
