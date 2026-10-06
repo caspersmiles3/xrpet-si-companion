@@ -21,7 +21,15 @@ const state={
   audioDefaultsV41:true,
   soundEnabled:enableAudioDefaults?true:saved.soundEnabled!==false,soundVolume:Number.isFinite(saved.soundVolume)?saved.soundVolume:35,
   interfaceSound:enableAudioDefaults?true:saved.interfaceSound!==false,ambientSound:enableAudioDefaults?true:saved.ambientSound!==false,ledgerSound:enableAudioDefaults?true:saved.ledgerSound!==false,
-  signalLoreIndex:Number.isFinite(saved.signalLoreIndex)?saved.signalLoreIndex:0
+  signalLoreIndex:Number.isFinite(saved.signalLoreIndex)?saved.signalLoreIndex:0,
+  lifeFood:Number.isFinite(saved.lifeFood)?saved.lifeFood:88,
+  lifeWater:Number.isFinite(saved.lifeWater)?saved.lifeWater:90,
+  lifeRest:Number.isFinite(saved.lifeRest)?saved.lifeRest:86,
+  lifeSocial:Number.isFinite(saved.lifeSocial)?saved.lifeSocial:82,
+  lifeActivity:saved.lifeActivity||'explore',
+  lifeRoaming:saved.lifeRoaming!==false,
+  lifePinned:saved.lifePinned===true,
+  lifeLastTick:Number(saved.lifeLastTick)||Date.now()
 };
 const FORMS=[['Drop',0],['Ripple',50],['Wave',150],['Surge',350],['Nexus',700],['Titan',1200],['Legend',2000]];
 const ROOM_NAMES={nexus:'Neon Horizon',ocean:'Ripple Sanctuary',vault:'Ledger Vault',aurora:'Sky Garden',legend:'Orbital Station',genesis:'Genesis Chamber',city:'Settlement City',quantum:'Quantum Ledger Lab',desert:'Digital Oasis',arctic:'Arctic Node'};
@@ -88,6 +96,90 @@ function renderSignal589(){
   }
 }
 
+
+const LIFE_STATIONS={
+  drink:{x:12,y:20,label:'Drinking from the fountain',thought:'I was thirsty. A quick drink, then I can get back to exploring.'},
+  eat:{x:76,y:18,label:'Eating',thought:'Food first. Ledger watching is easier with a charged core.'},
+  sleep:{x:14,y:70,label:'Sleeping',thought:'Resting for a while. I will check the Ledger when I wake up.'},
+  socialize:{x:77,y:70,label:'Visiting my signal friend',thought:'Spending time with my signal friend keeps my social core healthy.'},
+  explore:{x:48,y:48,label:'Exploring Home',thought:'I am roaming around and deciding what to do next.'},
+  ledger:{x:51,y:28,label:'Watching the XRP Ledger',thought:'I am watching the live ledger and waiting for something interesting.'},
+  sit:{x:52,y:73,label:'Sitting & staying',thought:'I will stay right here until you let me roam again.'}
+};
+function clampNeed(v){return Math.max(0,Math.min(100,Number(v)||0))}
+function applyOfflineLifeDecay(){
+  const now=Date.now();
+  const elapsed=Math.min(12*60*60*1000,Math.max(0,now-state.lifeLastTick));
+  const minutes=elapsed/60000;
+  state.lifeFood=clampNeed(state.lifeFood-minutes*.11);
+  state.lifeWater=clampNeed(state.lifeWater-minutes*.16);
+  state.lifeRest=clampNeed(state.lifeRest-minutes*.08);
+  state.lifeSocial=clampNeed(state.lifeSocial-minutes*.06);
+  state.lifeLastTick=now;
+}
+function chooseLifeActivity(){
+  if(state.lifePinned)return 'sit';
+  const needs=[
+    ['drink',state.lifeWater],
+    ['eat',state.lifeFood],
+    ['sleep',state.lifeRest],
+    ['socialize',state.lifeSocial]
+  ].sort((x,y)=>x[1]-y[1]);
+  if(needs[0][1]<42)return needs[0][0];
+  if(!state.lifeRoaming)return 'ledger';
+  const roll=Math.random();
+  if(roll<.28)return 'ledger';
+  if(roll<.56)return 'explore';
+  if(roll<.67)return 'drink';
+  if(roll<.78)return 'eat';
+  if(roll<.89)return 'socialize';
+  return 'sleep';
+}
+function performLifeActivity(activity,manual=false){
+  const cfg=LIFE_STATIONS[activity]||LIFE_STATIONS.explore;
+  state.lifeActivity=activity;
+  const avatar=q('#lifeAvatar');
+  if(avatar){
+    avatar.style.setProperty('--life-x',cfg.x+'%');
+    avatar.style.setProperty('--life-y',cfg.y+'%');
+    avatar.dataset.activity=activity;
+  }
+  setText('#lifeMode',cfg.label);
+  setText('#lifeThought',cfg.thought);
+  if(activity==='drink')state.lifeWater=clampNeed(state.lifeWater+(manual?28:18));
+  if(activity==='eat')state.lifeFood=clampNeed(state.lifeFood+(manual?28:18));
+  if(activity==='sleep')state.lifeRest=clampNeed(state.lifeRest+(manual?24:15));
+  if(activity==='socialize')state.lifeSocial=clampNeed(state.lifeSocial+(manual?28:18));
+  const reaction=activity==='sleep'?'sleep':activity==='ledger'?'scan':activity==='socialize'?'greet':'happy';
+  window.XRPet3D?.perform?.(reaction);
+  renderLife();
+  persist();
+}
+function renderLife(){
+  const values={Food:state.lifeFood,Water:state.lifeWater,Rest:state.lifeRest,Social:state.lifeSocial};
+  for(const [k,v] of Object.entries(values)){
+    const n=Math.round(clampNeed(v));
+    setText('#life'+k,n+'%');
+    const bar=q('#life'+k+'Bar');if(bar)bar.style.width=n+'%';
+  }
+  const cfg=LIFE_STATIONS[state.lifePinned?'sit':state.lifeActivity]||LIFE_STATIONS.explore;
+  setText('#lifeMode',cfg.label);
+  setText('#lifeThought',cfg.thought);
+  const roam=q('#lifeRoamToggle');if(roam)roam.textContent='Roam: '+(state.lifeRoaming&&!state.lifePinned?'On':'Off');
+  const stay=q('#lifeSitStay');if(stay)stay.textContent=state.lifePinned?'Unpin & Roam':'Sit & Stay';
+}
+function lifeTick(){
+  state.lifeFood=clampNeed(state.lifeFood-.18);
+  state.lifeWater=clampNeed(state.lifeWater-.25);
+  state.lifeRest=clampNeed(state.lifeRest-(state.lifeActivity==='sleep'?-.52:.12));
+  state.lifeSocial=clampNeed(state.lifeSocial-(state.lifeActivity==='socialize'?-.48:.09));
+  state.lifeLastTick=Date.now();
+  if(state.lifeActivity==='drink')state.lifeWater=clampNeed(state.lifeWater+.8);
+  if(state.lifeActivity==='eat')state.lifeFood=clampNeed(state.lifeFood+.8);
+  if(!state.lifePinned&&Math.random()<.36)performLifeActivity(chooseLifeActivity());
+  else {renderLife();persist();}
+}
+applyOfflineLifeDecay();
 function render(){
   const [name,min]=form(); const i=FORMS.findIndex(x=>x[0]===name); const next=FORMS[Math.min(i+1,FORMS.length-1)];
   setText('#petName',state.petName);setText('#chatPetName',state.petName);setText('#topPetName',state.petName);setText('#floatingPetName',state.nftCompanion?.name||state.petName);setText('#studioCompanionName',state.nftCompanion?.name||state.petName);setText('#studioQualityBadge',(state.graphicsQuality||'auto').toUpperCase()+' QUALITY');setText('#evolution',name.toUpperCase());
@@ -120,7 +212,7 @@ qa('.room-choice').forEach(b=>{const rank=FORMS.findIndex(x=>x[0]===name),need=0
   qa('[data-head-gear]').forEach(b=>b.classList.toggle('active',b.dataset.headGear===state.headGear));
   qa('[data-trail-style]').forEach(b=>b.classList.toggle('active',b.dataset.trailStyle===state.trailStyle));
   window.dispatchEvent(new CustomEvent('xrpet:appearance',{detail:{room:state.room,cosmetic:state.cosmetic,companionKind:state.companionKind,companionGender:state.companionGender,eyeStyle:state.eyeStyle,coreStyle:state.coreStyle,headGear:state.headGear,trailStyle:state.trailStyle,mood:state.networkMood||'calm'}}));
-  renderMemory();renderSignal589();
+  renderMemory();renderSignal589();renderLife();
 }
 function renderMemory(){const box=q('#memoryList');if(!box)return;box.innerHTML=state.memories.length?state.memories.map((m,i)=>'<span class="memory-chip">'+esc(m)+' <button type="button" data-rm="'+i+'">×</button></span>').join(''):'<span class="muted">No saved preferences.</span>';qa('[data-rm]').forEach(b=>b.addEventListener('click',()=>{state.memories.splice(Number(b.dataset.rm),1);persist();renderMemory()}))}
 function addXp(n){state.xp+=n;persist();render()}
@@ -621,6 +713,24 @@ floatEl?.addEventListener('focusout',()=>setTimeout(()=>{if(!floatEl.matches(':f
 revealFloatControls();
 
 
+
+qa('[data-life-action]').forEach(b=>b.addEventListener('click',()=>{
+  if(state.lifePinned)state.lifePinned=false;
+  state.lifeRoaming=true;
+  performLifeActivity(b.dataset.lifeAction,true);
+  playSound('pet');
+}));
+bind('#lifeRoamToggle','click',()=>{
+  state.lifePinned=false;
+  state.lifeRoaming=!state.lifeRoaming;
+  performLifeActivity(state.lifeRoaming?'explore':'ledger',true);
+});
+bind('#lifeSitStay','click',()=>{
+  state.lifePinned=!state.lifePinned;
+  state.lifeRoaming=!state.lifePinned;
+  performLifeActivity(state.lifePinned?'sit':'explore',true);
+});
+setInterval(lifeTick,15000);
 dailyVisit();render();connectLedger();loadMarket();loadUpdates();integrationCheck();setInterval(loadMarket,60000);setInterval(loadUpdates,60000);setInterval(integrationCheck,60000);
 
 if('serviceWorker' in navigator){
