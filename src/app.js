@@ -226,13 +226,38 @@ async function ask(message){
 }
 async function loadMarket(){try{const r=await fetch('/api/market',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error();state.xrpPrice=Number(d.price);state.xrpChange24h=Number(d.change24h);renderSignal589();const livePrice=Number.isFinite(state.xrpPrice)?'$'+state.xrpPrice.toFixed(4):'Unavailable';const liveChange=Number.isFinite(state.xrpChange24h)?(state.xrpChange24h>=0?'+':'')+state.xrpChange24h.toFixed(2)+'% · 24h':'24h unavailable';setText('#xrpPrice',livePrice);setText('#xrpChange',liveChange);setText('#globalXrpPrice',livePrice);setText('#globalXrpChange',liveChange);if(state.marketMood&&Number.isFinite(state.xrpChange24h)&&Math.abs(state.xrpChange24h)>=5)mood(state.xrpChange24h>0?'Excited':'Watchful','XRP moved '+Math.abs(state.xrpChange24h).toFixed(2)+'% over 24 hours. Movement is not a prediction.',state.xrpChange24h>0?'energized':'alert')}catch{setText('#xrpPrice','Unavailable');setText('#xrpChange','Market feed offline');setText('#globalXrpPrice','Unavailable');setText('#globalXrpChange','Market feed offline');renderSignal589()}}
 async function loadUpdates(){const box=q('#updates');if(box)box.innerHTML='<p class="muted">Checking official Ripple and XRPL sources…</p>';try{const r=await fetch('/api/updates',{cache:'no-store'});const d=await r.json();if(!r.ok||!Array.isArray(d.items)||!d.items.length)throw new Error();box.innerHTML=d.items.slice(0,9).map(x=>'<div class="update"><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title)+'</a><small>'+esc(x.source)+' · '+esc(x.label||'CONFIRMED')+'</small></div>').join('')}catch{if(box)box.innerHTML='<p class="muted">Official update feed is temporarily unavailable.</p>'}}
+const liveTransactions=[];
+const seenLiveTx=new Set();
+function shortAccount(v){if(!v)return '—';const s=String(v);return s.length>18?s.slice(0,9)+'…'+s.slice(-6):s}
+function formatLedgerAmount(amount){
+  if(amount==null)return '—';
+  if(typeof amount==='string'&&!Number.isNaN(Number(amount)))return (Number(amount)/1000000).toLocaleString(undefined,{maximumFractionDigits:6})+' XRP';
+  if(typeof amount==='object'&&amount.value!=null)return String(amount.value)+' '+String(amount.currency||'issued');
+  return String(amount);
+}
+function extractDeliveredAmount(m,tx){const meta=m.meta||m.metaData||{};return meta.delivered_amount??meta.DeliveredAmount??tx.DeliverMax??tx.Amount??null}
+function normalizeLiveTransaction(m){
+  const tx=m.transaction||m.tx_json||m.tx||{};
+  if(!tx||typeof tx!=='object')return null;
+  const hash=tx.hash||m.hash||m.transaction_hash||'';
+  if(hash&&seenLiveTx.has(hash))return null;
+  if(hash){seenLiveTx.add(hash);if(seenLiveTx.size>300){const first=seenLiveTx.values().next().value;seenLiveTx.delete(first)}}
+  const meta=m.meta||m.metaData||{};
+  return {hash,type:tx.TransactionType||'Transaction',account:tx.Account||'',destination:tx.Destination||'',destinationTag:tx.DestinationTag,amount:formatLedgerAmount(extractDeliveredAmount(m,tx)),fee:tx.Fee!=null?(Number(tx.Fee)/1000000).toFixed(6)+' XRP':'—',sequence:tx.Sequence??'—',ledger:m.ledger_index??tx.ledger_index??state.ledgerIndex??'—',status:meta.TransactionResult||m.engine_result||(m.validated===false?'Pending':'Validated'),validated:m.validated!==false,flags:tx.Flags??0,ticket:tx.TicketSequence??null};
+}
+function renderLiveTransactions(){
+  const box=q('#liveTransactions');if(!box)return;
+  if(!liveTransactions.length){box.innerHTML='<p class="muted">Waiting for validated XRPL transactions…</p>';return}
+  box.innerHTML=liveTransactions.map((x,i)=>'<details class="live-tx-card" '+(i===0?'open':'')+'><summary><span><b>'+esc(x.type)+'</b><strong>'+esc(x.amount)+'</strong></span><span><b>'+esc(shortAccount(x.account))+'</b><small>→ '+esc(shortAccount(x.destination))+'</small></span><span><b>#'+esc(x.ledger)+'</b><small>Sequence '+esc(x.sequence)+'</small></span><span><b>'+esc(x.fee)+'</b><small class="'+(String(x.status).includes('tesSUCCESS')?'ok':'')+'">'+esc(x.status)+'</small></span></summary><div class="live-tx-details"><p><span>Sender</span><code>'+esc(x.account||'—')+'</code></p><p><span>Destination</span><code>'+esc(x.destination||'—')+'</code></p>'+(x.destinationTag!=null?'<p><span>Destination Tag</span><code>'+esc(x.destinationTag)+'</code></p>':'')+'<p><span>Ledger</span><code>'+esc(x.ledger)+'</code></p><p><span>Sequence</span><code>'+esc(x.sequence)+'</code></p>'+(x.ticket!=null?'<p><span>Ticket Sequence</span><code>'+esc(x.ticket)+'</code></p>':'')+'<p><span>Flags</span><code>'+esc(x.flags)+'</code></p><p><span>Transaction Hash</span><code>'+esc(x.hash||'—')+'</code></p><p class="tx-safety-note"><span>Security</span><small>Public ledger data only. Seeds and private keys are never available from XRPL transactions.</small></p></div></details>').join('');
+  setText('#liveTxRate',liveTransactions.length+' RECENT');
+}
 let ws,retry,watchedSubscribed=null;
 function subscribeAccount(a){if(!a||!ws||ws.readyState!==1)return;if(watchedSubscribed&&watchedSubscribed!==a)ws.send(JSON.stringify({id:'unwatch',command:'unsubscribe',accounts:[watchedSubscribed]}));ws.send(JSON.stringify({id:'watch',command:'subscribe',accounts:[a]}));watchedSubscribed=a}
 function connectLedger(){clearTimeout(retry);try{ws=new WebSocket('wss://xrplcluster.com/')}catch{return scheduleReconnect()}
-  ws.onopen=()=>{state.connected=true;renderSignal589();setText('#status','Live');const b=q('#liveBadge');if(b){b.className='status-pill live';b.innerHTML='<i></i><span>XRPL Live</span>'}mood('Connected','Live XRPL data is flowing.','calm');ws.send(JSON.stringify({id:'ledger',command:'subscribe',streams:['ledger','server']}));ws.send(JSON.stringify({id:'fee',command:'fee'}));if(state.account)subscribeAccount(state.account)};
+  ws.onopen=()=>{state.connected=true;renderSignal589();setText('#status','Live');const b=q('#liveBadge');if(b){b.className='status-pill live';b.innerHTML='<i></i><span>XRPL Live</span>'}mood('Connected','Live XRPL data is flowing.','calm');ws.send(JSON.stringify({id:'ledger',command:'subscribe',streams:['ledger','server','transactions']}));ws.send(JSON.stringify({id:'fee',command:'fee'}));if(state.account)subscribeAccount(state.account)};
   ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='ledgerClosed'){state.ledgerIndex=m.ledger_index;state.txCount=m.txn_count??0;state.baseFeeDrops=m.fee_base??state.baseFeeDrops;setText('#ledger',Number(m.ledger_index).toLocaleString());setText('#txCount',(m.txn_count??0)+' transactions');if(m.fee_base!=null)setText('#fee',m.fee_base);renderSignal589()}else if(m.type==='serverStatus'){setText('#serverState',m.server_status||'Connected')}else if(m.id==='fee'&&m.result){const drops=m.result?.drops?.base_fee;if(drops!=null){state.baseFeeDrops=Number(drops);setText('#fee',drops)}}else if(m.id==='xrpet-nfts'&&Array.isArray(m.result?.account_nfts)){
     renderNfts(m.result.account_nfts);
-  }else if(m.type==='transaction'&&state.account){window.XRPet3D?.celebrate?.();if(state.ledgerSound)playSound('ledgerTx');mood('Wallet activity','Validated activity detected on the watched account.','energized');addXp(3)}};
+  }else if(m.type==='transaction'){const normalized=normalizeLiveTransaction(m);if(normalized){liveTransactions.unshift(normalized);if(liveTransactions.length>25)liveTransactions.length=25;renderLiveTransactions()}if(state.ledgerSound)playSound('ledgerTx');const tx=m.transaction||m.tx_json||m.tx||{};if(state.account&&(tx.Account===state.account||tx.Destination===state.account)){window.XRPet3D?.celebrate?.();mood('Wallet activity','Validated activity detected on the watched account.','energized');addXp(3)}}};
   ws.onclose=()=>{state.connected=false;renderSignal589();setText('#status','Reconnecting');const b=q('#liveBadge');if(b){b.className='status-pill waiting';b.innerHTML='<i></i><span>Reconnecting</span>'}scheduleReconnect()};ws.onerror=()=>safe(()=>ws.close())
 }
 function scheduleReconnect(){clearTimeout(retry);retry=setTimeout(connectLedger,4000)}
