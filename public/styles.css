@@ -524,3 +524,8 @@ body.launch-locked{overflow:hidden}
 .model-runtime-status span{font-size:.52rem;color:#657c88;text-transform:uppercase;letter-spacing:.12em}
 .model-runtime-status strong{font-size:.61rem;color:#a6f6ff}
 .model-credit{margin:7px 0 0;color:#4f6672;font-size:.49rem;line-height:1.45}
+
+
+/* XRPet v3.3 complete real-model roster */
+.companion-choice .rigged-badge{display:inline-block}
+.model-credit{max-width:980px}
