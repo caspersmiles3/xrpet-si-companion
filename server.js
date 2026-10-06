@@ -1,9 +1,11 @@
 import express from 'express';
 import * as cheerio from 'cheerio';
 import webpush from 'web-push';
+import { readFileSync } from 'node:fs';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const APP_VERSION = JSON.parse(readFileSync('package.json','utf8')).version;
 app.disable('x-powered-by');
 
 app.use((req,res,next)=>{
@@ -60,7 +62,7 @@ const cache = {
   ecosystemTokens: new Map()
 };
 const MARKET_CACHE_MS = 15 * 1000;
-const TEN_MIN = 15 * 1000;
+const UPDATES_CACHE_MS = 60 * 1000;
 const clean = s => (s || '').replace(/\s+/g, ' ').trim();
 const pushSubscriptions = new Map();
 const visitorIds = new Set();
@@ -163,7 +165,7 @@ async function scrapeSource(source) {
 }
 
 async function getUpdates() {
-  if (Date.now() - cache.updates.at < TEN_MIN && cache.updates.data.length) return cache.updates.data;
+  if (Date.now() - cache.updates.at < UPDATES_CACHE_MS && cache.updates.data.length) return cache.updates.data;
   const settled = await Promise.allSettled(OFFICIAL_SOURCES.map(scrapeSource));
   const items = settled.flatMap(x => x.status === 'fulfilled' ? x.value : []);
   const seen = new Set();
@@ -198,7 +200,7 @@ const EXCHANGE_MARKETS = {
 };
 const exchangeMarketCache = new Map();
 const exchangeHistoryCache = new Map();
-const n=v=>{const x=Number(v);return Number.isFinite(x)?x:null};
+const n=v=>{if(v===null||v===undefined||v==='')return null;const x=Number(v);return Number.isFinite(x)?x:null};
 const pctFrom=(last,open)=>Number.isFinite(last)&&Number.isFinite(open)&&open>0?((last-open)/open)*100:null;
 const rangePctFrom=(high,low)=>Number.isFinite(high)&&Number.isFinite(low)&&low>0?((high-low)/low)*100:null;
 function marketShape(exchange,{price,open24h,high24h,low24h,volume24hXrp,bestBid,bestAsk,change24h,volume24hUsd,source}={}){
@@ -852,24 +854,95 @@ app.post('/api/companion', async (req, res) => {
   res.json({ reply, truth, mode:'grounded-companion-si-v1.0', personality, explainLevel, marketSource:market?.source || null });
 });
 
-app.get('/api/self-test', (_req, res) => {
-  const integrations = {
-    xrpl: { configured:true, endpoint:'wss://xrplcluster.com/' },
-    xaman: { configured:Boolean(process.env.XAMAN_API_KEY) },
-    push: { configured:Boolean(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) },
-    si: { configured:Boolean(process.env.SI_PROVIDER_KEY), provider:process.env.SI_PROVIDER_URL ? 'configured' : 'default', model:process.env.SI_MODEL || 'default' }
+const runtimeHealthCache={at:0,data:null};
+const RUNTIME_HEALTH_CACHE_MS=30*1000;
+
+async function timedRuntimeProbe(fn){
+  const started=Date.now();
+  try{
+    const detail=await fn();
+    return {state:detail?.state||'live',latencyMs:Date.now()-started,...detail};
+  }catch(e){
+    return {state:'down',latencyMs:Date.now()-started,error:clean(e?.message||String(e))};
+  }
+}
+
+async function getRuntimeHealth(force=false){
+  if(!force&&runtimeHealthCache.data&&Date.now()-runtimeHealthCache.at<RUNTIME_HEALTH_CACHE_MS)return runtimeHealthCache.data;
+  const [xrpl,market,ecosystem,updates]=await Promise.all([
+    timedRuntimeProbe(async()=>{
+      const {result,source}=await xrplRpc('server_info',[{api_version:2}]);
+      const info=result?.info||{};
+      const ledgerIndex=Number(info?.validated_ledger?.seq);
+      return {state:Number.isFinite(ledgerIndex)?'live':'degraded',source,ledgerIndex:Number.isFinite(ledgerIndex)?ledgerIndex:null,serverState:info.server_state||null};
+    }),
+    timedRuntimeProbe(async()=>{
+      const d=await getMarket('all');
+      return {state:Number.isFinite(d?.price)&&d.price>0?'live':'degraded',price:Number.isFinite(d?.price)?d.price:null,venueCount:Array.isArray(d?.venues)?d.venues.length:null,source:d?.source||null,generatedAt:d?.generatedAt||null};
+    }),
+    timedRuntimeProbe(async()=>{
+      try{
+        await fetchJsonWithTimeout(XRPL_META_BASE+'/server',{},6000);
+        return {state:'live',source:'XRPL Meta'};
+      }catch(e){
+        const {result,source}=await xrplRpc('server_info',[{api_version:2}]);
+        const seq=Number(result?.info?.validated_ledger?.seq);
+        return {state:Number.isFinite(seq)?'degraded':'down',source:'XRPL mainnet fallback',rpcSource:source,error:clean(e?.message||String(e))};
+      }
+    }),
+    timedRuntimeProbe(async()=>{
+      const items=await getUpdates();
+      const ageMs=cache.updates.at?Date.now()-cache.updates.at:null;
+      const sourceLinksOnly=items.length>0&&items.every(x=>String(x.title||'').startsWith('Open ')&&String(x.title||'').includes('official live source'));
+      return {state:sourceLinksOnly||(Number.isFinite(ageMs)&&ageMs>UPDATES_CACHE_MS*2)?'degraded':'live',itemCount:items.length,ageMs};
+    })
+  ]);
+  const core={xrpl,market,ecosystem,updates};
+  const hardDown=xrpl.state==='down'||market.state==='down';
+  const degraded=hardDown||Object.values(core).some(x=>x.state!=='live');
+  const data={ok:!hardDown,status:hardDown?'down':degraded?'degraded':'live',version:APP_VERSION,checkedAt:new Date().toISOString(),core};
+  runtimeHealthCache.at=Date.now();
+  runtimeHealthCache.data=data;
+  return data;
+}
+
+app.get('/api/self-test', async (_req,res)=>{
+  res.setHeader('Cache-Control','no-store');
+  const runtime=await getRuntimeHealth();
+  const xRead=Boolean(process.env.X_BEARER_TOKEN),xWrite=Boolean(process.env.X_USER_ACCESS_TOKEN);
+  const integrations={
+    xrpl:runtime.core.xrpl,
+    market:runtime.core.market,
+    ecosystem:runtime.core.ecosystem,
+    updates:runtime.core.updates,
+    xaman:{configured:Boolean(process.env.XAMAN_API_KEY),state:process.env.XAMAN_API_KEY?'configured':'not_configured'},
+    push:{configured:Boolean(VAPID_PUBLIC_KEY&&VAPID_PRIVATE_KEY),state:VAPID_PUBLIC_KEY&&VAPID_PRIVATE_KEY?'configured':'not_configured'},
+    si:{configured:Boolean(process.env.SI_PROVIDER_KEY),state:process.env.SI_PROVIDER_KEY?'configured':'local_fallback',provider:process.env.SI_PROVIDER_URL?'custom':'OpenAI Responses API',model:process.env.SI_MODEL||'gpt-6-luna'},
+    x:{readConfigured:xRead,writeConfigured:xWrite,state:xRead||xWrite?'configured':'not_configured',provider:'X API v2'}
   };
-  res.json({
-    ok: integrations.xaman.configured && integrations.push.configured && integrations.si.configured,
-    integrations
-  });
+  res.json({...runtime,integrations});
 });
 
-app.get('/api/health', (_req, res) => res.json({
-  ok:true, product:'XRPet SI Companion', version:'5.5.41',
-  capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch','gemwallet','xaman-hook','web-push','capacitor-mobile','external-si-hook','interactive-webgl-companion','signal-589-community-layer','equipment-matrix','full-audio-engine','room-environments','rigged-glb-roster','glass-studio-ui','orbit-camera','ssao','bloom','adaptive-render-quality','ripple-xrp-living-archive','auto-updating-history','ripplet-single-companion','nft-companion-override','persistent-ripplet','in-app-companion-workspaces','audio-default-on','isolated-primary-views','one-minute-live-refresh','simplified-ripplet-page','ripplet-life-system','bounded-companion-habitat','live-xrpl-transactions','sidebar-history-routing','global-xrp-ticker','cinematic-ripple-launch','global-ripplet-ecosystem','data-driven-companion-life','bounded-roaming-companion','ripplet-primary-tab','varied-live-reactions','visitor-counter','clean-home','clean-xrpl-live','expressive-ripplet-limbs','life-reaction-sounds','visible-ripplet-feet','free-roam-companion','live-reaction-overlays','spontaneous-companion-actions','xrpet-custom-cursor','ripplet-walk-cycle','autonomous-companion-mind','si-behavior-decisions','xrp-market-history','live-market-chart','ripplet-2-runtime','global-eye-tracking','organic-companion-anatomy','xrpet-games','ledger-rush','xrp-flow-game','consensus-80-game','ripplet-3-runtime','superellipsoid-shell-geometry','unified-head-rig','randomized-natural-blink','transparent-direct-alpha-render','high-detail-micro-hardware','validated-mainnet-transaction-feed','xrpl-source-failover','live-bid-ask-spread','24h-market-detail','viewport-layout-guard','physical-motor-cortex','run-gait','jump-arc','climb-cycle','reach-grab-carry','crouch-balance','autonomous-physical-motion','viewport-contained-scroll','grounded-free-roam','no-ground-ring','advanced-arcade-difficulty','arcade-combos-and-hazards','music-waveform','x-api-posting','xrpl-http-transaction-fallback','ecosystem-last-good-cache','ecosystem-retry-fallback','ripplet-v6-skinned-rig','native-animation-library','native-emote-library'],
-  integrations:{ xaman:Boolean(process.env.XAMAN_API_KEY), push:Boolean(VAPID_PUBLIC_KEY&&VAPID_PRIVATE_KEY), si:Boolean(process.env.SI_PROVIDER_KEY) }
-}));
+app.get('/api/health', (_req,res)=>{
+  res.setHeader('Cache-Control','no-store');
+  const runtime=runtimeHealthCache.data;
+  res.json({
+    ok:runtime?.ok!==false,
+    status:runtime?.status||'starting',
+    checkedAt:runtime?.checkedAt||null,
+    core:runtime?.core||null,
+    product:'XRPet SI Companion',
+    version:APP_VERSION,
+    capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch','gemwallet','xaman-hook','web-push','capacitor-mobile','external-si-hook','interactive-webgl-companion','signal-589-community-layer','equipment-matrix','full-audio-engine','room-environments','rigged-glb-roster','glass-studio-ui','orbit-camera','ssao','bloom','adaptive-render-quality','ripple-xrp-living-archive','auto-updating-history','ripplet-single-companion','nft-companion-override','persistent-ripplet','in-app-companion-workspaces','audio-default-on','isolated-primary-views','one-minute-live-refresh','simplified-ripplet-page','ripplet-life-system','bounded-companion-habitat','live-xrpl-transactions','sidebar-history-routing','global-xrp-ticker','cinematic-ripple-launch','global-ripplet-ecosystem','data-driven-companion-life','bounded-roaming-companion','ripplet-primary-tab','varied-live-reactions','visitor-counter','clean-home','clean-xrpl-live','expressive-ripplet-limbs','life-reaction-sounds','visible-ripplet-feet','free-roam-companion','live-reaction-overlays','spontaneous-companion-actions','xrpet-custom-cursor','ripplet-walk-cycle','autonomous-companion-mind','si-behavior-decisions','xrp-market-history','live-market-chart','ripplet-2-runtime','global-eye-tracking','organic-companion-anatomy','xrpet-games','ledger-rush','xrp-flow-game','consensus-80-game','ripplet-3-runtime','superellipsoid-shell-geometry','unified-head-rig','randomized-natural-blink','transparent-direct-alpha-render','high-detail-micro-hardware','validated-mainnet-transaction-feed','xrpl-source-failover','live-bid-ask-spread','24h-market-detail','viewport-layout-guard','physical-motor-cortex','run-gait','jump-arc','climb-cycle','reach-grab-carry','crouch-balance','autonomous-physical-motion','viewport-contained-scroll','grounded-free-roam','no-ground-ring','advanced-arcade-difficulty','arcade-combos-and-hazards','music-waveform','x-api-posting','xrpl-http-transaction-fallback','ecosystem-last-good-cache','ecosystem-retry-fallback','ripplet-v6-skinned-rig','native-animation-library','native-emote-library','runtime-health-probes','truthful-degraded-states','collision-aware-ui-terrain'],
+    integrations:{
+      xaman:Boolean(process.env.XAMAN_API_KEY),
+      push:Boolean(VAPID_PUBLIC_KEY&&VAPID_PRIVATE_KEY),
+      si:Boolean(process.env.SI_PROVIDER_KEY),
+      xRead:Boolean(process.env.X_BEARER_TOKEN),
+      xWrite:Boolean(process.env.X_USER_ACCESS_TOKEN)
+    }
+  });
+});
 
 let lastPushMarket = null;
 setInterval(async () => {
@@ -886,10 +959,13 @@ setInterval(async () => {
 }, 10 * 60 * 1000);
 
 app.listen(PORT, () => {
-  console.log(`XRPet // Signal 589 v5.5.1 running on http://localhost:${PORT}`);
+  console.log(`XRPet // Signal 589 v${APP_VERSION} running on http://localhost:${PORT}`);
   console.log('Integration readiness:', {
     xaman:Boolean(process.env.XAMAN_API_KEY),
     push:Boolean(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY),
-    si:Boolean(process.env.SI_PROVIDER_KEY)
+    si:Boolean(process.env.SI_PROVIDER_KEY),
+    xRead:Boolean(process.env.X_BEARER_TOKEN),
+    xWrite:Boolean(process.env.X_USER_ACCESS_TOKEN)
   });
+  setTimeout(()=>getRuntimeHealth(true).catch(()=>{}),1200);
 });
