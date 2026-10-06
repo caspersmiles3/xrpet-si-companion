@@ -1,4 +1,4 @@
-# XRPet SI Companion™ — v4.1.0
+# XRPet SI Companion™ — v4.2.0
 
 **Don't watch the Ledger. Live with it.**
 
@@ -8,7 +8,7 @@ XRPet is a lightweight, installable companion built around Ripple, XRP and the X
 
 Render service: https://xrpet-si-companion.onrender.com
 
-## v4.1 capabilities
+## v4.2 capabilities
 
 - Live XRPL ledger + fee signals
 - XRP/USD market snapshot with public-data fallback
@@ -106,3 +106,15 @@ Ripplet reacts to XRPL connection state, wallet activity, XRP market movement, a
 - Ripplet Chat, Rooms, Ripplet Appearance, Wallet/NFT Override, and the Ripplet studio now open as in-app workspaces inside the existing XRPet shell instead of fixed full-screen overlays.
 - Every companion workspace has a visible **Back to XRP Interface** control.
 - Rooms retain **Apply Room & Close**, so selecting a room no longer requires the Escape key.
+
+
+## v4.2 primary-view routing
+
+- Added **Home** as the main XRPet landing view with the app explanation and Ripplet.
+- **XRPL Live** is now an isolated view: clicking it shows only the live ledger panel, with a Home button at the top.
+- **Announcements** is now an isolated view instead of scrolling past the history archive.
+- **Settlements + History** keeps the detailed expandable archive/navigation layout.
+- XRP market data, official announcements, and the living archive refresh every **60 seconds** while XRPet is open.
+- Ripplet is shown on Home rather than floating over every primary data page.
+- The Ripplet workspace is now a compact **single-column** in-app page.
+- Removed Eye Signal, Chest Core, Head Hardware, Signal Trail, and the separate Ripplet Appearance workspace. The page now includes a clean reserved slot for the future final interactive 3D Ripplet model.
