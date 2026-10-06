@@ -6151,3 +6151,42 @@ body[data-primary-view="games"] .top-command-deck .topbar{display:block!importan
 @media(max-height:620px){
   .clean-launch-video{width:100vw!important;height:100vh!important;max-width:none!important}
 }
+
+
+/* XRPet 5.5.18 — 1920x1080 launch presentation frame */
+.clean-launch-video{
+  position:absolute!important;
+  top:50%!important;
+  left:50%!important;
+  right:auto!important;
+  bottom:auto!important;
+  inset:auto!important;
+  width:min(96vw,1920px)!important;
+  height:min(94vh,1080px)!important;
+  max-width:1920px!important;
+  max-height:1080px!important;
+  aspect-ratio:16 / 9!important;
+  object-fit:contain!important;
+  object-position:center center!important;
+  transform:translate(-50%,-50%)!important;
+  opacity:1!important;
+}
+.clean-launch.launch-complete .clean-launch-video{
+  transform:translate(-50%,-50%)!important;
+}
+@media(max-width:760px){
+  .clean-launch-video{
+    width:96vw!important;
+    height:auto!important;
+    max-height:88vh!important;
+    aspect-ratio:16 / 9!important;
+  }
+}
+@media(max-height:620px){
+  .clean-launch-video{
+    width:auto!important;
+    height:90vh!important;
+    max-width:96vw!important;
+    aspect-ratio:16 / 9!important;
+  }
+}
