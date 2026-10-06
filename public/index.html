@@ -8,36 +8,45 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=4.10.2">
+  <link rel="stylesheet" href="/styles.css?v=4.10.3">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
-  <div class="launch-space" aria-hidden="true">
-    <div class="launch-cinema-stage">
-      <div class="launch-ripple-arc arc-one"></div>
-      <div class="launch-ripple-arc arc-two"></div>
-      <div class="launch-ripple-arc arc-three"></div>
-      <div class="launch-xrp-monolith"><span></span><i></i></div>
-      <div class="launch-ripplet-silhouette"><b></b><i></i></div>
-      <div class="launch-floor-reflection"></div>
+  <div class="xrpl-loader-field" aria-hidden="true">
+    <div class="xrpl-ledger-grid"></div>
+    <div class="xrpl-wave wave-a"></div>
+    <div class="xrpl-wave wave-b"></div>
+    <div class="xrpl-wave wave-c"></div>
+    <div class="xrp-sigil">
+      <span class="xrp-curve top"></span>
+      <span class="xrp-node"></span>
+      <span class="xrp-curve bottom"></span>
     </div>
-    <span class="launch-orbit orbit-a"></span>
-    <span class="launch-orbit orbit-b"></span>
-    <span class="launch-orbit orbit-c"></span>
-    <span class="ledger-node n1"></span><span class="ledger-node n2"></span><span class="ledger-node n3"></span>
-    <span class="ledger-node n4"></span><span class="ledger-node n5"></span><span class="ledger-node n6"></span>
-    <span class="ledger-link l1"></span><span class="ledger-link l2"></span><span class="ledger-link l3"></span>
-    <span class="ledger-link l4"></span><span class="ledger-link l5"></span><span class="ledger-link l6"></span>
+    <div id="launchRippletReveal" class="launch-ripplet-reveal">
+      <div class="ripplet-reveal-core"></div>
+      <div class="ripplet-reveal-body"></div>
+      <div class="ripplet-reveal-head"></div>
+      <div class="ripplet-reveal-eye left"></div>
+      <div class="ripplet-reveal-eye right"></div>
+    </div>
   </div>
 
   <div class="launch-content">
-    <div class="launch-brand"><span class="launch-brand-mark">X</span><div><strong>XRPet</strong><small>SI COMPANION · XRP LEDGER</small></div></div>
-    <p class="launch-kicker">RIPPLE SIGNAL // XRPL MAINNET</p>
-    <h1 id="launchTitle">Enter the XRP Ledger.</h1>
-    <p id="launchStatus" class="launch-status" aria-live="polite">Synchronize Ripple signal, XRP market data, XRPL telemetry, and Ripplet.</p>
+    <div class="launch-brand"><div><strong>XRPet</strong><small>RIPPLE + XRP LEDGER</small></div></div>
+    <p class="launch-kicker">XRPL MAINNET // LIVE SIGNAL</p>
+    <h1 id="launchTitle">Synchronizing the Ledger.</h1>
+    <p id="launchStatus" class="launch-status" aria-live="polite">Connecting Ripple signals, XRP market context, and Ripplet.</p>
+
+    <div class="launch-ledger-counter">
+      <span>VALIDATED LEDGER</span>
+      <strong id="launchLedgerCounter">00000000</strong>
+    </div>
 
     <button id="launchCore" class="launch-core" type="button" aria-label="Press and hold to open XRPet">
-      <span class="core-shell"><i class="core-x">X</i><b class="core-energy"></b></span>
+      <span class="core-shell">
+        <span class="core-xrp-mark"><i></i><b></b></span>
+        <em class="core-energy"></em>
+      </span>
       <span class="core-ring ring-one"></span>
       <span class="core-ring ring-two"></span>
     </button>
@@ -584,7 +593,7 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 4.10.2 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 4.10.3 · XRP Ledger companion</footer>
   </main>
 </div>
 
@@ -602,9 +611,9 @@
   <input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.45" aria-label="Music volume">
 </div>
 
-<script src="/app.js?v=4.10.2"></script>
-<script src="/timeline.js?v=4.10.2"></script>
-<script type="module" src="/companion3d.js?v=4.10.2"></script>
+<script src="/app.js?v=4.10.3"></script>
+<script src="/timeline.js?v=4.10.3"></script>
+<script type="module" src="/companion3d.js?v=4.10.3"></script>
 
 </body>
 </html>
