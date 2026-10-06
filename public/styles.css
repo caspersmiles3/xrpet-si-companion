@@ -2247,3 +2247,32 @@ body[data-primary-view="home"] .home-companion-layer .floating-companion{z-index
   .chart-stats span:last-child{grid-column:1/-1}
   #xrpMarketChart{height:210px}
 }
+
+
+/* v4.9.2 bare Ripplet */
+#rippletRoamLayer,
+#rippletRoamLayer::before,
+#rippletRoamLayer::after,
+#lifeAvatar,
+#persistentCompanionLayer,
+#floatingCompanion,
+#companion3d,
+#companion3d::before,
+#companion3d::after,
+#companion3d canvas{
+  background:transparent!important;
+  background-image:none!important;
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+}
+#rippletRoamLayer,
+#lifeAvatar,
+#persistentCompanionLayer,
+#floatingCompanion,
+#companion3d{
+  overflow:visible!important;
+}
+#floatingCompanion{
+  filter:drop-shadow(0 15px 18px rgba(0,0,0,.28))!important;
+}
