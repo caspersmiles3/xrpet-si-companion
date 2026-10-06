@@ -13,7 +13,7 @@ app.use((req,res,next)=>{
   res.setHeader('Permissions-Policy','camera=(), microphone=(), geolocation=()');
   res.setHeader('Cross-Origin-Opener-Policy','same-origin');
   res.setHeader('Cross-Origin-Resource-Policy','same-origin');
-  res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' https://xumm.app https://esm.sh; connect-src 'self' https://api.coinbase.com https://api.exchange.coinbase.com wss://advanced-trade-ws.coinbase.com https://api.coingecko.com https://ripple.com https://xrpl.org https://xrplcluster.com wss://xrplcluster.com https://xumm.app https://esm.sh https://ipfs.io https://raw.githubusercontent.com; img-src 'self' data: https:; media-src 'self' https://raw.githubusercontent.com; style-src 'self' 'unsafe-inline'; font-src 'self'; frame-src https://xumm.app; object-src 'none'; base-uri 'self'; form-action 'self'");
+  res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' https://xumm.app https://esm.sh; connect-src 'self' https://api.coinbase.com https://api.exchange.coinbase.com wss://advanced-trade-ws.coinbase.com https://api.coingecko.com https://ripple.com https://xrpl.org https://xrplcluster.com wss://xrplcluster.com wss://s2.ripple.com https://xumm.app https://esm.sh https://ipfs.io https://raw.githubusercontent.com; img-src 'self' data: https:; media-src 'self' https://raw.githubusercontent.com; style-src 'self' 'unsafe-inline'; font-src 'self'; frame-src https://xumm.app; object-src 'none'; base-uri 'self'; form-action 'self'");
   next();
 });
 
@@ -57,7 +57,7 @@ const cache = {
   market: { at: 0, data: null },
   marketHistory: { at: 0, data: [] }
 };
-const FIVE_MIN = 5 * 60 * 1000;
+const MARKET_CACHE_MS = 15 * 1000;
 const TEN_MIN = 15 * 1000;
 const clean = s => (s || '').replace(/\s+/g, ' ').trim();
 const pushSubscriptions = new Map();
@@ -121,37 +121,53 @@ async function getUpdates() {
 }
 
 async function getMarket() {
-  if (Date.now() - cache.market.at < FIVE_MIN && cache.market.data) return cache.market.data;
+  if (Date.now() - cache.market.at < MARKET_CACHE_MS && cache.market.data) return cache.market.data;
   try {
-    const [spot, stats] = await Promise.all([
+    const [spot, stats, book] = await Promise.all([
       fetchJson('https://api.coinbase.com/v2/prices/XRP-USD/spot'),
-      fetchJson('https://api.exchange.coinbase.com/products/XRP-USD/stats')
+      fetchJson('https://api.exchange.coinbase.com/products/XRP-USD/stats'),
+      fetchJson('https://api.exchange.coinbase.com/products/XRP-USD/book?level=1')
     ]);
     const price = Number(spot?.data?.amount);
     const open = Number(stats?.open);
     const last = Number(stats?.last || price);
+    const high24h = Number(stats?.high);
+    const low24h = Number(stats?.low);
+    const volume24hXrp = Number(stats?.volume);
+    const bestBid = Number(book?.bids?.[0]?.[0]);
+    const bestAsk = Number(book?.asks?.[0]?.[0]);
+    const spread = Number.isFinite(bestBid) && Number.isFinite(bestAsk) ? bestAsk - bestBid : null;
+    const spreadBps = Number.isFinite(spread) && Number.isFinite(last) && last > 0 ? (spread / last) * 10000 : null;
     const change24h = Number.isFinite(open) && open > 0 ? ((last - open) / open) * 100 : null;
+    const range24hPct = Number.isFinite(high24h) && Number.isFinite(low24h) && low24h > 0 ? ((high24h-low24h)/low24h)*100 : null;
     const data = {
-      price,
+      price:last,
       change24h,
-      volume24hXrp: Number(stats?.volume),
-      high24h: Number(stats?.high),
-      low24h: Number(stats?.low),
-      source: 'Coinbase public market data',
-      generatedAt: new Date().toISOString()
+      open24h:open,
+      volume24hXrp,
+      volume24hUsd:Number.isFinite(volume24hXrp)&&Number.isFinite(last)?volume24hXrp*last:null,
+      high24h,
+      low24h,
+      range24hPct,
+      bestBid,
+      bestAsk,
+      spread,
+      spreadBps,
+      source:'Coinbase public spot, stats, and level-1 order book',
+      generatedAt:new Date().toISOString()
     };
     cache.market = { at: Date.now(), data };
     return data;
   } catch {
-    const cg = await fetchJson('https://api.coingecko.com/api/v3/simple/price?ids=ripple&vs_currencies=usd&include_24hr_change=true');
+    const cg = await fetchJson('https://api.coingecko.com/api/v3/simple/price?ids=ripple&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_market_cap=true');
     const data = {
-      price: Number(cg?.ripple?.usd),
-      change24h: Number(cg?.ripple?.usd_24h_change),
-      volume24hXrp: null,
-      high24h: null,
-      low24h: null,
-      source: 'CoinGecko public market data',
-      generatedAt: new Date().toISOString()
+      price:Number(cg?.ripple?.usd),
+      change24h:Number(cg?.ripple?.usd_24h_change),
+      open24h:null,volume24hXrp:null,volume24hUsd:Number(cg?.ripple?.usd_24h_vol),
+      high24h:null,low24h:null,range24hPct:null,bestBid:null,bestAsk:null,spread:null,spreadBps:null,
+      marketCapUsd:Number(cg?.ripple?.usd_market_cap),
+      source:'CoinGecko public market fallback',
+      generatedAt:new Date().toISOString()
     };
     cache.market = { at: Date.now(), data };
     return data;
@@ -562,8 +578,8 @@ app.get('/api/self-test', (_req, res) => {
 });
 
 app.get('/api/health', (_req, res) => res.json({
-  ok:true, product:'XRPet SI Companion', version:'5.1.1',
-  capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch','gemwallet','xaman-hook','web-push','capacitor-mobile','external-si-hook','interactive-webgl-companion','signal-589-community-layer','equipment-matrix','full-audio-engine','room-environments','rigged-glb-roster','glass-studio-ui','orbit-camera','ssao','bloom','adaptive-render-quality','ripple-xrp-living-archive','auto-updating-history','ripplet-single-companion','nft-companion-override','persistent-ripplet','in-app-companion-workspaces','audio-default-on','isolated-primary-views','one-minute-live-refresh','simplified-ripplet-page','ripplet-life-system','bounded-companion-habitat','live-xrpl-transactions','sidebar-history-routing','global-xrp-ticker','cinematic-ripple-launch','global-ripplet-ecosystem','data-driven-companion-life','bounded-roaming-companion','ripplet-primary-tab','varied-live-reactions','visitor-counter','clean-home','clean-xrpl-live','expressive-ripplet-limbs','life-reaction-sounds','visible-ripplet-feet','free-roam-companion','live-reaction-overlays','spontaneous-companion-actions','xrpet-custom-cursor','ripplet-walk-cycle','autonomous-companion-mind','si-behavior-decisions','xrp-market-history','live-market-chart','ripplet-2-runtime','global-eye-tracking','organic-companion-anatomy','xrpet-games','ledger-rush','xrp-flow-game','consensus-80-game','ripplet-3-runtime','superellipsoid-shell-geometry','unified-head-rig','randomized-natural-blink','transparent-direct-alpha-render','high-detail-micro-hardware'],
+  ok:true, product:'XRPet SI Companion', version:'5.2.0',
+  capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch','gemwallet','xaman-hook','web-push','capacitor-mobile','external-si-hook','interactive-webgl-companion','signal-589-community-layer','equipment-matrix','full-audio-engine','room-environments','rigged-glb-roster','glass-studio-ui','orbit-camera','ssao','bloom','adaptive-render-quality','ripple-xrp-living-archive','auto-updating-history','ripplet-single-companion','nft-companion-override','persistent-ripplet','in-app-companion-workspaces','audio-default-on','isolated-primary-views','one-minute-live-refresh','simplified-ripplet-page','ripplet-life-system','bounded-companion-habitat','live-xrpl-transactions','sidebar-history-routing','global-xrp-ticker','cinematic-ripple-launch','global-ripplet-ecosystem','data-driven-companion-life','bounded-roaming-companion','ripplet-primary-tab','varied-live-reactions','visitor-counter','clean-home','clean-xrpl-live','expressive-ripplet-limbs','life-reaction-sounds','visible-ripplet-feet','free-roam-companion','live-reaction-overlays','spontaneous-companion-actions','xrpet-custom-cursor','ripplet-walk-cycle','autonomous-companion-mind','si-behavior-decisions','xrp-market-history','live-market-chart','ripplet-2-runtime','global-eye-tracking','organic-companion-anatomy','xrpet-games','ledger-rush','xrp-flow-game','consensus-80-game','ripplet-3-runtime','superellipsoid-shell-geometry','unified-head-rig','randomized-natural-blink','transparent-direct-alpha-render','high-detail-micro-hardware','validated-mainnet-transaction-feed','xrpl-source-failover','live-bid-ask-spread','24h-market-detail','viewport-layout-guard'],
   integrations:{ xaman:Boolean(process.env.XAMAN_API_KEY), push:Boolean(VAPID_PUBLIC_KEY&&VAPID_PRIVATE_KEY), si:Boolean(process.env.SI_PROVIDER_KEY) }
 }));
 
@@ -582,7 +598,7 @@ setInterval(async () => {
 }, 10 * 60 * 1000);
 
 app.listen(PORT, () => {
-  console.log(`XRPet // Signal 589 v5.1.1 running on http://localhost:${PORT}`);
+  console.log(`XRPet // Signal 589 v5.2 running on http://localhost:${PORT}`);
   console.log('Integration readiness:', {
     xaman:Boolean(process.env.XAMAN_API_KEY),
     push:Boolean(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY),
