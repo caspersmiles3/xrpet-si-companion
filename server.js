@@ -309,6 +309,56 @@ app.get('/xaman/callback', (_req, res) => {
   res.type('html').send(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Xaman Connected</title><style>body{font-family:system-ui;background:#061018;color:#edf8ff;margin:0;display:grid;place-items:center;min-height:100vh}.card{max-width:520px;background:#0b1924;border:1px solid #17384a;border-radius:20px;padding:28px;text-align:center}a{color:#42e8ff}</style></head><body><div class="card"><h1>Xaman return complete</h1><p>You can return to XRPet and continue the wallet connection.</p><p><a href="/">Return to XRPet</a></p></div></body></html>`);
 });
 
+
+const XRPL_META_BASE='https://s1.xrplmeta.org/v2';
+app.get('/api/ecosystem/stats', async (_req,res)=>{
+  try{
+    const data=await fetchJson(XRPL_META_BASE+'/server');
+    res.json({source:'XRPL Meta',...data});
+  }catch(e){res.status(502).json({error:'XRPL ecosystem stats unavailable',detail:e.message})}
+});
+app.get('/api/ecosystem/tokens', async (req,res)=>{
+  try{
+    const limit=Math.max(1,Math.min(100,Number(req.query.limit)||48));
+    const offset=Math.max(0,Number(req.query.offset)||0);
+    const sortAllowed=new Set(['holders','supply','marketcap','price_percent_24h','price_percent_7d','volume_24h','volume_7d','exchanges_24h','exchanges_7d','takers_24h','takers_7d']);
+    const sort=sortAllowed.has(String(req.query.sort))?String(req.query.sort):'holders';
+    const params=new URLSearchParams({limit:String(limit),offset:String(offset),sort_by:sort,decode_currency:'true',expand_meta:'true'});
+    const search=clean(req.query.q||'');if(search)params.set('name_like',search.slice(0,80));
+    const trust=clean(req.query.trust||'0,1,2,3');if(/^[0-3](,[0-3])*$/.test(trust))params.set('trust_level',trust);
+    const data=await fetchJson(XRPL_META_BASE+'/tokens?'+params.toString());
+    res.json({source:'XRPL Meta',...data});
+  }catch(e){res.status(502).json({error:'XRPL token directory unavailable',detail:e.message})}
+});
+
+async function getXrplXFeed(){
+  const token=process.env.X_BEARER_TOKEN||'';
+  const query=clean(process.env.XRPL_X_QUERY||'');
+  if(!token||!query)return {enabled:false,items:[],reason:'X_BEARER_TOKEN and XRPL_X_QUERY are not configured'};
+  const params=new URLSearchParams({
+    query:query.slice(0,512),
+    max_results:'20',
+    'tweet.fields':'created_at,author_id,public_metrics',
+    expansions:'author_id',
+    'user.fields':'username,name,verified'
+  });
+  const r=await fetch('https://api.x.com/2/tweets/search/recent?'+params.toString(),{
+    headers:{authorization:'Bearer '+token,'user-agent':'XRPetSI/1.0'}
+  });
+  if(!r.ok)throw new Error('X API '+r.status);
+  const d=await r.json();
+  const users=new Map((d.includes?.users||[]).map(u=>[u.id,u]));
+  const items=(d.data||[]).map(t=>{
+    const u=users.get(t.author_id)||{};
+    return {id:t.id,text:t.text,createdAt:t.created_at,author:u.name||u.username||'X',username:u.username||'',verified:!!u.verified,url:u.username?'https://x.com/'+u.username+'/status/'+t.id:'https://x.com/i/web/status/'+t.id};
+  });
+  return {enabled:true,items};
+}
+app.get('/api/ecosystem/x-feed', async (_req,res)=>{
+  try{res.json(await getXrplXFeed())}
+  catch(e){res.status(502).json({enabled:true,items:[],error:'X feed unavailable',detail:e.message})}
+});
+
 app.get('/api/updates', async (_req, res) => {
   try {
     const items = await getUpdates();
