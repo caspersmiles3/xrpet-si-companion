@@ -601,6 +601,12 @@ qa('[data-pet-action]').forEach(b=>b.addEventListener('click',()=>{
   else if(action==='focus'){playSound('select');setText('#petMood','Focused');setText('#petSpeech','Distractions reduced. Companion focus lock engaged.')}
   else if(action==='scan'){playSound('ledgerTx');setText('#petMood','Scanning');setText('#petSpeech','Scanning current XRPL telemetry and watched-account signals.');loadMarket()}
   else if(action==='orbit'){playSound('cosmetic');setText('#petMood','Orbiting');setText('#petSpeech','Signal hardware released into orbital display mode.')}
+  else if(['walk','run','jump','climb','reach','grab','carry','crouch','turn'].includes(action)){
+    playSound(action==='jump'||action==='run'?'success':'select');
+    const labels={walk:'Walking',run:'Running',jump:'Jumping',climb:'Climbing',reach:'Reaching',grab:'Gripping',carry:'Carrying',crouch:'Crouching',turn:'Turning'};
+    setText('#petMood',labels[action]||'Moving');
+    setText('#petSpeech','Physical motor cortex: '+(labels[action]||action)+' with full-body balance and limb coordination.');
+  }
   else{playSound('pet');setText('#petMood','Linked');setText('#petSpeech','Companion link acknowledged.')}
 }));
 let pendingRoom=state.room;
