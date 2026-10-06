@@ -6496,3 +6496,50 @@ body[data-primary-view="games"] .top-command-deck .topbar{display:block!importan
   .clean-launch-content h1{font-size:2rem!important}
   .clean-launch-note{display:none!important}
 }
+
+
+/* v5.5.18 — opaque collision-bounded micro Ripplet */
+.ripplet-roam-layer .global-life-avatar{
+  width:8px!important;
+  height:11px!important;
+  opacity:1!important;
+  mix-blend-mode:normal!important;
+  filter:none!important;
+}
+.ripplet-roam-layer .global-life-avatar.page-hop{
+  opacity:1!important;
+}
+.ripplet2d,
+.ripplet2d-svg,
+.ripplet2d .r2-character,
+.ripplet2d .r2-character *{
+  opacity:1!important;
+  fill-opacity:1!important;
+  stroke-opacity:1!important;
+  mix-blend-mode:normal!important;
+}
+.ripplet2d-svg{
+  filter:none!important;
+}
+.r2-ground{
+  opacity:1!important;
+  fill:#12242b!important;
+}
+@media(max-width:760px){
+  .ripplet-roam-layer .global-life-avatar{
+    width:7px!important;
+    height:10px!important;
+  }
+}
+@media(max-width:520px){
+  .ripplet-roam-layer .global-life-avatar{
+    width:7px!important;
+    height:9px!important;
+  }
+}
+
+/* The companion may occupy only page surfaces or open air, never the interior of text/boxes. */
+.ripplet-roam-layer{
+  pointer-events:none!important;
+  isolation:isolate!important;
+}
