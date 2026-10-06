@@ -205,6 +205,7 @@ floatHandle?.addEventListener('pointermove',e=>{
   state.floatX=x;state.floatY=y;floatEl.style.left=x+'px';floatEl.style.top=y+'px';floatEl.style.right='auto';floatEl.style.bottom='auto';
 });
 floatHandle?.addEventListener('pointerup',e=>{if(!dragFloat)return;dragFloat=false;floatHandle.releasePointerCapture?.(e.pointerId);persist()});
+qa('.floating-controls button').forEach(b=>b.addEventListener('pointerdown',e=>e.stopPropagation()));
 bind('#toggleFloat','click',()=>setPinned(!floatPinned));
 bind('#centerFloat','click',()=>{setPinned(true);if(floatEl){const r=floatEl.getBoundingClientRect();state.floatX=Math.max(0,(innerWidth-r.width)/2);state.floatY=Math.max(0,(innerHeight-r.height)/2);clampFloat();persist()}});
 addEventListener('resize',()=>{if(floatPinned)clampFloat()});
