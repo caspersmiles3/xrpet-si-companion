@@ -1,4 +1,4 @@
-# XRPet SI Companion™ — v5.5.0
+# XRPet SI Companion™ — v5.5.1
 
 **Don't watch the Ledger. Live with it.**
 
