@@ -1650,3 +1650,34 @@ body.workspace-open .main-shell{min-height:100vh}
   .customization-panel.is-open{padding:15px!important;margin-top:10px!important}
   .workspace-nav{align-items:flex-start;flex-direction:column}
 }
+
+
+/* v4.2 isolated primary views */
+.primary-view-section{display:none!important}
+.primary-view-section.view-active{display:block!important}
+.home-companion-layer{display:none}
+.home-companion-layer.view-active{display:block}
+body.workspace-open .primary-view-section,
+body.workspace-open .home-companion-layer{display:none!important}
+.panel-title-actions{display:flex;align-items:center;gap:10px}
+.panel-title-actions .mini-button{padding:6px 9px}
+body[data-primary-view="home"] .main-shell{min-height:100vh}
+body[data-primary-view="home"] #homeSection{margin-top:12px}
+body[data-primary-view="home"] .home-companion-layer .floating-companion{z-index:45}
+@media(max-width:760px){.panel-title-actions{gap:6px}.panel-title-actions .mini-button{font-size:.62rem}}
+
+/* v4.2 simplified Ripplet page */
+.ripplet-page-column{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;max-width:860px;margin:0 auto}
+.ripplet-page-column>*{width:100%;min-width:0}
+.ripplet-character-slot{min-height:220px;display:grid;grid-template-columns:1fr 180px;align-items:center;gap:20px;padding:24px}
+.ripplet-character-slot h3{margin:7px 0 8px;font-size:1.35rem}
+.ripplet-character-slot p{margin:0;max-width:620px;line-height:1.55;opacity:.72}
+.ripplet-slot-mark{width:150px;height:150px;border-radius:50%;display:grid;place-items:center;justify-self:end;border:1px solid rgba(102,229,255,.24);background:radial-gradient(circle,rgba(79,230,255,.15),rgba(6,16,23,.75) 65%);box-shadow:0 0 44px rgba(55,221,255,.12),inset 0 0 30px rgba(71,229,255,.08)}
+.ripplet-slot-mark span{font-size:3.2rem;font-weight:900;color:#baf6ff;text-shadow:0 0 24px rgba(71,229,255,.65)}
+.ripplet-description{margin:12px 0 0;line-height:1.55;opacity:.78}
+.ripplet-page .companion-reactions{margin:0}
+.ripplet-page .companion-reactions>span{display:none}
+@media(max-width:620px){
+  .ripplet-character-slot{grid-template-columns:1fr}
+  .ripplet-slot-mark{justify-self:center}
+}

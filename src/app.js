@@ -107,17 +107,6 @@ function render(){
   window.XRPet3D?.perform?.('scan');
 });
 
-function bindEquipment(selector,key,label){
-  qa(selector).forEach(b=>b.addEventListener('click',()=>{
-    state[key]=b.dataset[key];persist();render();playSound('cosmetic');
-    setText('#petMood','Reconfigured');setText('#petSpeech',label+' updated. XRPL equipment matrix synchronized.');
-  }));
-}
-bindEquipment('[data-eye-style]','eyeStyle','Eye signal');
-bindEquipment('[data-core-style]','coreStyle','Chest core');
-bindEquipment('[data-head-gear]','headGear','Head hardware');
-bindEquipment('[data-trail-style]','trailStyle','Signal trail');
-
 qa('.room-choice').forEach(b=>{const rank=FORMS.findIndex(x=>x[0]===name),need=0;b.disabled=rank<need;const active=b.dataset.room===state.room;b.classList.toggle('active',active);const e=b.querySelector('em');if(e&&active)e.textContent='Active';else if(e)e.textContent=need?((b.dataset.room==='aurora')?'Wave+':'Titan+'):'Unlocked'}); qa('.cosmetic-choice').forEach(b=>{const active=b.dataset.cosmetic===state.cosmetic;b.classList.toggle('active',active);const e=b.querySelector('em');if(e)e.textContent=active?'Equipped':'Owned'});
   document.body.classList.remove('room-nexus','room-ocean','room-vault','room-aurora','room-legend','room-genesis','room-city','room-quantum','room-desert','room-arctic');document.body.classList.add('room-'+state.room); const pet=q('#pet'); if(pet){pet.classList.remove('skin-classic','skin-aqua','skin-midnight','skin-pearl','skin-solar','skin-resonance');pet.classList.add('skin-'+state.cosmetic)}
   setText('#unlocksChip',Object.keys(ROOM_NAMES).length+' environments');setText('#homeRoom',ROOM_NAMES[state.room]||state.room);setText('#homeCosmetic',COSMETIC_NAMES[state.cosmetic]||state.cosmetic);setText('#homeCompanionModel',COMPANION_NAMES[state.companionKind]||state.companionKind);setText('#homeCompanionGender','Official XRPet companion');setText('#companionModelChip','OFFICIAL // RIPPLET');
@@ -280,7 +269,7 @@ bind('#globalSearchForm','submit',e=>{
   const map=[
     [['589','signal','community','lore','theory','theories'], '#signal589Section'],
     [['room','rooms','environment'], '#roomsSection'],
-    [['cosmetic','skin','appearance','equipment','eye','core','trail','halo'], '#cosmeticsSection'],
+    [['cosmetic','skin','appearance','equipment','eye','core','trail','halo'], '#companionSection'],
     [['wallet','xaman','gemwallet'], '#walletPanel'],
     [['chat','ask','si','assistant'], '#chatPanel'],
     [['history','timeline','ripple','sec','lawsuit','escrow','odl','rlusd','acquisition'], '#xrpHistorySection'],
@@ -567,10 +556,6 @@ if(launchGate){
 }
 
 
-bind('#studioViewFront','click',()=>window.XRPet3D?.cameraPreset?.('front'));
-bind('#studioViewThreeQuarter','click',()=>window.XRPet3D?.cameraPreset?.('threeQuarter'));
-bind('#studioViewProfile','click',()=>window.XRPet3D?.cameraPreset?.('profile'));
-bind('#studioResetCamera','click',()=>window.XRPet3D?.reset?.());
 
 const floatEl=q('#floatingCompanion'),floatHandle=q('#floatingHandle');
 let floatPinned=state.floatingPinned,dragFloat=false,dragDX=0,dragDY=0,floatRAF=0;
@@ -636,7 +621,7 @@ floatEl?.addEventListener('focusout',()=>setTimeout(()=>{if(!floatEl.matches(':f
 revealFloatControls();
 
 
-dailyVisit();render();connectLedger();loadMarket();loadUpdates();integrationCheck();setInterval(loadMarket,120000);setInterval(integrationCheck,60000);
+dailyVisit();render();connectLedger();loadMarket();loadUpdates();integrationCheck();setInterval(loadMarket,60000);setInterval(loadUpdates,60000);setInterval(integrationCheck,60000);
 
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
@@ -647,7 +632,8 @@ if('serviceWorker' in navigator){
 function closeCustomizationPanels(){
   qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));
   document.body.classList.remove('customization-open','workspace-open');
-  setTimeout(()=>scrollSectionTop('xrplPanel'),20);
+  const target=primaryView==='home'?'homeSection':primaryView==='live'?'xrplPanel':primaryView==='announcements'?'announcementsSection':'xrpHistorySection';
+  setTimeout(()=>scrollSectionTop(target),20);
 }
 qa('[data-customize-target]').forEach(b=>b.addEventListener('click',()=>{
   closeCustomizationPanels();
@@ -668,7 +654,27 @@ qa('[data-customize-target]').forEach(b=>b.addEventListener('click',()=>{
 qa('[data-customize-close]').forEach(b=>b.addEventListener('click',closeCustomizationPanels));
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCustomizationPanels()});
 
+let primaryView='home';
+function setPrimaryView(view='home'){
+  primaryView=view;
+  qa('[data-view-section]').forEach(section=>section.classList.toggle('view-active',section.dataset.viewSection===view));
+  const companion=q('[data-home-companion]');
+  if(companion)companion.classList.toggle('view-active',view==='home');
+  qa('[data-primary-view]').forEach(b=>b.classList.toggle('active',b.dataset.primaryView===view));
+  document.body.dataset.primaryView=view;
+  qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));
+  document.body.classList.remove('workspace-open','customization-open');
+  const target=view==='home'?'homeSection':view==='live'?'xrplPanel':view==='announcements'?'announcementsSection':'xrpHistorySection';
+  setTimeout(()=>scrollSectionTop(target),10);
+}
+qa('[data-primary-view]').forEach(b=>b.addEventListener('click',()=>setPrimaryView(b.dataset.primaryView)));
+
 function openHistoryView(view='All'){
+  primaryView='history';
+  qa('[data-view-section]').forEach(section=>section.classList.toggle('view-active',section.dataset.viewSection==='history'));
+  q('[data-home-companion]')?.classList.remove('view-active');
+  qa('[data-primary-view]').forEach(b=>b.classList.remove('active'));
+  document.body.dataset.primaryView='history';
   closeCustomizationPanels();
   const section=q('#xrpHistorySection');
   if(!section)return;
@@ -694,3 +700,5 @@ q('#customizeDetails')?.addEventListener('toggle',e=>{
 q('#settingsDetails')?.addEventListener('toggle',e=>{
   if(e.target.open) q('#customizeDetails')?.removeAttribute('open');
 });
+
+setPrimaryView('home');
