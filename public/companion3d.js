@@ -45,7 +45,8 @@ const palette={
   aqua:{shell:0x88dce8,dark:0x09202a,accent:0x45e8ff,glass:0xc5fbff},
   midnight:{shell:0x313c45,dark:0x04080b,accent:0x2ebcff,glass:0x79dcff},
   pearl:{shell:0xe8eef2,dark:0x65727a,accent:0xb4f8ff,glass:0xffffff},
-  solar:{shell:0xd78f48,dark:0x28110a,accent:0xffbf57,glass:0xffe5ad}
+  solar:{shell:0xd78f48,dark:0x28110a,accent:0xffbf57,glass:0xffe5ad},
+  resonance:{shell:0x9daab1,dark:0x090b0d,accent:0xd1aa56,glass:0x8ff3ff}
 };
 
 const shellMat=new THREE.MeshPhysicalMaterial({
@@ -359,7 +360,8 @@ const cosmeticGroups={
   aqua:new THREE.Group(),
   midnight:new THREE.Group(),
   pearl:new THREE.Group(),
-  solar:new THREE.Group()
+  solar:new THREE.Group(),
+  resonance:new THREE.Group()
 };
 Object.values(cosmeticGroups).forEach(g=>pet.add(g));
 
@@ -390,6 +392,25 @@ solarChest.position.set(0,-.3,.9);
 const solarReactor=add(new THREE.TorusGeometry(.27,.068,16,46),accentMat,cosmeticGroups.solar,'solarReactor');
 solarReactor.position.set(0,-.3,1.05);solarReactor.rotation.x=Math.PI/2;
 
+
+// 589 Resonance: angular ledger lattice, not a paint-only skin.
+const resCore=add(new THREE.OctahedronGeometry(.24,0),glassMat,cosmeticGroups.resonance,'resonanceCore');
+resCore.position.set(0,-.28,1.12);resCore.rotation.z=Math.PI/4;
+for(const [x,s] of [[-.72,-1],[.72,1]]){
+  const rail=add(new THREE.BoxGeometry(.055,1.18,.07),accentMat,cosmeticGroups.resonance,'resonanceRail');
+  rail.position.set(x,-.1,.45);rail.rotation.z=s*.22;
+  const fin=add(new THREE.ConeGeometry(.1,.56,4),shellMat,cosmeticGroups.resonance,'resonanceFin');
+  fin.position.set(x,.65,.18);fin.rotation.z=s*-.82;
+}
+for(let i=0;i<9;i++){
+  const node=add(new THREE.OctahedronGeometry(i===4?.055:.038,0),accentMat,cosmeticGroups.resonance,'resonanceNode'+i);
+  const a=(i/9)*Math.PI*2;node.position.set(Math.cos(a)*.78,.08+Math.sin(a)*.33,.34);
+}
+const resX1=add(new THREE.BoxGeometry(.72,.045,.06),accentMat,cosmeticGroups.resonance,'resonanceX1');
+resX1.position.set(0,.62,.86);resX1.rotation.z=.72;
+const resX2=add(new THREE.BoxGeometry(.72,.045,.06),accentMat,cosmeticGroups.resonance,'resonanceX2');
+resX2.position.copy(resX1.position);resX2.rotation.z=-.72;
+
 // holographic grounding ring; transparent scene, no box/pedestal
 const holo=new THREE.Group();root.add(holo);holo.position.y=-1.92;
 const holoRing=add(new THREE.TorusGeometry(1.03,.025,12,72),accentMat,holo,'holoRing');holoRing.rotation.x=Math.PI/2;
@@ -412,7 +433,7 @@ for(const x of [-.48,.48]){
 }
 
 const externalCosmetics={
-  classic:new THREE.Group(),aqua:new THREE.Group(),midnight:new THREE.Group(),pearl:new THREE.Group(),solar:new THREE.Group()
+  classic:new THREE.Group(),aqua:new THREE.Group(),midnight:new THREE.Group(),pearl:new THREE.Group(),solar:new THREE.Group(),resonance:new THREE.Group()
 };
 Object.values(externalCosmetics).forEach(g=>externalPresentation.add(g));
 
@@ -441,6 +462,52 @@ for(const [x,s] of [[-.76,-1],[.76,1]]){
   fin.position.set(x,.1,.15);fin.rotation.z=s*-1.03;
 }
 
+
+
+// Universal XRPL exoskeleton: gives every imported companion a shared XRPet identity.
+const externalLedgerFrame=new THREE.Group();externalPresentation.add(externalLedgerFrame);
+for(const [x,s] of [[-.77,-1],[.77,1]]){
+  const vertical=add(new THREE.BoxGeometry(.045,1.22,.055),accentMat,externalLedgerFrame,'ledgerRail');
+  vertical.position.set(x,.18,.45);vertical.rotation.z=s*.13;
+  const shoulder=add(new THREE.BoxGeometry(.48,.055,.08),shellDarkMat,externalLedgerFrame,'ledgerShoulderRail');
+  shoulder.position.set(x*.72,.7,.47);shoulder.rotation.z=s*.28;
+  const lower=add(new THREE.BoxGeometry(.38,.045,.06),accentMat,externalLedgerFrame,'ledgerLowerRail');
+  lower.position.set(x*.63,-.5,.4);lower.rotation.z=s*-.22;
+}
+const externalXCore=new THREE.Group();externalLedgerFrame.add(externalXCore);externalXCore.position.set(0,.12,1.08);
+for(const r of [-.72,.72]){
+  const bar=add(new THREE.BoxGeometry(.5,.055,.07),accentMat,externalXCore,'xrpCoreBar');
+  bar.rotation.z=r;
+}
+const externalCoreHousing=add(new THREE.OctahedronGeometry(.18,0),glassMat,externalXCore,'xrpCoreHousing');
+externalCoreHousing.rotation.z=Math.PI/4;
+const externalTopRail=add(new THREE.BoxGeometry(1.1,.035,.05),shellDarkMat,externalLedgerFrame,'ledgerTopRail');
+externalTopRail.position.set(0,1.14,.25);
+for(let i=0;i<5;i++){
+  const n=add(new THREE.OctahedronGeometry(.027,0),accentMat,externalLedgerFrame,'validationFive'+i);
+  n.position.set(-.58+i*.29,1.14,.31);
+}
+
+// 589 Resonance imported-model hardware.
+const extRes=externalCosmetics.resonance;
+const extResCore=add(new THREE.OctahedronGeometry(.28,0),glassMat,extRes,'ext589Core');
+extResCore.position.set(0,.08,1.16);extResCore.rotation.z=Math.PI/4;
+for(const [x,s] of [[-.9,-1],[.9,1]]){
+  const rail=add(new THREE.BoxGeometry(.055,1.35,.065),accentMat,extRes,'ext589Rail');
+  rail.position.set(x,.12,.26);rail.rotation.z=s*.19;
+  const crown=add(new THREE.ConeGeometry(.095,.52,4),shellMat,extRes,'ext589Crown');
+  crown.position.set(x*.72,1.1,.2);crown.rotation.z=s*-.72;
+}
+const ext589Nodes=[];
+for(let i=0;i<9;i++){
+  const node=add(new THREE.OctahedronGeometry(i===4?.05:.034,0),accentMat,extRes,'ext589Node'+i);
+  const a=(i/9)*Math.PI*2;node.position.set(Math.cos(a)*.76,.18+Math.sin(a)*.44,.38);
+  ext589Nodes.push(node);
+}
+const ext589SlashA=add(new THREE.BoxGeometry(.72,.045,.06),accentMat,extRes,'ext589SlashA');
+ext589SlashA.position.set(0,.64,.9);ext589SlashA.rotation.z=.72;
+const ext589SlashB=add(new THREE.BoxGeometry(.72,.045,.06),accentMat,extRes,'ext589SlashB');
+ext589SlashB.position.copy(ext589SlashA.position);ext589SlashB.rotation.z=-.72;
 
 // lighting
 scene.add(new THREE.HemisphereLight(0xc9f6ff,0x061017,2.1));
@@ -568,9 +635,10 @@ function configureCosmetic(cosmetic){
   const p=palette[currentCosmetic];
   shellMat.color.setHex(p.shell);shellDarkMat.color.setHex(p.dark);accentMat.color.setHex(p.accent);
   accentMat.emissive.setHex(p.accent);glassMat.color.setHex(p.glass);
-  coreRing.scale.setScalar(currentCosmetic==='solar'?1.35:currentCosmetic==='midnight'?.84:1);
-  coreBall.scale.setScalar(currentCosmetic==='solar'?1.45:1);
+  coreRing.scale.setScalar(currentCosmetic==='solar'?1.35:currentCosmetic==='midnight'?.84:currentCosmetic==='resonance'?1.18:1);
+  coreBall.scale.setScalar(currentCosmetic==='solar'?1.45:currentCosmetic==='resonance'?1.22:1);
   orbGroup.visible=currentCosmetic!=='midnight';
+  externalLedgerFrame.visible=true;
 }
 function applyRoom(room){
   const rooms={
@@ -586,9 +654,9 @@ function applyRoom(room){
   renderer.toneMappingExposure=r[2];
 }
 function performAction(name='greet'){
-  const allowed=new Set(['greet','celebrate','alert','sleep','wake','happy']);
+  const allowed=new Set(['greet','celebrate','alert','sleep','wake','happy','focus','scan','orbit']);
   action=allowed.has(name)?name:'greet';
-  actionUntil=performance.now()+(action==='sleep'?12000:action==='celebrate'?2600:action==='alert'?2200:1800);
+  actionUntil=performance.now()+(action==='sleep'?12000:action==='orbit'?5200:action==='scan'?3200:action==='focus'?4200:action==='celebrate'?2600:action==='alert'?2200:1800);
   lastInteract=performance.now();
   if(action==='wake')actionUntil=performance.now()+700;
   if(action==='happy'||action==='greet'||action==='celebrate')boost=1;
@@ -670,7 +738,10 @@ function playExternalAction(name){
     celebrate:['dance','run','yes','thumbsup','fly'],
     alert:['run','walk','no','survey','fly'],
     sleep:['sitting','idle','survey'],
-    wake:['standing','idle','survey','fly']
+    wake:['standing','idle','survey','fly'],
+    focus:['idle','survey','standing'],
+    scan:['survey','walk','fly','idle'],
+    orbit:['dance','run','walk','fly','survey']
   };
   const custom=externalModel?.userData?.xrpetActionMap||{};
   const patterns=(custom[name]&&custom[name].length?custom[name]:fallback[name])||fallback.idle;
@@ -780,11 +851,12 @@ function animate(){
 
   if(externalMixer)externalMixer.update(dt);
   if(externalModel){
-    const extSleep=state==='sleep',extCelebrate=state==='celebrate',extAlert=state==='alert';
+    const extSleep=state==='sleep',extCelebrate=state==='celebrate',extAlert=state==='alert',extFocus=state==='focus',extScan=state==='scan',extOrbit=state==='orbit';
     const baseY=externalModel.userData.xrpetBaseY??0;
     externalModel.position.y=baseY+(extSleep?-.06:0)+Math.sin(t*(extSleep?.65:1.15))*(extSleep?.012:.026)+(extCelebrate?Math.abs(Math.sin(t*6))*.06:0);
-    externalModel.rotation.z=(extSleep?.045:Math.sin(t*.52)*.008)+(extCelebrate?Math.sin(t*5)*.018:0);
-    externalModel.rotation.x=extAlert?Math.sin(t*2.2)*.012:0;
+    externalModel.rotation.z=(extSleep?.045:Math.sin(t*.52)*.008)+(extCelebrate?Math.sin(t*5)*.018:0)+(extScan?Math.sin(t*4)*.012:0);
+    externalModel.rotation.x=extAlert?Math.sin(t*2.2)*.012:extFocus?-.025:0;
+    if(extOrbit)externalModel.rotation.y=(externalModel.userData.xrpetBaseRotY??0)+t*.75;
   }
 
   if(!dragging&&idle&&state!=='alert'&&state!=='sleep') targetRotY=Math.sin(t*.28)*.15;
@@ -800,11 +872,15 @@ function animate(){
   const sleeping=state==='sleep';
   const celebrating=state==='celebrate';
   const alerting=state==='alert';
+  const focusing=state==='focus';
+  const scanning=state==='scan';
+  const orbiting=state==='orbit';
   const greeting=state==='greet'||state==='happy';
 
   // levitation and body life
   let lift=.1+Math.sin(t*(sleeping?.72:1.25))*(sleeping?.018:.035);
   if(celebrating)lift+=Math.abs(Math.sin(t*8))*0.14;
+  if(orbiting)lift+=.07+Math.sin(t*2.4)*.04;
   if(greeting)lift+=Math.abs(Math.sin(t*5))*0.045;
   pet.position.y=lift+boost*.06;
   chestPanel.position.y=-.3+Math.sin(t*(sleeping?.8:1.65))*(sleeping?.004:.009);
@@ -860,10 +936,19 @@ function animate(){
   extAqua1.rotation.z=t*(celebrating?.9:.34);extAqua2.rotation.z=-t*(celebrating?1.1:.48);
   extHalo1.rotation.z=t*(celebrating?.72:.28);extHalo2.rotation.z=-t*(celebrating?.9:.4);
   extSolar.rotation.z=t*(alerting?1.2:.5);extGuardian.rotation.z=Math.PI*.83+Math.sin(t*.8)*.025;
+  externalLedgerFrame.rotation.y=orbiting?t*1.05:Math.sin(t*.3)*.025;
+  externalXCore.rotation.z=scanning?t*2.1:Math.sin(t*.6)*.05;
+  extRes.rotation.y=orbiting?t*1.35:Math.sin(t*.42)*.03;
+  extResCore.rotation.y=t*(scanning?2.4:.55);
+  ext589Nodes.forEach((n,i)=>{
+    const pulse=.88+(Math.sin(t*(scanning?5.2:1.8)+i*.67)+1)*.12;
+    n.scale.setScalar(pulse);
+  });
+  cosmeticGroups.resonance.rotation.y=orbiting?t*.8:0;
   orbGroup.rotation.y=t*(alerting?1.35:.7);orbit1.rotation.z=t*(celebrating?1.5:.62);orbit2.rotation.z=-t*(celebrating?1.7:.78);
   holoRing.rotation.z=t*(alerting?.34:.15);holoRing2.rotation.z=-t*(alerting?.45:.21);
 
-  const targetEmissive=alerting?4.2:celebrating?5.4:greeting?3.4:2.5;
+  const targetEmissive=scanning?5.2:orbiting?4.6:focusing?3.8:alerting?4.2:celebrating?5.4:greeting?3.4:currentCosmetic==='resonance'?3.2:2.5;
   accentMat.emissiveIntensity+=(targetEmissive-accentMat.emissiveIntensity)*.12;
 
   if(boost>0){
