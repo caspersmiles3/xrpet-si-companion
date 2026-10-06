@@ -1863,31 +1863,240 @@ function markInterfaceTarget(el,on=true){
   qa('.ripplet-target-active').forEach(x=>x.classList.remove('ripplet-target-active'));
   if(on&&el)el.classList.add('ripplet-target-active');
 }
-function ensurePlayProps(){qa('.companion-play-prop').forEach(el=>el.remove());}
-function nearestFreePlayProp(){ensurePlayProps();return null;}
-function carryProp(prop){
-  if(!prop||!lifeAvatar)return;
-  clearTimeout(playPropDropTimer);
-  heldPlayProp=prop;
-  prop.classList.add('held');
-  prop.style.left='';prop.style.top='';
-  lifeAvatar.appendChild(prop);
-  window.XRPet3D?.motor?.('grab',{side:'right'});
-  setTimeout(()=>window.XRPet3D?.motor?.('carry',{side:'right'}),700);
-  setText('#mindAction','Carrying '+(prop.dataset.propLabel||'object'));
-  setText('#mindThought','I found something in the interface to play with.');
-  playPropDropTimer=setTimeout(dropPlayProp,4200+Math.random()*2600);
+function activeViewName(){
+  return activePageElement()?.dataset?.viewSection||document.body.dataset.primaryView||'home';
 }
-function dropPlayProp(){
-  clearTimeout(playPropDropTimer);
-  const prop=heldPlayProp;if(!prop||!roamLayer||!lifeAvatar)return;
-  const layer=roamLayer.getBoundingClientRect(),a=lifeAvatar.getBoundingClientRect();
-  prop.classList.remove('held');roamLayer.appendChild(prop);
-  prop.style.left=Math.max(8,Math.min(layer.width-42,a.left-layer.left+a.width*.62))+'px';
-  prop.style.top=Math.max(12,Math.min(layer.height-42,a.bottom-layer.top-34))+'px';
-  prop.classList.remove('just-dropped');void prop.offsetWidth;prop.classList.add('just-dropped');
-  heldPlayProp=null;
-  window.XRPet3D?.motor?.('reach',{side:'right'});
+function clearCryptoCoins(keepHeld=true){
+  clearTimeout(cryptoCoinMissionTimer);
+  qa('.ripplet-crypto-coin').forEach(coin=>{
+    if(keepHeld&&coin===heldCryptoCoin)return;
+    coin.remove();
+  });
+  if(pendingCryptoCoin&&pendingCryptoCoin!==heldCryptoCoin)pendingCryptoCoin=null;
+}
+function cryptoCoinSpotClear(x,y,size=12){
+  const b=activePageBounds(12);
+  const rect={left:x,top:y,right:x+size,bottom:y+size,width:size,height:size};
+  if(rect.left<b.left||rect.top<b.top||rect.right>b.right||rect.bottom>b.bottom)return false;
+
+  const padded={left:x-7,top:y-7,right:x+size+7,bottom:y+size+7};
+  if(visibleCollisionRects().some(r=>rectsOverlap(padded,r,0)))return false;
+
+  const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),avatar=lifeAvatar?.getBoundingClientRect();
+  if(shell&&sr&&avatar){
+    const ar={
+      left:avatar.left-sr.left+shell.scrollLeft-12,
+      top:avatar.top-sr.top+shell.scrollTop-12,
+      right:avatar.right-sr.left+shell.scrollLeft+12,
+      bottom:avatar.bottom-sr.top+shell.scrollTop+12
+    };
+    if(rectsOverlap(rect,ar,0))return false;
+  }
+
+  for(const coin of qa('.ripplet-crypto-coin:not(.is-carried)')){
+    const cx=parseFloat(coin.style.left)||0,cy=parseFloat(coin.style.top)||0;
+    const cr={left:cx-8,top:cy-8,right:cx+20,bottom:cy+20};
+    if(rectsOverlap(rect,cr,0))return false;
+  }
+  return true;
+}
+function ensureCryptoCoins(force=false){
+  if(!roamLayer)return;
+  const view=activeViewName();
+  if(force){
+    qa('.ripplet-crypto-coin').forEach(coin=>{
+      if(coin!==heldCryptoCoin)coin.remove();
+    });
+    if(pendingCryptoCoin!==heldCryptoCoin)pendingCryptoCoin=null;
+  }else{
+    qa('.ripplet-crypto-coin').forEach(coin=>{
+      if(coin!==heldCryptoCoin&&coin.dataset.view!==view)coin.remove();
+    });
+  }
+
+  const existing=qa('.ripplet-crypto-coin:not(.is-carried)').filter(coin=>coin.dataset.view===view);
+  const desired=innerWidth<600?3:5;
+  if(existing.length>=desired)return;
+
+  const b=activePageBounds(14),size=12;
+  let needed=desired-existing.length,tries=0;
+  while(needed>0&&tries<260){
+    tries++;
+    const x=b.left+Math.random()*Math.max(1,b.right-b.left-size);
+    const y=b.top+Math.random()*Math.max(1,b.bottom-b.top-size);
+    if(!cryptoCoinSpotClear(x,y,size))continue;
+    const type=RIPPLET_CRYPTO_COINS[Math.floor(Math.random()*RIPPLET_CRYPTO_COINS.length)];
+    const coin=document.createElement('span');
+    coin.className='ripplet-crypto-coin';
+    coin.dataset.symbol=type.symbol;
+    coin.dataset.label=type.label;
+    coin.dataset.view=view;
+    coin.setAttribute('aria-hidden','true');
+    coin.style.left=x+'px';
+    coin.style.top=y+'px';
+    roamLayer.appendChild(coin);
+    needed--;
+  }
+}
+function nearestCryptoCoin(){
+  const view=activeViewName(),shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar?.getBoundingClientRect();
+  const coins=qa('.ripplet-crypto-coin:not(.is-carried)').filter(coin=>coin.dataset.view===view&&coin.isConnected);
+  if(!coins.length||!shell||!sr||!ar)return null;
+  const ax=ar.left-sr.left+shell.scrollLeft+ar.width*.5;
+  const ay=ar.top-sr.top+shell.scrollTop+ar.height*.5;
+  return coins.map(coin=>{
+    const r=coin.getBoundingClientRect();
+    const x=r.left-sr.left+shell.scrollLeft+r.width*.5;
+    const y=r.top-sr.top+shell.scrollTop+r.height*.5;
+    return {coin,distance:Math.hypot(x-ax,y-ay)};
+  }).sort((a,b)=>a.distance-b.distance);
+}
+function cryptoCoinPickupPosition(coin){
+  const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar?.getBoundingClientRect(),r=coin?.getBoundingClientRect();
+  if(!shell||!sr||!ar||!r)return null;
+  const aw=Math.max(52,ar.width||52),ah=Math.max(72,ar.height||72);
+  const left=r.left-sr.left+shell.scrollLeft,top=r.top-sr.top+shell.scrollTop;
+  const right=r.right-sr.left+shell.scrollLeft,bottom=r.bottom-sr.top+shell.scrollTop;
+  const candidates=[
+    {x:left-aw-3,y:bottom-ah},
+    {x:right+3,y:bottom-ah},
+    {x:left+r.width*.5-aw*.5,y:top-ah-3},
+    {x:left+r.width*.5-aw*.5,y:bottom+3}
+  ];
+  for(const p of candidates){
+    if(surfacePositionIsClear(p.x,p.y,null,false))return p;
+  }
+  for(const p of candidates){
+    const adjusted=findNearestClearPosition(p.x,p.y,null,false);
+    if(adjusted&&Math.hypot(adjusted.x-p.x,adjusted.y-p.y)<=90)return adjusted;
+  }
+  return null;
+}
+function recordDockCryptoCoin(symbol){
+  const platform=q('#rippletDock .ripplet-dock-platform');if(!platform)return;
+  const token=document.createElement('span');
+  token.className='dock-crypto-token';
+  token.dataset.symbol=symbol;
+  token.setAttribute('aria-hidden','true');
+  const spots=[[18,10],[72,12],[28,72],[67,70],[45,7],[48,78],[10,48],[80,48]];
+  const count=qa('#rippletDock .dock-crypto-token').length;
+  const spot=spots[count%spots.length];
+  token.style.left=spot[0]+'%';
+  token.style.top=spot[1]+'%';
+  platform.appendChild(token);
+  const tokens=qa('#rippletDock .dock-crypto-token');
+  while(tokens.length>8)tokens.shift()?.remove();
+}
+function keepRippletInsideActivePage(){
+  if(!lifeAvatar||roamDocked||rippletMusicDancing||heldCryptoCoin||pendingCryptoCoin||rippletRouteBusy())return false;
+  const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar.getBoundingClientRect();
+  if(!shell||!sr)return false;
+  const current={
+    x:ar.left-sr.left+shell.scrollLeft,
+    y:ar.top-sr.top+shell.scrollTop
+  };
+  if(rippletPositionInsideActivePage(current.x,current.y))return true;
+  const b=activePageBounds(12);
+  const target=findNearestClearPosition(
+    Math.max(b.left,Math.min(b.right-ar.width,current.x)),
+    b.top+12,
+    null,
+    false
+  )||findNearestClearPosition((b.left+b.right-ar.width)*.5,b.top+18,null,false);
+  if(!target)return false;
+  return routeRippletTo(target.x,target.y,'page-enter');
+}
+function depositCryptoCoin(){
+  clearTimeout(cryptoCoinMissionTimer);
+  const coin=heldCryptoCoin;if(!coin)return false;
+  const symbol=coin.dataset.symbol||'XRP';
+  coin.remove();
+  heldCryptoCoin=null;
+  pendingCryptoCoin=null;
+  cryptoCoinDeposits++;
+  recordDockCryptoCoin(symbol);
+  window.XRPet2D?.motor?.('stand');
+  window.XRPet3D?.perform?.('happy');
+  setText('#mindAction','Delivered '+symbol);
+  setText('#mindThought','I carried a tiny '+symbol+' coin back to the dock. I may look for another one later.');
+  setTimeout(()=>{
+    ensureCryptoCoins(false);
+    keepRippletInsideActivePage();
+  },520);
+  return true;
+}
+function carryCryptoCoinToDock(){
+  if(!heldCryptoCoin)return false;
+  if(rippletMusicDancing)return false;
+  if(rippletRouteBusy())return true;
+  const dock=q('#rippletDock'),target=dockPosition();
+  if(!dock||!target)return false;
+  if(!routeRippletTo(target.x,target.y,'coin-return',dock)){
+    cryptoCoinMissionTimer=setTimeout(carryCryptoCoinToDock,900);
+    return false;
+  }
+  window.XRPet2D?.motor?.('carry',{side:'right'});
+  setText('#mindAction','Carrying '+(heldCryptoCoin.dataset.symbol||'crypto')+' to dock');
+  setText('#mindThought','I picked up a tiny crypto coin and I am physically taking it back to my dock.');
+  const wait=Math.max(850,rippletRouteUntil-performance.now()+180);
+  cryptoCoinMissionTimer=setTimeout(()=>{
+    if(!heldCryptoCoin)return;
+    if(rippletMusicDancing){cryptoCoinMissionTimer=setTimeout(carryCryptoCoinToDock,700);return}
+    depositCryptoCoin();
+  },wait);
+  return true;
+}
+function pickUpCryptoCoin(coin){
+  clearTimeout(cryptoCoinMissionTimer);
+  if(!coin||coin!==pendingCryptoCoin||!coin.isConnected||rippletMusicDancing||roamDocked){
+    if(coin)coin.classList.remove('is-targeted');
+    if(pendingCryptoCoin===coin)pendingCryptoCoin=null;
+    return false;
+  }
+  const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar?.getBoundingClientRect(),cr=coin.getBoundingClientRect();
+  if(!shell||!sr||!ar)return false;
+  const distance=Math.hypot(
+    (cr.left+cr.width*.5)-(ar.left+ar.width*.5),
+    (cr.top+cr.height*.5)-(ar.top+ar.height*.5)
+  );
+  if(distance>Math.max(95,ar.height*1.5)){
+    coin.classList.remove('is-targeted');
+    pendingCryptoCoin=null;
+    return false;
+  }
+  pendingCryptoCoin=null;
+  heldCryptoCoin=coin;
+  coin.classList.remove('is-targeted');
+  coin.classList.add('is-carried');
+  coin.style.left='';
+  coin.style.top='';
+  lifeAvatar.appendChild(coin);
+  window.XRPet2D?.motor?.('grab',{side:'right'});
+  setText('#mindAction','Picked up '+(coin.dataset.symbol||'crypto'));
+  setText('#mindThought','I found a tiny coin in a clear part of the page. I am taking it to the dock.');
+  cryptoCoinMissionTimer=setTimeout(carryCryptoCoinToDock,420);
+  return true;
+}
+function collectRandomCryptoCoin(){
+  if(roamDocked||rippletMusicDancing||heldCryptoCoin||pendingCryptoCoin||rippletRouteBusy())return false;
+  ensureCryptoCoins(false);
+  const ranked=nearestCryptoCoin();if(!ranked?.length)return false;
+  const pool=ranked.slice(0,Math.min(3,ranked.length));
+  const coin=pool[Math.floor(Math.random()*pool.length)]?.coin;
+  const target=cryptoCoinPickupPosition(coin);
+  if(!coin||!target)return false;
+  pendingCryptoCoin=coin;
+  coin.classList.add('is-targeted');
+  if(!routeRippletTo(target.x,target.y,'walk')){
+    coin.classList.remove('is-targeted');
+    pendingCryptoCoin=null;
+    return false;
+  }
+  setText('#mindAction','Coin spotted');
+  setText('#mindThought','I noticed a tiny '+(coin.dataset.symbol||'crypto')+' coin in an open spot, so I am going to pick it up.');
+  const wait=Math.max(700,rippletRouteUntil-performance.now()+160);
+  cryptoCoinMissionTimer=setTimeout(()=>pickUpCryptoCoin(coin),wait);
+  return true;
 }
 function makeInterfaceEcho(){return null;}
 function playWithInterface(force=false){
@@ -1970,25 +2179,15 @@ function playWithInterface(force=false){
   return true;
 }
 function playWithObject(){
-  if(roamDocked||rippletMusicDancing||rippletRouteBusy())return false;
-  const prop=nearestFreePlayProp();if(!prop)return false;
-  const layer=roamLayer?.getBoundingClientRect(),r=prop.getBoundingClientRect(),avatar=lifeAvatar?.getBoundingClientRect();
-  if(!layer||!avatar)return false;
-  const x=r.left-layer.left-avatar.width*.55,y=r.top-layer.top-avatar.height*.55;
-  if(!routeRippletTo(x,y,'walk'))return false;
-  setText('#mindAction','Walking to object');
-  setText('#mindThought','I spotted '+(prop.dataset.propLabel||'an object')+' and I am walking to it.');
-  const wait=Math.max(900,rippletRouteUntil-performance.now()+120);
-  setTimeout(()=>{if(!rippletMusicDancing&&!rippletRouteBusy())carryProp(prop)},wait);
-  return true;
+  return collectRandomCryptoCoin();
 }
 window.XRPetPlayground={
   play:()=>playWithInterface(true),
   object:playWithObject,
-  drop:dropPlayProp,
-  refresh:ensurePlayProps
+  drop:()=>heldCryptoCoin?depositCryptoCoin():false,
+  refresh:()=>ensureCryptoCoins(true)
 };
-ensurePlayProps();
+setTimeout(()=>ensureCryptoCoins(true),320);
 
 function syncDanceButton(){
   qa('[data-pet-action="dance"]').forEach(button=>{
