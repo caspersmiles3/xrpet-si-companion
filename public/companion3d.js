@@ -423,7 +423,7 @@ const BUILTIN_MODELS={
 
 let currentKind='nexus', currentGender='boy', currentCosmetic='classic';
 let targetRotY=0,targetRotX=0,dragging=false,lastX=0,lastY=0,pointerX=0,pointerY=0,boost=0,lastInteract=0;
-let action='idle',actionUntil=0,externalModel=null,externalMixer=null,externalKind=null,externalActions={},externalActiveAction=null,externalLoadToken=0;
+let action='idle',actionUntil=0,externalModel=null,externalMixer=null,externalKind=null,externalActions={},externalActiveAction=null,externalLoadToken=0,externalLoadingKind=null,externalLoadingPromise=null;
 const baseEarTransforms=ears.map(e=>({scale:e.scale.clone(),rot:e.rotation.clone()}));
 
 function resetBaseShape(){
@@ -531,6 +531,7 @@ async function loadExternalModel(url,options={}){
   const mod=await import('https://esm.sh/three@0.169.0/examples/jsm/loaders/GLTFLoader.js?deps=three@0.169.0');
   const loader=new mod.GLTFLoader();
   const gltf=await new Promise((resolve,reject)=>loader.load(url,resolve,undefined,reject));
+  if(options.token!=null&&options.token!==externalLoadToken)return {stale:true,animations:[],credit:options.credit||''};
 
   if(externalModel){
     root.remove(externalModel);
@@ -601,32 +602,36 @@ function playExternalAction(name){
 }
 async function ensureBuiltInModel(kind){
   const cfg=BUILTIN_MODELS[kind];
-  const token=++externalLoadToken;
   if(!cfg){useProceduralModel();return false}
-  if(externalModel&&externalKind===kind){return true}
-  try{
-    const result=await loadExternalModel(cfg.url,{...cfg,kind});
-    if(token!==externalLoadToken){return false}
-    window.dispatchEvent(new CustomEvent('xrpet:model-ready',{detail:{kind,mode:'rigged',animations:result.animations,credit:cfg.credit}}));
-    playExternalAction('idle');
-    return true;
-  }catch(err){
-    console.warn('Rigged companion failed; using procedural fallback',kind,err);
-    if(token===externalLoadToken){
-      useProceduralModel();
-      window.dispatchEvent(new CustomEvent('xrpet:model-fallback',{detail:{kind,error:String(err?.message||err)}}));
+  if(externalModel&&externalKind===kind)return true;
+  if(externalLoadingKind===kind&&externalLoadingPromise)return externalLoadingPromise;
+
+  const token=++externalLoadToken;
+  externalLoadingKind=kind;
+  externalLoadingPromise=(async()=>{
+    try{
+      const result=await loadExternalModel(cfg.url,{...cfg,kind,token});
+      if(result?.stale||token!==externalLoadToken)return false;
+      window.dispatchEvent(new CustomEvent('xrpet:model-ready',{detail:{kind,mode:'rigged',animations:result.animations,credit:cfg.credit}}));
+      playExternalAction('idle');
+      return true;
+    }catch(err){
+      console.warn('Rigged companion failed; using procedural fallback',kind,err);
+      if(token===externalLoadToken){
+        useProceduralModel();
+        window.dispatchEvent(new CustomEvent('xrpet:model-fallback',{detail:{kind,error:String(err?.message||err)}}));
+      }
+      return false;
+    }finally{
+      if(token===externalLoadToken){externalLoadingKind=null;externalLoadingPromise=null}
     }
-    return false;
-  }
+  })();
+  return externalLoadingPromise;
 }
 function useProceduralModel(){
   externalLoadToken++;
   if(externalModel){root.remove(externalModel);externalModel=null}
-  externalMixer=null;externalKind=null;externalActions={};externalActiveAction=null;
-  pet.visible=true;
-}
-{
-  if(externalModel){root.remove(externalModel);externalModel=null;externalMixer=null}
+  externalMixer=null;externalKind=null;externalActions={};externalActiveAction=null;externalLoadingKind=null;externalLoadingPromise=null;
   pet.visible=true;
 }
 
