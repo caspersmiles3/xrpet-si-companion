@@ -5302,3 +5302,248 @@ body[data-primary-view="games"] .top-command-deck .topbar{display:block!importan
     max-width:90vw!important;
   }
 }
+
+
+/* v5.5.13 — page-native articulated 2D Ripplet */
+.main-shell{
+  position:relative!important;
+}
+.ripplet-roam-layer{
+  position:absolute!important;
+  inset:auto!important;
+  left:0!important;
+  top:0!important;
+  z-index:6!important;
+  overflow:visible!important;
+  pointer-events:none!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+.ripplet-roam-layer .global-life-avatar{
+  position:absolute!important;
+  left:0!important;
+  top:0!important;
+  width:50px!important;
+  height:69px!important;
+  transform-origin:50% 100%!important;
+  pointer-events:none!important;
+  will-change:transform!important;
+  filter:none!important;
+  opacity:1!important;
+}
+.ripplet-roam-layer .home-companion-layer,
+.ripplet-roam-layer .persistent-companion-layer,
+.ripplet-roam-layer .floating-companion{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  display:block!important;
+  overflow:visible!important;
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  filter:none!important;
+  transform:none!important;
+  pointer-events:none!important;
+}
+.ripplet-roam-layer .companion3d-host,
+.ripplet-roam-layer .companion3d-canvas,
+.ripplet-roam-layer .companion3d-loading,
+.ripplet-roam-layer .floating-tag,
+.ripplet-roam-layer .nft-floating-companion{
+  display:none!important;
+}
+.ripplet2d{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  transform-origin:50% 100%;
+  pointer-events:none;
+  user-select:none;
+}
+.ripplet2d-svg{
+  display:block;
+  width:100%;
+  height:100%;
+  overflow:visible;
+}
+.ripplet2d-svg *{
+  vector-effect:non-scaling-stroke;
+}
+.r2-ground{
+  fill:rgba(20,48,58,.18);
+}
+.r2-head-shell,.r2-torso,.r2-neck,.r2-limb,.r2-hand rect,.r2-foot rect,.r2-joint{
+  fill:url(#r2-shell);
+  stroke:#56727d;
+  stroke-width:.55;
+}
+.r2-face{
+  fill:url(#r2-dark);
+  stroke:#6bc7d8;
+  stroke-width:.55;
+}
+.r2-chest{
+  fill:#0c1d24;
+  stroke:#55727d;
+  stroke-width:.5;
+}
+.r2-core-ring{
+  fill:none;
+  stroke:#62e8ff;
+  stroke-width:1;
+}
+.r2-core-x{
+  fill:none;
+  stroke:#b8f8ff;
+  stroke-width:.8;
+  stroke-linecap:round;
+}
+.r2-eye{
+  fill:#7cf2ff;
+}
+.r2-mouth{
+  fill:none;
+  stroke:#82cbd7;
+  stroke-width:.65;
+  stroke-linecap:round;
+}
+.r2-cheek{
+  fill:#50d8eb;
+  opacity:.35;
+}
+.r2-ear path:first-child{
+  fill:url(#r2-shell);
+  stroke:#56727d;
+  stroke-width:.55;
+}
+.r2-ear-inner{
+  fill:#12303a;
+  stroke:#59d8eb;
+  stroke-width:.35;
+}
+.r2-character,
+.r2-head,
+.r2-ear,
+.r2-arm,
+.r2-forearm,
+.r2-hand,
+.r2-leg,
+.r2-foot{
+  transform-box:fill-box;
+}
+.r2-character{transform-origin:50% 100%}
+.r2-head{transform-origin:50% 85%}
+.r2-ear-left{transform-origin:90% 80%}
+.r2-ear-right{transform-origin:10% 80%}
+.r2-arm-left,.r2-arm-right{transform-origin:50% 6%}
+.r2-forearm{transform-origin:50% 8%}
+.r2-hand{transform-origin:50% 8%}
+.r2-leg-left,.r2-leg-right{transform-origin:50% 5%}
+.r2-foot{transform-origin:50% 20%}
+
+/* Always-alive micro motion. */
+.ripplet2d[data-state="idle"] .r2-character{animation:r2Idle 2.6s ease-in-out infinite}
+.ripplet2d[data-state="idle"] .r2-head{animation:r2Look 4.8s ease-in-out infinite}
+.ripplet2d .r2-ear-left{animation:r2EarL 3.4s ease-in-out infinite}
+.ripplet2d .r2-ear-right{animation:r2EarR 3.9s ease-in-out infinite}
+.ripplet2d.is-blinking .r2-eye{transform-box:fill-box;transform-origin:center;transform:scaleY(.12)}
+
+/* Walk / run. */
+.ripplet2d[data-state="walk"] .r2-character{animation:r2StepBob .32s ease-in-out infinite alternate}
+.ripplet2d[data-state="walk"] .r2-arm-left{animation:r2ArmForward .64s ease-in-out infinite alternate}
+.ripplet2d[data-state="walk"] .r2-arm-right{animation:r2ArmBack .64s ease-in-out infinite alternate}
+.ripplet2d[data-state="walk"] .r2-leg-left{animation:r2LegForward .64s ease-in-out infinite alternate}
+.ripplet2d[data-state="walk"] .r2-leg-right{animation:r2LegBack .64s ease-in-out infinite alternate}
+.ripplet2d[data-state="run"] .r2-character{animation:r2StepBob .18s ease-in-out infinite alternate}
+.ripplet2d[data-state="run"] .r2-arm-left{animation:r2ArmForward .36s ease-in-out infinite alternate}
+.ripplet2d[data-state="run"] .r2-arm-right{animation:r2ArmBack .36s ease-in-out infinite alternate}
+.ripplet2d[data-state="run"] .r2-leg-left{animation:r2LegForward .36s ease-in-out infinite alternate}
+.ripplet2d[data-state="run"] .r2-leg-right{animation:r2LegBack .36s ease-in-out infinite alternate}
+
+/* Jump / climb / crouch. */
+.ripplet2d[data-state="jump"] .r2-character{animation:r2Jump .58s cubic-bezier(.2,.7,.2,1)}
+.ripplet2d[data-state="jump"] .r2-arm-left,
+.ripplet2d[data-state="jump"] .r2-arm-right{transform:rotate(24deg)}
+.ripplet2d[data-state="climb"] .r2-arm-left{animation:r2ClimbL .44s ease-in-out infinite alternate}
+.ripplet2d[data-state="climb"] .r2-arm-right{animation:r2ClimbR .44s ease-in-out infinite alternate}
+.ripplet2d[data-state="climb"] .r2-leg-left{animation:r2LegBack .44s ease-in-out infinite alternate}
+.ripplet2d[data-state="climb"] .r2-leg-right{animation:r2LegForward .44s ease-in-out infinite alternate}
+.ripplet2d[data-state="crouch"] .r2-character{transform:translateY(5px) scaleY(.91)}
+
+/* Emotes. */
+.ripplet2d[data-state="wave"] .r2-arm-right{animation:r2Wave .3s ease-in-out infinite alternate}
+.ripplet2d[data-state="wave"] .r2-forearm{transform:rotate(-68deg)}
+.ripplet2d[data-state="salute"] .r2-arm-right{transform:rotate(-62deg)}
+.ripplet2d[data-state="salute"] .r2-arm-right .r2-forearm{transform:rotate(-52deg)}
+.ripplet2d[data-state="thinking"] .r2-head{transform:rotate(7deg)}
+.ripplet2d[data-state="thinking"] .r2-arm-left{transform:rotate(28deg)}
+.ripplet2d[data-state="thinking"] .r2-arm-left .r2-forearm{transform:rotate(58deg)}
+.ripplet2d[data-state="happy"] .r2-head,
+.ripplet2d[data-state="excited"] .r2-head{animation:r2HappyHead .32s ease-in-out infinite alternate}
+.ripplet2d[data-state="happy"] .r2-arm-left,
+.ripplet2d[data-state="excited"] .r2-arm-left{transform:rotate(26deg)}
+.ripplet2d[data-state="happy"] .r2-arm-right,
+.ripplet2d[data-state="excited"] .r2-arm-right{transform:rotate(-26deg)}
+.ripplet2d[data-state="dance"] .r2-character,
+.ripplet2d[data-state="celebrate"] .r2-character,
+.ripplet2d[data-state="cheer"] .r2-character{animation:r2Dance .44s ease-in-out infinite alternate}
+.ripplet2d[data-state="dance"] .r2-arm-left,
+.ripplet2d[data-state="celebrate"] .r2-arm-left,
+.ripplet2d[data-state="cheer"] .r2-arm-left{animation:r2DanceArmL .44s ease-in-out infinite alternate}
+.ripplet2d[data-state="dance"] .r2-arm-right,
+.ripplet2d[data-state="celebrate"] .r2-arm-right,
+.ripplet2d[data-state="cheer"] .r2-arm-right{animation:r2DanceArmR .44s ease-in-out infinite alternate}
+.ripplet2d[data-state="shrug"] .r2-arm-left{transform:rotate(42deg)}
+.ripplet2d[data-state="shrug"] .r2-arm-right{transform:rotate(-42deg)}
+.ripplet2d[data-state="confused"] .r2-head{animation:r2Confused .7s ease-in-out infinite alternate}
+.ripplet2d[data-state="surprised"] .r2-eye{transform-box:fill-box;transform-origin:center;transform:scaleY(1.7)}
+.ripplet2d[data-state="focus"] .r2-eye,
+.ripplet2d[data-state="scan"] .r2-eye{transform-box:fill-box;transform-origin:center;transform:scaleY(.5)}
+.ripplet2d[data-state="scan"] .r2-head{animation:r2Scan 1.15s ease-in-out infinite alternate}
+.ripplet2d[data-state="point"] .r2-arm-right{transform:rotate(-78deg)}
+.ripplet2d[data-state="point"] .r2-arm-right .r2-forearm{transform:rotate(14deg)}
+.ripplet2d[data-state="reach"] .r2-arm-right{transform:rotate(-54deg)}
+.ripplet2d[data-state="grab"] .r2-hand{transform:scale(.78)}
+.ripplet2d[data-state="alert"] .r2-ear-left,
+.ripplet2d[data-state="alert"] .r2-ear-right{animation-duration:.55s}
+.ripplet2d[data-state="turn"] .r2-character{transform:scaleX(-1)}
+
+@keyframes r2Idle{0%,100%{transform:translateY(0)}50%{transform:translateY(-1px)}}
+@keyframes r2Look{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(3deg)}}
+@keyframes r2EarL{0%,84%,100%{transform:rotate(0)}89%{transform:rotate(-9deg)}94%{transform:rotate(4deg)}}
+@keyframes r2EarR{0%,78%,100%{transform:rotate(0)}84%{transform:rotate(8deg)}90%{transform:rotate(-3deg)}}
+@keyframes r2StepBob{from{transform:translateY(0)}to{transform:translateY(-1.4px)}}
+@keyframes r2ArmForward{from{transform:rotate(-19deg)}to{transform:rotate(18deg)}}
+@keyframes r2ArmBack{from{transform:rotate(18deg)}to{transform:rotate(-19deg)}}
+@keyframes r2LegForward{from{transform:rotate(15deg)}to{transform:rotate(-13deg)}}
+@keyframes r2LegBack{from{transform:rotate(-13deg)}to{transform:rotate(15deg)}}
+@keyframes r2Jump{0%{transform:translateY(0) scaleY(1)}42%{transform:translateY(-10px) scaleY(.96)}70%{transform:translateY(-5px)}100%{transform:translateY(0)}}
+@keyframes r2ClimbL{from{transform:rotate(-62deg)}to{transform:rotate(-28deg)}}
+@keyframes r2ClimbR{from{transform:rotate(28deg)}to{transform:rotate(62deg)}}
+@keyframes r2Wave{from{transform:rotate(-72deg)}to{transform:rotate(-48deg)}}
+@keyframes r2HappyHead{from{transform:rotate(-4deg)}to{transform:rotate(4deg)}}
+@keyframes r2Dance{from{transform:translateY(0) rotate(-3deg)}to{transform:translateY(-2px) rotate(3deg)}}
+@keyframes r2DanceArmL{from{transform:rotate(38deg)}to{transform:rotate(72deg)}}
+@keyframes r2DanceArmR{from{transform:rotate(-72deg)}to{transform:rotate(-38deg)}}
+@keyframes r2Confused{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
+@keyframes r2Scan{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
+
+.ripplet-target-active{
+  outline:1px solid rgba(86,229,255,.08)!important;
+  outline-offset:2px!important;
+}
+
+@media(max-width:760px){
+  .ripplet-roam-layer .global-life-avatar{width:46px!important;height:64px!important}
+}
+@media(max-width:520px){
+  .ripplet-roam-layer .global-life-avatar{width:42px!important;height:58px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .ripplet2d *{animation-duration:.001ms!important;animation-iteration-count:1!important}
+}
