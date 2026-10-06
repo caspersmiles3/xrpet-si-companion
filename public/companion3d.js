@@ -394,9 +394,8 @@ function animate(){
   pet.rotation.x+=(targetRotX-pet.rotation.x)*.07;
 
   // breathing / levitation
-  const breathe=Math.sin(t*1.65)*.012;
   pet.position.y=.1+Math.sin(t*1.25)*.035+boost*.075;
-  torso.scale.y*=1+breathe*.025;
+  chestPanel.position.y=-.3+Math.sin(t*1.65)*.008;
   head.rotation.z=Math.sin(t*.48)*.012;
 
   // eye tracking
