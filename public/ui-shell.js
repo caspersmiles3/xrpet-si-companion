@@ -2,6 +2,7 @@
   const q=(s,r=document)=>r.querySelector(s);
   const qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const finiteNumber=v=>{if(v===null||v===undefined||v==='')return null;const n=Number(v);return Number.isFinite(n)?n:null};
 
   const VIEW_TARGETS={
     home:'homeSection',
@@ -253,7 +254,7 @@
       const r=await fetch('/api/market?exchange='+encodeURIComponent(id),{cache:'no-store'});
       const d=await r.json();
       if(!r.ok)throw new Error(d.detail||d.error||'Market unavailable');
-      const price=Number(d.price),change=Number(d.change24h);
+      const price=finiteNumber(d.price),change=finiteNumber(d.change24h);
       if(Number.isFinite(price)){
         if(q('#xrpPrice'))q('#xrpPrice').textContent='$'+price.toFixed(5);
         qa('[data-exchange-price="'+id+'"]').forEach(el=>el.textContent='$'+price.toFixed(5));
@@ -289,19 +290,19 @@
       const r=await fetch('/api/exchange-board',{cache:'no-store'});
       if(r.ok)data=await r.json();
     }catch{}
-    if(!data||!Number.isFinite(Number(data?.composite?.price))){
+    if(!data||!Number.isFinite(finiteNumber(data?.composite?.price))){
       try{
         const r=await fetch('/api/market?exchange=all',{cache:'no-store'});
         if(r.ok){
           const m=await r.json();
-          data={composite:{price:Number(m.price),change24h:Number(m.change24h),venueCount:Number(m.venueCount)||0},venues:[]};
+          data={composite:{price:finiteNumber(m.price),change24h:finiteNumber(m.change24h),venueCount:finiteNumber(m.venueCount)||0},venues:[]};
         }
       }catch{}
     }
     if(!data)return;
 
     const composite=data.composite||{};
-    const price=Number(composite.price),change=Number(composite.change24h);
+    const price=finiteNumber(composite.price),change=finiteNumber(composite.change24h);
     if(Number.isFinite(price)){
       const text='$'+price.toFixed(5);
       if(q('#globalXrpPrice'))q('#globalXrpPrice').textContent=text;
@@ -315,7 +316,7 @@
       if(q('#xrpChange'))q('#xrpChange').textContent=move+' · 24h';
     }
     for(const row of data.venues||[]){
-      const p=Number(row?.price);
+      const p=finiteNumber(row?.price);
       qa('[data-exchange-price="'+row.id+'"]').forEach(el=>{
         el.textContent=Number.isFinite(p)?'$'+p.toFixed(5):'—';
         el.dataset.available=Number.isFinite(p)?'true':'false';
@@ -380,5 +381,5 @@
   refreshMarket();
   loadAnnouncements();
   setInterval(refreshMarket,5000);
-  setInterval(loadAnnouncements,15000);
+  setInterval(()=>{if(!document.hidden)loadAnnouncements()},60000);
 })();
