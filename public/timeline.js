@@ -96,7 +96,7 @@
       input?.addEventListener('input',()=>{query=input.value;renderTimeline()});
       el('#xrpRefreshHistory')?.addEventListener('click',refreshLive);
       await refreshLive();
-      setInterval(refreshLive,5*60*1000);
+      setInterval(refreshLive,60*1000);
     }catch(e){
       const box=el('#xrpTimeline'); if(box)box.innerHTML='<p class="muted">Ripple/XRP history archive is temporarily unavailable.</p>';
     }
