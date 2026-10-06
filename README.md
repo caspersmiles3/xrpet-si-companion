@@ -1,4 +1,4 @@
-# XRPet SI Companion™ — v4.8.0
+# XRPet SI Companion™ — v4.9.0
 
 **Don't watch the Ledger. Live with it.**
 
@@ -8,7 +8,7 @@ XRPet is a lightweight, installable companion built around Ripple, XRP and the X
 
 Render service: https://xrpet-si-companion.onrender.com
 
-## v4.8 capabilities
+## v4.9 capabilities
 
 - Live XRPL ledger + fee signals
 - XRP/USD market snapshot with public-data fallback
@@ -185,3 +185,14 @@ The live 3D Ripplet layer is mounted inside the habitat instead of roaming over 
 - Added spontaneous non-network reactions so Ripplet can greet, scan, focus, wave, dance, or react between live data events.
 - Quiet XRPL periods can still trigger sleep reactions, but they no longer freeze roaming.
 - Added custom XRPet mouse cursors for desktop/fine-pointer devices: a cyan XRPet signal cursor and a distinct interactive pointer for buttons, links, transaction cards, and controls.
+
+
+## v4.9 autonomous mind + XRP market chart
+
+- Ripplet now has an autonomous decision system separate from his live reaction system.
+- The local autonomous brain considers food, water, rest, social state, recent XRPL transaction activity, XRP price movement, announcements, and saved companion memory.
+- When an external SI provider is configured, XRPet periodically asks it for a constrained behavior decision. Allowed choices are roam, drink, eat, sleep, socialize, scan, wave, dance, or focus. If the provider is unavailable or returns an invalid decision, local autonomy continues automatically.
+- Ripplet may independently decide to physically visit Water, Food, Sleep, or Signal Friend. Live transaction/market reactions can still happen wherever he is.
+- The Ripplet tab now shows current intention, current thought, and whether the last higher-level decision came from connected SI or local autonomy.
+- XRP Live now includes a rolling XRP/USD market chart based on public Coinbase 5-minute candles, covering roughly the latest 24 hours and refreshing every 60 seconds.
+- The chart includes high, low, aggregate XRP volume, time range, and direction styling. It is descriptive market data, not a forecast.

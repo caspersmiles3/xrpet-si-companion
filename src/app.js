@@ -32,7 +32,12 @@ const state={
   lifeLastTick:Number(saved.lifeLastTick)||Date.now(),
   lastLedgerTxAt:Number(saved.lastLedgerTxAt)||0,
   lastAnnouncementTitle:saved.lastAnnouncementTitle||'',
-  lastMarketPrice:Number.isFinite(saved.lastMarketPrice)?saved.lastMarketPrice:null
+  lastAnnouncementAt:Number(saved.lastAnnouncementAt)||0,
+  lastMarketPrice:Number.isFinite(saved.lastMarketPrice)?saved.lastMarketPrice:null,
+  lastPriceTickPct:Number.isFinite(saved.lastPriceTickPct)?saved.lastPriceTickPct:0,
+  mindAction:saved.mindAction||'roam',
+  mindThought:saved.mindThought||'Watching the Ledger and deciding what to do next.',
+  mindMode:saved.mindMode||'local-autonomy'
 };
 const FORMS=[['Drop',0],['Ripple',50],['Wave',150],['Surge',350],['Nexus',700],['Titan',1200],['Legend',2000]];
 const ROOM_NAMES={nexus:'Neon Horizon',ocean:'Ripple Sanctuary',vault:'Ledger Vault',aurora:'Sky Garden',legend:'Orbital Station',genesis:'Genesis Chamber',city:'Settlement City',quantum:'Quantum Ledger Lab',desert:'Digital Oasis',arctic:'Arctic Node'};
@@ -160,7 +165,7 @@ function playLifeReaction(activity){
   setText('#lifeMode',choice.name);
   return choice;
 }
-function performLifeActivity(activity,manual=false){
+function performLifeActivity(activity,manual=false,moveToStation=manual){
   if(state.lifePinned&&activity!=='sit'&&!manual)return;
   const isLiveOverlay=!manual&&['drink','eat','sleep','socialize'].includes(activity);
   if(!isLiveOverlay)state.lifeActivity=activity;
@@ -172,9 +177,9 @@ function performLifeActivity(activity,manual=false){
   const lifeReaction=['drink','eat','sleep','socialize'].includes(activity)?playLifeReaction(activity):null;
   if(!lifeReaction)window.XRPet3D?.perform?.(reaction);
   // Automatic live reactions happen wherever Ripplet currently is. Manual station taps may guide him there.
-  if(manual)window.XRPetRoam?.go?.(activity);
+  if(moveToStation)window.XRPetRoam?.go?.(activity);
   clearTimeout(lifeReturnTimer);
-  if(manual&&!state.lifePinned&&['drink','eat','sleep','socialize'].includes(activity)){
+  if(moveToStation&&!state.lifePinned&&['drink','eat','sleep','socialize'].includes(activity)){
     lifeReturnTimer=setTimeout(()=>{if(!state.lifePinned){state.lifeActivity='explore';renderLife();persist()}},4200);
   }
   renderLife();persist();
@@ -225,7 +230,7 @@ qa('.room-choice').forEach(b=>{const rank=FORMS.findIndex(x=>x[0]===name),need=0
   qa('[data-head-gear]').forEach(b=>b.classList.toggle('active',b.dataset.headGear===state.headGear));
   qa('[data-trail-style]').forEach(b=>b.classList.toggle('active',b.dataset.trailStyle===state.trailStyle));
   window.dispatchEvent(new CustomEvent('xrpet:appearance',{detail:{room:state.room,cosmetic:state.cosmetic,companionKind:state.companionKind,companionGender:state.companionGender,eyeStyle:state.eyeStyle,coreStyle:state.coreStyle,headGear:state.headGear,trailStyle:state.trailStyle,mood:state.networkMood||'calm'}}));
-  renderMemory();renderSignal589();renderLife();
+  renderMemory();renderSignal589();renderLife();renderMind();
 }
 function renderMemory(){const box=q('#memoryList');if(!box)return;box.innerHTML=state.memories.length?state.memories.map((m,i)=>'<span class="memory-chip">'+esc(m)+' <button type="button" data-rm="'+i+'">×</button></span>').join(''):'<span class="muted">No saved preferences.</span>';qa('[data-rm]').forEach(b=>b.addEventListener('click',()=>{state.memories.splice(Number(b.dataset.rm),1);persist();renderMemory()}))}
 function addXp(n){state.xp+=n;persist();render()}
@@ -264,10 +269,43 @@ async function registerVisitor(){
 async function loadMarket(){try{const r=await fetch('/api/market',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error();const previousPrice=state.lastMarketPrice;state.xrpPrice=Number(d.price);state.xrpChange24h=Number(d.change24h);state.lastMarketPrice=state.xrpPrice;renderSignal589();
 if(Number.isFinite(previousPrice)&&Number.isFinite(state.xrpPrice)&&previousPrice!==state.xrpPrice){
   const delta=(state.xrpPrice-previousPrice)/previousPrice*100;
+  state.lastPriceTickPct=delta;
   setText('#foodSignal',(delta>=0?'+':'')+delta.toFixed(3)+'% tick');
   if(!state.lifePinned)performLifeActivity('eat');
 }const livePrice=Number.isFinite(state.xrpPrice)?'$'+state.xrpPrice.toFixed(4):'Unavailable';const liveChange=Number.isFinite(state.xrpChange24h)?(state.xrpChange24h>=0?'+':'')+state.xrpChange24h.toFixed(2)+'% · 24h':'24h unavailable';setText('#xrpPrice',livePrice);setText('#xrpChange',liveChange);setText('#globalXrpPrice',livePrice);setText('#globalXrpChange',liveChange);if(state.marketMood&&Number.isFinite(state.xrpChange24h)&&Math.abs(state.xrpChange24h)>=5)mood(state.xrpChange24h>0?'Excited':'Watchful','XRP moved '+Math.abs(state.xrpChange24h).toFixed(2)+'% over 24 hours. Movement is not a prediction.',state.xrpChange24h>0?'energized':'alert')}catch{setText('#xrpPrice','Unavailable');setText('#xrpChange','Market feed offline');setText('#globalXrpPrice','Unavailable');setText('#globalXrpChange','Market feed offline');renderSignal589()}}
-async function loadUpdates(){const box=q('#updates');if(box)box.innerHTML='<p class="muted">Checking official Ripple and XRPL sources…</p>';try{const r=await fetch('/api/updates',{cache:'no-store'});const d=await r.json();if(!r.ok||!Array.isArray(d.items)||!d.items.length)throw new Error();const items=d.items.slice(0,12);box.innerHTML=items.map((x,i)=>'<article class="announcement-card"><div class="announcement-index">'+String(i+1).padStart(2,'0')+'</div><div><span class="announcement-source">'+esc(x.source)+' · '+esc(x.label||'CONFIRMED')+'</span><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title)+'</a><small>Official source ↗</small></div></article>').join('');setText('#announcementStatus','Live');setText('#announcementUpdated','Updated '+new Date().toLocaleTimeString());const newest=items[0]?.title||'';setText('#friendSignal',newest?'New signal':'Standing by');if(newest&&state.lastAnnouncementTitle&&newest!==state.lastAnnouncementTitle&&!state.lifePinned)performLifeActivity('socialize');state.lastAnnouncementTitle=newest;persist()}catch{if(box)box.innerHTML='<p class="muted">Official update feed is temporarily unavailable.</p>';setText('#announcementStatus','Unavailable');setText('#announcementUpdated','Retrying automatically')}}
+function renderMarketChart(points=[]){
+  const svg=q('#xrpMarketChart'),line=q('#marketLine'),area=q('#marketArea'),grid=q('#marketGrid');
+  if(!svg||!line||!area||!grid||!points.length)return;
+  const pts=points.filter(p=>Number.isFinite(Number(p.close))&&Number.isFinite(Number(p.time)));
+  if(pts.length<2)return;
+  const closes=pts.map(p=>Number(p.close));
+  const highs=pts.map(p=>Number(p.high)).filter(Number.isFinite);
+  const lows=pts.map(p=>Number(p.low)).filter(Number.isFinite);
+  const min=Math.min(...lows,...closes),max=Math.max(...highs,...closes),span=Math.max(.000001,max-min);
+  const W=1000,H=320,padX=18,padY=18,plotW=W-padX*2,plotH=H-padY*2;
+  const coords=pts.map((p,i)=>[padX+(i/(pts.length-1))*plotW,padY+(1-(Number(p.close)-min)/span)*plotH]);
+  const d=coords.map(([x,y],i)=>(i?'L':'M')+x.toFixed(2)+' '+y.toFixed(2)).join(' ');
+  line.setAttribute('d',d);
+  area.setAttribute('d',d+' L '+coords[coords.length-1][0].toFixed(2)+' '+(H-padY)+' L '+coords[0][0].toFixed(2)+' '+(H-padY)+' Z');
+  grid.innerHTML='';
+  [.25,.5,.75].forEach(n=>{const el=document.createElementNS('http://www.w3.org/2000/svg','line');el.setAttribute('x1',padX);el.setAttribute('x2',W-padX);el.setAttribute('y1',padY+n*plotH);el.setAttribute('y2',padY+n*plotH);grid.appendChild(el)});
+  const first=closes[0],last=closes[closes.length-1],panel=q('.market-chart-panel');
+  if(panel)panel.dataset.direction=last>=first?'up':'down';
+  setText('#chartHigh','$'+Math.max(...highs,...closes).toFixed(4));
+  setText('#chartLow','$'+Math.min(...lows,...closes).toFixed(4));
+  const volume=pts.reduce((n,p)=>n+(Number.isFinite(Number(p.volume))?Number(p.volume):0),0);
+  setText('#chartVolume',volume>=1e6?(volume/1e6).toFixed(1)+'M XRP':volume>=1e3?(volume/1e3).toFixed(1)+'K XRP':Math.round(volume)+' XRP');
+  const fmt=t=>new Date(t).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+  setText('#chartStart',fmt(pts[0].time));setText('#chartEnd',fmt(pts[pts.length-1].time));setText('#chartRange','24 HOURS');
+}
+async function loadMarketHistory(){
+  try{
+    const r=await fetch('/api/market-history',{cache:'no-store'}),d=await r.json();
+    if(!r.ok||!Array.isArray(d.points))throw new Error();
+    renderMarketChart(d.points);
+  }catch{setText('#chartRange','MARKET CHART OFFLINE')}
+}
+async function loadUpdates(){const box=q('#updates');if(box)box.innerHTML='<p class="muted">Checking official Ripple and XRPL sources…</p>';try{const r=await fetch('/api/updates',{cache:'no-store'});const d=await r.json();if(!r.ok||!Array.isArray(d.items)||!d.items.length)throw new Error();const items=d.items.slice(0,12);box.innerHTML=items.map((x,i)=>'<article class="announcement-card"><div class="announcement-index">'+String(i+1).padStart(2,'0')+'</div><div><span class="announcement-source">'+esc(x.source)+' · '+esc(x.label||'CONFIRMED')+'</span><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title)+'</a><small>Official source ↗</small></div></article>').join('');setText('#announcementStatus','Live');setText('#announcementUpdated','Updated '+new Date().toLocaleTimeString());const newest=items[0]?.title||'';setText('#friendSignal',newest?'New signal':'Standing by');if(newest&&state.lastAnnouncementTitle&&newest!==state.lastAnnouncementTitle&&!state.lifePinned){state.lastAnnouncementAt=Date.now();performLifeActivity('socialize')}state.lastAnnouncementTitle=newest;persist()}catch{if(box)box.innerHTML='<p class="muted">Official update feed is temporarily unavailable.</p>';setText('#announcementStatus','Unavailable');setText('#announcementUpdated','Retrying automatically')}}
 const liveTransactions=[];
 const seenLiveTx=new Set();
 let liveTxRenderTimer=0,lifeWaterTimer=0,lifeReturnTimer=0,lastQuietReactionAt=0,spontaneousReactionTimer=0;
@@ -796,6 +834,62 @@ function roamingStep(){
   if(!roamPinned)goRipplet('explore');
   roamTimer=setTimeout(roamingStep,4200+Math.random()*5200);
 }
+function renderMind(){
+  const labels={roam:'Roaming',drink:'Water Fountain',eat:'Food Station',sleep:'Sleep Pod',socialize:'Signal Friend',scan:'Scanning XRPL',wave:'Waving',dance:'Dancing',focus:'Focused'};
+  setText('#mindAction',labels[state.mindAction]||state.mindAction||'Roaming');
+  setText('#mindThought',state.mindThought||'Watching the Ledger and deciding what to do next.');
+  setText('#mindMode',state.mindMode==='external-si-autonomy'?'SI MIND':'LOCAL AUTONOMY');
+}
+function mindContext(){
+  return {
+    connected:state.connected,
+    ledgerIndex:state.ledgerIndex,
+    txCount:state.txCount,
+    recentTxSeconds:state.lastLedgerTxAt?Math.max(0,(Date.now()-state.lastLedgerTxAt)/1000):9999,
+    price:state.xrpPrice,
+    priceTickPct:state.lastPriceTickPct||0,
+    change24h:state.xrpChange24h,
+    newAnnouncement:Boolean(state.lastAnnouncementAt&&Date.now()-state.lastAnnouncementAt<120000),
+    needs:{food:state.lifeFood,water:state.lifeWater,rest:state.lifeRest,social:state.lifeSocial},
+    currentActivity:state.lifeActivity,
+    memories:state.memories.slice(-5)
+  };
+}
+function executeMindDecision(decision){
+  if(!decision||state.lifePinned)return;
+  const action=decision.action||'roam';
+  state.mindAction=action;
+  state.mindThought=decision.thought||'I chose my next move.';
+  state.mindMode=decision.mode||'local-autonomy';
+  if(['drink','eat','sleep','socialize'].includes(action)){
+    performLifeActivity(action,false,Boolean(decision.visitStation));
+  }else if(action==='roam'){
+    state.lifeActivity='explore';window.XRPetRoam?.go?.('explore');
+  }else if(['scan','wave','dance','focus'].includes(action)){
+    window.XRPet3D?.perform?.(action);
+    if(action==='wave')playSound('wave',true);
+    if(action==='dance')playSound('dance',true);
+    if(action==='scan')playSound('ledgerTx',true);
+  }
+  renderMind();persist();
+}
+let mindTimer=0,mindBusy=false;
+async function runAutonomousMind(){
+  clearTimeout(mindTimer);
+  if(!state.lifePinned&&!mindBusy){
+    mindBusy=true;
+    try{
+      const r=await fetch('/api/companion/decision',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({context:mindContext()})});
+      const d=await r.json();
+      if(r.ok)executeMindDecision(d);
+      setText('#mindSiStatus',d.mode==='external-si-autonomy'?'Connected SI':'Local fallback');
+    }catch{
+      setText('#mindSiStatus','Local fallback');
+      executeMindDecision({action:'roam',thought:'The SI link is quiet, so I am exploring on my own.',visitStation:false,mode:'local-autonomy'});
+    }finally{mindBusy=false}
+  }
+  mindTimer=setTimeout(runAutonomousMind,38000+Math.random()*22000);
+}
 function spontaneousRippletReaction(){
   clearTimeout(spontaneousReactionTimer);
   if(!roamPinned){
@@ -818,7 +912,7 @@ syncRoamBounds();setTimeout(()=>goRipplet(state.lifePinned?'sit':'explore'),300)
 qa('[data-life-action]').forEach(b=>b.addEventListener('click',()=>{if(state.lifePinned)setRoamPinned(false);performLifeActivity(b.dataset.lifeAction,true)}));
 bind('#lifeSitStay','click',()=>setRoamPinned(!state.lifePinned));
 setInterval(lifeTick,15000);
-dailyVisit();render();registerVisitor();connectLedger();loadMarket();loadUpdates();integrationCheck();setInterval(loadMarket,60000);setInterval(loadUpdates,60000);setInterval(integrationCheck,60000);
+dailyVisit();render();registerVisitor();connectLedger();loadMarket();loadMarketHistory();loadUpdates();integrationCheck();setTimeout(runAutonomousMind,12000);setInterval(loadMarket,60000);setInterval(loadMarketHistory,60000);setInterval(loadUpdates,60000);setInterval(integrationCheck,60000);
 
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{

@@ -54,7 +54,8 @@ const OFFICIAL_SOURCES = [
 
 const cache = {
   updates: { at: 0, data: [] },
-  market: { at: 0, data: null }
+  market: { at: 0, data: null },
+  marketHistory: { at: 0, data: [] }
 };
 const FIVE_MIN = 5 * 60 * 1000;
 const TEN_MIN = 10 * 60 * 1000;
@@ -155,6 +156,24 @@ async function getMarket() {
     cache.market = { at: Date.now(), data };
     return data;
   }
+}
+async function getMarketHistory() {
+  if (Date.now() - cache.marketHistory.at < 60 * 1000 && cache.marketHistory.data.length) return cache.marketHistory.data;
+  const rows = await fetchJson('https://api.exchange.coinbase.com/products/XRP-USD/candles?granularity=300');
+  const points = (Array.isArray(rows) ? rows : [])
+    .map(row => ({
+      time: Number(row?.[0]) * 1000,
+      low: Number(row?.[1]),
+      high: Number(row?.[2]),
+      open: Number(row?.[3]),
+      close: Number(row?.[4]),
+      volume: Number(row?.[5])
+    }))
+    .filter(p => Number.isFinite(p.time) && Number.isFinite(p.close))
+    .sort((a,b)=>a.time-b.time)
+    .slice(-288);
+  cache.marketHistory = { at: Date.now(), data: points };
+  return points;
 }
 
 function fmtPct(n) {
@@ -304,6 +323,15 @@ app.get('/api/market', async (_req, res) => {
   catch (e) { res.status(502).json({ error:'XRP market feed unavailable', detail:e.message }); }
 });
 
+app.get('/api/market-history', async (_req, res) => {
+  try {
+    const points = await getMarketHistory();
+    res.json({ pair:'XRP-USD', granularitySeconds:300, points, source:'Coinbase public candles', generatedAt:new Date().toISOString() });
+  } catch (e) {
+    res.status(502).json({ error:'XRP market history unavailable', detail:e.message });
+  }
+});
+
 app.post('/api/briefing', async (req, res) => {
   try {
     const [market, updates] = await Promise.all([getMarket(), getUpdates()]);
@@ -369,6 +397,63 @@ async function askExternalSI(message, context, market, updates) {
   }
 }
 
+function deterministicCompanionDecision(context={}) {
+  const needs=context.needs||{};
+  const txRecent=Number(context.recentTxSeconds ?? 9999);
+  const priceMove=Math.abs(Number(context.priceTickPct)||0);
+  const choices=[];
+  const add=(action,weight,thought,visitStation=false)=>choices.push({action,weight,thought,visitStation});
+  add('roam',3,'I want to wander around XRPet and watch what changes.');
+  add('scan',txRecent<15?4:1,'I want to check the live ledger signal.');
+  add('wave',1.4,'I feel like greeting whoever is here.');
+  add('dance',priceMove>.05?2.6:.5,'The market moved enough to give me some extra energy.');
+  add('drink',Number(needs.water)<55?4:txRecent<10?2.2:.5,'I want to visit the water fountain and take in the ledger flow.',true);
+  add('eat',Number(needs.food)<55?3.5:priceMove>.02?2:.45,'I want to visit the food station and recharge from the market signal.',true);
+  add('sleep',Number(needs.rest)<45?4:txRecent>45?1.5:.35,'Things are quiet enough that I want to rest for a little while.',true);
+  add('socialize',Number(needs.social)<50?3.2:context.newAnnouncement?2.8:.4,'I want to check in with Signal Friend.',true);
+  const total=choices.reduce((n,x)=>n+x.weight,0);
+  let roll=Math.random()*total;
+  let chosen=choices[0];
+  for(const item of choices){roll-=item.weight;if(roll<=0){chosen=item;break}}
+  return { action:chosen.action, thought:chosen.thought, visitStation:chosen.visitStation, mode:'local-autonomy' };
+}
+
+async function askExternalDecision(context={}) {
+  const key=process.env.SI_PROVIDER_KEY;
+  if(!key)return null;
+  const market=await getMarket().catch(()=>({}));
+  const updates=await getUpdates().catch(()=>[]);
+  const prompt=[
+    'Choose ONE next autonomous behavior for Ripplet, an XRPet companion.',
+    'Allowed actions: roam, drink, eat, sleep, socialize, scan, wave, dance, focus.',
+    'Return strict JSON only with keys action, thought, visitStation.',
+    'visitStation may only be true for drink, eat, sleep, socialize.',
+    'Keep thought under 110 characters.',
+    'Use live state and needs; do not make financial predictions.'
+  ].join(' ');
+  const raw=await askExternalSI(prompt, {...context, autonomousDecision:true}, market, updates);
+  if(!raw)return null;
+  try{
+    const text=raw.replace(/`{3}json|`{3}/gi,'').trim();
+    const parsed=JSON.parse(text);
+    const allowed=new Set(['roam','drink','eat','sleep','socialize','scan','wave','dance','focus']);
+    if(!allowed.has(parsed.action))return null;
+    return {
+      action:parsed.action,
+      thought:clean(parsed.thought||'I chose my next move.').slice(0,110),
+      visitStation:Boolean(parsed.visitStation)&&['drink','eat','sleep','socialize'].includes(parsed.action),
+      mode:'external-si-autonomy'
+    };
+  }catch{return null}
+}
+
+app.post('/api/companion/decision', async (req,res)=>{
+  const context=req.body?.context||{};
+  let decision=null;
+  try{decision=await askExternalDecision(context)}catch{}
+  if(!decision)decision=deterministicCompanionDecision(context);
+  res.json(decision);
+});
 app.post('/api/companion', async (req, res) => {
   const { message = '', context = {} } = req.body || {};
   const petName = clean(context.petName || 'Nexus');
@@ -427,8 +512,8 @@ app.get('/api/self-test', (_req, res) => {
 });
 
 app.get('/api/health', (_req, res) => res.json({
-  ok:true, product:'XRPet SI Companion', version:'4.8.0',
-  capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch','gemwallet','xaman-hook','web-push','capacitor-mobile','external-si-hook','interactive-webgl-companion','signal-589-community-layer','equipment-matrix','full-audio-engine','room-environments','rigged-glb-roster','glass-studio-ui','orbit-camera','ssao','bloom','adaptive-render-quality','ripple-xrp-living-archive','auto-updating-history','ripplet-single-companion','nft-companion-override','persistent-ripplet','in-app-companion-workspaces','audio-default-on','isolated-primary-views','one-minute-live-refresh','simplified-ripplet-page','ripplet-life-system','bounded-companion-habitat','live-xrpl-transactions','sidebar-history-routing','global-xrp-ticker','cinematic-ripple-launch','global-ripplet-ecosystem','data-driven-companion-life','bounded-roaming-companion','ripplet-primary-tab','varied-live-reactions','visitor-counter','clean-home','clean-xrpl-live','expressive-ripplet-limbs','life-reaction-sounds','visible-ripplet-feet','free-roam-companion','live-reaction-overlays','spontaneous-companion-actions','xrpet-custom-cursor','ripplet-walk-cycle'],
+  ok:true, product:'XRPet SI Companion', version:'4.9.0',
+  capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch','gemwallet','xaman-hook','web-push','capacitor-mobile','external-si-hook','interactive-webgl-companion','signal-589-community-layer','equipment-matrix','full-audio-engine','room-environments','rigged-glb-roster','glass-studio-ui','orbit-camera','ssao','bloom','adaptive-render-quality','ripple-xrp-living-archive','auto-updating-history','ripplet-single-companion','nft-companion-override','persistent-ripplet','in-app-companion-workspaces','audio-default-on','isolated-primary-views','one-minute-live-refresh','simplified-ripplet-page','ripplet-life-system','bounded-companion-habitat','live-xrpl-transactions','sidebar-history-routing','global-xrp-ticker','cinematic-ripple-launch','global-ripplet-ecosystem','data-driven-companion-life','bounded-roaming-companion','ripplet-primary-tab','varied-live-reactions','visitor-counter','clean-home','clean-xrpl-live','expressive-ripplet-limbs','life-reaction-sounds','visible-ripplet-feet','free-roam-companion','live-reaction-overlays','spontaneous-companion-actions','xrpet-custom-cursor','ripplet-walk-cycle','autonomous-companion-mind','si-behavior-decisions','xrp-market-history','live-market-chart'],
   integrations:{ xaman:Boolean(process.env.XAMAN_API_KEY), push:Boolean(VAPID_PUBLIC_KEY&&VAPID_PRIVATE_KEY), si:Boolean(process.env.SI_PROVIDER_KEY) }
 }));
 
@@ -447,7 +532,7 @@ setInterval(async () => {
 }, 10 * 60 * 1000);
 
 app.listen(PORT, () => {
-  console.log(`XRPet // Signal 589 v4.8 running on http://localhost:${PORT}`);
+  console.log(`XRPet // Signal 589 v4.9 running on http://localhost:${PORT}`);
   console.log('Integration readiness:', {
     xaman:Boolean(process.env.XAMAN_API_KEY),
     push:Boolean(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY),

@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=4.8.0">
+  <link rel="stylesheet" href="/styles.css?v=4.9.0">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
@@ -266,6 +266,31 @@
         <article><span>XRPL Status</span><strong id="status">Connecting</strong><small id="serverState">Live network</small></article>
       </div>
 
+      <section class="market-chart-panel">
+        <div class="market-chart-head">
+          <div><span class="eyebrow">XRP / USD // LIVE MARKET</span><h2>XRP Market Movement</h2><p>Rolling XRP/USD market history from public Coinbase candles. This is descriptive market data, not a prediction.</p></div>
+          <div class="chart-stats">
+            <span><small>24H HIGH</small><strong id="chartHigh">—</strong></span>
+            <span><small>24H LOW</small><strong id="chartLow">—</strong></span>
+            <span><small>VOLUME</small><strong id="chartVolume">—</strong></span>
+          </div>
+        </div>
+        <div class="market-chart-wrap">
+          <svg id="xrpMarketChart" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img" aria-label="Live XRP USD market chart">
+            <defs>
+              <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="currentColor" stop-opacity=".24"/>
+                <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <g id="marketGrid"></g>
+            <path id="marketArea" class="market-area"></path>
+            <path id="marketLine" class="market-line"></path>
+          </svg>
+          <div class="chart-axis-row"><span id="chartStart">—</span><span id="chartRange">24 HOURS</span><span id="chartEnd">—</span></div>
+        </div>
+      </section>
+
       <section class="live-transactions-panel">
         <div class="live-transactions-head">
           <div><span class="eyebrow">VALIDATED TRANSACTION STREAM</span><h2>Live Transactions</h2><p>Tap a transaction to expand its public ledger details. Private keys and wallet seeds never appear here.</p></div>
@@ -407,6 +432,19 @@
           <div class="ripplet-slot-mark" aria-hidden="true"><span>R</span></div>
         </article>
 
+        <article class="detail-card ripplet-mind-card">
+          <div class="card-title">
+            <div><h3>Autonomous Mind</h3><p>Ripplet can choose what to do next from live XRPL/XRP state, his needs, and memory.</p></div>
+            <span id="mindMode" class="chip">LOCAL AUTONOMY</span>
+          </div>
+          <div class="mind-grid">
+            <div><span>CURRENT INTENTION</span><strong id="mindAction">Roaming</strong></div>
+            <div><span>CURRENT THOUGHT</span><strong id="mindThought">Watching the Ledger and deciding what to do next.</strong></div>
+            <div><span>SI STATUS</span><strong id="mindSiStatus">Checking</strong></div>
+          </div>
+          <p class="ripplet-description">When an external SI provider is configured, Ripplet can ask it for a higher-level behavior decision. If not, his local autonomous brain continues running on its own.</p>
+        </article>
+
         <article class="detail-card ripplet-identity-card">
           <div class="card-title"><div><h3>Official Identity</h3><p>One mascot across XRPet.</p></div><span id="companionModelChip" class="chip">OFFICIAL // RIPPLET</span></div>
           <div class="ripplet-spec-grid">
@@ -546,12 +584,12 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 4.8.0 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 4.9.0 · XRP Ledger companion</footer>
   </main>
 </div>
 
-<script src="/app.js?v=4.8.0"></script>
-<script src="/timeline.js?v=4.8.0"></script>
-<script type="module" src="/companion3d.js?v=4.8.0"></script>
+<script src="/app.js?v=4.9.0"></script>
+<script src="/timeline.js?v=4.9.0"></script>
+<script type="module" src="/companion3d.js?v=4.9.0"></script>
 </body>
 </html>
