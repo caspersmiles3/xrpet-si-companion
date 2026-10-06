@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=5.5.6">
+  <link rel="stylesheet" href="/styles.css?v=5.5.7">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate clean-launch" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
@@ -63,33 +63,8 @@
 
     <nav class="side-nav" aria-label="Primary navigation">
       <button class="side-link active" data-primary-view="home"><span>⌂</span>Home</button>
-      <details class="nav-dropdown" id="xrplLiveNavDetails">
-        <summary class="side-link nav-parent-summary"><span>▥</span><b>XRPL Live</b><i>⌄</i></summary>
-        <div class="nav-dropdown-menu xrpl-live-nav-menu">
-          <button type="button" data-primary-view="live">Open XRPL Live</button>
-          <button class="xrpl-signal-menu-action" data-life-action="socialize" type="button">
-            <span class="xrpl-signal-dot" aria-hidden="true"></span>
-            Signal Friend
-          </button>
-        </div>
-      </details>
-      <details class="nav-dropdown exchange-nav-dropdown" id="exchangeNavDetails">
-        <summary class="side-link nav-parent-summary"><span>⇄</span><b>Exchanges</b><i>⌄</i></summary>
-        <div class="nav-dropdown-menu exchange-nav-menu">
-          <div class="exchange-menu-current"><span>MARKET SOURCE</span><strong id="selectedExchangeName">All Exchanges</strong></div>
-          <button type="button" data-exchange="all">All Exchanges · Composite</button>
-          <button type="button" data-exchange="coinbase">Coinbase · XRP/USD</button>
-          <button type="button" data-exchange="kraken">Kraken · XRP/USD</button>
-          <button type="button" data-exchange="bitstamp">Bitstamp · XRP/USD</button>
-          <button type="button" data-exchange="bitfinex">Bitfinex · XRP/USD</button>
-          <button type="button" data-exchange="binanceus">Binance.US · XRP/USDT</button>
-          <button type="button" data-exchange="okx">OKX · XRP/USDT</button>
-          <button type="button" data-exchange="bybit">Bybit · XRP/USDT</button>
-          <button type="button" data-exchange="kucoin">KuCoin · XRP/USDT</button>
-          <button type="button" data-exchange="gateio">Gate.io · XRP/USDT</button>
-          <button type="button" data-exchange="mexc">MEXC · XRP/USDT</button>
-        </div>
-      </details>
+      <button class="side-link" data-primary-view="live"><span>▥</span>XRPL Live</button>
+      <button class="side-link" data-primary-view="exchanges"><span>⇄</span>Exchanges</button>
       <details class="nav-dropdown" id="historyNavDetails">
         <summary class="side-link history-summary"><span>↯</span><b>Settlements + History</b><i>⌄</i></summary>
         <div class="nav-dropdown-menu">
@@ -195,21 +170,19 @@
 
   <main class="main-shell">
     <section class="top-command-deck" id="topCommandDeck" aria-label="XRPet command deck">
-      <header class="topbar command-search-row">
-        <form id="globalSearchForm" class="global-search">
+      <div class="command-primary-row">
+        <form id="globalSearchForm" class="global-search command-search-box">
           <span>⌕</span>
           <input id="globalSearch" placeholder="Search XRPet…">
         </form>
-      </header>
 
-      <div class="global-command-bar command-status-row" id="globalCommandBar">
-        <button type="button" data-primary-view="live" class="global-xrp-price-button">
+        <button type="button" data-primary-view="live" class="global-xrp-price-button command-primary-box">
           <span>XRP / USD</span>
           <strong id="globalXrpPrice">—</strong>
           <small id="globalXrpChange">Loading</small>
         </button>
 
-        <div id="rippletDock" class="ripplet-dock" aria-label="Ripplet companion dock">
+        <div id="rippletDock" class="ripplet-dock command-primary-box" aria-label="Ripplet companion dock">
           <div class="ripplet-dock-platform" aria-hidden="true"><i></i><b>589</b><i></i></div>
           <div class="ripplet-dock-copy">
             <span>RIPPLET DOCK</span>
@@ -220,18 +193,17 @@
             <button id="undockRipplet" type="button">Roam</button>
           </div>
         </div>
+      </div>
 
-        <div class="command-meta-strip">
-          <div class="visitor-ticker" aria-label="XRPet visitor counter">
-            <span class="visitor-label">VISITORS</span>
-            <span class="visitor-reel"><b id="visitorCount">000000</b></span>
-          </div>
-          <span id="liveBadge" class="status-pill waiting"><i></i><span>Connecting</span></span>
-          <div class="profile-chip">
-            <div class="mini-avatar">X</div>
-            <div><strong id="topPetName">RIPPLET</strong><small><span id="topLevel">Level 1</span> · <span id="topXp">0 XP</span></small></div>
-          </div>
-          <button type="button" class="signal-friend-button" data-life-action="socialize"><span>◉</span><b>Signal Friend</b><small>Interact</small></button>
+      <div class="command-meta-strip">
+        <div class="visitor-ticker" aria-label="XRPet visitor counter">
+          <span class="visitor-label">VISITORS</span>
+          <span class="visitor-reel"><b id="visitorCount">000000</b></span>
+        </div>
+        <span id="liveBadge" class="status-pill waiting"><i></i><span>Connecting</span></span>
+        <div class="profile-chip compact-profile">
+          <div class="mini-avatar">X</div>
+          <div><strong id="topPetName">RIPPLET</strong><small><span id="topLevel">Level 1</span> · <span id="topXp">0 XP</span></small></div>
         </div>
       </div>
     </section>
@@ -322,6 +294,12 @@
         <div><span class="eyebrow">XRP LEDGER // MAINNET</span><h1>XRPL Live</h1><p>Live network health, XRP market context, and validated public transactions in one focused view.</p></div>
         <div class="xrpl-live-actions"><span class="truth-label">LIVE MAINNET</span><button type="button" class="mini-button" data-primary-view="home">⌂ Home</button></div>
       </div>
+      <div class="xrpl-inline-tools">
+        <button type="button" class="xrpl-signal-friend" data-life-action="socialize">
+          <span class="xrpl-signal-dot" aria-hidden="true"></span>
+          <div><strong>Signal Friend</strong><small>Ripplet checks the latest XRPL activity and reacts.</small></div>
+        </button>
+      </div>
       <div class="top-metrics xrpl-live-metrics">
         <article class="price-card"><span id="marketPairLabel">XRP / USD + USDT</span><strong id="xrpPrice">—</strong><small id="xrpChange">Loading market</small></article>
         <article><span>Ledger Index</span><strong id="ledger">—</strong><small id="txCount">Waiting for close</small></article>
@@ -331,7 +309,7 @@
 
       <section class="market-chart-panel">
         <div class="market-chart-head">
-          <div><span id="marketChartEyebrow" class="eyebrow">XRP // ALL EXCHANGES</span><h2>XRP Market Movement</h2><p id="marketChartCopy">Live XRP market movement from the selected public exchange feed. Choose a venue from the Exchanges menu in the left column.</p></div>
+          <div><span id="marketChartEyebrow" class="eyebrow">XRP // ALL EXCHANGES</span><h2>XRP Market Movement</h2><p id="marketChartCopy">Live XRP market movement from the selected public exchange feed. Choose a venue from the Exchanges interface in the left column.</p></div>
           <div class="chart-stats">
             <span><small>24H HIGH</small><strong id="chartHigh">—</strong></span>
             <span><small>24H LOW</small><strong id="chartLow">—</strong></span>
@@ -372,6 +350,31 @@
           <p class="muted">Connecting to the XRPL transaction stream…</p>
         </div>
       </section>
+    </section>
+
+    <section id="exchangesSection" class="flow-section exchanges-section primary-view-section" data-view-section="exchanges">
+      <div class="section-heading exchanges-heading">
+        <div>
+          <span class="eyebrow">XRP // MARKET SOURCES</span>
+          <h2>Exchanges</h2>
+          <p class="section-subcopy">Choose the public exchange feed XRPet uses for the XRP market chart and live market details.</p>
+        </div>
+        <div class="exchange-selected-chip"><span>ACTIVE SOURCE</span><strong id="selectedExchangeName">All Exchanges</strong></div>
+      </div>
+      <div class="exchange-interface-grid">
+        <button type="button" data-exchange="all"><span>COMPOSITE</span><strong>All Exchanges</strong><small>XRP/USD + XRP/USDT</small></button>
+        <button type="button" data-exchange="coinbase"><span>USD</span><strong>Coinbase</strong><small>XRP/USD</small></button>
+        <button type="button" data-exchange="kraken"><span>USD</span><strong>Kraken</strong><small>XRP/USD</small></button>
+        <button type="button" data-exchange="bitstamp"><span>USD</span><strong>Bitstamp</strong><small>XRP/USD</small></button>
+        <button type="button" data-exchange="bitfinex"><span>USD</span><strong>Bitfinex</strong><small>XRP/USD</small></button>
+        <button type="button" data-exchange="binanceus"><span>USDT</span><strong>Binance.US</strong><small>XRP/USDT</small></button>
+        <button type="button" data-exchange="okx"><span>USDT</span><strong>OKX</strong><small>XRP/USDT</small></button>
+        <button type="button" data-exchange="bybit"><span>USDT</span><strong>Bybit</strong><small>XRP/USDT</small></button>
+        <button type="button" data-exchange="kucoin"><span>USDT</span><strong>KuCoin</strong><small>XRP/USDT</small></button>
+        <button type="button" data-exchange="gateio"><span>USDT</span><strong>Gate.io</strong><small>XRP/USDT</small></button>
+        <button type="button" data-exchange="mexc"><span>USDT</span><strong>MEXC</strong><small>XRP/USDT</small></button>
+      </div>
+      <div class="exchange-interface-note">Selecting a venue updates XRP Live immediately. No account login or exchange credentials are required.</div>
     </section>
 
 
@@ -899,7 +902,7 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 5.5.6 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 5.5.7 · XRP Ledger companion</footer>
   </main>
 </div>
 
@@ -936,14 +939,14 @@
   },6000);
 })();
 </script>
-<script src="/launch-enhance.js?v=5.5.6"></script>
+<script src="/launch-enhance.js?v=5.5.7"></script>
 <script src="/contact-directory.js?v=5.5.3"></script>
 <script src="/music-player.js?v=5.5.2"></script>
 <script src="/games.js?v=5.5.2"></script>
 <script src="/ecosystem.js?v=5.5.2"></script>
-<script src="/app.js?v=5.5.6"></script>
+<script src="/app.js?v=5.5.7"></script>
 <script src="/timeline.js?v=5.5.2"></script>
-<script type="module" src="/companion3d.js?v=5.5.6"></script>
+<script type="module" src="/companion3d.js?v=5.5.7"></script>
 
 </body>
 </html>
