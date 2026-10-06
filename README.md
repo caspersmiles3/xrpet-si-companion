@@ -1,4 +1,4 @@
-# XRPet SI Companion™ — v5.0.0
+# XRPet SI Companion™ — v5.1.0
 
 **Don't watch the Ledger. Live with it.**
 
@@ -215,3 +215,18 @@ A new **Games** primary navigation tab contains three original XRPet mini games:
 3. **Consensus 80** — a validator-sequence memory game inspired by consensus concepts. It is explicitly an arcade interpretation, not a technical simulation of XRPL consensus.
 
 Mini-game events feed back into Ripplet's animation/sound system and award small amounts of local XRPet XP. Games do not award XRP, tokens, money, or financial value.
+
+
+## v5.1 Ripplet 3.0 realism rebuild
+
+- Rebuilt Ripplet's hero geometry around custom high-resolution superellipsoid shells instead of relying on sphere-shaped head/body forms.
+- Added a unified articulated head rig so the outer shell, face, eyes, pupils, irises, corneas, lids, brows, jaw hardware, and temple details move together during gaze and reactions.
+- Added layered eye sockets, brow armor, temple/jaw rails, cheek vents, shoulder armor, shin armor, chest rails, micro-bolts, collar hardware, articulated palms, finger segments, calves, and shaped toe caps.
+- Whole-app mouse tracking now drives pupils, irises, eye highlights, the complete head rig, and subtle torso follow.
+- Replaced the deterministic blink loop with randomized natural blink timing including occasional double blinks.
+- Added subtle idle breathing, balance shifts, hand movement, finger motion, and continuous chest-core micro-pulsing.
+- Increased capable-device rendering fidelity to a 1.75 device-pixel-ratio ceiling and 45 FPS target while preserving the performance profile for lower-power devices.
+- Fixed the visible companion rectangle by bypassing SSAO/bloom compositing for the canonical transparent Ripplet render and rendering the roaming character directly into an alpha canvas.
+- Added final CSS isolation that forces every roaming companion wrapper and canvas to stay fully transparent with no borders, backgrounds, frames, pseudo-elements, or backdrop effects.
+- Ripplet 3.0 remains connected to autonomous behavior, XRP/XRPL live reactions, Water/Food/Sleep/Signal Friend choices, sounds, free roaming, Games, and local progression.
+- This release intentionally does **not** add or publish Google Play/Android distribution.
