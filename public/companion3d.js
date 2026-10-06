@@ -890,7 +890,7 @@ function naturalBlinkAmount(now){
 // state
 const BUILTIN_MODELS={
   ripplet:{
-    url:'/models/Ripplet.glb',
+    url:'/models/Ripplet.glb?v=6',
     credit:'Ripplet — XRPet canonical Ripple + XRP companion',
     rotationY:0,targetHeight:3.15,
     actions:{
@@ -1330,6 +1330,10 @@ function playExternalAction(name){
   if(looping.has(name)){next.setLoop(THREE.LoopRepeat,Infinity);next.clampWhenFinished=false}
   else{next.setLoop(THREE.LoopOnce,1);next.clampWhenFinished=true}
   next.fadeIn(.18).play();
+  if(!looping.has(name)){
+    const clipMs=Math.max(450,(next.getClip?.().duration||0)*1000+180);
+    actionUntil=Math.max(actionUntil,performance.now()+clipMs);
+  }
   if(externalActiveAction&&externalActiveAction!==externalBlinkAction)externalActiveAction.fadeOut(.18);
   externalActiveAction=next;
 }
@@ -1495,9 +1499,15 @@ function renderFrame(){
   if(externalModel){
     const extSleep=state==='sleep',extCelebrate=state==='celebrate',extAlert=state==='alert',extFocus=state==='focus',extScan=state==='scan',extOrbit=state==='orbit',extRun=state==='run',extJump=state==='jump',extClimb=state==='climb',extCrouch=state==='crouch';
     const baseY=externalModel.userData.xrpetBaseY??0;
-    externalModel.position.y=baseY+(extSleep?-.06:0)+(extCrouch?-.10:0)+Math.sin(t*(extSleep?.65:extRun?2.1:1.15))*(extSleep?.012:extRun?.04:.026)+(extCelebrate?Math.abs(Math.sin(t*6))*.06:0)+(extJump?Math.sin(Math.PI*motorProgress())*.36:0)+(extClimb?Math.sin(t*7.8)*.025:0);
-    externalModel.rotation.z=(extSleep?.045:Math.sin(t*.52)*.008)+(extCelebrate?Math.sin(t*5)*.018:0)+(extScan?Math.sin(t*4)*.012:0);
-    externalModel.rotation.x=extAlert?Math.sin(t*2.2)*.012:extFocus?-.025:0;
+    if(externalNativeRig){
+      externalModel.position.y=baseY+(extJump?Math.sin(Math.PI*motorProgress())*.36:0)+(extClimb?Math.sin(t*7.8)*.018:0);
+      externalModel.rotation.z=0;
+      externalModel.rotation.x=0;
+    }else{
+      externalModel.position.y=baseY+(extSleep?-.06:0)+(extCrouch?-.10:0)+Math.sin(t*(extSleep?.65:extRun?2.1:1.15))*(extSleep?.012:extRun?.04:.026)+(extCelebrate?Math.abs(Math.sin(t*6))*.06:0)+(extJump?Math.sin(Math.PI*motorProgress())*.36:0)+(extClimb?Math.sin(t*7.8)*.025:0);
+      externalModel.rotation.z=(extSleep?.045:Math.sin(t*.52)*.008)+(extCelebrate?Math.sin(t*5)*.018:0)+(extScan?Math.sin(t*4)*.012:0);
+      externalModel.rotation.x=extAlert?Math.sin(t*2.2)*.012:extFocus?-.025:0;
+    }
     if(extOrbit)externalModel.rotation.y=(externalModel.userData.xrpetBaseRotY??0)+t*.75;
   }
 
