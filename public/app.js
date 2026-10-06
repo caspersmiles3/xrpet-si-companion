@@ -415,7 +415,7 @@ async function loadMarketHistory(){
 async function loadUpdates(){const box=q('#updates');if(box)box.innerHTML='<p class="muted">Checking official Ripple and XRPL sources…</p>';try{const r=await fetch('/api/updates',{cache:'no-store'});const d=await r.json();if(!r.ok||!Array.isArray(d.items)||!d.items.length)throw new Error();const items=d.items.slice(0,12);box.innerHTML=items.map((x,i)=>'<article class="announcement-card"><div class="announcement-index">'+String(i+1).padStart(2,'0')+'</div><div><span class="announcement-source">'+esc(x.source)+' · '+esc(x.label||'CONFIRMED')+'</span><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title)+'</a><small>Official source ↗</small></div></article>').join('');setText('#announcementStatus','Live');setText('#announcementUpdated','Updated '+new Date().toLocaleTimeString());const newest=items[0]?.title||'';setText('#friendSignal',newest?'New signal':'Standing by');if(newest&&state.lastAnnouncementTitle&&newest!==state.lastAnnouncementTitle&&!false){state.lastAnnouncementAt=Date.now();performLifeActivity('socialize')}state.lastAnnouncementTitle=newest;persist()}catch{if(box)box.innerHTML='<p class="muted">Official update feed is temporarily unavailable.</p>';setText('#announcementStatus','Unavailable');setText('#announcementUpdated','Retrying automatically')}}
 const liveTransactions=[];
 const seenLiveTx=new Set();
-let liveTxRenderTimer=0,lifeWaterTimer=0,lifeReturnTimer=0,lastQuietReactionAt=0,spontaneousReactionTimer=0;
+let liveTxRenderTimer=0,lifeWaterTimer=0,lifeReturnTimer=0,lastQuietReactionAt=0,spontaneousReactionTimer=0,lastWsTransactionAt=0,lastHttpTransactionAt=0;
 function shortAccount(v){if(!v)return '—';const s=String(v);return s.length>18?s.slice(0,9)+'…'+s.slice(-6):s}
 function formatLedgerAmount(amount){
   if(amount==null)return '—';
@@ -436,7 +436,7 @@ function normalizeLiveTransaction(m){
   const meta=m.meta||m.metaData||{};
   const timestamp=Number.isFinite(Number(tx.date))?new Date((Number(tx.date)+946684800)*1000).toISOString():new Date().toISOString();
   const memos=Array.isArray(tx.Memos)?tx.Memos.map(x=>{const memo=x?.Memo||{};return {type:hexToUtf8(memo.MemoType||''),format:hexToUtf8(memo.MemoFormat||''),data:hexToUtf8(memo.MemoData||'')}}).filter(x=>x.type||x.format||x.data):[];
-  return {hash,type:tx.TransactionType||'Transaction',account:tx.Account||'',destination:tx.Destination||'',destinationTag:tx.DestinationTag,amount:formatLedgerAmount(extractDeliveredAmount(m,tx)),fee:tx.Fee!=null?(Number(tx.Fee)/1000000).toFixed(6)+' XRP':'—',sequence:tx.Sequence??'—',ledger,status:meta.TransactionResult||m.engine_result||(m.validated===false?'Pending':'Validated'),validated:m.validated!==false,flags:tx.Flags??0,ticket:tx.TicketSequence??null,timestamp,memos,source:activeXrplEndpoint,explorer:'https://livenet.xrpl.org/transactions/'+encodeURIComponent(hash)};
+  return {hash,type:tx.TransactionType||'Transaction',account:tx.Account||'',destination:tx.Destination||'',destinationTag:tx.DestinationTag,amount:formatLedgerAmount(extractDeliveredAmount(m,tx)),fee:tx.Fee!=null?(Number(tx.Fee)/1000000).toFixed(6)+' XRP':'—',sequence:tx.Sequence??'—',ledger,status:meta.TransactionResult||m.engine_result||(m.validated===false?'Pending':'Validated'),validated:m.validated!==false,flags:tx.Flags??0,ticket:tx.TicketSequence??null,timestamp,memos,source:m.source||activeXrplEndpoint,explorer:'https://livenet.xrpl.org/transactions/'+encodeURIComponent(hash)};
 }
 function scheduleLiveTransactionRender(){if(liveTxRenderTimer)return;liveTxRenderTimer=setTimeout(()=>{liveTxRenderTimer=0;renderLiveTransactions()},250)}
 function renderLiveTransactions(){
@@ -503,6 +503,7 @@ function connectLedger(){
     }else if(m.type==='transaction'){
       const normalized=normalizeLiveTransaction(m);
       if(normalized){
+        lastWsTransactionAt=Date.now();
         window.dispatchEvent(new CustomEvent('xrpet:xrplTransaction',{detail:normalized}));
         liveTransactions.unshift(normalized);if(liveTransactions.length>40)liveTransactions.length=40;scheduleLiveTransactionRender();
         state.lastLedgerTxAt=Date.now();setText('#waterSignal','Ledger #'+normalized.ledger);setText('#sleepSignal','XRPL active');
@@ -521,6 +522,40 @@ function scheduleReconnect(rotate=false){
   clearTimeout(retry);if(rotate)xrplEndpointIndex=(xrplEndpointIndex+1)%XRPL_ENDPOINTS.length;
   retry=setTimeout(connectLedger,2500);
 }
+async function loadRecentTransactionsFallback(force=false){
+  const quietFor=Date.now()-Math.max(lastWsTransactionAt||0,lastHttpTransactionAt||0);
+  if(!force&&state.connected&&quietFor<9000)return;
+  try{
+    const r=await fetch('/api/xrpl/recent-transactions',{cache:'no-store'});
+    const d=await r.json();if(!r.ok)throw new Error(d.error||'XRPL fallback unavailable');
+    let added=0;
+    for(const item of d.transactions||[]){
+      const normalized=normalizeLiveTransaction({
+        type:'transaction',
+        validated:true,
+        transaction:item.transaction,
+        meta:item.meta,
+        hash:item.hash,
+        ledger_index:item.ledger_index||d.ledgerIndex,
+        source:'XRPL JSON-RPC fallback'
+      });
+      if(!normalized)continue;
+      liveTransactions.push(normalized);added+=1;
+      window.dispatchEvent(new CustomEvent('xrpet:xrplTransaction',{detail:normalized}));
+    }
+    if(added){
+      liveTransactions.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+      if(liveTransactions.length>40)liveTransactions.length=40;
+      lastHttpTransactionAt=Date.now();
+      scheduleLiveTransactionRender();
+      setText('#txStreamSource',state.connected?'LIVE + RPC BACKUP':'RPC FALLBACK · VALIDATED');
+      setText('#liveTxRate',liveTransactions.length+' RECENT');
+    }
+  }catch(e){
+    if(!state.connected)setText('#txStreamSource','XRPL RETRYING');
+  }
+}
+
 async function loadConfig(){try{const r=await fetch('/api/config',{cache:'no-store'});return await r.json()}catch{return{}}}
 async function integrationCheck(){const box=q('#integrationStatus');if(!box)return;box.innerHTML='<div class="integration-item"><span>System</span><strong>Checking…</strong></div>';try{const [cfg,self]=await Promise.all([loadConfig(),fetch('/api/self-test',{cache:'no-store'}).then(r=>r.json())]);const rows=[['XRPL',state.connected?'LIVE':'CONNECTING'],['Xaman',cfg.xamanApiKey?'READY':'NOT CONFIGURED'],['Web Push',cfg.pushEnabled?'READY':'NOT CONFIGURED'],['Full SI',cfg.siProviderEnabled?'READY':'NOT CONFIGURED']];box.innerHTML=rows.map(([n,s])=>'<div class="integration-item"><span>'+n+'</span><strong class="'+(/LIVE|READY/.test(s)?'ok':'warn')+'">'+s+'</strong></div>').join('')}catch{box.innerHTML='<div class="integration-item"><span>System</span><strong class="warn">Check failed</strong></div>'}}
 async function requestNfts(){
@@ -1035,7 +1070,7 @@ q('.main-shell')?.addEventListener('scroll',()=>{syncRoamBounds()},{passive:true
 syncRoamBounds();setTimeout(()=>goRipplet('explore'),300);roamingStep();spontaneousRippletReaction();applyNftCompanion();
 qa('[data-life-action]').forEach(b=>b.addEventListener('click',()=>performLifeActivity(b.dataset.lifeAction,true)));
 setInterval(lifeTick,15000);
-dailyVisit();render();registerVisitor();connectLedger();loadMarket();loadMarketHistory();connectMarketStream();loadUpdates();integrationCheck();setTimeout(runAutonomousMind,12000);setInterval(()=>{if(Date.now()-marketLastTickAt>15000)loadMarket()},15000);setInterval(loadMarketHistory,300000);setInterval(loadUpdates,15000);setInterval(integrationCheck,15000);
+dailyVisit();render();registerVisitor();connectLedger();loadRecentTransactionsFallback(true);loadMarket();loadMarketHistory();connectMarketStream();loadUpdates();integrationCheck();setTimeout(runAutonomousMind,12000);setInterval(()=>{if(Date.now()-marketLastTickAt>15000)loadMarket()},15000);setInterval(loadMarketHistory,300000);setInterval(loadUpdates,15000);setInterval(integrationCheck,15000);setInterval(()=>loadRecentTransactionsFallback(false),8000);
 
 window.addEventListener('xrpet:gameEvent',e=>{
   const d=e.detail||{};
