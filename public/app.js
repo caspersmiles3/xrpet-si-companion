@@ -117,7 +117,7 @@ const LIFE_REACTIONS={
   socialize:[
     {name:'Signal Wave',actions:[['wave',0],['greet',950]],sounds:[['wave',0],['greet',900]],variant:'a'},
     {name:'Signal High-Five',actions:[['highfive',0],['celebrate',1100]],sounds:[['highfive',0],['celebrate',1100]],variant:'b'},
-    {name:'Signal Dance',actions:[['dance',0],['orbit',1200]],sounds:[['dance',0],['success',1200]],variant:'c'}
+    {name:'Signal Cheer',actions:[['cheer',0],['salute',1200]],sounds:[['success',0],['greet',1150]],variant:'c'}
   ]
 };
 const lastLifeReaction={};
@@ -706,6 +706,11 @@ qa('.gender-choice').forEach(b=>b.addEventListener('click',()=>{state.companionG
 qa('[data-pet-action]').forEach(b=>b.addEventListener('click',()=>{
   const action=b.dataset.petAction;
   state.nftCompanion=null;applyNftCompanion();
+  if(action==='dance'&&window.XRPetMusicPlaying!==true){
+    setText('#petMood','Waiting for music');
+    setText('#petSpeech','Ripplet only dances while the XRPet music player is actually playing.');
+    return;
+  }
   window.XRPet3D?.perform?.(action);
   if(action==='celebrate'){playSound('success');setText('#petMood','Celebrating');setText('#petSpeech','Celebration protocol active. XRP signal lattice energized.')}
   else if(action==='alert'){playSound('alert');setText('#petMood','Alert');setText('#petSpeech','Sensors focused. Watching validated ledger activity closely.')}
@@ -1112,6 +1117,9 @@ let rippletPointer={x:0,y:0,active:false,movedAt:0};
 let rippletPointerTimer=0;
 let rippletLastPointerTarget=null;
 let rippletRouteToken=0;
+let rippletRouteUntil=0;
+let rippletMusicDancing=false;
+let rippletMusicDanceTimer=0;
 
 function syncRoamBounds(){
   const shell=q('.main-shell');if(!shell||!roamLayer)return;
@@ -1130,6 +1138,23 @@ function setRoamPosition(x,y,activity='explore'){
   lifeAvatar.dataset.activity=activity;
   roamX=maxX?px/maxX:.5;roamY=maxY?py/maxY:.5;
 }
+function cancelRippletRoute(){
+  if(!lifeAvatar)return;
+  const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar.getBoundingClientRect();
+  ++rippletRouteToken;
+  rippletRouteUntil=0;
+  if(shell&&sr){
+    const x=ar.left-sr.left+shell.scrollLeft;
+    const y=ar.top-sr.top+shell.scrollTop;
+    lifeAvatar.style.transitionDuration='0s';
+    lifeAvatar.style.transform='translate3d('+x+'px,'+y+'px,0)';
+    void lifeAvatar.offsetWidth;
+    roamX=shell.scrollWidth?x/Math.max(1,shell.scrollWidth-ar.width):.5;
+    roamY=shell.scrollHeight?y/Math.max(1,shell.scrollHeight-ar.height):.5;
+  }
+}
+function rippletRouteBusy(){return performance.now()<rippletRouteUntil}
+
 function stationPosition(activity){
   const station=q('[data-life-action="'+activity+'"]'),layer=roamLayer?.getBoundingClientRect();
   if(!station||!layer)return null;
@@ -1392,12 +1417,17 @@ function pointerActionFor(hit){
   if(side&&(textual||line))return {mode:'hang',action:'hang'};
   if(my<rect.top-10&&(textual||line))return {mode:'climb',action:'climb'};
   if(nearTop||line)return {mode:'perch',action:Math.random()<.18?'sit':'stand'};
-  if(nearBottom)return {mode:'hop',action:'jump'};
+  if(nearBottom){
+    const hop=interfaceTargetPosition(target,'hop');
+    if(hop&&canJumpOntoTarget(target,hop))return {mode:'hop',action:'jump'};
+    return {mode:'climb',action:'climb'};
+  }
   if(textual&&Math.random()<.30)return {mode:'hang',action:'hang'};
   return {mode:'perch',action:'stand'};
 }
 function followRippletPointer(force=false){
-  if(roamDocked||!lifeAvatar||!roamLayer)return false;
+  if(roamDocked||rippletMusicDancing||!lifeAvatar||!roamLayer)return false;
+  if(rippletRouteBusy())return true;
   if(!rippletPointer.active&&!force)return false;
   const hits=terrainNearPointer();
   if(!hits.length)return false;
@@ -1416,27 +1446,18 @@ function followRippletPointer(force=false){
     window.XRPet2D?.face?.(dir);
   }
 
-  if(choice.action==='hang'){
-    window.XRPet2D?.motor?.('hang');
-    routeRippletTo(p.x,p.y,'hang',hit.target);
-    setText('#mindAction','Following cursor · hanging');
-  }else if(choice.action==='climb'){
-    window.XRPet2D?.motor?.('climb');
-    routeRippletTo(p.x,p.y,'climb',hit.target);
-    setText('#mindAction','Following cursor · climbing');
-  }else if(choice.action==='jump'){
-    window.XRPet2D?.motor?.('jump');
-    routeRippletTo(p.x,p.y,'jump',hit.target);
-    setText('#mindAction','Following cursor · jumping');
-  }else if(choice.action==='sit'){
-    window.XRPet2D?.motor?.('sit');
-    routeRippletTo(p.x,p.y,'sit',hit.target);
-    setText('#mindAction','Following cursor · sitting');
-  }else{
-    window.XRPet2D?.motor?.('stand');
-    routeRippletTo(p.x,p.y,'stand',hit.target);
-    setText('#mindAction','Following cursor · perched');
+  const routeAction=choice.action==='sit'?'sit':choice.action==='hang'?'hang':choice.action==='climb'?'climb':choice.action==='jump'?'jump':'stand';
+  if(!routeRippletTo(p.x,p.y,routeAction,hit.target)){
+    markInterfaceTarget(hit.target,false);
+    return false;
   }
+  setText('#mindAction',
+    choice.action==='hang'?'Following cursor · hanging':
+    choice.action==='climb'?'Following cursor · climbing':
+    choice.action==='jump'?'Following cursor · short hop':
+    choice.action==='sit'?'Following cursor · sitting':
+    'Following cursor · perched'
+  );
   setText('#mindThought','I am following your mouse through the page terrain.');
 
   clearTimeout(rippletPointerTimer);
@@ -1453,7 +1474,7 @@ function updateRippletPointer(e){
   rippletPointer.active=true;
   rippletPointer.movedAt=Date.now();
   clearTimeout(rippletPointerTimer);
-  rippletPointerTimer=setTimeout(()=>followRippletPointer(),34);
+  rippletPointerTimer=setTimeout(()=>followRippletPointer(),120);
 }
 function rectsOverlap(a,b,pad=0){
   return !(a.right<=b.left+pad||a.left>=b.right-pad||a.bottom<=b.top+pad||a.top>=b.bottom-pad);
@@ -1484,7 +1505,14 @@ function visibleCollisionRects(ignoreTarget=null){
     if(seen.has(key))continue;
     seen.add(key);rects.push(local);
   }
-  return rects;
+  const boxes=rects.filter(r=>r.kind==='box');
+  return rects.filter(r=>{
+    if(r.kind==='box')return true;
+    return !boxes.some(b=>
+      r.left>=b.left+1&&r.right<=b.right-1&&
+      r.top>=b.top+1&&r.bottom<=b.bottom-1
+    );
+  });
 }
 function surfacePositionIsClear(x,y,ignoreTarget=null){
   const a=avatarRectAt(x,y);
@@ -1524,38 +1552,55 @@ function findClearRoute(start,end,ignoreTarget=null){
   const aw=Math.max(52,avatar?.width||52),ah=Math.max(72,avatar?.height||72);
   const maxX=Math.max(4,shell.scrollWidth-aw-4),maxY=Math.max(4,shell.scrollHeight-ah-4);
   const clampPoint=p=>({x:Math.max(4,Math.min(maxX,p.x)),y:Math.max(4,Math.min(maxY,p.y))});
-  const candidates=[
-    [end],
+  const candidates=[];
+
+  // Never plan a long diagonal "flight". Direct routes are only allowed when
+  // they are effectively horizontal or vertical. Other routes use right-angle
+  // segments so Ripplet can walk/run horizontally and climb vertically.
+  if(Math.abs(end.x-start.x)<=8||Math.abs(end.y-start.y)<=8)candidates.push([end]);
+  candidates.push(
     [{x:start.x,y:end.y},end],
     [{x:end.x,y:start.y},end],
     [{x:4,y:start.y},{x:4,y:end.y},end],
     [{x:maxX,y:start.y},{x:maxX,y:end.y},end],
     [{x:start.x,y:4},{x:end.x,y:4},end],
     [{x:start.x,y:maxY},{x:end.x,y:maxY},end]
-  ];
+  );
+
   const blockers=visibleCollisionRects().sort((a,b)=>{
     const ac=Math.hypot((a.left+a.right)*.5-start.x,(a.top+a.bottom)*.5-start.y);
     const bc=Math.hypot((b.left+b.right)*.5-start.x,(b.top+b.bottom)*.5-start.y);
     return ac-bc;
-  }).slice(0,18);
+  }).slice(0,40);
+
   for(const r of blockers){
-    const top=Math.max(4,r.top-ah-5),bottom=Math.min(maxY,r.bottom+5);
-    const left=Math.max(4,r.left-aw-5),right=Math.min(maxX,r.right+5);
+    const top=Math.max(4,r.top-ah-6),bottom=Math.min(maxY,r.bottom+6);
+    const left=Math.max(4,r.left-aw-6),right=Math.min(maxX,r.right+6);
     candidates.push(
       [{x:start.x,y:top},{x:end.x,y:top},end],
       [{x:start.x,y:bottom},{x:end.x,y:bottom},end],
       [{x:left,y:start.y},{x:left,y:end.y},end],
-      [{x:right,y:start.y},{x:right,y:end.y},end]
+      [{x:right,y:start.y},{x:right,y:end.y},end],
+      [{x:left,y:start.y},{x:left,y:top},{x:end.x,y:top},end],
+      [{x:right,y:start.y},{x:right,y:bottom},{x:end.x,y:bottom},end]
     );
   }
+
   let best=null,bestDistance=Infinity;
   for(const raw of candidates){
-    const route=raw.map(clampPoint);
+    const route=[];
+    for(const p of raw.map(clampPoint)){
+      const prev=route[route.length-1]||start;
+      if(Math.hypot(p.x-prev.x,p.y-prev.y)<2)continue;
+      route.push(p);
+    }
+    if(!route.length)continue;
     let from=start,total=0,ok=true;
     for(let i=0;i<route.length;i++){
       const to=route[i],final=i===route.length-1;
       if(!pathIsClear(from,to,final?ignoreTarget:null)){ok=false;break}
-      total+=Math.hypot(to.x-from.x,to.y-from.y);from=to;
+      total+=Math.hypot(to.x-from.x,to.y-from.y);
+      from=to;
     }
     if(ok&&total<bestDistance){best=route;bestDistance=total}
   }
@@ -1563,59 +1608,131 @@ function findClearRoute(start,end,ignoreTarget=null){
 }
 function rippletMaxJumpHeight(){
   const avatar=lifeAvatar?.getBoundingClientRect();
-  return Math.round(Math.max(44,Math.min(86,(avatar?.height||72)*.68)));
+  return Math.round(Math.max(22,Math.min(38,(avatar?.height||72)*.34)));
+}
+function rippletMaxJumpDistance(){
+  const avatar=lifeAvatar?.getBoundingClientRect();
+  return Math.round(Math.max(28,Math.min(48,(avatar?.width||52)*.82)));
 }
 function targetTerrainKind(target){
   return target?.__terrain||'box';
 }
 function canJumpOntoTarget(target,position=null){
-  if(targetTerrainKind(target)!=='box')return true;
   const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar?.getBoundingClientRect();
   if(!shell||!sr||!ar)return false;
   const p=position||interfaceTargetPosition(target,'hop');
   if(!p)return false;
+  const currentX=ar.left-sr.left+shell.scrollLeft;
   const currentY=ar.top-sr.top+shell.scrollTop;
-  const rise=Math.max(0,currentY-p.y);
-  return rise<=rippletMaxJumpHeight();
+  const rise=currentY-p.y;
+  const horizontal=Math.abs(currentX-p.x);
+  return rise>=-6&&rise<=rippletMaxJumpHeight()&&horizontal<=rippletMaxJumpDistance();
+}
+function routeSegmentActivity(from,to,requested='walk',final=false){
+  const dx=Math.abs(to.x-from.x),dy=Math.abs(to.y-from.y);
+  if(final&&requested==='jump'&&dy<=rippletMaxJumpHeight()&&dx<=rippletMaxJumpDistance())return 'jump';
+  if(dy>8)return 'climb';
+  if(dx>82)return 'run';
+  return 'walk';
+}
+function routeSegmentDuration(from,to,activity){
+  const distance=Math.max(1,Math.hypot(to.x-from.x,to.y-from.y));
+  const speed=activity==='run'?245:activity==='climb'?78:activity==='jump'?115:135;
+  return Math.max(260,Math.min(activity==='climb'?900:720,(distance/speed)*1000));
+}
+function expandPhysicalRoute(start,route){
+  const expanded=[];
+  let from=start;
+  for(const point of route){
+    const dx=point.x-from.x,dy=point.y-from.y;
+    const vertical=Math.abs(dy)>8;
+    const maxStep=vertical?34:76;
+    const count=Math.max(1,Math.ceil(Math.max(Math.abs(dx),Math.abs(dy))/maxStep));
+    for(let i=1;i<=count;i++){
+      expanded.push({x:from.x+dx*(i/count),y:from.y+dy*(i/count)});
+    }
+    from=point;
+  }
+  return expanded;
+}
+function currentTerrainCollision(current){
+  const a=avatarRectAt(current.x,current.y);
+  return visibleCollisionRects().find(r=>rectsOverlap(a,r,1))||null;
+}
+function recoverRippletFromCollision(current,goal,activity,ignoreTarget){
+  const shell=q('.main-shell'),avatar=lifeAvatar?.getBoundingClientRect(),blocker=currentTerrainCollision(current);
+  if(!shell||!avatar||!blocker)return false;
+  const aw=Math.max(52,avatar.width||52),ah=Math.max(72,avatar.height||72);
+  const maxX=Math.max(4,shell.scrollWidth-aw-4),maxY=Math.max(4,shell.scrollHeight-ah-4);
+  const candidates=[
+    {x:Math.max(4,Math.min(maxX,current.x)),y:Math.max(4,blocker.top-ah-3)},
+    {x:Math.max(4,blocker.left-aw-3),y:Math.max(4,Math.min(maxY,current.y))},
+    {x:Math.min(maxX,blocker.right+3),y:Math.max(4,Math.min(maxY,current.y))},
+    {x:Math.max(4,Math.min(maxX,current.x)),y:Math.min(maxY,blocker.bottom+3)}
+  ].filter(p=>surfacePositionIsClear(p.x,p.y,blocker.target));
+  if(!candidates.length)return false;
+  candidates.sort((a,b)=>Math.hypot(a.x-current.x,a.y-current.y)-Math.hypot(b.x-current.x,b.y-current.y));
+  const escape=candidates[0],token=++rippletRouteToken;
+  rippletRouteUntil=performance.now()+720;
+  window.XRPet2D?.motor?.('climb');
+  setRoamPosition(escape.x,escape.y,'climb');
+  setTimeout(()=>{
+    if(token!==rippletRouteToken)return;
+    rippletRouteUntil=0;
+    routeRippletTo(goal.x,goal.y,activity,ignoreTarget);
+  },740);
+  return true;
 }
 function routeRippletTo(x,y,activity='walk',ignoreTarget=null){
   if(!lifeAvatar||!roamLayer)return false;
   const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar.getBoundingClientRect();
-  if(!shell||!sr){setRoamPosition(x,y,activity);return true}
+  if(!shell||!sr)return false;
   const current={
     x:ar.left-sr.left+shell.scrollLeft,
     y:ar.top-sr.top+shell.scrollTop
   };
+
+  if(currentTerrainCollision(current)&&recoverRippletFromCollision(current,{x,y},activity,ignoreTarget))return true;
+
   let end={x,y};
   if(!surfacePositionIsClear(end.x,end.y,ignoreTarget)){
     const adjusted=findNearestClearPosition(end.x,end.y,ignoreTarget);
     if(!adjusted)return false;
     end=adjusted;
   }
-  const route=findClearRoute(current,end,ignoreTarget);
+
+  let route=null;
+  if(activity==='jump'&&canJumpOntoTarget(ignoreTarget,end)&&pathIsClear(current,end,ignoreTarget)){
+    route=[end];
+  }else{
+    route=findClearRoute(current,end,ignoreTarget);
+  }
   if(!route)return false;
+
+  const physicalRoute=expandPhysicalRoute(current,route);
+  if(!physicalRoute.length)return false;
 
   const routeToken=++rippletRouteToken;
   let delay=0,from=current;
-  route.forEach((point,index)=>{
-    const final=index===route.length-1;
-    const segment=Math.hypot(point.x-from.x,point.y-from.y);
-    const finalActivity=activity==='sit'?'walk':activity==='stand'?'walk':activity;
-    const stepActivity=final?finalActivity:(segment>120?'run':'walk');
-    const stepDelay=stepActivity==='run'?760:stepActivity==='jump'?620:stepActivity==='climb'||stepActivity==='hang'?1020:1180;
+  physicalRoute.forEach((point,index)=>{
+    const final=index===physicalRoute.length-1;
+    const stepActivity=routeSegmentActivity(from,point,activity,final);
+    const stepDelay=routeSegmentDuration(from,point,stepActivity);
     setTimeout(()=>{
       if(routeToken!==rippletRouteToken)return;
       if(roamDocked&&activity!=='dock')return;
-      window.XRPet2D?.motor?.(final?(activity==='stand'?'stand':activity==='sit'?'sit':activity):stepActivity);
+      window.XRPet2D?.motor?.(stepActivity);
       setRoamPosition(point.x,point.y,stepActivity);
       if(final){
-        if(activity==='sit')window.XRPet2D?.motor?.('sit');
-        else if(activity==='stand')window.XRPet2D?.motor?.('stand');
+        const finish=activity==='sit'?'sit':activity==='hang'?'hang':activity==='stand'?'stand':activity==='dock'?'stand':null;
+        if(finish)window.XRPet2D?.motor?.(finish);
+        rippletRouteUntil=0;
       }
     },delay);
     delay+=stepDelay;
     from=point;
   });
+  rippletRouteUntil=performance.now()+delay+80;
   return true;
 }
 function interfaceTargetPosition(el,mode='perch'){
@@ -1711,7 +1828,8 @@ function dropPlayProp(){
 }
 function makeInterfaceEcho(){return null;}
 function playWithInterface(force=false){
-  if(roamDocked||!lifeAvatar||!roamLayer)return false;
+  if(roamDocked||rippletMusicDancing||!lifeAvatar||!roamLayer)return false;
+  if(rippletRouteBusy())return false;
   if(!force&&Date.now()-lastInterfacePlayAt<1900)return false;
 
   const words=visibleTextTerrain();
@@ -1733,77 +1851,72 @@ function playWithInterface(force=false){
   let mode='perch',action='walk';
 
   if(textual){
-    if(roll<.20){mode='hang';action='hang'}
-    else if(roll<.52){mode='climb';action='climb'}
-    else if(roll<.76){mode='hop';action='jump'}
+    const hop=interfaceTargetPosition(target,'hop');
+    const shortHop=hop&&canJumpOntoTarget(target,hop);
+    if(roll<.18){mode='hang';action='hang'}
+    else if(roll<.58){mode='climb';action='climb'}
+    else if(roll<.70&&shortHop){mode='hop';action='jump'}
     else{mode='perch';action='walk'}
   }else{
     const hop=interfaceTargetPosition(target,'hop');
-    if(roll<.58&&hop&&canJumpOntoTarget(target,hop)){mode='hop';action='jump'}
+    if(roll<.28&&hop&&canJumpOntoTarget(target,hop)){mode='hop';action='jump'}
     else{mode='side';action='walk'}
   }
 
-  const p=interfaceTargetPosition(target,mode);if(!p)return false;
+  let p=interfaceTargetPosition(target,mode);if(!p)return false;
+  if(action==='jump'&&!canJumpOntoTarget(target,p)){
+    action='climb';mode='climb';
+    p=interfaceTargetPosition(target,mode);
+    if(!p)return false;
+  }
   markInterfaceTarget(target,true);
 
   if(action==='hang'){
-    window.XRPet3D?.motor?.('hang');
     if(!routeRippletTo(p.x,p.y,'hang',target)){markInterfaceTarget(target,false);return false}
     setText('#mindAction',terrainKind==='line'?'Hanging from a line':'Hanging from letters');
-    setText('#mindThought','I grabbed the edge without crossing through it.');
+    setText('#mindThought','I reached the edge without crossing through it.');
     setTimeout(()=>{
-      if(roamDocked)return;
+      if(roamDocked||rippletMusicDancing||rippletRouteBusy())return;
       const up=interfaceTargetPosition(target,'perch');
-      if(up){
-        window.XRPet3D?.motor?.('climb');
-        routeRippletTo(up.x,up.y,'climb',target);
-      }
-    },1050);
+      if(up)routeRippletTo(up.x,up.y,'climb',target);
+    },1200);
   }else if(action==='jump'){
-    if(terrainKind==='box'&&!canJumpOntoTarget(target,p)){
-      markInterfaceTarget(target,false);
-      return false;
-    }
-    window.XRPet3D?.motor?.('jump');
     if(!routeRippletTo(p.x,p.y,'jump',target)){markInterfaceTarget(target,false);return false}
-    setText('#mindAction',terrainKind==='box'?'Jumping onto a box':'Jumping onto page terrain');
-    setText('#mindThought',terrainKind==='box'
-      ? 'That surface is inside my jump-height limit.'
-      : 'I am using the words and lines as little platforms.');
+    setText('#mindAction','Short hop');
+    setText('#mindThought','I only jump when the platform is close enough to reach physically.');
   }else if(action==='climb'){
-    window.XRPet3D?.motor?.('climb');
     if(!routeRippletTo(p.x,p.y,'climb',target)){markInterfaceTarget(target,false);return false}
-    setText('#mindAction',terrainKind==='line'?'Climbing a line':'Climbing letters and words');
-    setText('#mindThought','I am climbing along the outside edge instead of passing through it.');
+    setText('#mindAction',terrainKind==='line'?'Climbing a line':'Climbing page terrain');
+    setText('#mindThought','I am climbing the outside edge instead of passing through it.');
   }else{
-    window.XRPet3D?.motor?.('walk');
     if(!routeRippletTo(p.x,p.y,'stand',target)){markInterfaceTarget(target,false);return false}
-    setText('#mindAction',terrainKind==='box'?'Stopped beside a box':terrainKind==='line'?'Standing on a line':'Walking on words');
+    setText('#mindAction',terrainKind==='box'?'Walking around a box':terrainKind==='line'?'Standing on a line':'Walking to a word');
     setText('#mindThought',terrainKind==='box'
-      ? 'That box is too high to jump, so I am going around it.'
-      : 'The page itself is solid terrain now.');
+      ? 'The box is solid, so I am taking a grounded route around it.'
+      : 'Words and lines are solid platforms, not empty space.');
   }
 
   setTimeout(()=>{
     markInterfaceTarget(target,false);
-    if(!roamDocked&&Math.random()<.42){
+    if(!roamDocked&&!rippletMusicDancing&&!rippletRouteBusy()&&Math.random()<.42){
       const emotes=['wave','thinking','happy','salute'];
       window.XRPet3D?.perform?.(emotes[Math.floor(Math.random()*emotes.length)]);
     }
-  },1750);
+  },2200);
 
   return true;
 }
 function playWithObject(){
-  if(roamDocked)return false;
+  if(roamDocked||rippletMusicDancing||rippletRouteBusy())return false;
   const prop=nearestFreePlayProp();if(!prop)return false;
   const layer=roamLayer?.getBoundingClientRect(),r=prop.getBoundingClientRect(),avatar=lifeAvatar?.getBoundingClientRect();
   if(!layer||!avatar)return false;
   const x=r.left-layer.left-avatar.width*.55,y=r.top-layer.top-avatar.height*.55;
-  window.XRPet3D?.motor?.('walk');setRoamPosition(x,y,'walk');
-  setText('#mindAction','Playing');
-  setText('#mindThought','I spotted '+(prop.dataset.propLabel||'an object')+' and decided to pick it up.');
-  setTimeout(()=>carryProp(prop),1300);
+  if(!routeRippletTo(x,y,'walk'))return false;
+  setText('#mindAction','Walking to object');
+  setText('#mindThought','I spotted '+(prop.dataset.propLabel||'an object')+' and I am walking to it.');
+  const wait=Math.max(900,rippletRouteUntil-performance.now()+120);
+  setTimeout(()=>{if(!rippletMusicDancing&&!rippletRouteBusy())carryProp(prop)},wait);
   return true;
 }
 window.XRPetPlayground={
@@ -1814,8 +1927,66 @@ window.XRPetPlayground={
 };
 ensurePlayProps();
 
+function syncDanceButton(){
+  qa('[data-pet-action="dance"]').forEach(button=>{
+    button.disabled=window.XRPetMusicPlaying!==true;
+    button.title=button.disabled?'Start the XRPet music player to let Ripplet dance.':'Dance with the music';
+  });
+}
+function danceToMusicBeat(){
+  clearTimeout(rippletMusicDanceTimer);
+  if(!rippletMusicDancing||window.XRPetMusicPlaying!==true)return;
+  if(rippletRouteBusy()){
+    rippletMusicDanceTimer=setTimeout(danceToMusicBeat,240);
+    return;
+  }
+  if(lifeAvatar){
+    lifeAvatar.dataset.activity='dance';
+    lifeAvatar.dataset.reaction='dance';
+  }
+  window.XRPet3D?.perform?.('dance');
+  state.mindAction='dance';
+  state.mindThought='The music is playing, so I am dancing in place.';
+  renderMind();
+  rippletMusicDanceTimer=setTimeout(danceToMusicBeat,2250);
+}
+function setRippletMusicDance(playing){
+  const next=playing===true;
+  rippletMusicDancing=next;
+  syncDanceButton();
+  clearTimeout(rippletMusicDanceTimer);
+  if(next){
+    clearTimeout(roamTimer);
+    cancelRippletRoute();
+    setText('#mindAction','Dancing to music');
+    setText('#mindThought','Music is on. I stay grounded and dance where I am.');
+    danceToMusicBeat();
+    return;
+  }
+  if(lifeAvatar){
+    if(lifeAvatar.dataset.activity==='dance')lifeAvatar.dataset.activity='stand';
+    if(lifeAvatar.dataset.reaction==='dance')delete lifeAvatar.dataset.reaction;
+  }
+  window.XRPet2D?.motor?.('stand');
+  state.mindAction='roam';
+  state.mindThought='The music stopped. I can move through the interface again.';
+  renderMind();
+  clearTimeout(roamTimer);
+  roamTimer=setTimeout(roamingStep,320);
+}
+window.addEventListener('xrpet:music-state',e=>setRippletMusicDance(e.detail?.playing===true));
+setTimeout(()=>setRippletMusicDance(window.XRPetMusicPlaying===true),0);
+
 function roamingStep(){
   clearTimeout(roamTimer);
+  if(rippletMusicDancing){
+    roamTimer=setTimeout(roamingStep,700);
+    return;
+  }
+  if(rippletRouteBusy()){
+    roamTimer=setTimeout(roamingStep,240);
+    return;
+  }
   if(roamDocked){
     const dockEmotes=['thinking','salute','wave','shrug','happy'];
     const emote=dockEmotes[Math.floor(Math.random()*dockEmotes.length)];
@@ -1825,13 +1996,13 @@ function roamingStep(){
   }
   if(rippletPointer.active&&Date.now()-rippletPointer.movedAt<8000){
     followRippletPointer(true);
-    roamTimer=setTimeout(roamingStep,320);
+    roamTimer=setTimeout(roamingStep,650);
     return;
   }
   const roll=Math.random();
-  if(roll<.93)playWithInterface();
+  if(roll<.90)playWithInterface();
   else goRipplet('explore');
-  roamTimer=setTimeout(roamingStep,1700+Math.random()*2500);
+  roamTimer=setTimeout(roamingStep,1900+Math.random()*2600);
 }
 function renderMind(){
   const labels={roam:'Roaming',dock:'Docked',socialize:'Signal Friend',scan:'Scanning XRPL',wave:'Waving',dance:'Dancing',focus:'Focused',run:'Running',jump:'Jumping',climb:'Climbing',reach:'Reaching',grab:'Grabbing',carry:'Carrying',crouch:'Crouching',turn:'Turning'};
@@ -1855,21 +2026,30 @@ function mindContext(){
   };
 }
 function executeMindDecision(decision){
-  if(!decision||false)return;
-  const action=decision.action||'roam';
+  if(!decision)return;
+  const requested=decision.action||'roam';
+  const action=requested==='dance'&&window.XRPetMusicPlaying!==true?'roam':requested;
   state.mindAction=action;
-  state.mindThought=decision.thought||'I chose my next move.';
+  state.mindThought=requested==='dance'&&action!=='dance'
+    ? 'I only dance when the XRPet music player is on, so I chose to roam instead.'
+    : decision.thought||'I chose my next move.';
   state.mindMode=decision.mode||'local-autonomy';
-  if(action==='socialize'){
+  if(rippletMusicDancing){
+    state.mindAction='dance';
+    state.mindThought='The music is playing, so I am dancing instead of roaming.';
+  }else if(action==='socialize'){
     performLifeActivity('socialize',false,false);
   }else if(action==='roam'){
     state.lifeActivity='explore';window.XRPetRoam?.go?.('explore');
-  }else if(['scan','wave','dance','focus','run','jump','climb','reach','grab','carry','crouch','turn'].includes(action)){
-    if(action==='run'){window.XRPetRoam?.go?.('explore')}
+  }else if(action==='jump'){
+    playWithInterface(true);
+  }else if(['scan','wave','focus','run','climb','reach','grab','carry','crouch','turn'].includes(action)){
+    if(action==='run')window.XRPetRoam?.go?.('explore');
     else window.XRPet3D?.motor?.(action,{side:Math.random()<.5?'left':'right',turn:(Math.random()<.5?-1:1)*.45});
     if(action==='wave')playSound('wave',true);
-    if(action==='dance')playSound('dance',true);
     if(action==='scan')playSound('ledgerTx',true);
+  }else if(action==='dance'&&window.XRPetMusicPlaying===true){
+    setRippletMusicDance(true);
   }
   renderMind();persist();
 }
@@ -1892,18 +2072,18 @@ async function runAutonomousMind(){
 }
 function spontaneousRippletReaction(){
   clearTimeout(spontaneousReactionTimer);
-  {
+  if(!rippletMusicDancing&&!rippletRouteBusy()){
     const options=roamDocked
       ? ['thinking','salute','wave','shrug','happy','surprised']
-      : ['greet','happy','focus','scan','wave','dance','cheer','laugh','shrug','confused','excited','point','salute','thinking','surprised','jump','turn','reach'];
+      : ['greet','happy','focus','scan','wave','cheer','laugh','shrug','confused','excited','point','salute','thinking','surprised','turn','reach'];
     const pick=options[Math.floor(Math.random()*options.length)];
-    if(['jump','turn','reach'].includes(pick))window.XRPet3D?.motor?.(pick,{side:Math.random()<.5?'left':'right',turn:(Math.random()<.5?-1:1)*.35});
+    if(['turn','reach'].includes(pick))window.XRPet3D?.motor?.(pick,{side:Math.random()<.5?'left':'right',turn:(Math.random()<.5?-1:1)*.35});
     else window.XRPet3D?.perform?.(pick);
     if(lifeAvatar){
       lifeAvatar.dataset.reaction=pick;
       setTimeout(()=>{if(lifeAvatar?.dataset.reaction===pick)delete lifeAvatar.dataset.reaction},1800);
     }
-    if(Math.random()<.28)playSound(pick==='dance'?'dance':pick==='wave'?'wave':pick==='scan'?'ledgerTx':'pet',true);
+    if(Math.random()<.28)playSound(pick==='wave'?'wave':pick==='scan'?'ledgerTx':'pet',true);
   }
   spontaneousReactionTimer=setTimeout(spontaneousRippletReaction,4200+Math.random()*5200);
 }
@@ -1944,7 +2124,7 @@ window.addEventListener('xrpet:gameEvent',e=>{
   }else if(d.type==='miss'){
     window.XRPet3D?.perform?.('alert');playSound('error',true);
   }else if(d.type==='complete'){
-    window.XRPet3D?.perform?.((d.score||0)>100?'jump':'greet');
+    window.XRPet3D?.perform?.((d.score||0)>100?'celebrate':'greet');
     playSound((d.score||0)>100?'success':'pet',true);
     addXp(Math.max(1,Math.min(10,Math.floor((Number(d.score)||0)/50)+1)));
   }else if(d.type==='start'){
@@ -2072,20 +2252,14 @@ function setPrimaryView(view='home'){
   requestAnimationFrame(()=>{
     try{scrollSectionTop(target)}catch{}
     try{
-      if(lifeAvatar&&!roamDocked){
-        lifeAvatar.classList.remove('page-hop');
-        void lifeAvatar.offsetWidth;
-        lifeAvatar.classList.add('page-hop');
-        window.XRPet3D?.motor?.('jump');
-      }
       syncRoamBounds?.();
-      if(!roamDocked)setTimeout(()=>{
+      if(lifeAvatar&&!roamDocked&&!rippletMusicDancing)window.XRPet3D?.motor?.('turn',{turn:.18});
+      if(!roamDocked&&!rippletMusicDancing)setTimeout(()=>{
         try{
           if(rippletPointer?.active)followRippletPointer?.(true);
           else playWithInterface?.(true);
-          lifeAvatar?.classList.remove('page-hop');
         }catch{}
-      },120);
+      },180);
     }catch{}
   });
 }
