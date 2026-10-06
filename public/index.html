@@ -128,25 +128,7 @@
       </div>
     </header>
 
-    <div id="persistentCompanionLayer" class="persistent-companion-layer home-companion-layer" data-home-companion aria-label="Ripplet companion">
-      <div id="floatingCompanion" class="floating-companion persistent-ripplet" aria-label="Floating interactive XRPet">
-  <div id="nftFloatingCompanion" class="nft-floating-companion hidden" aria-hidden="true">
-    <img id="nftFloatingImage" alt="">
-    <div class="nft-holo-ring"></div>
-  </div>
-  <div id="companion3d" class="companion3d-host" role="application" aria-label="Interactive 3D XRPet companion">
-    <div class="companion3d-loading"><span class="loading-orb"></span><small>INITIALIZING RIPPLET</small></div>
-  </div>
-  <div id="floatingHandle" class="floating-tag">
-    <strong id="floatingPetName">RIPPLET</strong>
-    <span id="floatingModeLabel">Move via this tag · Tap XRPet to show controls</span>
-    <div class="floating-controls">
-      <button id="toggleFloat" type="button">Pin</button>
-      <button id="centerFloat" type="button">Center</button>
-    </div>
-  </div>
-</div>
-    </div>
+    
 
     
 
@@ -179,7 +161,27 @@
             <span class="station-icon">✦</span><strong>Signal Friend</strong><small>Social time</small>
           </button>
 
-          <div id="lifeAvatar" class="life-avatar" aria-label="Ripplet roaming position"><span>R</span></div>
+          <div id="lifeAvatar" class="life-avatar life-avatar-3d" aria-label="Ripplet roaming position">
+            <div id="persistentCompanionLayer" class="persistent-companion-layer home-companion-layer" data-home-companion aria-label="Ripplet companion">
+      <div id="floatingCompanion" class="floating-companion persistent-ripplet" aria-label="Floating interactive XRPet">
+  <div id="nftFloatingCompanion" class="nft-floating-companion hidden" aria-hidden="true">
+    <img id="nftFloatingImage" alt="">
+    <div class="nft-holo-ring"></div>
+  </div>
+  <div id="companion3d" class="companion3d-host" role="application" aria-label="Interactive 3D XRPet companion">
+    <div class="companion3d-loading"><span class="loading-orb"></span><small>INITIALIZING RIPPLET</small></div>
+  </div>
+  <div id="floatingHandle" class="floating-tag">
+    <strong id="floatingPetName">RIPPLET</strong>
+    <span id="floatingModeLabel">Move via this tag · Tap XRPet to show controls</span>
+    <div class="floating-controls">
+      <button id="toggleFloat" type="button">Pin</button>
+      <button id="centerFloat" type="button">Center</button>
+    </div>
+  </div>
+</div>
+    </div>
+          </div>
           <div class="habitat-path" aria-hidden="true"></div>
         </div>
 
