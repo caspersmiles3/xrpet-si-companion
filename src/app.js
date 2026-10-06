@@ -1446,27 +1446,18 @@ function followRippletPointer(force=false){
     window.XRPet2D?.face?.(dir);
   }
 
-  if(choice.action==='hang'){
-    window.XRPet2D?.motor?.('hang');
-    routeRippletTo(p.x,p.y,'hang',hit.target);
-    setText('#mindAction','Following cursor · hanging');
-  }else if(choice.action==='climb'){
-    window.XRPet2D?.motor?.('climb');
-    routeRippletTo(p.x,p.y,'climb',hit.target);
-    setText('#mindAction','Following cursor · climbing');
-  }else if(choice.action==='jump'){
-    window.XRPet2D?.motor?.('jump');
-    routeRippletTo(p.x,p.y,'jump',hit.target);
-    setText('#mindAction','Following cursor · jumping');
-  }else if(choice.action==='sit'){
-    window.XRPet2D?.motor?.('sit');
-    routeRippletTo(p.x,p.y,'sit',hit.target);
-    setText('#mindAction','Following cursor · sitting');
-  }else{
-    window.XRPet2D?.motor?.('stand');
-    routeRippletTo(p.x,p.y,'stand',hit.target);
-    setText('#mindAction','Following cursor · perched');
+  const routeAction=choice.action==='sit'?'sit':choice.action==='hang'?'hang':choice.action==='climb'?'climb':choice.action==='jump'?'jump':'stand';
+  if(!routeRippletTo(p.x,p.y,routeAction,hit.target)){
+    markInterfaceTarget(hit.target,false);
+    return false;
   }
+  setText('#mindAction',
+    choice.action==='hang'?'Following cursor · hanging':
+    choice.action==='climb'?'Following cursor · climbing':
+    choice.action==='jump'?'Following cursor · short hop':
+    choice.action==='sit'?'Following cursor · sitting':
+    'Following cursor · perched'
+  );
   setText('#mindThought','I am following your mouse through the page terrain.');
 
   clearTimeout(rippletPointerTimer);
@@ -2133,7 +2124,7 @@ window.addEventListener('xrpet:gameEvent',e=>{
   }else if(d.type==='miss'){
     window.XRPet3D?.perform?.('alert');playSound('error',true);
   }else if(d.type==='complete'){
-    window.XRPet3D?.perform?.((d.score||0)>100?'jump':'greet');
+    window.XRPet3D?.perform?.((d.score||0)>100?'celebrate':'greet');
     playSound((d.score||0)>100?'success':'pet',true);
     addXp(Math.max(1,Math.min(10,Math.floor((Number(d.score)||0)/50)+1)));
   }else if(d.type==='start'){
@@ -2261,20 +2252,14 @@ function setPrimaryView(view='home'){
   requestAnimationFrame(()=>{
     try{scrollSectionTop(target)}catch{}
     try{
-      if(lifeAvatar&&!roamDocked){
-        lifeAvatar.classList.remove('page-hop');
-        void lifeAvatar.offsetWidth;
-        lifeAvatar.classList.add('page-hop');
-        window.XRPet3D?.motor?.('jump');
-      }
       syncRoamBounds?.();
-      if(!roamDocked)setTimeout(()=>{
+      if(lifeAvatar&&!roamDocked&&!rippletMusicDancing)window.XRPet3D?.motor?.('turn',{turn:.18});
+      if(!roamDocked&&!rippletMusicDancing)setTimeout(()=>{
         try{
           if(rippletPointer?.active)followRippletPointer?.(true);
           else playWithInterface?.(true);
-          lifeAvatar?.classList.remove('page-hop');
         }catch{}
-      },120);
+      },180);
     }catch{}
   });
 }
