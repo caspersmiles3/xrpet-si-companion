@@ -4,8 +4,39 @@ import webpush from 'web-push';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+app.disable('x-powered-by');
+
+app.use((req,res,next)=>{
+  res.setHeader('X-Content-Type-Options','nosniff');
+  res.setHeader('X-Frame-Options','DENY');
+  res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy','camera=(), microphone=(), geolocation=()');
+  res.setHeader('Cross-Origin-Opener-Policy','same-origin');
+  res.setHeader('Cross-Origin-Resource-Policy','same-origin');
+  res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' https://xumm.app https://esm.sh; connect-src 'self' https://api.coinbase.com https://api.exchange.coinbase.com https://api.coingecko.com https://ripple.com https://xrpl.org https://xrplcluster.com wss://xrplcluster.com https://xumm.app https://esm.sh; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; frame-src https://xumm.app; object-src 'none'; base-uri 'self'; form-action 'self'");
+  next();
+});
+
+const rateBuckets=new Map();
+function rateLimit(limit,windowMs){
+  return (req,res,next)=>{
+    const key=req.ip||req.socket.remoteAddress||'unknown';
+    const now=Date.now();
+    const bucket=rateBuckets.get(key);
+    if(!bucket||now-bucket.start>windowMs){
+      rateBuckets.set(key,{start:now,count:1}); return next();
+    }
+    bucket.count+=1;
+    if(bucket.count>limit) return res.status(429).json({error:'Too many requests'});
+    next();
+  };
+}
+
 app.use(express.json({ limit: '100kb' }));
-app.use(express.static('public'));
+app.use('/api/',rateLimit(120,60*1000));
+app.use('/api/companion',rateLimit(30,60*1000));
+app.use('/api/push/subscribe',rateLimit(10,60*1000));
+app.use(express.static('public',{etag:true,maxAge:'1h'}));
 
 const OFFICIAL_SOURCES = [
   { name: 'Ripple Insights', url: 'https://ripple.com/insights/', type: 'official' },
