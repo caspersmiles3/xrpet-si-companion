@@ -107,17 +107,6 @@ function render(){
   window.XRPet3D?.perform?.('scan');
 });
 
-function bindEquipment(selector,key,label){
-  qa(selector).forEach(b=>b.addEventListener('click',()=>{
-    state[key]=b.dataset[key];persist();render();playSound('cosmetic');
-    setText('#petMood','Reconfigured');setText('#petSpeech',label+' updated. XRPL equipment matrix synchronized.');
-  }));
-}
-bindEquipment('[data-eye-style]','eyeStyle','Eye signal');
-bindEquipment('[data-core-style]','coreStyle','Chest core');
-bindEquipment('[data-head-gear]','headGear','Head hardware');
-bindEquipment('[data-trail-style]','trailStyle','Signal trail');
-
 qa('.room-choice').forEach(b=>{const rank=FORMS.findIndex(x=>x[0]===name),need=0;b.disabled=rank<need;const active=b.dataset.room===state.room;b.classList.toggle('active',active);const e=b.querySelector('em');if(e&&active)e.textContent='Active';else if(e)e.textContent=need?((b.dataset.room==='aurora')?'Wave+':'Titan+'):'Unlocked'}); qa('.cosmetic-choice').forEach(b=>{const active=b.dataset.cosmetic===state.cosmetic;b.classList.toggle('active',active);const e=b.querySelector('em');if(e)e.textContent=active?'Equipped':'Owned'});
   document.body.classList.remove('room-nexus','room-ocean','room-vault','room-aurora','room-legend','room-genesis','room-city','room-quantum','room-desert','room-arctic');document.body.classList.add('room-'+state.room); const pet=q('#pet'); if(pet){pet.classList.remove('skin-classic','skin-aqua','skin-midnight','skin-pearl','skin-solar','skin-resonance');pet.classList.add('skin-'+state.cosmetic)}
   setText('#unlocksChip',Object.keys(ROOM_NAMES).length+' environments');setText('#homeRoom',ROOM_NAMES[state.room]||state.room);setText('#homeCosmetic',COSMETIC_NAMES[state.cosmetic]||state.cosmetic);setText('#homeCompanionModel',COMPANION_NAMES[state.companionKind]||state.companionKind);setText('#homeCompanionGender','Official XRPet companion');setText('#companionModelChip','OFFICIAL // RIPPLET');
@@ -280,7 +269,7 @@ bind('#globalSearchForm','submit',e=>{
   const map=[
     [['589','signal','community','lore','theory','theories'], '#signal589Section'],
     [['room','rooms','environment'], '#roomsSection'],
-    [['cosmetic','skin','appearance','equipment','eye','core','trail','halo'], '#cosmeticsSection'],
+    [['cosmetic','skin','appearance','equipment','eye','core','trail','halo'], '#companionSection'],
     [['wallet','xaman','gemwallet'], '#walletPanel'],
     [['chat','ask','si','assistant'], '#chatPanel'],
     [['history','timeline','ripple','sec','lawsuit','escrow','odl','rlusd','acquisition'], '#xrpHistorySection'],
@@ -567,10 +556,6 @@ if(launchGate){
 }
 
 
-bind('#studioViewFront','click',()=>window.XRPet3D?.cameraPreset?.('front'));
-bind('#studioViewThreeQuarter','click',()=>window.XRPet3D?.cameraPreset?.('threeQuarter'));
-bind('#studioViewProfile','click',()=>window.XRPet3D?.cameraPreset?.('profile'));
-bind('#studioResetCamera','click',()=>window.XRPet3D?.reset?.());
 
 const floatEl=q('#floatingCompanion'),floatHandle=q('#floatingHandle');
 let floatPinned=state.floatingPinned,dragFloat=false,dragDX=0,dragDY=0,floatRAF=0;
