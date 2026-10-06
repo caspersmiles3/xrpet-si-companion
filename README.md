@@ -1,4 +1,4 @@
-# XRPet SI Companion™ — v5.1.1
+# XRPet SI Companion™ — v5.2.0
 
 **Don't watch the Ledger. Live with it.**
 
@@ -239,3 +239,16 @@ Mini-game events feed back into Ripplet's animation/sound system and award small
 - Added an independent HTML loading-gate release handler so **Enter XRPet** no longer depends on the main application bundle.
 - Added a six-second failsafe that automatically releases the loading screen if another client script fails in the future.
 - Bumped all client asset query strings and the service-worker cache to v5.1.1 so browsers replace the broken cached bundle.
+
+
+## v5.2 validated live data + viewport layout
+
+- XRPL transaction cards now admit only WebSocket messages explicitly marked `validated: true`, with a real transaction hash and ledger index.
+- The live ledger connection uses Ripple's public XRPL WebSocket node first and automatically fails over to XRPLCluster if the primary socket closes.
+- Each transaction shows the actual live source and includes an XRPL Explorer link for independent hash verification.
+- Seeds, secret keys, and private keys are never requested, transmitted, or displayed.
+- XRP/USD now uses Coinbase's live ticker for price updates plus public spot/stats/order-book endpoints for 24h open, high, low, XRP volume, estimated USD volume, best bid, best ask, spread, spread basis points, and last update time.
+- The market history now keeps the full 288 five-minute candles (24 hours). Live ticks update the current five-minute candle instead of flooding and erasing the 24-hour history.
+- The application shell now uses the full available viewport width and enforces min-width/overflow guards on every primary page.
+- Removed the competing sticky behavior from the older top status bar; only the command bar remains sticky where the viewport is wide enough.
+- Medium and mobile layouts automatically switch sticky elements to normal flow and reflow market/transaction panels to avoid covering click targets.

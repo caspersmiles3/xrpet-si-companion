@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=5.1.1">
+  <link rel="stylesheet" href="/styles.css?v=5.2.0">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate clean-launch" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
@@ -261,8 +261,17 @@
           <div class="chart-stats">
             <span><small>24H HIGH</small><strong id="chartHigh">—</strong></span>
             <span><small>24H LOW</small><strong id="chartLow">—</strong></span>
-            <span><small>VOLUME</small><strong id="chartVolume">—</strong></span>
+            <span><small>24H OPEN</small><strong id="chartOpen">—</strong></span>
+            <span><small>XRP VOLUME</small><strong id="chartVolume">—</strong></span>
+            <span><small>USD VOLUME</small><strong id="chartVolumeUsd">—</strong></span>
+            <span><small>24H RANGE</small><strong id="chartRangePct">—</strong></span>
           </div>
+        </div>
+        <div class="market-live-detail" aria-label="Live XRP USD order book details">
+          <article><span>BEST BID</span><strong id="marketBid">—</strong><small>Coinbase</small></article>
+          <article><span>BEST ASK</span><strong id="marketAsk">—</strong><small>Coinbase</small></article>
+          <article><span>SPREAD</span><strong id="marketSpread">—</strong><small id="marketSpreadBps">— bps</small></article>
+          <article><span>LAST TICK</span><strong id="marketLastTick">—</strong><small id="marketSource">Waiting for live stream</small></article>
         </div>
         <div class="market-chart-wrap">
           <svg id="xrpMarketChart" viewBox="0 0 1000 320" preserveAspectRatio="none" role="img" aria-label="Live XRP USD market chart">
@@ -282,8 +291,8 @@
 
       <section class="live-transactions-panel">
         <div class="live-transactions-head">
-          <div><span class="eyebrow">VALIDATED TRANSACTION STREAM</span><h2>Live Transactions</h2><p>Tap a transaction to expand its public ledger details. Private keys and wallet seeds never appear here.</p></div>
-          <span id="liveTxRate" class="truth-label">WAITING</span>
+          <div><span class="eyebrow">XRPL MAINNET // VALIDATED ONLY</span><h2>Real XRPL Transactions</h2><p>These are public, validated transactions received directly from an XRP Ledger mainnet WebSocket. Tap one to inspect its ledger index, hash, accounts, amount, fee and explorer link. Private keys and wallet seeds never exist in this stream.</p></div>
+          <div class="tx-live-status"><span id="txStreamSource">CONNECTING</span><span id="liveTxRate" class="truth-label">WAITING</span></div>
         </div>
         <div id="liveTransactions" class="live-transactions-list">
           <p class="muted">Connecting to the XRPL transaction stream…</p>
@@ -704,7 +713,7 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 5.1.1 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 5.2.0 · XRP Ledger companion</footer>
   </main>
 </div>
 
@@ -751,12 +760,12 @@
   },6000);
 })();
 </script>
-<script src="/music-player.js?v=5.1.1"></script>
-<script src="/games.js?v=5.1.1"></script>
-<script src="/ecosystem.js?v=5.1.1"></script>
-<script src="/app.js?v=5.1.1"></script>
-<script src="/timeline.js?v=5.1.1"></script>
-<script type="module" src="/companion3d.js?v=5.1.1"></script>
+<script src="/music-player.js?v=5.2.0"></script>
+<script src="/games.js?v=5.2.0"></script>
+<script src="/ecosystem.js?v=5.2.0"></script>
+<script src="/app.js?v=5.2.0"></script>
+<script src="/timeline.js?v=5.2.0"></script>
+<script type="module" src="/companion3d.js?v=5.2.0"></script>
 
 </body>
 </html>
