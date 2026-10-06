@@ -1098,8 +1098,8 @@ function dockPosition(){
   const dock=q('#rippletDock'),layer=roamLayer?.getBoundingClientRect(),avatar=lifeAvatar?.getBoundingClientRect();
   if(!dock||!layer)return null;
   const r=dock.getBoundingClientRect();
-  const w=Math.max(6,avatar?.width||6);
-  const h=Math.max(8,avatar?.height||8);
+  const w=Math.max(52,avatar?.width||52);
+  const h=Math.max(72,avatar?.height||72);
   return {
     x:r.left-layer.left+r.width/2-w/2,
     y:Math.max(6,r.top-layer.top+Math.max(4,(r.height-h)*.16))
@@ -1145,8 +1145,8 @@ function goRipplet(activity='explore'){
   if(activity==='socialize')target=null;
   if(activity==='ledger')target={x:layer.width*.72,y:Math.max(165,layer.height*.34)};
   if(!target){
-    const avatarH=Math.max(8,avatar?.height||8);
-    const avatarW=Math.max(6,avatar?.width||6);
+    const avatarH=Math.max(72,avatar?.height||72);
+    const avatarW=Math.max(52,avatar?.width||52);
     target={
       x:14+Math.random()*Math.max(40,layer.width-avatarW-28),
       y:12+Math.random()*Math.max(36,layer.height-avatarH-24)
@@ -1330,7 +1330,7 @@ function rectsOverlap(a,b,pad=0){
 }
 function avatarRectAt(x,y){
   const avatar=lifeAvatar?.getBoundingClientRect();
-  const w=Math.max(6,avatar?.width||6),h=Math.max(8,avatar?.height||8);
+  const w=Math.max(52,avatar?.width||52),h=Math.max(72,avatar?.height||72);
   return {left:x,top:y,right:x+w,bottom:y+h,width:w,height:h};
 }
 function visibleCollisionRects(ignoreTarget=null){
@@ -1388,7 +1388,7 @@ function interfaceTargetPosition(el,mode='perch'){
   const shell=q('.main-shell'),avatar=lifeAvatar?.getBoundingClientRect(),r=el?.__rect||el?.getBoundingClientRect?.();
   if(!shell||!r)return null;
   const sr=shell.getBoundingClientRect();
-  const aw=Math.max(6,avatar?.width||6),ah=Math.max(8,avatar?.height||8);
+  const aw=Math.max(52,avatar?.width||52),ah=Math.max(72,avatar?.height||72);
   const localLeft=r.left-sr.left+shell.scrollLeft;
   const localTop=r.top-sr.top+shell.scrollTop;
   const localRight=r.right-sr.left+shell.scrollLeft;
