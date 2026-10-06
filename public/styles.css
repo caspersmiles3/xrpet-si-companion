@@ -461,3 +461,40 @@ body.launch-locked{overflow:hidden}
   .launch-orbit,.core-ring{animation:none!important}
   .launch-gate,.core-shell,.ledger-node{transition-duration:.01ms!important}
 }
+
+
+/* XRPet v3.0 companion Life Pass controls */
+.companion-reactions{
+  margin-top:13px;
+  padding-top:11px;
+  border-top:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.companion-reactions>span{
+  color:#728895;
+  font-size:.57rem;
+  font-weight:800;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.companion-reactions>div{display:flex;gap:6px;flex-wrap:wrap}
+.companion-reactions button{
+  min-height:34px;
+  padding:7px 10px;
+  border-radius:9px;
+  border:1px solid #1d3b48;
+  background:#071219;
+  color:#9feeff;
+  font-size:.58rem;
+  font-weight:750;
+}
+.companion-reactions button:hover,
+.companion-reactions button:focus-visible{
+  border-color:var(--cyan);
+  color:#fff;
+  box-shadow:0 0 16px color-mix(in srgb,var(--cyan) 20%,transparent);
+}
