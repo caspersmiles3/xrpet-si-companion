@@ -28,7 +28,7 @@ try{
   renderer=new THREE.WebGLRenderer({antialias:!XRPetQuality.lowPower,alpha:true,powerPreference:XRPetQuality.lowPower?'default':'high-performance'});
 }catch(err){
   host.innerHTML='<div class="companion3d-fallback"><strong>XRPet 3D Safe Mode</strong><small>Your browser could not initialize WebGL. The app will continue without the live 3D layer.</small></div>';
-  window.dispatchEvent(new CustomEvent('xrpet:model-fallback',{detail:{kind:'nexus',error:'WebGL unavailable'}}));
+  window.dispatchEvent(new CustomEvent('xrpet:model-fallback',{detail:{kind:'ripplet',error:'WebGL unavailable'}}));
   throw err;
 }
 renderer.setPixelRatio(XRPetQuality.pixelRatio);
@@ -316,6 +316,25 @@ coreX1.position.set(0,-.28,1.19);coreX1.rotation.z=.78;
 const coreX2=add(new THREE.BoxGeometry(.24,.035,.025),accentMat,pet,'coreX2');
 coreX2.position.copy(coreX1.position);coreX2.rotation.z=-.78;
 
+// Ripplet side-flow fins: rounded Ripple-inspired lobes beside the head.
+const rippletFins=new THREE.Group();pet.add(rippletFins);
+for(const [side,sgn] of [['left',-1],['right',1]]){
+  const group=new THREE.Group();rippletFins.add(group);
+  group.position.set(sgn*1.03,1.02,.02);
+  for(const [dx,dy,scale] of [[0,.22,1],[.07,0,.86],[0,-.22,.72]]){
+    const lobe=add(new THREE.SphereGeometry(.22,28,20),shellMat,group,'rippletFin');
+    lobe.scale.set(.58*scale,1.05*scale,.42*scale);
+    lobe.position.set(sgn*dx,dy,0);
+    const glow=add(new THREE.TorusGeometry(.15*scale,.016,8,36),accentMat,group,'rippletFinGlow');
+    glow.scale.set(.6,1,.7);glow.position.copy(lobe.position);glow.rotation.y=Math.PI/2;
+  }
+}
+
+// Hover thruster / lower glow.
+const rippletHover=add(new THREE.SphereGeometry(.24,28,18),glassMat,pet,'rippletHover');
+rippletHover.scale.set(.82,.35,.72);rippletHover.position.set(0,-1.1,.02);
+
+
 // floating crown orb
 const orbGroup=new THREE.Group();pet.add(orbGroup);orbGroup.position.set(0,2.45,0);
 const orb=add(new THREE.SphereGeometry(.18,34,24),glassMat,orbGroup,'orb');
@@ -324,6 +343,7 @@ const orbit2=add(new THREE.TorusGeometry(.27,.014,10,52),accentMat,orbGroup,'orb
 
 // --- species geometry ---
 const species={
+  ripplet:new THREE.Group(),
   nexus:new THREE.Group(),
   fox:new THREE.Group(),
   pup:new THREE.Group(),
@@ -748,7 +768,7 @@ const BUILTIN_MODELS={
   }
 };
 
-let currentKind='nexus', currentGender='boy', currentCosmetic='classic';
+let currentKind='ripplet', currentGender='neutral', currentCosmetic='classic';
 let targetRotY=0,targetRotX=0,dragging=false,lastX=0,lastY=0,pointerX=0,pointerY=0,boost=0,lastInteract=0;
 let action='idle',actionUntil=0,externalModel=null,externalMixer=null,externalKind=null,externalActions={},externalActiveAction=null,externalLoadToken=0,externalLoadingKind=null,externalLoadingPromise=null;
 const baseEarTransforms=ears.map(e=>({scale:e.scale.clone(),rot:e.rotation.clone()}));
@@ -762,6 +782,7 @@ function resetBaseShape(){
 }
 function applySurfaceProfile(kind){
   const profiles={
+    ripplet:{metalness:.7,roughness:.2,clearcoat:1,darkMetal:.8,darkRough:.16},
     nexus:{metalness:.72,roughness:.22,clearcoat:1,darkMetal:.82,darkRough:.18},
     fox:{metalness:.28,roughness:.5,clearcoat:.34,darkMetal:.24,darkRough:.55},
     pup:{metalness:.24,roughness:.54,clearcoat:.3,darkMetal:.22,darkRough:.58},
@@ -770,52 +791,41 @@ function applySurfaceProfile(kind){
     turtle:{metalness:.34,roughness:.43,clearcoat:.42,darkMetal:.3,darkRough:.48}
   };
   const p=profiles[kind]||profiles.nexus;
-  const detail=kind==='nexus'?detailTextures.metal:kind==='bird'?detailTextures.feather:kind==='turtle'?detailTextures.shell:detailTextures.fur;
+  const detail=(kind==='ripplet'||kind==='nexus')?detailTextures.metal:kind==='bird'?detailTextures.feather:kind==='turtle'?detailTextures.shell:detailTextures.fur;
   shellMat.metalness=p.metalness;shellMat.roughness=p.roughness;shellMat.clearcoat=p.clearcoat;
   shellDarkMat.metalness=p.darkMetal;shellDarkMat.roughness=p.darkRough;
   shellMat.bumpMap=detail;shellDarkMat.bumpMap=detail;softMat.bumpMap=detail;
-  shellMat.bumpScale=kind==='nexus'?.018:kind==='turtle'?.026:.032;
-  shellDarkMat.bumpScale=kind==='nexus'?.014:.025;softMat.bumpScale=.022;
+  shellMat.bumpScale=(kind==='ripplet'||kind==='nexus')?.018:kind==='turtle'?.026:.032;
+  shellDarkMat.bumpScale=(kind==='ripplet'||kind==='nexus')?.014:.025;softMat.bumpScale=.022;
   shellMat.roughnessMap=detail;shellDarkMat.roughnessMap=detail;
   shellMat.needsUpdate=true;shellDarkMat.needsUpdate=true;softMat.needsUpdate=true;
 }
 
-function configureSpecies(kind){
-  currentKind=species[kind]?kind:'nexus';
-  applySurfaceProfile(currentKind);
-  Object.entries(species).forEach(([k,g])=>g.visible=k===currentKind);
-  // nexus group has no extra geometry; it is still the base body
+function configureSpecies(){
+  currentKind='ripplet';
+  applySurfaceProfile('ripplet');
+  Object.values(species).forEach(g=>g.visible=false);
+  species.ripplet.visible=true;
   resetBaseShape();
 
-  if(currentKind==='fox'){
-    head.scale.set(.92,.75,.85);face.scale.set(.9,.62,.72);torso.scale.set(.76,.92,.7);
-    ears.forEach(e=>{e.scale.set(.78,1.45,.78)});
-    muzzle.scale.set(.93,.42,.62);muzzle.position.z=1.42;nose.position.z=1.64;
-  }else if(currentKind==='pup'){
-    head.scale.set(1.06,.88,.94);face.scale.set(1.02,.72,.82);torso.scale.set(1,.92,.88);
-    ears.forEach(e=>e.visible=false);muzzle.visible=false;nose.position.set(0,.68,1.65);
-  }else if(currentKind==='cat'){
-    head.scale.set(.95,.79,.86);face.scale.set(.91,.64,.76);torso.scale.set(.73,.96,.68);
-    ears.forEach(e=>e.scale.set(.72,1.08,.72));muzzle.scale.set(.82,.38,.55);
-  }else if(currentKind==='bird'){
-    head.scale.set(.88,.76,.8);face.scale.set(.82,.6,.68);torso.scale.set(.58,1.12,.58);
-    ears.forEach(e=>e.visible=false);muzzle.visible=false;nose.visible=false;shoulders.forEach(s=>s.visible=false);
-  }else if(currentKind==='turtle'){
-    head.scale.set(.82,.7,.78);face.scale.set(.78,.55,.67);torso.scale.set(1.06,.67,.96);
-    ears.forEach(e=>e.visible=false);muzzle.scale.set(.78,.4,.55);
-  }
-  if(currentKind!=='pup'&&currentKind!=='bird')muzzle.visible=true;
-  if(currentKind!=='bird')nose.visible=true;
+  // Ripplet: oversized smooth head, tiny floating body, no animal muzzle/legs.
+  head.scale.set(1.08,.9,.96);
+  face.scale.set(1.02,.72,.8);
+  torso.scale.set(.72,.72,.68);
+  pelvis.scale.set(.68,.38,.62);
+  muzzle.visible=false;
+  nose.visible=false;
+  ears.forEach(e=>e.visible=false);
+  legs.forEach(e=>e.visible=false);
+  pet.traverse(o=>{ if(o.name==='foot')o.visible=false; });
+  shoulders.forEach((o,i)=>{o.scale.set(.62,.72,.52);o.position.set(i===0?-.72:.72,-.18,.08)});
 }
-function configureGender(gender){
-  currentGender=gender==='girl'?'girl':'boy';
-  boyGroup.visible=currentGender==='boy';girlGroup.visible=currentGender==='girl';
-  externalGender.boy.visible=currentGender==='boy';externalGender.girl.visible=currentGender==='girl';
-  // deliberately visible but subtle presentation differences
-  if(currentGender==='girl'){
-    head.scale.multiplyScalar(.97);face.scale.y*=1.04;
-    eyes.forEach(e=>e.scale.y=1.02);
-  }
+function configureGender(){
+  currentGender='neutral';
+  boyGroup.visible=false;
+  girlGroup.visible=false;
+  externalGender.boy.visible=false;
+  externalGender.girl.visible=false;
 }
 function configureCosmetic(cosmetic){
   currentCosmetic=palette[cosmetic]?cosmetic:'classic';
@@ -983,21 +993,13 @@ function useProceduralModel(kind=currentKind){
 
 let modelLoadTimer=0;
 function setAppearance(detail={}){
-  const kind=detail.companionKind||currentKind;
-  configureSpecies(kind);
-  configureGender(detail.companionGender||currentGender);
+  configureSpecies('ripplet');
+  configureGender('neutral');
   configureCosmetic(detail.cosmetic||currentCosmetic);
   configureEquipment(detail);
   applyRoom(detail.room||'nexus');
-
   clearTimeout(modelLoadTimer);
-  // Always establish a lightweight visible fallback first.
-  if(!externalModel||externalKind!==kind)useProceduralModel(kind);
-
-  if(BUILTIN_MODELS[kind]&&!XRPetQuality.lowPower){
-    window.dispatchEvent(new CustomEvent('xrpet:model-loading',{detail:{kind}}));
-    modelLoadTimer=setTimeout(()=>ensureBuiltInModel(kind),650);
-  }
+  useProceduralModel('ripplet');
 }
 window.addEventListener('xrpet:appearance',e=>setAppearance(e.detail||{}));
 
