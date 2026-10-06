@@ -777,7 +777,7 @@ const BUILTIN_MODELS={
 
 let currentKind='ripplet', currentGender='neutral', currentCosmetic='classic';
 let targetRotY=0,targetRotX=0,dragging=false,lastX=0,lastY=0,pointerX=0,pointerY=0,boost=0,lastInteract=0;
-let action='idle',actionUntil=0,externalModel=null,externalMixer=null,externalKind=null,externalActions={},externalActiveAction=null,externalLoadToken=0,externalLoadingKind=null,externalLoadingPromise=null;
+let action='idle',actionUntil=0,externalModel=null,externalMixer=null,externalKind=null,externalActions={},externalActiveAction=null,externalLoadToken=0,externalLoadingKind=null,externalLoadingPromise=null,externalParts={};
 const baseEarTransforms=ears.map(e=>({scale:e.scale.clone(),rot:e.rotation.clone()}));
 
 function resetBaseShape(){
@@ -881,6 +881,122 @@ function currentAction(){
   return action;
 }
 
+
+function captureExternalRippletParts(){
+  externalParts={};
+  if(!externalModel)return;
+  externalModel.traverse(o=>{
+    if(!o.name)return;
+    externalParts[o.name]=o;
+    if(!o.userData.xrpetBase){
+      o.userData.xrpetBase={
+        position:o.position.clone(),
+        rotation:o.rotation.clone(),
+        scale:o.scale.clone()
+      };
+    }
+  });
+}
+function poseExternalPart(name,opts={},speed=.14){
+  const o=externalParts[name];
+  const b=o?.userData?.xrpetBase;
+  if(!o||!b)return;
+  const rp=opts.rot||[0,0,0], pp=opts.pos||[0,0,0], sp=opts.scale||[1,1,1];
+  const tx=b.rotation.x+rp[0],ty=b.rotation.y+rp[1],tz=b.rotation.z+rp[2];
+  o.rotation.x+=(tx-o.rotation.x)*speed;
+  o.rotation.y+=(ty-o.rotation.y)*speed;
+  o.rotation.z+=(tz-o.rotation.z)*speed;
+  o.position.x+=(b.position.x+pp[0]-o.position.x)*speed;
+  o.position.y+=(b.position.y+pp[1]-o.position.y)*speed;
+  o.position.z+=(b.position.z+pp[2]-o.position.z)*speed;
+  o.scale.x+=(b.scale.x*sp[0]-o.scale.x)*speed;
+  o.scale.y+=(b.scale.y*sp[1]-o.scale.y)*speed;
+  o.scale.z+=(b.scale.z*sp[2]-o.scale.z)*speed;
+}
+function animateExternalRipplet(t,state){
+  if(externalKind!=='ripplet'||!externalModel)return;
+  const s=Math.sin(t*2.2), slow=Math.sin(t*.72), walk=Math.sin(t*6.2);
+  const blinkPhase=t%4.7;
+  const blink=blinkPhase>.05&&blinkPhase<.14?.10:1;
+
+  // baseline living motion
+  poseExternalPart('Ripplet_Torso',{scale:[1+Math.sin(t*1.7)*.012,1+Math.sin(t*1.7)*.018,1+Math.sin(t*1.7)*.012]});
+  poseExternalPart('Ripplet_TorsoInset',{scale:[1+Math.sin(t*1.7)*.01,1+Math.sin(t*1.7)*.014,1+Math.sin(t*1.7)*.01]});
+  poseExternalPart('Ripplet_Head',{rot:[slow*.018,slow*.07,slow*.012],pos:[0,Math.sin(t*1.15)*.018,0]});
+  poseExternalPart('Ripplet_FacePlate',{rot:[slow*.012,slow*.055,0]});
+  poseExternalPart('Ripplet_Forehead',{rot:[slow*.01,slow*.05,0]});
+  poseExternalPart('EnergyEye_L',{scale:[1,blink,1]});
+  poseExternalPart('EnergyEye_R',{scale:[1,blink,1]});
+  poseExternalPart('Ripple_HeadFin_L',{rot:[0,0,-slow*.035]});
+  poseExternalPart('Ripple_HeadFin_R',{rot:[0,0,slow*.035]});
+  poseExternalPart('XRP_CoreRing',{rot:[0,t*.20,0]},.10);
+  poseExternalPart('XRP_CoreCrystal',{scale:[1+.06*Math.sin(t*3.1),1+.06*Math.sin(t*3.1),1+.06*Math.sin(t*3.1)]},.18);
+
+  // neutral limbs
+  for(const n of ['UpperArm_L','Forearm_L','Hand_L','UpperArm_R','Forearm_R','Hand_R','Thigh_L','Shin_L','Foot_L','Thigh_R','Shin_R','Foot_R']) poseExternalPart(n,{},.16);
+
+  if(state==='greet'||state==='wave'){
+    poseExternalPart('UpperArm_R',{rot:[0,0,-.78],pos:[0,.06,0]},.22);
+    poseExternalPart('Forearm_R',{rot:[0,0,-.48+Math.sin(t*8)*.28],pos:[0,.10,0]},.25);
+    poseExternalPart('Hand_R',{rot:[0,Math.sin(t*9)*.22,-.28],pos:[0,.12,0]},.28);
+    poseExternalPart('Ripplet_Head',{rot:[-.05,.12,Math.sin(t*3)*.035]},.20);
+  }else if(state==='happy'){
+    poseExternalPart('UpperArm_L',{rot:[0,0,.60]},.22);
+    poseExternalPart('UpperArm_R',{rot:[0,0,-.60]},.22);
+    poseExternalPart('Forearm_L',{rot:[0,0,.30]},.24);
+    poseExternalPart('Forearm_R',{rot:[0,0,-.30]},.24);
+    poseExternalPart('Thigh_L',{rot:[walk*.08,0,0]},.20);
+    poseExternalPart('Thigh_R',{rot:[-walk*.08,0,0]},.20);
+    poseExternalPart('Ripplet_Head',{rot:[-.08,slow*.12,s*.025],pos:[0,.04+Math.abs(s)*.025,0]},.22);
+  }else if(state==='celebrate'){
+    poseExternalPart('UpperArm_L',{rot:[0,0,1.02+Math.sin(t*7)*.10],pos:[0,.10,0]},.28);
+    poseExternalPart('UpperArm_R',{rot:[0,0,-1.02-Math.sin(t*7)*.10],pos:[0,.10,0]},.28);
+    poseExternalPart('Forearm_L',{rot:[0,0,.62+Math.sin(t*9)*.16]},.30);
+    poseExternalPart('Forearm_R',{rot:[0,0,-.62-Math.sin(t*9)*.16]},.30);
+    poseExternalPart('Thigh_L',{rot:[walk*.20,0,.08]},.28);
+    poseExternalPart('Thigh_R',{rot:[-walk*.20,0,-.08]},.28);
+    poseExternalPart('Shin_L',{rot:[-walk*.16,0,0]},.28);
+    poseExternalPart('Shin_R',{rot:[walk*.16,0,0]},.28);
+    poseExternalPart('Ripplet_Head',{rot:[-.12,Math.sin(t*5)*.14,Math.sin(t*8)*.045],pos:[0,.08+Math.abs(Math.sin(t*5))*.05,0]},.30);
+  }else if(state==='alert'){
+    poseExternalPart('UpperArm_L',{rot:[-.16,0,.18]},.28);
+    poseExternalPart('UpperArm_R',{rot:[-.16,0,-.18]},.28);
+    poseExternalPart('Ripplet_Head',{rot:[-.12,Math.sin(t*10)*.10,0]},.30);
+    poseExternalPart('EnergyEye_L',{scale:[1,.72,1.18]},.35);
+    poseExternalPart('EnergyEye_R',{scale:[1,.72,1.18]},.35);
+  }else if(state==='scan'){
+    const scan=Math.sin(t*2.8);
+    poseExternalPart('Ripplet_Head',{rot:[0,scan*.34,0]},.22);
+    poseExternalPart('Ripplet_FacePlate',{rot:[0,scan*.28,0]},.22);
+    poseExternalPart('EnergyEye_L',{scale:[1,.58,1.12]},.28);
+    poseExternalPart('EnergyEye_R',{scale:[1,.58,1.12]},.28);
+    poseExternalPart('XRP_CoreRing',{rot:[0,t*2.3,0]},.30);
+  }else if(state==='focus'){
+    poseExternalPart('Ripplet_Head',{rot:[-.11,0,0]},.22);
+    poseExternalPart('EnergyEye_L',{scale:[1,.48,1.12]},.30);
+    poseExternalPart('EnergyEye_R',{scale:[1,.48,1.12]},.30);
+    poseExternalPart('UpperArm_L',{rot:[-.08,0,.08]},.18);
+    poseExternalPart('UpperArm_R',{rot:[-.08,0,-.08]},.18);
+  }else if(state==='sleep'||state==='curl'||state==='dream'||state==='snore'){
+    poseExternalPart('Ripplet_Head',{rot:[.24,0,.10],pos:[0,-.05,0]},.16);
+    poseExternalPart('UpperArm_L',{rot:[.12,0,.18]},.14);
+    poseExternalPart('UpperArm_R',{rot:[.12,0,-.18]},.14);
+    poseExternalPart('Forearm_L',{rot:[.15,0,.12]},.14);
+    poseExternalPart('Forearm_R',{rot:[.15,0,-.12]},.14);
+    poseExternalPart('EnergyEye_L',{scale:[1,.08,1]},.28);
+    poseExternalPart('EnergyEye_R',{scale:[1,.08,1]},.28);
+  }else if(state==='walk'){
+    poseExternalPart('UpperArm_L',{rot:[walk*.34,0,0]},.30);
+    poseExternalPart('UpperArm_R',{rot:[-walk*.34,0,0]},.30);
+    poseExternalPart('Forearm_L',{rot:[walk*.18,0,0]},.28);
+    poseExternalPart('Forearm_R',{rot:[-walk*.18,0,0]},.28);
+    poseExternalPart('Thigh_L',{rot:[-walk*.30,0,0]},.30);
+    poseExternalPart('Thigh_R',{rot:[walk*.30,0,0]},.30);
+    poseExternalPart('Shin_L',{rot:[Math.max(0,walk)*.28,0,0]},.30);
+    poseExternalPart('Shin_R',{rot:[Math.max(0,-walk)*.28,0,0]},.30);
+    poseExternalPart('Ripplet_Head',{rot:[-.025,0,-walk*.015],pos:[0,Math.abs(walk)*.03,0]},.24);
+  }
+}
 async function loadExternalModel(url,options={}){
   if(!url)throw new Error('A GLB/GLTF URL is required.');
   const mod=await import('https://esm.sh/three@0.169.0/examples/jsm/loaders/GLTFLoader.js?deps=three@0.169.0');
@@ -930,6 +1046,7 @@ async function loadExternalModel(url,options={}){
   externalModel.userData.xrpetBaseRotY=externalModel.rotation.y;
   externalModel.userData.xrpetBaseRotX=externalModel.rotation.x;
   root.add(externalModel);
+  captureExternalRippletParts();
 
   pet.visible=false;
   const bareRipplet=externalKind==='ripplet';
@@ -1055,7 +1172,10 @@ renderer.domElement.addEventListener('pointerup',e=>{dragging=false;renderer.dom
 renderer.domElement.addEventListener('pointercancel',()=>dragging=false);
 renderer.domElement.addEventListener('dblclick',()=>{targetRotX=0;targetRotY=0;setCameraPreset('front')});
 renderer.domElement.addEventListener('click',()=>{
-  performAction('happy');window.dispatchEvent(new CustomEvent('xrpet:petInteract'));
+  const reactions=['greet','happy','celebrate','scan'];
+  const next=reactions[Math.floor(Math.random()*reactions.length)];
+  performAction(next);
+  window.dispatchEvent(new CustomEvent('xrpet:petInteract',{detail:{reaction:next}}));
 });
 
 window.XRPet3D={
@@ -1116,6 +1236,7 @@ function renderFrame(){
   }
 
   if(externalMixer)externalMixer.update(dt);
+  animateExternalRipplet(t,state);
   if(externalModel){
     const extSleep=state==='sleep',extCelebrate=state==='celebrate',extAlert=state==='alert',extFocus=state==='focus',extScan=state==='scan',extOrbit=state==='orbit';
     const baseY=externalModel.userData.xrpetBaseY??0;
