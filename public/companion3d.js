@@ -1066,8 +1066,16 @@ function configureCosmetic(cosmetic){
   coreRing.scale.setScalar(currentCosmetic==='solar'?1.35:currentCosmetic==='midnight'?.84:currentCosmetic==='resonance'?1.18:1);
   coreBall.scale.setScalar(currentCosmetic==='solar'?1.45:currentCosmetic==='resonance'?1.22:1);
   orbGroup.visible=currentCosmetic!=='midnight';
-  externalLedgerFrame.visible=true;
-  if(currentKind==='ripplet'){holo.visible=false;contactShadow.visible=false;rippletHover.visible=false;}
+  externalLedgerFrame.visible=currentKind!=='ripplet';
+  externalPresentation.visible=currentKind!=='ripplet';
+  if(currentKind==='ripplet'){
+    holo.visible=false;
+    contactShadow.visible=false;
+    rippletHover.visible=false;
+    Object.values(externalCosmetics).forEach(g=>g.visible=false);
+    externalGender.boy.visible=false;
+    externalGender.girl.visible=false;
+  }
 }
 function applyRoom(room){
   const rooms={
@@ -1188,16 +1196,10 @@ function makeJointCoupler(name,parent,radius=.055){
 
 function ensureRippletJointCouplers(){
   if(externalKind!=='ripplet'||!externalModel)return;
-  const upperL=externalParts['UpperArm_L'],upperR=externalParts['UpperArm_R'];
-  const foreL=externalParts['Forearm_L'],foreR=externalParts['Forearm_R'];
-  const handL=externalParts['Hand_L'],handR=externalParts['Hand_R'];
-
-  makeJointCoupler('XR_ShoulderCoupler_L',upperL,.064);
-  makeJointCoupler('XR_ShoulderCoupler_R',upperR,.064);
-  makeJointCoupler('XR_ElbowCoupler_L',foreL,.056);
-  makeJointCoupler('XR_ElbowCoupler_R',foreR,.056);
-  makeJointCoupler('XR_WristCoupler_L',handL,.046);
-  makeJointCoupler('XR_WristCoupler_R',handR,.046);
+  ['XR_ShoulderCoupler_L','XR_ShoulderCoupler_R','XR_ElbowCoupler_L','XR_ElbowCoupler_R','XR_WristCoupler_L','XR_WristCoupler_R'].forEach(name=>{
+    const part=externalParts[name];
+    if(part)part.visible=false;
+  });
 }
 
 function animateRippletEyes(t,state){
@@ -1567,6 +1569,14 @@ async function loadExternalModel(url,options={}){
   root.add(externalModel);
   captureExternalRippletParts();
   ensureRippletJointCouplers();
+  if(externalKind==='ripplet'){
+    externalModel.traverse(o=>{
+      const name=String(o.name||'').toLowerCase();
+      if(/helper|guide|control|controller|locator|debug|rail|frame|socketmarker|jointmarker/.test(name))o.visible=false;
+    });
+    externalPresentation.visible=false;
+    externalLedgerFrame.visible=false;
+  }
 
   pet.visible=false;
   const bareRipplet=externalKind==='ripplet';
