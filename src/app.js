@@ -16,7 +16,7 @@ const state={
   nftCompanion:saved.nftCompanion||null,
   companionKind:saved.companionKind||'nexus',companionGender:saved.companionGender||'boy',
   eyeStyle:saved.eyeStyle||'cyan',coreStyle:saved.coreStyle||'standard',headGear:saved.headGear||'none',trailStyle:saved.trailStyle||'none',
-  soundEnabled:saved.soundEnabled===true,soundVolume:Number.isFinite(saved.soundVolume)?saved.soundVolume:35,
+  soundEnabled:saved.soundEnabled!==false,soundVolume:Number.isFinite(saved.soundVolume)?saved.soundVolume:35,
   interfaceSound:saved.interfaceSound!==false,ambientSound:saved.ambientSound!==false,ledgerSound:saved.ledgerSound!==false,
   signalLoreIndex:Number.isFinite(saved.signalLoreIndex)?saved.signalLoreIndex:0
 };
