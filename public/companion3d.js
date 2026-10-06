@@ -7,21 +7,41 @@ const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(31,1,.1,100);
 camera.position.set(0,.15,8.4);
 
-const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+const deviceMemory=Number(navigator.deviceMemory||8);
+const cpuCores=Number(navigator.hardwareConcurrency||8);
+const prefersReducedMotion=matchMedia?.('(prefers-reduced-motion: reduce)')?.matches===true;
+const lowPower=deviceMemory<=4||cpuCores<=4||prefersReducedMotion;
+const XRPetQuality={
+  lowPower,
+  pixelRatio:lowPower?1:Math.min(window.devicePixelRatio||1,1.35),
+  shadows:!lowPower,
+  reflections:!lowPower,
+  fps:lowPower?24:30
+};
+
+let renderer;
+try{
+  renderer=new THREE.WebGLRenderer({antialias:!XRPetQuality.lowPower,alpha:true,powerPreference:XRPetQuality.lowPower?'default':'high-performance'});
+}catch(err){
+  host.innerHTML='<div class="companion3d-fallback"><strong>XRPet 3D Safe Mode</strong><small>Your browser could not initialize WebGL. The app will continue without the live 3D layer.</small></div>';
+  window.dispatchEvent(new CustomEvent('xrpet:model-fallback',{detail:{kind:'nexus',error:'WebGL unavailable'}}));
+  throw err;
+}
+renderer.setPixelRatio(XRPetQuality.pixelRatio);
 renderer.setClearColor(0x000000,0);
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure=1.18;
-renderer.shadowMap.enabled=true;
+renderer.shadowMap.enabled=XRPetQuality.shadows;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.domElement.className='companion3d-canvas';
 renderer.domElement.setAttribute('aria-label','Interactive cinematic XRPet companion');
 
 host.appendChild(renderer.domElement);
 
-// Physically based reflection environment. Failure here never blocks the companion.
+// Physically based reflection environment. Disabled in performance mode.
 (async()=>{
+  if(!XRPetQuality.reflections)return;
   try{
     const envMod=await import('https://esm.sh/three@0.169.0/examples/jsm/environments/RoomEnvironment.js?deps=three@0.169.0');
     const pmrem=new THREE.PMREMGenerator(renderer);
@@ -591,7 +611,7 @@ function configureEquipment(detail={}){
 
 // lighting
 scene.add(new THREE.HemisphereLight(0xc9f6ff,0x061017,2.1));
-const key=new THREE.SpotLight(0xffffff,44,20,.5,.5,1.3);key.position.set(-4,5,5);key.castShadow=true;scene.add(key);key.target=pet;
+const key=new THREE.SpotLight(0xffffff,44,20,.5,.5,1.3);key.position.set(-4,5,5);key.castShadow=XRPetQuality.shadows;scene.add(key);key.target=pet;
 const fill=new THREE.PointLight(0x45e8ff,24,9,1.7);fill.position.set(2.9,1.3,3.6);scene.add(fill);
 const rim=new THREE.PointLight(0x6b6dff,17,8,1.7);rim.position.set(-3.1,1.2,-2.1);scene.add(rim);
 const under=new THREE.PointLight(0x35ddff,10,5,2);under.position.set(0,-1.2,1.8);scene.add(under);
@@ -867,6 +887,7 @@ function useProceduralModel(kind=currentKind){
   window.dispatchEvent(new CustomEvent('xrpet:model-ready',{detail:{kind,mode:'procedural',animations:[],credit:''}}));
 }
 
+let modelLoadTimer=0;
 function setAppearance(detail={}){
   const kind=detail.companionKind||currentKind;
   configureSpecies(kind);
@@ -874,10 +895,15 @@ function setAppearance(detail={}){
   configureCosmetic(detail.cosmetic||currentCosmetic);
   configureEquipment(detail);
   applyRoom(detail.room||'nexus');
-  if(BUILTIN_MODELS[kind]){
+
+  clearTimeout(modelLoadTimer);
+  // Always establish a lightweight visible fallback first.
+  if(!externalModel||externalKind!==kind)useProceduralModel(kind);
+
+  if(BUILTIN_MODELS[kind]&&!XRPetQuality.lowPower){
     window.dispatchEvent(new CustomEvent('xrpet:model-loading',{detail:{kind}}));
-    ensureBuiltInModel(kind);
-  }else useProceduralModel(kind);
+    modelLoadTimer=setTimeout(()=>ensureBuiltInModel(kind),650);
+  }
 }
 window.addEventListener('xrpet:appearance',e=>setAppearance(e.detail||{}));
 
@@ -913,6 +939,16 @@ window.XRPet3D={
   visible(){return renderer.domElement.isConnected}
 };
 
+renderer.domElement.addEventListener('webglcontextlost',e=>{
+  e.preventDefault();
+  window.dispatchEvent(new CustomEvent('xrpet:model-fallback',{detail:{kind:currentKind,error:'WebGL context lost'}}));
+  host.classList.add('webgl-lost');
+});
+renderer.domElement.addEventListener('webglcontextrestored',()=>{
+  host.classList.remove('webgl-lost');
+  setAppearance({companionKind:currentKind,companionGender:currentGender,cosmetic:currentCosmetic});
+});
+
 function resize(){
   const r=host.getBoundingClientRect();const w=Math.max(1,r.width),h=Math.max(1,r.height);
   renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
@@ -923,7 +959,7 @@ host.querySelector('.companion3d-loading')?.remove();
 window.dispatchEvent(new CustomEvent('xrpet:3d-ready'));
 
 const clock=new THREE.Clock();
-function animate(){
+function renderFrame(){
   const dt=Math.min(.05,clock.getDelta());
   const t=clock.elapsedTime;
   const idle=performance.now()-lastInteract>1600;
@@ -1045,6 +1081,24 @@ function animate(){
   }
 
   renderer.render(scene,camera);
-  requestAnimationFrame(animate);
 }
+let rafId=0,lastFrameTime=0,renderPaused=document.hidden;
+const frameInterval=1000/XRPetQuality.fps;
+function animate(ts=0){
+  rafId=requestAnimationFrame(animate);
+  if(renderPaused)return;
+  if(ts-lastFrameTime<frameInterval)return;
+  lastFrameTime=ts;
+  try{renderFrame()}catch(err){
+    console.error('XRPet 3D frame failed',err);
+    renderPaused=true;
+    host.classList.add('webgl-lost');
+    window.dispatchEvent(new CustomEvent('xrpet:model-fallback',{detail:{kind:currentKind,error:String(err?.message||err)}}));
+  }
+}
+document.addEventListener('visibilitychange',()=>{
+  renderPaused=document.hidden;
+  if(!renderPaused){lastFrameTime=0}
+});
 animate();
+
