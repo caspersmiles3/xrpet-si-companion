@@ -1252,28 +1252,35 @@ function undockRipplet(){
 }
 function goRipplet(activity='explore'){
   syncRoamBounds();
+  if(rippletMusicDancing||heldCryptoCoin||pendingCryptoCoin)return false;
   const layer=roamLayer?.getBoundingClientRect();if(!layer)return false;
-  const avatar=lifeAvatar?.getBoundingClientRect();
-  const currentX=avatar?avatar.left-layer.left:layer.width*.5;
-  const currentY=avatar?avatar.top-layer.top:layer.height*.55;
+  const avatar=lifeAvatar?.getBoundingClientRect(),b=activePageBounds(10);
+  const currentX=avatar?avatar.left-layer.left:b.left;
+  const currentY=avatar?avatar.top-layer.top:b.top;
+  const avatarH=Math.max(72,avatar?.height||72);
+  const avatarW=Math.max(52,avatar?.width||52);
+  const minX=b.left,minY=b.top,maxX=Math.max(minX,b.right-avatarW),maxY=Math.max(minY,b.bottom-avatarH);
   let target=null;
   if(activity==='dock')target=dockPosition();
   if(activity==='socialize')target=null;
-  if(activity==='ledger')target={x:layer.width*.72,y:Math.max(165,layer.height*.34)};
+  if(activity==='ledger'){
+    target=findNearestClearPosition(
+      minX+(maxX-minX)*.72,
+      minY+(maxY-minY)*.34
+    );
+  }
   if(!target){
-    const avatarH=Math.max(72,avatar?.height||72);
-    const avatarW=Math.max(52,avatar?.width||52);
-    for(let tries=0;tries<22&&!target;tries++){
+    for(let tries=0;tries<28&&!target;tries++){
       const candidate={
-        x:14+Math.random()*Math.max(40,layer.width-avatarW-28),
-        y:Math.max(12,Math.min(layer.height-avatarH-24,currentY+(Math.random()-.5)*34))
+        x:minX+Math.random()*Math.max(1,maxX-minX),
+        y:Math.max(minY,Math.min(maxY,currentY+(Math.random()-.5)*34))
       };
       target=findNearestClearPosition(candidate.x,candidate.y);
     }
   }
   if(!target)return false;
   const distance=Math.hypot(target.x-currentX,target.y-currentY);
-  const locomotion=activity==='dock'?'walk':distance>Math.max(180,layer.width*.24)?'run':'walk';
+  const locomotion=activity==='dock'?'walk':distance>Math.max(180,(b.right-b.left)*.24)?'run':'walk';
   const moved=routeRippletTo(target.x,target.y,locomotion);
   if(activity==='socialize'&&moved)window.XRPet3D?.perform?.('wave');
   return moved;
@@ -1474,9 +1481,11 @@ function pointerActionFor(hit){
   return {mode:'perch',action:'stand'};
 }
 function followRippletPointer(force=false){
-  if(roamDocked||rippletMusicDancing||!lifeAvatar||!roamLayer)return false;
+  if(roamDocked||rippletMusicDancing||heldCryptoCoin||pendingCryptoCoin||!lifeAvatar||!roamLayer)return false;
   if(rippletRouteBusy())return true;
   if(!rippletPointer.active&&!force)return false;
+  const pb=activePageBounds(4);
+  if(rippletPointer.x<pb.left||rippletPointer.x>pb.right||rippletPointer.y<pb.top||rippletPointer.y>pb.bottom)return false;
   const hits=terrainNearPointer();
   if(!hits.length)return false;
 
