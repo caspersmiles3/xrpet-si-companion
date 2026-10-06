@@ -2197,3 +2197,53 @@ body[data-primary-view="home"] .home-companion-layer .floating-companion{z-index
 .global-life-avatar[data-reaction]{
   will-change:transform,filter;
 }
+
+
+/* XRPet v4.9 — autonomous mind + XRP live market chart */
+.market-chart-panel{
+  margin-top:20px;padding:20px;border-top:1px solid rgba(104,222,255,.13);
+  border-bottom:1px solid rgba(104,222,255,.1);
+  background:linear-gradient(180deg,rgba(7,18,24,.5),rgba(4,10,15,.2));
+  color:#69e6ff
+}
+.market-chart-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:14px}
+.market-chart-head h2{margin:4px 0 6px;font-size:1.45rem;color:#edfaff}
+.market-chart-head p{margin:0;max-width:720px;color:#718994;font-size:.68rem;line-height:1.5}
+.chart-stats{display:grid;grid-template-columns:repeat(3,minmax(90px,1fr));gap:8px;min-width:330px}
+.chart-stats span{padding:9px 10px;border:1px solid rgba(103,220,246,.1);border-radius:9px;background:rgba(5,13,18,.48)}
+.chart-stats small,.chart-stats strong{display:block}
+.chart-stats small{font-size:.46rem;letter-spacing:.12em;color:#627b87}
+.chart-stats strong{margin-top:4px;font-size:.72rem;color:#e7fbff}
+.market-chart-wrap{position:relative}
+#xrpMarketChart{
+  width:100%;height:320px;display:block;overflow:visible;
+  filter:drop-shadow(0 10px 25px rgba(0,0,0,.2))
+}
+#marketGrid line{stroke:rgba(104,218,242,.08);stroke-width:1}
+.market-line{fill:none;stroke:currentColor;stroke-width:3;vector-effect:non-scaling-stroke}
+.market-area{fill:url(#chartFill);stroke:none}
+.market-chart-panel[data-direction="down"]{color:#ff8b8b}
+.market-chart-panel[data-direction="up"]{color:#68efc2}
+.chart-axis-row{display:flex;justify-content:space-between;gap:10px;margin-top:5px;color:#5d7480;font-size:.5rem;letter-spacing:.08em}
+.chart-axis-row span:nth-child(2){color:#7d98a3}
+
+.ripplet-mind-card{border-color:rgba(102,225,255,.2)!important;background:linear-gradient(145deg,rgba(8,23,31,.9),rgba(5,12,18,.95))!important}
+.mind-grid{display:grid;grid-template-columns:.8fr 1.5fr .8fr;gap:9px;margin-top:12px}
+.mind-grid>div{padding:12px;border:1px solid rgba(107,220,245,.1);border-radius:10px;background:rgba(4,12,17,.5)}
+.mind-grid span,.mind-grid strong{display:block}
+.mind-grid span{font-size:.48rem;letter-spacing:.11em;color:#617985}
+.mind-grid strong{margin-top:5px;font-size:.68rem;line-height:1.45;color:#dff9ff}
+#mindThought{font-weight:500}
+#mindMode{white-space:nowrap}
+
+@media(max-width:850px){
+  .market-chart-head{flex-direction:column}
+  .chart-stats{min-width:0;width:100%}
+  #xrpMarketChart{height:250px}
+  .mind-grid{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .chart-stats{grid-template-columns:1fr 1fr}
+  .chart-stats span:last-child{grid-column:1/-1}
+  #xrpMarketChart{height:210px}
+}
