@@ -177,19 +177,19 @@ function configureBuild(build){
   });
 
   orbGroup.visible=build!=='midnight';
-  orbGroup.scale.setScalar(build==='pearl'?1.18:build==='aqua'?.88:build==='solar'?1.05:1);
+  orbGroup.scale.setScalar(build==='pearl'?1.18:build==='aqua' ? .88:build==='solar'?1.05:1);
   head.scale.set(
     build==='midnight'?1.1:build==='pearl'?1.0:1.05,
-    build==='midnight'?.92:build==='aqua'?.82:.88,
+    build==='midnight' ? .92:build==='aqua' ? .82:.88,
     build==='solar'?1.0:.95
   );
   body.scale.set(
-    build==='midnight'?1.02:build==='aqua'?.84:.9,
-    build==='solar'?.9:build==='midnight'?.88:.83,
-    build==='solar'?.9:.82
+    build==='midnight'?1.02:build==='aqua' ? .84:.9,
+    build==='solar' ? .9:build==='midnight' ? .88:.83,
+    build==='solar' ? .9:.82
   );
-  core.scale.setScalar(build==='solar'?1.42:build==='midnight'?.82:build==='pearl'?.9:1);
-  coreBall.scale.setScalar(build==='solar'?1.55:build==='midnight'?.82:1);
+  core.scale.setScalar(build==='solar'?1.42:build==='midnight' ? .82:build==='pearl' ? .9:1);
+  coreBall.scale.setScalar(build==='solar'?1.55:build==='midnight' ? .82:1);
 }
 const hemi=new THREE.HemisphereLight(0xbfefff,0x071018,2.2);scene.add(hemi);
 const key=new THREE.SpotLight(0xffffff,48,20,.45,.45,1.3);key.position.set(-4,5,5);key.castShadow=true;scene.add(key);key.target=pet;
