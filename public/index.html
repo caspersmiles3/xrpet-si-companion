@@ -869,11 +869,14 @@
   setTimeout(()=>{
     if(released)return;
     const status=document.getElementById('launchStatus');
-    if(status)status.textContent='Ready. Entering XRPet…';
-    release();
+    if(status)status.textContent='XRPet is ready when you are.';
+    const bar=document.getElementById('launchProgressBar');
+    if(bar)bar.style.width='94%';
   },6000);
 })();
 </script>
+<script src="/launch-enhance.js?v=5.5.3"></script>
+<script src="/contact-directory.js?v=5.5.3"></script>
 <script src="/music-player.js?v=5.5.2"></script>
 <script src="/games.js?v=5.5.2"></script>
 <script src="/ecosystem.js?v=5.5.2"></script>
