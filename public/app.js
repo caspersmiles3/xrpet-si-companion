@@ -1040,6 +1040,165 @@ function goRipplet(activity='explore'){
     window.XRPet3D?.perform?.('wave');
   }
 }
+const RIPPLET_PLAY_PROPS=[
+  {kind:'orb',label:'XRP orb',glyph:'X'},
+  {kind:'cube',label:'ledger cube',glyph:'▣'},
+  {kind:'ring',label:'signal ring',glyph:'◇'},
+  {kind:'chip',label:'589 chip',glyph:'589'}
+];
+let heldPlayProp=null,playPropDropTimer=0,lastInterfacePlayAt=0;
+
+function visibleInterfaceTargets(){
+  const layer=roamLayer?.getBoundingClientRect(),shell=q('.main-shell')?.getBoundingClientRect();
+  if(!layer||!shell)return[];
+  const selectors=[
+    '.primary-view-section.view-active h1',
+    '.primary-view-section.view-active h2',
+    '.primary-view-section.view-active .detail-card',
+    '.primary-view-section.view-active .contact-card',
+    '.primary-view-section.view-active .ecosystem-token-card',
+    '.primary-view-section.view-active .game-panel.active',
+    '.global-command-bar'
+  ];
+  return qa(selectors.join(',')).filter(el=>{
+    if(el.closest('.sidebar'))return false;
+    const r=el.getBoundingClientRect(),style=getComputedStyle(el);
+    return style.display!=='none'&&style.visibility!=='hidden'&&r.width>36&&r.height>18&&
+      r.bottom>shell.top+28&&r.top<shell.bottom-26&&r.right>shell.left+24&&r.left<shell.right-24;
+  });
+}
+function interfaceTargetPosition(el,mode='perch'){
+  const layer=roamLayer?.getBoundingClientRect(),avatar=lifeAvatar?.getBoundingClientRect(),r=el?.getBoundingClientRect();
+  if(!layer||!r)return null;
+  const aw=Math.max(140,avatar?.width||170),ah=Math.max(160,avatar?.height||205);
+  const centerX=r.left-layer.left+r.width*.5-aw*.5;
+  if(mode==='climb')return{x:r.left-layer.left-aw*.38,y:Math.min(layer.height-ah-8,r.bottom-layer.top-ah*.7)};
+  if(mode==='inspect')return{x:r.left-layer.left-aw*.72,y:r.top-layer.top+r.height*.5-ah*.55};
+  return{x:centerX,y:r.top-layer.top-ah+18};
+}
+function markInterfaceTarget(el,on=true){
+  qa('.ripplet-target-active').forEach(x=>x.classList.remove('ripplet-target-active'));
+  if(on&&el)el.classList.add('ripplet-target-active');
+}
+function ensurePlayProps(){
+  if(!roamLayer||roamLayer.querySelector('.companion-play-prop'))return;
+  const spots=[[.12,.70],[.33,.82],[.61,.74],[.84,.80]];
+  RIPPLET_PLAY_PROPS.forEach((p,i)=>{
+    const el=document.createElement('span');
+    el.className='companion-play-prop prop-'+p.kind;
+    el.dataset.propKind=p.kind;el.dataset.propLabel=p.label;el.textContent=p.glyph;
+    el.setAttribute('aria-hidden','true');
+    roamLayer.appendChild(el);
+    requestAnimationFrame(()=>{
+      const lr=roamLayer.getBoundingClientRect();
+      el.style.left=Math.max(12,lr.width*spots[i][0])+'px';
+      el.style.top=Math.max(18,lr.height*spots[i][1])+'px';
+    });
+  });
+}
+function nearestFreePlayProp(){
+  ensurePlayProps();
+  const avatar=lifeAvatar?.getBoundingClientRect();if(!avatar)return null;
+  return [...roamLayer.querySelectorAll('.companion-play-prop:not(.held)')].sort((a,b)=>{
+    const ar=a.getBoundingClientRect(),br=b.getBoundingClientRect();
+    const acx=avatar.left+avatar.width*.5,acy=avatar.top+avatar.height*.62;
+    return Math.hypot(ar.left-acx,ar.top-acy)-Math.hypot(br.left-acx,br.top-acy);
+  })[0]||null;
+}
+function carryProp(prop){
+  if(!prop||!lifeAvatar)return;
+  clearTimeout(playPropDropTimer);
+  heldPlayProp=prop;
+  prop.classList.add('held');
+  prop.style.left='';prop.style.top='';
+  lifeAvatar.appendChild(prop);
+  window.XRPet3D?.motor?.('grab',{side:'right'});
+  setTimeout(()=>window.XRPet3D?.motor?.('carry',{side:'right'}),700);
+  setText('#mindAction','Carrying '+(prop.dataset.propLabel||'object'));
+  setText('#mindThought','I found something in the interface to play with.');
+  playPropDropTimer=setTimeout(dropPlayProp,4200+Math.random()*2600);
+}
+function dropPlayProp(){
+  clearTimeout(playPropDropTimer);
+  const prop=heldPlayProp;if(!prop||!roamLayer||!lifeAvatar)return;
+  const layer=roamLayer.getBoundingClientRect(),a=lifeAvatar.getBoundingClientRect();
+  prop.classList.remove('held');roamLayer.appendChild(prop);
+  prop.style.left=Math.max(8,Math.min(layer.width-42,a.left-layer.left+a.width*.62))+'px';
+  prop.style.top=Math.max(12,Math.min(layer.height-42,a.bottom-layer.top-34))+'px';
+  prop.classList.remove('just-dropped');void prop.offsetWidth;prop.classList.add('just-dropped');
+  heldPlayProp=null;
+  window.XRPet3D?.motor?.('reach',{side:'right'});
+}
+function makeInterfaceEcho(el){
+  if(!el||!lifeAvatar)return null;
+  const text=(el.querySelector?.('h1,h2,h3,strong,span')?.textContent||el.textContent||'UI').trim().replace(/\s+/g,' ').slice(0,8);
+  const prop=document.createElement('span');
+  prop.className='companion-play-prop prop-ui-echo';
+  prop.dataset.propKind='ui-echo';prop.dataset.propLabel='interface piece';
+  prop.textContent=text||'UI';
+  roamLayer?.appendChild(prop);
+  return prop;
+}
+function playWithInterface(force=false){
+  if(roamDocked||!lifeAvatar||!roamLayer)return false;
+  if(!force&&Date.now()-lastInterfacePlayAt<7000)return false;
+  const targets=visibleInterfaceTargets();if(!targets.length)return false;
+  lastInterfacePlayAt=Date.now();
+  const target=targets[Math.floor(Math.random()*targets.length)];
+  const heading=/^H[1-3]$/.test(target.tagName);
+  const roll=Math.random();
+  markInterfaceTarget(target,true);
+  if(heading||roll<.34){
+    const p=interfaceTargetPosition(target,'perch');if(!p)return false;
+    window.XRPet3D?.motor?.('jump');
+    setRoamPosition(p.x,p.y,'jump');
+    setText('#mindAction','Platform jumping');
+    setText('#mindThought','I am using the interface itself as terrain.');
+    setTimeout(()=>window.XRPet3D?.motor?.(Math.random()<.5?'crouch':'turn',{turn:(Math.random()<.5?-1:1)*.35}),1250);
+  }else if(roll<.62){
+    const side=interfaceTargetPosition(target,'climb'),top=interfaceTargetPosition(target,'perch');if(!side||!top)return false;
+    window.XRPet3D?.motor?.('walk');setRoamPosition(side.x,side.y,'walk');
+    setText('#mindAction','Climbing interface');
+    setText('#mindThought','That panel looks climbable.');
+    setTimeout(()=>{
+      window.XRPet3D?.motor?.('climb');
+      setRoamPosition(top.x,top.y,'climb');
+      setTimeout(()=>window.XRPet3D?.perform?.('happy'),2100);
+    },1150);
+  }else{
+    const near=interfaceTargetPosition(target,'inspect');if(!near)return false;
+    window.XRPet3D?.motor?.('walk');setRoamPosition(near.x,near.y,'walk');
+    setText('#mindAction','Inspecting interface');
+    setText('#mindThought','I want to see what I can pick up here.');
+    setTimeout(()=>{
+      window.XRPet3D?.motor?.('reach',{side:'right'});
+      const prop=Math.random()<.55?nearestFreePlayProp():makeInterfaceEcho(target);
+      if(prop)setTimeout(()=>carryProp(prop),520);
+    },1100);
+  }
+  setTimeout(()=>markInterfaceTarget(null,false),3200);
+  return true;
+}
+function playWithObject(){
+  if(roamDocked)return false;
+  const prop=nearestFreePlayProp();if(!prop)return false;
+  const layer=roamLayer?.getBoundingClientRect(),r=prop.getBoundingClientRect(),avatar=lifeAvatar?.getBoundingClientRect();
+  if(!layer||!avatar)return false;
+  const x=r.left-layer.left-avatar.width*.55,y=r.top-layer.top-avatar.height*.55;
+  window.XRPet3D?.motor?.('walk');setRoamPosition(x,y,'walk');
+  setText('#mindAction','Playing');
+  setText('#mindThought','I spotted '+(prop.dataset.propLabel||'an object')+' and decided to pick it up.');
+  setTimeout(()=>carryProp(prop),1300);
+  return true;
+}
+window.XRPetPlayground={
+  play:()=>playWithInterface(true),
+  object:playWithObject,
+  drop:dropPlayProp,
+  refresh:ensurePlayProps
+};
+ensurePlayProps();
+
 function roamingStep(){
   clearTimeout(roamTimer);
   if(roamDocked){
@@ -1049,8 +1208,11 @@ function roamingStep(){
     roamTimer=setTimeout(roamingStep,5200+Math.random()*4200);
     return;
   }
-  goRipplet('explore');
-  roamTimer=setTimeout(roamingStep,5200+Math.random()*4800);
+  const roll=Math.random();
+  if(roll<.32)playWithInterface();
+  else if(roll<.48)playWithObject();
+  else goRipplet('explore');
+  roamTimer=setTimeout(roamingStep,6200+Math.random()*6200);
 }
 function renderMind(){
   const labels={roam:'Roaming',dock:'Docked',socialize:'Signal Friend',scan:'Scanning XRPL',wave:'Waving',dance:'Dancing',focus:'Focused',run:'Running',jump:'Jumping',climb:'Climbing',reach:'Reaching',grab:'Grabbing',carry:'Carrying',crouch:'Crouching',turn:'Turning'};
