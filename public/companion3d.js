@@ -10,8 +10,12 @@ camera.position.set(0,.15,8.4);
 const deviceMemory=Number(navigator.deviceMemory||8);
 const cpuCores=Number(navigator.hardwareConcurrency||8);
 const prefersReducedMotion=matchMedia?.('(prefers-reduced-motion: reduce)')?.matches===true;
-const lowPower=deviceMemory<=4||cpuCores<=4||prefersReducedMotion;
+let savedGraphics='auto';
+try{savedGraphics=JSON.parse(localStorage.getItem('xrpet-v2-state')||'{}').graphicsQuality||'auto'}catch{}
+const autoLowPower=deviceMemory<=4||cpuCores<=4||prefersReducedMotion;
+const lowPower=savedGraphics==='performance'?true:savedGraphics==='full'?false:autoLowPower;
 const XRPetQuality={
+  mode:savedGraphics,
   lowPower,
   pixelRatio:lowPower?1:Math.min(window.devicePixelRatio||1,1.35),
   shadows:!lowPower,
