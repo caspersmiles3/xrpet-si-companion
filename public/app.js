@@ -1070,8 +1070,8 @@ function dockPosition(){
   const dock=q('#rippletDock'),layer=roamLayer?.getBoundingClientRect(),avatar=lifeAvatar?.getBoundingClientRect();
   if(!dock||!layer)return null;
   const r=dock.getBoundingClientRect();
-  const w=Math.max(14,avatar?.width||15);
-  const h=Math.max(20,avatar?.height||21);
+  const w=Math.max(7,avatar?.width||8);
+  const h=Math.max(10,avatar?.height||11);
   return {
     x:r.left-layer.left+r.width/2-w/2,
     y:Math.max(6,r.top-layer.top+Math.max(4,(r.height-h)*.16))
@@ -1117,8 +1117,8 @@ function goRipplet(activity='explore'){
   if(activity==='socialize')target=null;
   if(activity==='ledger')target={x:layer.width*.72,y:Math.max(165,layer.height*.34)};
   if(!target){
-    const avatarH=Math.max(20,avatar?.height||21);
-    const avatarW=Math.max(14,avatar?.width||15);
+    const avatarH=Math.max(10,avatar?.height||11);
+    const avatarW=Math.max(7,avatar?.width||8);
     target={
       x:14+Math.random()*Math.max(40,layer.width-avatarW-28),
       y:12+Math.random()*Math.max(36,layer.height-avatarH-24)
@@ -1260,23 +1260,23 @@ function followRippletPointer(force=false){
 
   if(choice.action==='hang'){
     window.XRPet2D?.motor?.('hang');
-    setRoamPosition(p.x,p.y,'hang');
+    routeRippletTo(p.x,p.y,'hang',hit.target);
     setText('#mindAction','Following cursor · hanging');
   }else if(choice.action==='climb'){
     window.XRPet2D?.motor?.('climb');
-    setRoamPosition(p.x,p.y,'climb');
+    routeRippletTo(p.x,p.y,'climb',hit.target);
     setText('#mindAction','Following cursor · climbing');
   }else if(choice.action==='jump'){
     window.XRPet2D?.motor?.('jump');
-    setRoamPosition(p.x,p.y,'jump');
+    routeRippletTo(p.x,p.y,'jump',hit.target);
     setText('#mindAction','Following cursor · jumping');
   }else if(choice.action==='sit'){
     window.XRPet2D?.motor?.('sit');
-    setRoamPosition(p.x,p.y,'walk');
+    routeRippletTo(p.x,p.y,'sit',hit.target);
     setText('#mindAction','Following cursor · sitting');
   }else{
     window.XRPet2D?.motor?.('stand');
-    setRoamPosition(p.x,p.y,'walk');
+    routeRippletTo(p.x,p.y,'stand',hit.target);
     setText('#mindAction','Following cursor · perched');
   }
   setText('#mindThought','I am following your mouse through the page terrain.');
@@ -1297,42 +1297,108 @@ function updateRippletPointer(e){
   clearTimeout(rippletPointerTimer);
   rippletPointerTimer=setTimeout(()=>followRippletPointer(),34);
 }
-function interfaceTargetPosition(el,mode='perch'){
-  const layer=roamLayer?.getBoundingClientRect(),avatar=lifeAvatar?.getBoundingClientRect(),r=el?.__rect||el?.getBoundingClientRect?.();
-  if(!layer||!r)return null;
-  const aw=Math.max(14,avatar?.width||15),ah=Math.max(20,avatar?.height||21);
-  const localLeft=r.left-layer.left,localTop=r.top-layer.top;
-  const centerX=localLeft+r.width*.5-aw*.5;
-  const rightEdge=localLeft+r.width-aw*.78;
-  const textLike=/^(H1|H2|H3|P|SPAN|STRONG|SMALL|BUTTON|TEXTWORD)$/.test(el.tagName);
-  if(mode==='climb'){
-    return {
-      x:Math.max(8,localLeft-aw*.56),
-      y:Math.max(8,Math.min(layer.height-ah-6,localTop+r.height*.45-ah*.46))
-    };
+function rectsOverlap(a,b,pad=0){
+  return !(a.right<=b.left+pad||a.left>=b.right-pad||a.bottom<=b.top+pad||a.top>=b.bottom-pad);
+}
+function avatarRectAt(x,y){
+  const avatar=lifeAvatar?.getBoundingClientRect();
+  const w=Math.max(7,avatar?.width||8),h=Math.max(10,avatar?.height||11);
+  return {left:x,top:y,right:x+w,bottom:y+h,width:w,height:h};
+}
+function visibleCollisionRects(ignoreTarget=null){
+  const shell=q('.main-shell'),sr=shell?.getBoundingClientRect();
+  if(!shell||!sr)return[];
+  const rects=[];
+  for(const target of [...visibleTextTerrain(),...visibleInterfaceTargets()]){
+    if(target===ignoreTarget)continue;
+    const r=target?.__rect||target?.getBoundingClientRect?.();
+    if(!r)continue;
+    rects.push({
+      left:r.left-sr.left+shell.scrollLeft,
+      right:r.right-sr.left+shell.scrollLeft,
+      top:r.top-sr.top+shell.scrollTop,
+      bottom:r.bottom-sr.top+shell.scrollTop
+    });
   }
-  if(mode==='hop'){
-    return {
-      x:Math.max(8,Math.min(layer.width-aw-6,rightEdge)),
-      y:Math.max(8,localTop-ah+Math.min(18,r.height*.35))
-    };
-  }
-  if(mode==='inspect'){
-    return {
-      x:Math.max(8,localLeft-aw*.72),
-      y:Math.max(8,Math.min(layer.height-ah-6,localTop+r.height*.5-ah*.58))
-    };
-  }
-  if(mode==='hang'){
-    return {
-      x:Math.max(6,Math.min(layer.width-aw-4,localLeft+r.width-aw*.62)),
-      y:Math.max(6,Math.min(layer.height-ah-4,localTop+r.height*.72-ah*.16))
-    };
-  }
-  return {
-    x:Math.max(8,Math.min(layer.width-aw-6,centerX)),
-    y:Math.max(8,localTop-ah+(textLike?10:16))
+  return rects;
+}
+function surfacePositionIsClear(x,y,ignoreTarget=null){
+  const a=avatarRectAt(x,y);
+  return !visibleCollisionRects(ignoreTarget).some(r=>rectsOverlap(a,r,0));
+}
+function routeRippletTo(x,y,activity='walk',ignoreTarget=null){
+  if(!lifeAvatar||!roamLayer)return;
+  const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar.getBoundingClientRect();
+  if(!shell||!sr){setRoamPosition(x,y,activity);return}
+  const current={
+    x:ar.left-sr.left+shell.scrollLeft,
+    y:ar.top-sr.top+shell.scrollTop
   };
+  const distance=Math.hypot(x-current.x,y-current.y);
+
+  if(distance<20||activity==='climb'||activity==='hang'){
+    setRoamPosition(x,y,activity);
+    return;
+  }
+
+  // Route through open air above the current and destination surfaces instead of through page content.
+  const clearanceY=Math.max(4,Math.min(current.y,y)-18);
+  window.XRPet2D?.motor?.('jump');
+  setRoamPosition(current.x,clearanceY,'jump');
+  setTimeout(()=>{
+    if(roamDocked)return;
+    setRoamPosition(x,clearanceY,'run');
+    setTimeout(()=>{
+      if(roamDocked)return;
+      setRoamPosition(x,y,activity==='sit'?'walk':activity);
+      if(activity==='sit')window.XRPet2D?.motor?.('sit');
+      else if(activity==='stand')window.XRPet2D?.motor?.('stand');
+    },220);
+  },180);
+}
+function interfaceTargetPosition(el,mode='perch'){
+  const shell=q('.main-shell'),avatar=lifeAvatar?.getBoundingClientRect(),r=el?.__rect||el?.getBoundingClientRect?.();
+  if(!shell||!r)return null;
+  const sr=shell.getBoundingClientRect();
+  const aw=Math.max(7,avatar?.width||8),ah=Math.max(10,avatar?.height||11);
+  const localLeft=r.left-sr.left+shell.scrollLeft;
+  const localTop=r.top-sr.top+shell.scrollTop;
+  const localRight=r.right-sr.left+shell.scrollLeft;
+  const localBottom=r.bottom-sr.top+shell.scrollTop;
+
+  // Stand/sit/perch strictly above the element: never inside its text/box rectangle.
+  if(mode==='perch'){
+    const x=Math.max(4,Math.min(shell.scrollWidth-aw-4,localLeft+r.width*.5-aw*.5));
+    const y=Math.max(4,localTop-ah-1);
+    return {x,y};
+  }
+
+  // Jump destination is also a top surface.
+  if(mode==='hop'){
+    const x=Math.max(4,Math.min(shell.scrollWidth-aw-4,localRight-aw));
+    const y=Math.max(4,localTop-ah-2);
+    return {x,y};
+  }
+
+  // Climb alongside an outside edge.
+  if(mode==='climb'){
+    const useLeft=rippletPointer.x<(localLeft+r.width*.5);
+    const x=useLeft?Math.max(4,localLeft-aw-1):Math.min(shell.scrollWidth-aw-4,localRight+1);
+    const y=Math.max(4,Math.min(shell.scrollHeight-ah-4,localTop+r.height*.45-ah*.5));
+    return {x,y};
+  }
+
+  // Hang outside the nearest edge with only the hands visually meeting the surface.
+  if(mode==='hang'){
+    const useLeft=rippletPointer.x<(localLeft+r.width*.5);
+    const x=useLeft?Math.max(4,localLeft-aw+1):Math.min(shell.scrollWidth-aw-4,localRight-1);
+    const y=Math.max(4,Math.min(shell.scrollHeight-ah-4,localTop+Math.min(r.height*.35,8)));
+    return {x,y};
+  }
+
+  const x=Math.max(4,localLeft-aw-1);
+  const y=Math.max(4,localTop-ah-1);
+  return {x,y};
 }
 function markInterfaceTarget(el,on=true){
   qa('.ripplet-target-active').forEach(x=>x.classList.remove('ripplet-target-active'));
@@ -1402,7 +1468,7 @@ function playWithInterface(force=false){
 
   if(action==='hang'){
     window.XRPet3D?.motor?.('hang');
-    setRoamPosition(p.x,p.y,'hang');
+    routeRippletTo(p.x,p.y,'hang',hit.target);
     setText('#mindAction',target.__terrain?'Hanging from letters':'Hanging from a box');
     setText('#mindThought','I grabbed the edge and I am hanging on.');
     setTimeout(()=>{
@@ -1413,12 +1479,12 @@ function playWithInterface(force=false){
     },850);
   }else if(action==='jump'){
     window.XRPet3D?.motor?.('jump');
-    setRoamPosition(p.x,p.y,'jump');
+    routeRippletTo(p.x,p.y,'jump',hit.target);
     setText('#mindAction','Jumping between letters');
     setText('#mindThought','I am using the words as little platforms.');
   }else if(action==='climb'){
     window.XRPet3D?.motor?.('climb');
-    setRoamPosition(p.x,p.y,'climb');
+    routeRippletTo(p.x,p.y,'climb',hit.target);
     setText('#mindAction','Climbing the interface');
     setText('#mindThought','I grabbed the edge and climbed onto it.');
   }else{
