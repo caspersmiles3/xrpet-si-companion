@@ -259,7 +259,7 @@ bind('#globalSearchForm','submit',e=>{
     [['cosmetic','skin','appearance','equipment','eye','core','trail','halo'], '#cosmeticsSection'],
     [['wallet','xaman','gemwallet'], '#walletPanel'],
     [['chat','ask','si','assistant'], '#chatPanel'],
-    [['ledger','xrpl','xrp','network','price'], '#xrplPanel'],
+    [['history','timeline','ripple','sec','lawsuit','escrow','odl','rlusd','acquisition'], '#xrpHistorySection'],\n    [['ledger','xrpl','xrp','network','price'], '#xrplPanel'],
     [['companion','pet','profile','memory','evolution'], '#companionSection']
   ];
   const match=map.find(([keys])=>keys.some(k=>term.includes(k)));
