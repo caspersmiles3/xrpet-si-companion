@@ -1,5 +1,5 @@
-const CACHE='xrpet-v5.5.21';
-const CORE=['/','/styles.css?v=5.5.21','/app.js?v=5.5.21','/ecosystem.js?v=5.5.21','/music-player.js?v=5.5.21','/timeline.js?v=5.5.21','/xrp-history.json','/ripplet2d.js?v=5.5.21','/manifest.webmanifest','/xrpet-icon.svg','/xrpet-cursor.svg','/xrpet-pointer.svg','/games.js?v=5.5.21','/media/xrpet-launch-bg.mp4?v=5.5.21'];
+const CACHE='xrpet-v5.5.22';
+const CORE=['/','/styles.css?v=5.5.22','/app.js?v=5.5.22','/ecosystem.js?v=5.5.22','/music-player.js?v=5.5.22','/timeline.js?v=5.5.22','/xrp-history.json','/ripplet2d.js?v=5.5.22','/manifest.webmanifest','/xrpet-icon.svg','/xrpet-cursor.svg','/xrpet-pointer.svg','/games.js?v=5.5.22','/media/xrpet-launch-bg.mp4?v=5.5.22'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE))));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))));
 self.addEventListener('fetch',e=>{
