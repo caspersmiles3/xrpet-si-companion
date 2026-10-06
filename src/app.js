@@ -447,6 +447,14 @@ async function loadIntegrationStatus(){
   }
 }
 $('#refreshIntegrations').onclick=loadIntegrationStatus;
+$('#copyXamanEnv').onclick=async()=>{
+  try{
+    await navigator.clipboard.writeText('XAMAN_API_KEY');
+    $('#activationHelp').textContent='Copied XAMAN_API_KEY. Add that variable in Render and paste your public Xaman app key as its value.';
+  }catch{
+    $('#activationHelp').textContent='Add the Render environment variable XAMAN_API_KEY and paste your public Xaman app key as its value.';
+  }
+};
 
 if(state.account){
   $('#account').value=state.account;
