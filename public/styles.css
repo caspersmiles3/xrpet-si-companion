@@ -2051,7 +2051,7 @@ body[data-primary-view="home"] .home-companion-layer .floating-companion{z-index
   .eco-copy small{display:none}
 }
 @media(max-width:800px){
-  .global-command-bar{position:relative;grid-template-columns:1fr}
+  .global-command-bar{position:sticky;top:0;grid-template-columns:1fr}
   .ecosystem-strip{grid-template-columns:1fr 1fr}
   .ecosystem-station{grid-template-columns:50px 1fr}
   .ripplet-roam-layer .global-life-avatar{width:140px!important;height:175px!important}
@@ -2064,3 +2064,6 @@ body[data-primary-view="home"] .home-companion-layer .floating-companion{z-index
   .xrpl-live-expanded{padding:18px}
   .xrpl-live-metrics{grid-template-columns:1fr}
 }
+
+.tx-memos{grid-column:1/-1}
+.ecosystem-friend .friend-core:after{content:"";position:absolute;left:2px;top:2px;width:7px;height:7px;border-radius:50%;background:#091319;box-shadow:0 0 0 1px #dffcff55}
