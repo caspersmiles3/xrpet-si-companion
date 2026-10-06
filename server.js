@@ -178,7 +178,7 @@ app.get('/api/config', (_req, res) => {
   res.json({
     xamanApiKey: process.env.XAMAN_API_KEY || null,
     pushEnabled: Boolean(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY),
-    siProviderEnabled: Boolean(process.env.SI_PROVIDER_URL && process.env.SI_PROVIDER_KEY && process.env.SI_MODEL)
+    siProviderEnabled: Boolean(process.env.SI_PROVIDER_KEY)
   });
 });
 
@@ -229,26 +229,48 @@ app.post('/api/briefing', async (req, res) => {
 });
 
 async function askExternalSI(message, context, market, updates) {
-  const url = process.env.SI_PROVIDER_URL;
   const key = process.env.SI_PROVIDER_KEY;
-  const model = process.env.SI_MODEL;
-  if (!url || !key || !model) return null;
+  if (!key) return null;
+
+  const url = process.env.SI_PROVIDER_URL || 'https://api.openai.com/v1/responses';
+  const model = process.env.SI_MODEL || 'gpt-6-luna';
   const official = updates.slice(0, 5).map(x => ({ title:x.title, source:x.source, label:x.label, url:x.url }));
-  const system = [
+  const instructions = [
     'You are the SI core inside XRPet, an XRP Ledger companion.',
-    'Use supplied live data as ground truth. Separate fact from speculation.',
-    'Never promise XRP price outcomes or ask for a seed phrase/private key.',
-    'Be concise, companion-like, and match the requested explanation level.',
-    'If a claim is not supported, say it is unconfirmed.'
+    'Use supplied live data as ground truth.',
+    'Clearly separate confirmed facts, interpretation, and speculation.',
+    'Never promise XRP price outcomes or ask for a seed phrase or private key.',
+    'Be concise, useful, and companion-like.',
+    'Respect the requested explanation level.'
   ].join(' ');
+
   try {
+    if (url.includes('/responses')) {
+      const r = await fetch(url, {
+        method:'POST',
+        headers:{ 'content-type':'application/json', 'authorization':'Bearer '+key },
+        body:JSON.stringify({
+          model,
+          instructions,
+          input: JSON.stringify({ message, context, market, officialUpdates:official })
+        })
+      });
+      if (!r.ok) return null;
+      const d = await r.json();
+      return clean(
+        d?.output_text ||
+        d?.output?.flatMap?.(x=>x?.content||[])?.map?.(x=>x?.text||'')?.join?.(' ') ||
+        ''
+      );
+    }
+
     const r = await fetch(url, {
       method:'POST',
       headers:{ 'content-type':'application/json', 'authorization':'Bearer '+key },
       body:JSON.stringify({
         model,
         messages:[
-          { role:'system', content:system },
+          { role:'system', content:instructions },
           { role:'user', content:JSON.stringify({ message, context, market, officialUpdates:official }) }
         ],
         temperature:0.4
@@ -257,7 +279,9 @@ async function askExternalSI(message, context, market, updates) {
     if (!r.ok) return null;
     const d = await r.json();
     return clean(d?.choices?.[0]?.message?.content || d?.output_text || '');
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 app.post('/api/companion', async (req, res) => {
@@ -307,7 +331,7 @@ app.post('/api/companion', async (req, res) => {
 app.get('/api/health', (_req, res) => res.json({
   ok:true, product:'XRPet SI Companion', version:'1.5.0',
   capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch','gemwallet','xaman-hook','web-push','capacitor-mobile','external-si-hook'],
-  integrations:{ xaman:Boolean(process.env.XAMAN_API_KEY), push:Boolean(VAPID_PUBLIC_KEY&&VAPID_PRIVATE_KEY), si:Boolean(process.env.SI_PROVIDER_URL&&process.env.SI_PROVIDER_KEY&&process.env.SI_MODEL) }
+  integrations:{ xaman:Boolean(process.env.XAMAN_API_KEY), push:Boolean(VAPID_PUBLIC_KEY&&VAPID_PRIVATE_KEY), si:Boolean(process.env.SI_PROVIDER_KEY) }
 }));
 
 let lastPushMarket = null;
