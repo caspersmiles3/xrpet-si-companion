@@ -1620,10 +1620,10 @@ function playExternalAction(name){
   if(!externalMixer)return;
   const fallback={
     idle:['Idle','idle','survey','standing','fly'],
-    greet:['Greet','Wave','wave','yes','idle'], happy:['Happy','Emote_Excited','thumbsup','yes','dance'],
-    celebrate:['Celebrate','Emote_Cheer','Emote_Victory','dance','run'], alert:['Alert','run','walk','no'],
+    greet:['Greet','Wave','wave','yes','idle'], happy:['Happy','Emote_Excited','thumbsup','yes'],
+    celebrate:['Celebrate','Emote_Cheer','Emote_Victory','run'], alert:['Alert','run','walk','no'],
     sleep:['Sleep','sitting','idle'], wake:['Wake','standing','idle'], focus:['Focus','idle','survey'],
-    scan:['Scan','survey','walk'], orbit:['Emote_Dance','LookAround','dance','walk'],
+    scan:['Scan','survey','walk'], orbit:['LookAround','walk','idle'],
     walk:['Walk','walk'], run:['Run','run','walk'], wave:['Wave','wave'],
     jump:['Emote_Excited','Celebrate','jump','run'], climb:['Run','climb','walk'],
     reach:['Emote_Point','reach','wave'], grab:['Emote_Point','grab','reach'],
