@@ -202,7 +202,7 @@ window.addEventListener('xrpet:petInteract',()=>{playSound('pet');revealFloatCon
 window.addEventListener('xrpet:3d-ready',()=>render());
 window.addEventListener('xrpet:model-loading',e=>{const d=e.detail||{};setText('#modelRuntimeMode','Loading rigged model · '+(COMPANION_NAMES[d.kind]||d.kind||'Companion'))});
 window.addEventListener('xrpet:model-ready',e=>{
-  const d=e.detail||{};setText('#modelRuntimeMode',(d.mode==='rigged'?'Rigged GLB':'Procedural')+' · '+(COMPANION_NAMES[d.kind]||d.kind||'Companion'));
+  const d=e.detail||{};setText('#modelRuntimeMode',(d.mode==='rigged'?'Rigged GLB':d.mode==='real'?'Real GLB':'Procedural')+' · '+(COMPANION_NAMES[d.kind]||d.kind||'Companion'));
 });
 window.addEventListener('xrpet:model-fallback',e=>{
   const d=e.detail||{};setText('#modelRuntimeMode','Procedural fallback · '+(COMPANION_NAMES[d.kind]||d.kind||'Companion'));
