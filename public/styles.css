@@ -5503,15 +5503,15 @@ body[data-primary-view="games"] .top-command-deck .topbar{display:block!importan
 .ripplet2d[data-state="excited"] .r2-arm-left{transform:rotate(26deg)}
 .ripplet2d[data-state="happy"] .r2-arm-right,
 .ripplet2d[data-state="excited"] .r2-arm-right{transform:rotate(-26deg)}
-.ripplet2d[data-state="dance"] .r2-character,
+.ripplet2d[data-state="dance"] .r2-character{animation:r2Dance .44s ease-in-out infinite alternate}
+.ripplet2d[data-state="dance"] .r2-arm-left{animation:r2DanceArmL .44s ease-in-out infinite alternate}
+.ripplet2d[data-state="dance"] .r2-arm-right{animation:r2DanceArmR .44s ease-in-out infinite alternate}
 .ripplet2d[data-state="celebrate"] .r2-character,
-.ripplet2d[data-state="cheer"] .r2-character{animation:r2Dance .44s ease-in-out infinite alternate}
-.ripplet2d[data-state="dance"] .r2-arm-left,
+.ripplet2d[data-state="cheer"] .r2-character{animation:r2CheerBounce .34s ease-out infinite alternate}
 .ripplet2d[data-state="celebrate"] .r2-arm-left,
-.ripplet2d[data-state="cheer"] .r2-arm-left{animation:r2DanceArmL .44s ease-in-out infinite alternate}
-.ripplet2d[data-state="dance"] .r2-arm-right,
+.ripplet2d[data-state="cheer"] .r2-arm-left{animation:r2CheerArmL .34s ease-out infinite alternate}
 .ripplet2d[data-state="celebrate"] .r2-arm-right,
-.ripplet2d[data-state="cheer"] .r2-arm-right{animation:r2DanceArmR .44s ease-in-out infinite alternate}
+.ripplet2d[data-state="cheer"] .r2-arm-right{animation:r2CheerArmR .34s ease-out infinite alternate}
 .ripplet2d[data-state="shrug"] .r2-arm-left{transform:rotate(42deg)}
 .ripplet2d[data-state="shrug"] .r2-arm-right{transform:rotate(-42deg)}
 .ripplet2d[data-state="confused"] .r2-head{animation:r2Confused .7s ease-in-out infinite alternate}
@@ -5544,6 +5544,9 @@ body[data-primary-view="games"] .top-command-deck .topbar{display:block!importan
 @keyframes r2Dance{from{transform:translateY(0) rotate(-3deg)}to{transform:translateY(-2px) rotate(3deg)}}
 @keyframes r2DanceArmL{from{transform:rotate(38deg)}to{transform:rotate(72deg)}}
 @keyframes r2DanceArmR{from{transform:rotate(-72deg)}to{transform:rotate(-38deg)}}
+@keyframes r2CheerBounce{from{transform:translateY(0) scaleY(1)}to{transform:translateY(-1.5px) scaleY(1.025)}}
+@keyframes r2CheerArmL{from{transform:rotate(22deg)}to{transform:rotate(52deg)}}
+@keyframes r2CheerArmR{from{transform:rotate(-22deg)}to{transform:rotate(-52deg)}}
 @keyframes r2Confused{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
 @keyframes r2Scan{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
 
@@ -6047,12 +6050,12 @@ body[data-primary-view="games"] .top-command-deck .topbar{display:block!importan
 .ripplet2d[data-state="excited"] .r2-arm-motion-left{transform:rotate(26deg)!important}
 .ripplet2d[data-state="happy"] .r2-arm-motion-right,
 .ripplet2d[data-state="excited"] .r2-arm-motion-right{transform:rotate(-26deg)!important}
-.ripplet2d[data-state="dance"] .r2-arm-motion-left,
+.ripplet2d[data-state="dance"] .r2-arm-motion-left{animation:r2DanceArmL .44s ease-in-out infinite alternate!important}
+.ripplet2d[data-state="dance"] .r2-arm-motion-right{animation:r2DanceArmR .44s ease-in-out infinite alternate!important}
 .ripplet2d[data-state="celebrate"] .r2-arm-motion-left,
-.ripplet2d[data-state="cheer"] .r2-arm-motion-left{animation:r2DanceArmL .44s ease-in-out infinite alternate!important}
-.ripplet2d[data-state="dance"] .r2-arm-motion-right,
+.ripplet2d[data-state="cheer"] .r2-arm-motion-left{animation:r2CheerArmL .34s ease-out infinite alternate!important}
 .ripplet2d[data-state="celebrate"] .r2-arm-motion-right,
-.ripplet2d[data-state="cheer"] .r2-arm-motion-right{animation:r2DanceArmR .44s ease-in-out infinite alternate!important}
+.ripplet2d[data-state="cheer"] .r2-arm-motion-right{animation:r2CheerArmR .34s ease-out infinite alternate!important}
 .ripplet2d[data-state="shrug"] .r2-arm-motion-left{transform:rotate(42deg)!important}
 .ripplet2d[data-state="shrug"] .r2-arm-motion-right{transform:rotate(-42deg)!important}
 .ripplet2d[data-state="point"] .r2-arm-motion-right{transform:rotate(-78deg)!important}
