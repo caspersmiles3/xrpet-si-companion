@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=2.6.0">
+  <link rel="stylesheet" href="/styles.css?v=2.7.0">
 </head>
 <body>
 <div class="ambient ambient-one"></div>
@@ -83,8 +83,9 @@
       <div class="home-overview">
         <article><small>Companion</small><strong id="petName">NEXUS-589</strong><span id="petMood">Watching the Ledger</span></article>
         <article><small>Evolution</small><strong id="evolution">DROP</strong><span><span id="level">Lv. 1</span> · <span id="xpLabel">0 XP</span></span></article>
-        <article><small>Current Room</small><strong id="homeRoom">Neon Horizon</strong><span>Interactive environment</span></article>
-        <article><small>Current Finish</small><strong id="homeCosmetic">Classic</strong><span>3D material active</span></article>
+        <article><small>Companion Model</small><strong id="homeCompanionModel">Nexus</strong><span id="homeCompanionGender">Boy companion</span></article>
+        <article><small>Current Room</small><strong id="homeRoom">Neon Horizon</strong><span>Application theme</span></article>
+        <article><small>Current Build</small><strong id="homeCosmetic">Classic Nexus</strong><span>3D cosmetic build</span></article>
       </div>
       <div class="progress wide-progress"><span id="xpFill"></span></div>
       <p id="petSpeech" class="pet-speech">Connecting to live network data…</p>
@@ -123,6 +124,39 @@
         <div><span class="eyebrow">COMPANION</span><h2>Build the personality, memory, and evolution</h2></div>
         <span id="personalityChip" class="chip">Guardian</span>
       </div>
+
+      <article class="detail-card companion-selector-card">
+        <div class="card-title">
+          <div><h3>Choose Your Companion</h3><p>Pick a boy or girl companion, then choose the species/model. Cosmetics apply on top of this choice.</p></div>
+          <span id="companionModelChip" class="chip">Nexus · Boy</span>
+        </div>
+
+        <div class="gender-selector" role="group" aria-label="Companion gender">
+          <button type="button" class="gender-choice active" data-gender="boy"><span>♂</span><strong>Boy</strong><small>Boy companion presentation</small></button>
+          <button type="button" class="gender-choice" data-gender="girl"><span>♀</span><strong>Girl</strong><small>Girl companion presentation</small></button>
+        </div>
+
+        <div class="companion-roster">
+          <button type="button" class="companion-choice active" data-companion="nexus">
+            <span class="companion-preview-icon nexus-preview"><i></i></span><strong>Nexus</strong><small>Balanced XRPL core companion</small>
+          </button>
+          <button type="button" class="companion-choice" data-companion="fox">
+            <span class="companion-preview-icon fox-preview"><i></i></span><strong>Ripple Fox</strong><small>Fast, alert, long-eared explorer</small>
+          </button>
+          <button type="button" class="companion-choice" data-companion="pup">
+            <span class="companion-preview-icon pup-preview"><i></i></span><strong>Ledger Pup</strong><small>Loyal, friendly, broad-built guardian</small>
+          </button>
+          <button type="button" class="companion-choice" data-companion="cat">
+            <span class="companion-preview-icon cat-preview"><i></i></span><strong>Vault Cat</strong><small>Quiet, precise, agile ledger watcher</small>
+          </button>
+          <button type="button" class="companion-choice" data-companion="bird">
+            <span class="companion-preview-icon bird-preview"><i></i></span><strong>Pulse Bird</strong><small>Winged signal companion with a bright core</small>
+          </button>
+          <button type="button" class="companion-choice" data-companion="turtle">
+            <span class="companion-preview-icon turtle-preview"><i></i></span><strong>Wave Turtle</strong><small>Steady armored companion with a ledger shell</small>
+          </button>
+        </div>
+      </article>
 
       <div class="detail-grid companion-detail">
         <article class="detail-card identity-card">
@@ -230,7 +264,7 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet SI Companion™ · Beta 2.6 · XRP Ledger companion · Not affiliated with or endorsed by Ripple · Not financial advice</footer>
+    <footer>XRPet SI Companion™ · Beta 2.7 · XRP Ledger companion · Not affiliated with or endorsed by Ripple · Not financial advice</footer>
   </main>
 </div>
 
@@ -252,7 +286,7 @@
   </div>
 </div>
 
-<script src="/app.js?v=2.6.0"></script>
-<script type="module" src="/companion3d.js?v=2.6.0"></script>
+<script src="/app.js?v=2.7.0"></script>
+<script type="module" src="/companion3d.js?v=2.7.0"></script>
 </body>
 </html>
