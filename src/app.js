@@ -77,9 +77,9 @@ function dailyVisit(){const t=new Date().toISOString().slice(0,10);if(state.last
 function bubble(text,type='assistant'){const box=q('#chat');if(!box)return;const d=document.createElement('div');d.className='bubble '+type;d.textContent=text;box.appendChild(d);box.scrollTop=box.scrollHeight}
 function context(){return{connected:state.connected,ledgerIndex:state.ledgerIndex,txCount:state.txCount,baseFeeDrops:state.baseFeeDrops,petName:state.petName,personality:state.personality,focus:state.focus,explainLevel:state.explainLevel,memories:state.memories}}
 async function ask(message){
-  bubble(message,'user');bubble('Thinking…','assistant');const box=q('#chat');const pending=box?.lastElementChild;
-  try{const r=await fetch('/api/companion',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message,context:context()})});const d=await r.json();if(!r.ok)throw new Error(d.error||'SI request failed');if(pending)pending.textContent=d.reply||'No response returned.'}
-  catch(e){if(pending)pending.textContent='SI is unavailable right now: '+e.message}
+  playSound('chatSend');bubble(message,'user');bubble('Thinking…','assistant');const box=q('#chat');const pending=box?.lastElementChild;
+  try{const r=await fetch('/api/companion',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message,context:context()})});const d=await r.json();if(!r.ok)throw new Error(d.error||'SI request failed');if(pending)pending.textContent=d.reply||'No response returned.';playSound('chatReceive')}
+  catch(e){if(pending)pending.textContent='SI is unavailable right now: '+e.message;playSound('error')}
 }
 async function loadMarket(){try{const r=await fetch('/api/market',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error();state.xrpPrice=Number(d.price);state.xrpChange24h=Number(d.change24h);setText('#xrpPrice',Number.isFinite(state.xrpPrice)?'$'+state.xrpPrice.toFixed(4):'Unavailable');setText('#xrpChange',Number.isFinite(state.xrpChange24h)?(state.xrpChange24h>=0?'+':'')+state.xrpChange24h.toFixed(2)+'% · 24h':'24h unavailable');if(state.marketMood&&Number.isFinite(state.xrpChange24h)&&Math.abs(state.xrpChange24h)>=5)mood(state.xrpChange24h>0?'Excited':'Watchful','XRP moved '+Math.abs(state.xrpChange24h).toFixed(2)+'% over 24 hours. Movement is not a prediction.',state.xrpChange24h>0?'energized':'alert')}catch{setText('#xrpPrice','Unavailable');setText('#xrpChange','Market feed offline')}}
 async function loadUpdates(){const box=q('#updates');if(box)box.innerHTML='<p class="muted">Checking official Ripple and XRPL sources…</p>';try{const r=await fetch('/api/updates',{cache:'no-store'});const d=await r.json();if(!r.ok||!Array.isArray(d.items)||!d.items.length)throw new Error();box.innerHTML=d.items.slice(0,9).map(x=>'<div class="update"><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title)+'</a><small>'+esc(x.source)+' · '+esc(x.label||'CONFIRMED')+'</small></div>').join('')}catch{if(box)box.innerHTML='<p class="muted">Official update feed is temporarily unavailable.</p>'}}
@@ -89,7 +89,7 @@ function connectLedger(){clearTimeout(retry);try{ws=new WebSocket('wss://xrplclu
   ws.onopen=()=>{state.connected=true;setText('#status','Live');const b=q('#liveBadge');if(b){b.className='status-pill live';b.innerHTML='<i></i><span>XRPL Live</span>'}mood('Connected','Live XRPL data is flowing.','calm');ws.send(JSON.stringify({id:'ledger',command:'subscribe',streams:['ledger','server']}));ws.send(JSON.stringify({id:'fee',command:'fee'}));if(state.account)subscribeAccount(state.account)};
   ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='ledgerClosed'){state.ledgerIndex=m.ledger_index;state.txCount=m.txn_count??0;state.baseFeeDrops=m.fee_base??state.baseFeeDrops;setText('#ledger',Number(m.ledger_index).toLocaleString());setText('#txCount',(m.txn_count??0)+' transactions');if(m.fee_base!=null)setText('#fee',m.fee_base)}else if(m.type==='serverStatus'){setText('#serverState',m.server_status||'Connected')}else if(m.id==='fee'&&m.result){const drops=m.result?.drops?.base_fee;if(drops!=null){state.baseFeeDrops=Number(drops);setText('#fee',drops)}}else if(m.id==='xrpet-nfts'&&Array.isArray(m.result?.account_nfts)){
     renderNfts(m.result.account_nfts);
-  }else if(m.type==='transaction'&&state.account){window.XRPet3D?.celebrate?.();playSound('success');mood('Wallet activity','Validated activity detected on the watched account.','energized');addXp(3)}};
+  }else if(m.type==='transaction'&&state.account){window.XRPet3D?.celebrate?.();if(state.ledgerSound)playSound('ledgerTx');mood('Wallet activity','Validated activity detected on the watched account.','energized');addXp(3)}};
   ws.onclose=()=>{state.connected=false;setText('#status','Reconnecting');const b=q('#liveBadge');if(b){b.className='status-pill waiting';b.innerHTML='<i></i><span>Reconnecting</span>'}scheduleReconnect()};ws.onerror=()=>safe(()=>ws.close())
 }
 function scheduleReconnect(){clearTimeout(retry);retry=setTimeout(connectLedger,4000)}
@@ -155,12 +155,12 @@ function bind(sel,event,fn){const el=q(sel);if(el)el.addEventListener(event,fn)}
 bind('#chatForm','submit',e=>{e.preventDefault();const i=q('#message');const m=i?.value.trim();if(!m)return;i.value='';ask(m)});
 qa('.quick button').forEach(b=>b.addEventListener('click',()=>{const m=b.dataset.q;if(m.endsWith(': ')){const i=q('#message');i.value=m;i.focus()}else ask(m)}));
 bind('#catchup','click',()=>{ask('Catch me up');loadMarket();loadUpdates()});bind('#dailyButton','click',()=>ask('Give me a concise daily XRP and XRPL briefing.'));
-bind('#refreshNews','click',()=>{loadUpdates();loadMarket()});bind('#profileForm','submit',e=>{e.preventDefault();state.petName=q('#profileName').value.trim()||'NEXUS-589';state.personality=q('#profilePersonality').value;state.focus=q('#profileFocus').value.trim();persist();render();mood('Personalized',state.petName+' is now running '+state.personality+' mode.','calm')});
-bind('#memoryForm','submit',e=>{e.preventDefault();const i=q('#memoryInput');const v=i.value.trim();if(!v)return;state.memories.push(v);state.memories=state.memories.slice(-8);i.value='';persist();renderMemory()});
-bind('#watchForm','submit',e=>{e.preventDefault();const a=q('#account').value.trim();if(!/^r[1-9A-HJ-NP-Za-km-z]{24,34}$/.test(a)){setText('#walletState','That does not look like a valid XRPL classic address.');return}state.account=a;state.walletProvider='manual';persist();subscribeAccount(a);render();mood('Watching wallet','Public account watch is active.','calm')});
-bind('#clearWallet','click',()=>{if(watchedSubscribed&&ws?.readyState===1)ws.send(JSON.stringify({id:'unwatch',command:'unsubscribe',accounts:[watchedSubscribed]}));watchedSubscribed=null;state.account=null;state.walletProvider='manual';persist();render();setText('#walletConnection','No wallet connected. Public wallet watch still works.')});
+bind('#refreshNews','click',()=>{loadUpdates();loadMarket()});bind('#profileForm','submit',e=>{e.preventDefault();state.petName=q('#profileName').value.trim()||'NEXUS-589';state.personality=q('#profilePersonality').value;state.focus=q('#profileFocus').value.trim();persist();render();playSound('success');mood('Personalized',state.petName+' is now running '+state.personality+' mode.','calm')});
+bind('#memoryForm','submit',e=>{e.preventDefault();const i=q('#memoryInput');const v=i.value.trim();if(!v)return;state.memories.push(v);state.memories=state.memories.slice(-8);i.value='';persist();renderMemory();playSound('success')});
+bind('#watchForm','submit',e=>{e.preventDefault();const a=q('#account').value.trim();if(!/^r[1-9A-HJ-NP-Za-km-z]{24,34}$/.test(a)){setText('#walletState','That does not look like a valid XRPL classic address.');playSound('error');return}state.account=a;state.walletProvider='manual';persist();subscribeAccount(a);render();playSound('wallet');mood('Watching wallet','Public account watch is active.','calm')});
+bind('#clearWallet','click',()=>{if(watchedSubscribed&&ws?.readyState===1)ws.send(JSON.stringify({id:'unwatch',command:'unsubscribe',accounts:[watchedSubscribed]}));watchedSubscribed=null;state.account=null;state.walletProvider='manual';persist();render();playSound('wallet');setText('#walletConnection','No wallet connected. Public wallet watch still works.')});
 bind('#connectXaman','click',connectXaman);bind('#connectGem','click',connectGem);
-let charge=0;bind('#charge','click',()=>{const t=new Date().toISOString().slice(0,10);if(state.lastMissionDate===t){mood('Complete','Today’s core mission is already complete.','calm');return}charge=Math.min(7,charge+1);setText('#chargeCount',charge+'/7');if(q('#meterFill'))q('#meterFill').style.width=(charge/7*100)+'%';if(charge===7){state.lastMissionDate=t;addXp(15);setText('#missionText','Mission complete. +15 XP. New pulse tomorrow.');mood('Charged','Core synchronized. Mission complete.','energized')}});
+let charge=0;bind('#charge','click',()=>{const t=new Date().toISOString().slice(0,10);if(state.lastMissionDate===t){playSound('notification');mood('Complete','Today’s core mission is already complete.','calm');return}charge=Math.min(7,charge+1);setText('#chargeCount',charge+'/7');if(q('#meterFill'))q('#meterFill').style.width=(charge/7*100)+'%';playSound(charge===7?'success':'mission');if(charge===7){state.lastMissionDate=t;addXp(15);setText('#missionText','Mission complete. +15 XP. New pulse tomorrow.');mood('Charged','Core synchronized. Mission complete.','energized')}});
 qa('.companion-choice').forEach(b=>b.addEventListener('click',()=>{state.companionKind=b.dataset.companion;state.nftCompanion=null;persist();applyNftCompanion();render();mood('Companion changed',(COMPANION_NAMES[state.companionKind]||state.companionKind)+' is now your active companion.','energized')}));
 qa('.gender-choice').forEach(b=>b.addEventListener('click',()=>{state.companionGender=b.dataset.gender;state.nftCompanion=null;persist();applyNftCompanion();render();mood('Companion updated',(state.companionGender==='girl'?'Girl':'Boy')+' companion presentation selected.','calm')}));
 qa('[data-pet-action]').forEach(b=>b.addEventListener('click',()=>{
@@ -172,10 +172,10 @@ qa('[data-pet-action]').forEach(b=>b.addEventListener('click',()=>{
   else if(action==='sleep'){playSound('tap');setText('#petMood','Resting');setText('#petSpeech','Low-power rest mode. I am still watching quietly.')}
   else{playSound('pet');setText('#petMood','Hello');setText('#petSpeech','Companion link acknowledged.')}
 }));
-qa('.room-choice').forEach(b=>b.addEventListener('click',()=>{if(b.disabled)return;state.room=b.dataset.room;persist();render();mood('Theme changed','The entire XRPet interface is now running '+b.querySelector('strong')?.textContent+'.','calm')})); qa('.cosmetic-choice').forEach(b=>b.addEventListener('click',()=>{state.cosmetic=b.dataset.cosmetic;state.nftCompanion=null;persist();applyNftCompanion();render();mood('Reconfigured','Companion build changed to '+b.querySelector('strong')?.textContent+'.','energized')}));
+qa('.room-choice').forEach(b=>b.addEventListener('click',()=>{if(b.disabled)return;state.room=b.dataset.room;persist();render();playSound('room');setRoomAmbience(state.room);mood('Theme changed','The entire XRPet interface is now running '+b.querySelector('strong')?.textContent+'.','calm')})); qa('.cosmetic-choice').forEach(b=>b.addEventListener('click',()=>{state.cosmetic=b.dataset.cosmetic;state.nftCompanion=null;persist();applyNftCompanion();render();mood('Reconfigured','Companion build changed to '+b.querySelector('strong')?.textContent+'.','energized')}));
 qa('[data-scroll]').forEach(b=>b.addEventListener('click',()=>q('#'+b.dataset.scroll)?.scrollIntoView({behavior:'smooth',block:'center'})));
 bind('#explainLevel','change',e=>{state.explainLevel=e.target.value;persist()});bind('#notifyLevel','change',e=>{state.notifyLevel=e.target.value;persist()});bind('#truthToggle','change',e=>{state.truthMode=e.target.checked;persist()});bind('#marketMoodToggle','change',e=>{state.marketMood=e.target.checked;persist()});
-bind('#notifyButton','click',async()=>{if(!('Notification'in window)){alert('Browser notifications are not supported here.');return}const p=await Notification.requestPermission();if(p==='granted')new Notification('XRPet alerts enabled',{body:'Browser alerts are ready while XRPet is open.'});});
+bind('#notifyButton','click',async()=>{if(!('Notification'in window)){playSound('error');alert('Browser notifications are not supported here.');return}const p=await Notification.requestPermission();if(p==='granted')new Notification('XRPet alerts enabled',{body:'Browser alerts are ready while XRPet is open.'});});
 bind('#refreshIntegrations','click',integrationCheck);bind('#loadNfts','click',requestNfts);
 
 bind('#globalSearchForm','submit',e=>{
@@ -201,12 +201,12 @@ qa('.side-link').forEach(b=>b.addEventListener('click',()=>{
 qa('.variant-dot').forEach(b=>b.addEventListener('click',()=>{state.cosmetic=b.dataset.cosmetic;persist();render();mood('Customized','Companion variant updated.','energized')}));
 window.addEventListener('xrpet:petInteract',()=>{playSound('pet');revealFloatControls();mood('Responsive','Core pulse received. Drag me to rotate, click to react.','energized');setTimeout(()=>mood('Connected','Live XRPL data is flowing.','calm'),900)});
 window.addEventListener('xrpet:3d-ready',()=>render());
-window.addEventListener('xrpet:model-loading',e=>{const d=e.detail||{};setText('#modelRuntimeMode','Loading rigged model · '+(COMPANION_NAMES[d.kind]||d.kind||'Companion'))});
+window.addEventListener('xrpet:model-loading',e=>{const d=e.detail||{};setText('#modelRuntimeMode','Loading rigged model · '+(COMPANION_NAMES[d.kind]||d.kind||'Companion'));playSound('model')});
 window.addEventListener('xrpet:model-ready',e=>{
-  const d=e.detail||{};setText('#modelRuntimeMode',(d.mode==='rigged'?'Rigged GLB':d.mode==='real'?'Real GLB':'Procedural')+' · '+(COMPANION_NAMES[d.kind]||d.kind||'Companion'));
+  const d=e.detail||{};setText('#modelRuntimeMode',(d.mode==='rigged'?'Rigged GLB':d.mode==='real'?'Real GLB':'Procedural')+' · '+(COMPANION_NAMES[d.kind]||d.kind||'Companion'));playSound('success')
 });
 window.addEventListener('xrpet:model-fallback',e=>{
-  const d=e.detail||{};setText('#modelRuntimeMode','Procedural fallback · '+(COMPANION_NAMES[d.kind]||d.kind||'Companion'));
+  const d=e.detail||{};setText('#modelRuntimeMode','Procedural fallback · '+(COMPANION_NAMES[d.kind]||d.kind||'Companion'));playSound('error')
 });
 
 
@@ -350,8 +350,10 @@ function classifyButtonSound(b){
   return 'tap';
 }
 document.addEventListener('click',e=>{
-  const b=e.target.closest('button');if(!b||b.id==='testSound')return;
-  playSound(classifyButtonSound(b));
+  const b=e.target.closest('button');
+  if(b&&b.id!=='testSound'){playSound(classifyButtonSound(b));return}
+  const nav=e.target.closest('a,.nav-link,summary');
+  if(nav)playSound('nav');
 });
 document.addEventListener('mouseover',e=>{
   if(!state.soundEnabled||!state.interfaceSound)return;
@@ -368,10 +370,12 @@ document.addEventListener('submit',e=>{if(e.target.matches('form'))playSound(e.t
 
 const launchGate=q('#launchGate'),launchCore=q('#launchCore'),launchEnter=q('#launchEnter');
 const launchBar=q('#launchProgressBar'),launchPercent=q('#launchPercent'),launchPhase=q('#launchPhase'),launchStatus=q('#launchStatus');
-let launchProgress=0,launchHolding=false,launchRAF=0,launchOpened=false,launchLast=0;
+let launchProgress=0,launchHolding=false,launchRAF=0,launchOpened=false,launchLast=0,launchSoundStage=-1;
 
 function setLaunchVisual(p){
   launchProgress=Math.max(0,Math.min(1,p));
+  const soundStage=launchProgress>=1?4:launchProgress>=.7?3:launchProgress>=.42?2:launchProgress>=.18?1:0;
+  if(soundStage>launchSoundStage){launchSoundStage=soundStage;if(soundStage>0)playSound(soundStage===4?'open':'launchStage',true)}
   launchGate?.style.setProperty('--sync',String(launchProgress));
   if(launchBar)launchBar.style.width=Math.round(launchProgress*100)+'%';
   setText('#launchPercent',Math.round(launchProgress*100)+'%');
@@ -408,7 +412,7 @@ function completeLaunch(fromFallback=false){
     document.body.classList.remove('launch-locked');
     setTimeout(()=>launchGate?.remove(),850);
     window.XRPet3D?.react?.();
-    window.dispatchEvent(new CustomEvent('xrpet:launch-complete'));
+    window.dispatchEvent(new CustomEvent('xrpet:launch-complete'));setTimeout(()=>setRoomAmbience(state.room),120);
   },560);
 }
 
@@ -428,7 +432,7 @@ function beginLaunchHold(e){
   e?.preventDefault?.();
   launchHolding=true;launchLast=0;
   launchCore?.classList.add('is-holding');
-  try{if(state.soundEnabled)playSound('tap',true)}catch{}
+  try{if(state.soundEnabled)playSound('launch',true)}catch{}
   cancelAnimationFrame(launchRAF);launchRAF=requestAnimationFrame(launchTick);
 }
 function endLaunchHold(){
