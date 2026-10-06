@@ -339,6 +339,19 @@ app.post('/api/companion', async (req, res) => {
   res.json({ reply, truth, mode:'grounded-companion-si-v1.0', personality, explainLevel, marketSource:market?.source || null });
 });
 
+app.get('/api/self-test', (_req, res) => {
+  const integrations = {
+    xrpl: { configured:true, endpoint:'wss://xrplcluster.com/' },
+    xaman: { configured:Boolean(process.env.XAMAN_API_KEY) },
+    push: { configured:Boolean(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) },
+    si: { configured:Boolean(process.env.SI_PROVIDER_KEY), provider:process.env.SI_PROVIDER_URL ? 'configured' : 'default', model:process.env.SI_MODEL || 'default' }
+  };
+  res.json({
+    ok: integrations.xaman.configured && integrations.push.configured && integrations.si.configured,
+    integrations
+  });
+});
+
 app.get('/api/health', (_req, res) => res.json({
   ok:true, product:'XRPet SI Companion', version:'1.5.0',
   capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch','gemwallet','xaman-hook','web-push','capacitor-mobile','external-si-hook'],
@@ -359,4 +372,11 @@ setInterval(async () => {
   } catch {}
 }, 10 * 60 * 1000);
 
-app.listen(PORT, () => console.log(`XRPet SI Companion v1.5 running on http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`XRPet SI Companion v1.5 running on http://localhost:${PORT}`);
+  console.log('Integration readiness:', {
+    xaman:Boolean(process.env.XAMAN_API_KEY),
+    push:Boolean(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY),
+    si:Boolean(process.env.SI_PROVIDER_KEY)
+  });
+});
