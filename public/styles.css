@@ -1493,3 +1493,15 @@ input,select,textarea{
 @media(max-width:800px){
   .customization-panel.is-open{inset:10px;padding:16px}
 }
+
+/* v3.9 Ripplet single-companion identity */
+.ripplet-identity-card{border-color:rgba(81,231,255,.25);background:linear-gradient(145deg,rgba(8,24,34,.9),rgba(5,13,20,.82))}
+.ripplet-spec-grid,.ripplet-design-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}
+.ripplet-spec-grid>div,.ripplet-design-grid>article{padding:12px;border:1px solid rgba(117,223,255,.14);border-radius:13px;background:rgba(4,13,19,.62)}
+.ripplet-spec-grid span,.ripplet-design-grid span{display:block;font-size:.68rem;letter-spacing:.12em;opacity:.62}
+.ripplet-spec-grid strong,.ripplet-design-grid strong{display:block;margin-top:5px}
+.ripplet-design-grid small{display:block;margin-top:5px;opacity:.62;line-height:1.35}
+.ripplet-lore-card p{line-height:1.55;opacity:.82}
+.ripplet-lore-card strong{color:#a8efff}
+.ripplet-appearance-section{min-height:360px}
+@media(max-width:620px){.ripplet-spec-grid,.ripplet-design-grid{grid-template-columns:1fr}}
