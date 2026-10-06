@@ -8560,3 +8560,14 @@ body.sidebar-collapsed #xrpetSidebar #sidebarToggle{
 @media(max-aspect-ratio:4/3){
   .launch-side-video{display:none!important}
 }
+
+
+/* v5.5.30 — primary page visibility guard */
+body:not(.workspace-open) .main-shell>.primary-view-section.view-active:not([hidden]){
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+body:not(.workspace-open) .main-shell>.primary-view-section:not(.view-active){
+  display:none!important;
+}
