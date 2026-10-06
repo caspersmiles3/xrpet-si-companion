@@ -230,7 +230,7 @@ qa('.room-choice').forEach(b=>{const rank=FORMS.findIndex(x=>x[0]===name),need=0
   qa('[data-head-gear]').forEach(b=>b.classList.toggle('active',b.dataset.headGear===state.headGear));
   qa('[data-trail-style]').forEach(b=>b.classList.toggle('active',b.dataset.trailStyle===state.trailStyle));
   window.dispatchEvent(new CustomEvent('xrpet:appearance',{detail:{room:state.room,cosmetic:state.cosmetic,companionKind:state.companionKind,companionGender:state.companionGender,eyeStyle:state.eyeStyle,coreStyle:state.coreStyle,headGear:state.headGear,trailStyle:state.trailStyle,mood:state.networkMood||'calm'}}));
-  renderMemory();renderSignal589();renderLife();
+  renderMemory();renderSignal589();renderLife();renderMind();
 }
 function renderMemory(){const box=q('#memoryList');if(!box)return;box.innerHTML=state.memories.length?state.memories.map((m,i)=>'<span class="memory-chip">'+esc(m)+' <button type="button" data-rm="'+i+'">×</button></span>').join(''):'<span class="muted">No saved preferences.</span>';qa('[data-rm]').forEach(b=>b.addEventListener('click',()=>{state.memories.splice(Number(b.dataset.rm),1);persist();renderMemory()}))}
 function addXp(n){state.xp+=n;persist();render()}
@@ -834,6 +834,62 @@ function roamingStep(){
   if(!roamPinned)goRipplet('explore');
   roamTimer=setTimeout(roamingStep,4200+Math.random()*5200);
 }
+function renderMind(){
+  const labels={roam:'Roaming',drink:'Water Fountain',eat:'Food Station',sleep:'Sleep Pod',socialize:'Signal Friend',scan:'Scanning XRPL',wave:'Waving',dance:'Dancing',focus:'Focused'};
+  setText('#mindAction',labels[state.mindAction]||state.mindAction||'Roaming');
+  setText('#mindThought',state.mindThought||'Watching the Ledger and deciding what to do next.');
+  setText('#mindMode',state.mindMode==='external-si-autonomy'?'SI MIND':'LOCAL AUTONOMY');
+}
+function mindContext(){
+  return {
+    connected:state.connected,
+    ledgerIndex:state.ledgerIndex,
+    txCount:state.txCount,
+    recentTxSeconds:state.lastLedgerTxAt?Math.max(0,(Date.now()-state.lastLedgerTxAt)/1000):9999,
+    price:state.xrpPrice,
+    priceTickPct:state.lastPriceTickPct||0,
+    change24h:state.xrpChange24h,
+    newAnnouncement:Boolean(state.lastAnnouncementAt&&Date.now()-state.lastAnnouncementAt<120000),
+    needs:{food:state.lifeFood,water:state.lifeWater,rest:state.lifeRest,social:state.lifeSocial},
+    currentActivity:state.lifeActivity,
+    memories:state.memories.slice(-5)
+  };
+}
+function executeMindDecision(decision){
+  if(!decision||state.lifePinned)return;
+  const action=decision.action||'roam';
+  state.mindAction=action;
+  state.mindThought=decision.thought||'I chose my next move.';
+  state.mindMode=decision.mode||'local-autonomy';
+  if(['drink','eat','sleep','socialize'].includes(action)){
+    performLifeActivity(action,false,Boolean(decision.visitStation));
+  }else if(action==='roam'){
+    state.lifeActivity='explore';window.XRPetRoam?.go?.('explore');
+  }else if(['scan','wave','dance','focus'].includes(action)){
+    window.XRPet3D?.perform?.(action);
+    if(action==='wave')playSound('wave',true);
+    if(action==='dance')playSound('dance',true);
+    if(action==='scan')playSound('ledgerTx',true);
+  }
+  renderMind();persist();
+}
+let mindTimer=0,mindBusy=false;
+async function runAutonomousMind(){
+  clearTimeout(mindTimer);
+  if(!state.lifePinned&&!mindBusy){
+    mindBusy=true;
+    try{
+      const r=await fetch('/api/companion/decision',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({context:mindContext()})});
+      const d=await r.json();
+      if(r.ok)executeMindDecision(d);
+      setText('#mindSiStatus',d.mode==='external-si-autonomy'?'Connected SI':'Local fallback');
+    }catch{
+      setText('#mindSiStatus','Local fallback');
+      executeMindDecision({action:'roam',thought:'The SI link is quiet, so I am exploring on my own.',visitStation:false,mode:'local-autonomy'});
+    }finally{mindBusy=false}
+  }
+  mindTimer=setTimeout(runAutonomousMind,38000+Math.random()*22000);
+}
 function spontaneousRippletReaction(){
   clearTimeout(spontaneousReactionTimer);
   if(!roamPinned){
@@ -856,7 +912,7 @@ syncRoamBounds();setTimeout(()=>goRipplet(state.lifePinned?'sit':'explore'),300)
 qa('[data-life-action]').forEach(b=>b.addEventListener('click',()=>{if(state.lifePinned)setRoamPinned(false);performLifeActivity(b.dataset.lifeAction,true)}));
 bind('#lifeSitStay','click',()=>setRoamPinned(!state.lifePinned));
 setInterval(lifeTick,15000);
-dailyVisit();render();registerVisitor();connectLedger();loadMarket();loadUpdates();integrationCheck();setInterval(loadMarket,60000);setInterval(loadUpdates,60000);setInterval(integrationCheck,60000);
+dailyVisit();render();registerVisitor();connectLedger();loadMarket();loadMarketHistory();loadUpdates();integrationCheck();setTimeout(runAutonomousMind,12000);setInterval(loadMarket,60000);setInterval(loadMarketHistory,60000);setInterval(loadUpdates,60000);setInterval(integrationCheck,60000);
 
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
