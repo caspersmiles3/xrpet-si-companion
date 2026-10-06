@@ -1791,3 +1791,98 @@ body[data-primary-view="home"] .home-companion-layer .floating-companion{z-index
   .life-avatar{width:150px;height:185px}
   .life-status-grid{grid-template-columns:1fr 1fr}
 }
+
+
+/* v4.4 global XRP ticker + expanded XRPL Live */
+.global-xrp-strip{
+  position:sticky;
+  top:0;
+  z-index:55;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:0 0 10px;
+  padding:8px 12px;
+  border:1px solid rgba(83,226,255,.16);
+  border-radius:12px;
+  background:rgba(4,12,18,.94);
+  backdrop-filter:blur(12px)
+}
+.global-xrp-price-button{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  min-width:0;
+  border:0;
+  background:transparent;
+  color:inherit;
+  padding:0;
+  cursor:pointer;
+  text-align:left
+}
+.global-xrp-price-button span{font-size:.58rem;letter-spacing:.12em;color:#708894}
+.global-xrp-price-button strong{font-size:1.15rem;color:#effcff}
+.global-xrp-price-button small{font-size:.66rem;color:#84a0ac}
+.global-xrp-live{display:flex;align-items:center;gap:6px;font-size:.55rem;letter-spacing:.12em;color:#7fdff0}
+.global-xrp-live i{width:7px;height:7px;border-radius:50%;background:#50e6ff;box-shadow:0 0 12px #50e6ff}
+
+.xrpl-live-expanded{padding:28px;min-height:calc(100vh - 115px)}
+.xrpl-live-title{align-items:flex-start}
+.xrpl-live-title>div:first-child{display:grid;gap:3px}
+.xrpl-live-title>div:first-child small{color:#6f8793;font-size:.66rem;font-weight:400}
+.xrpl-live-metrics{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:18px}
+.xrpl-live-metrics article{min-height:132px;padding:18px;display:flex;flex-direction:column;justify-content:center}
+.xrpl-live-metrics article>span{font-size:.58rem;letter-spacing:.12em}
+.xrpl-live-metrics article>strong{font-size:1.55rem;margin-top:8px}
+.xrpl-live-metrics .price-card>strong{font-size:2rem;color:#dffcff}
+.xrpl-live-metrics article>small{margin-top:7px}
+
+.live-transactions-panel{margin-top:18px;border-top:1px solid rgba(111,221,255,.12);padding-top:18px}
+.live-transactions-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:12px}
+.live-transactions-head h2{margin:4px 0 5px;font-size:1.35rem}
+.live-transactions-head p{margin:0;max-width:760px;color:#718895;font-size:.68rem;line-height:1.45}
+.transaction-column-head{display:grid;grid-template-columns:1.1fr 1.4fr .9fr .9fr;gap:10px;padding:8px 12px;color:#5f7885;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase}
+.live-transactions-list{display:grid;gap:7px;max-height:620px;overflow:auto;padding-right:3px}
+.live-tx-card{border:1px solid rgba(111,220,255,.12);border-radius:12px;background:rgba(5,14,20,.72);overflow:hidden}
+.live-tx-card summary{list-style:none;display:grid;grid-template-columns:1.1fr 1.4fr .9fr .9fr;gap:10px;align-items:center;padding:12px;cursor:pointer}
+.live-tx-card summary::-webkit-details-marker{display:none}
+.live-tx-card summary>span{min-width:0}
+.live-tx-card summary b,.live-tx-card summary strong,.live-tx-card summary small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.live-tx-card summary b{font-size:.68rem}
+.live-tx-card summary strong{margin-top:3px;font-size:.64rem;color:#a9efff}
+.live-tx-card summary small{margin-top:3px;font-size:.56rem;color:#667f8b}
+.live-tx-card[open]{border-color:rgba(102,229,255,.3);background:rgba(7,20,28,.88)}
+.live-tx-details{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px;padding:12px;border-top:1px solid rgba(111,220,255,.1);background:rgba(3,10,15,.52)}
+.live-tx-details p{margin:0;min-width:0;padding:8px;border:1px solid rgba(110,218,255,.08);border-radius:8px;background:rgba(6,16,22,.6)}
+.live-tx-details span,.live-tx-details code,.live-tx-details small{display:block}
+.live-tx-details span{font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;color:#667e89}
+.live-tx-details code{margin-top:4px;font-size:.61rem;color:#caedf4;white-space:normal;overflow-wrap:anywhere}
+.tx-safety-note{grid-column:1/-1}
+.tx-safety-note small{margin-top:5px;font-size:.6rem;color:#78929d;line-height:1.4}
+
+/* sidebar-only history navigation */
+.history-selected-header{padding:6px 0 16px}
+.history-selected-header h2{margin:5px 0 6px;font-size:1.55rem}
+.history-selected-header p{margin:0;max-width:760px;color:#748b98;font-size:.7rem;line-height:1.5}
+#xrpHistorySection[data-history-mode]:not([data-history-mode="All"]) .history-main-heading,
+#xrpHistorySection[data-history-mode]:not([data-history-mode="All"]) .history-overview-only{display:none!important}
+#xrpHistorySection[data-history-mode]:not([data-history-mode="All"]) .history-selected-header{display:block!important}
+#xrpHistorySection[data-history-mode]:not([data-history-mode="People"]) .history-people-only{display:none!important}
+#xrpHistorySection[data-history-mode="All"] .history-people-only{display:block}
+#xrpHistorySection[data-history-mode="People"] .xrp-timeline{display:none!important}
+#xrpHistorySection[data-history-mode="People"] .history-people-only{display:block!important}
+
+@media(max-width:900px){
+  .xrpl-live-metrics{grid-template-columns:1fr 1fr}
+  .transaction-column-head{display:none}
+  .live-tx-card summary{grid-template-columns:1fr 1fr}
+}
+@media(max-width:620px){
+  .global-xrp-price-button{gap:6px}
+  .global-xrp-price-button small{display:none}
+  .xrpl-live-expanded{padding:18px}
+  .xrpl-live-metrics{grid-template-columns:1fr 1fr}
+  .live-tx-card summary{grid-template-columns:1fr}
+  .live-tx-details{grid-template-columns:1fr}
+}
