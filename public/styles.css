@@ -3386,3 +3386,96 @@ footer{padding-bottom:24px}
   white-space:normal;
   line-height:1.35;
 }
+
+
+/* XRPet v5.5 — waveform player + X composer + resilient ecosystem */
+.xrpet-music-player{
+  grid-template-columns:30px minmax(100px,150px) minmax(120px,220px) 24px 24px 24px 64px!important;
+  max-width:min(620px,calc(100vw - 24px))!important;
+}
+.music-waveform{
+  display:block;
+  width:100%;
+  height:34px;
+  min-width:120px;
+  border:1px solid rgba(94,222,247,.10);
+  border-radius:7px;
+  background:
+    linear-gradient(180deg,rgba(20,61,73,.11),rgba(3,12,17,.38)),
+    repeating-linear-gradient(90deg,rgba(91,224,250,.035) 0 1px,transparent 1px 8px);
+}
+.xrpet-music-player.playing .music-waveform{
+  border-color:rgba(99,232,255,.24);
+  box-shadow:inset 0 0 18px rgba(68,218,246,.05),0 0 16px rgba(47,208,239,.06)
+}
+
+.x-post-composer{
+  display:grid;
+  gap:8px;
+  margin:0 0 10px;
+  padding:10px;
+  border:1px solid #163440;
+  border-radius:10px;
+  background:linear-gradient(145deg,rgba(8,21,28,.92),rgba(4,11,16,.96))
+}
+.x-post-head{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.x-post-head span{font-size:.49rem;letter-spacing:.12em;color:#70e8ff}
+.x-post-head b{font-size:.48rem;color:#718995;font-weight:700}
+#xPostText{
+  width:100%;
+  min-height:82px;
+  resize:vertical;
+  border:1px solid #193541;
+  border-radius:8px;
+  background:#050d12;
+  color:#dff9ff;
+  padding:9px;
+  font:inherit;
+  font-size:.62rem;
+  line-height:1.5;
+  outline:none
+}
+#xPostText:focus{border-color:#4edff6;box-shadow:0 0 0 2px rgba(78,223,246,.06)}
+.x-post-actions{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.x-post-actions small{font-size:.5rem;color:#637a86}
+.x-post-actions button{
+  min-height:30px;
+  padding:5px 10px;
+  border:1px solid #2b687b;
+  border-radius:8px;
+  background:#0d2833;
+  color:#bdf5ff;
+  font-size:.58rem;
+  font-weight:800
+}
+.x-post-actions button:disabled{opacity:.42;cursor:not-allowed}
+#xPostResult{margin:0;font-size:.54rem;line-height:1.4}
+#xPostResult a{color:#84ebff;text-decoration:none}
+
+.ecosystem-retry{
+  display:grid;
+  place-items:center;
+  gap:10px;
+  min-height:180px;
+  padding:20px;
+  text-align:center;
+  border:1px dashed #23404b;
+  border-radius:12px;
+  background:rgba(6,14,19,.52)
+}
+.ecosystem-retry p{max-width:560px;margin:0}
+.ecosystem-retry button{min-height:32px}
+
+@media(max-width:760px){
+  .xrpet-music-player{
+    grid-template-columns:30px minmax(78px,1fr) minmax(90px,140px) 24px 24px!important;
+    max-width:calc(100vw - 16px)!important;
+  }
+  .music-waveform{height:28px;min-width:90px}
+  #musicPrev,#musicShuffle,#musicVolume{display:none!important}
+}
+@media(max-width:520px){
+  .music-waveform{display:none}
+  .xrpet-music-player{grid-template-columns:30px minmax(90px,1fr) 24px 24px!important}
+  .x-post-head{align-items:flex-start;flex-direction:column;gap:3px}
+}
