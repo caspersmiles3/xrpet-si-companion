@@ -63,7 +63,16 @@
 
     <nav class="side-nav" aria-label="Primary navigation">
       <button class="side-link active" data-primary-view="home"><span>⌂</span>Home</button>
-      <button class="side-link" data-primary-view="live"><span>▥</span>XRPL Live</button>
+      <details class="nav-dropdown" id="xrplLiveNavDetails">
+        <summary class="side-link nav-parent-summary"><span>▥</span><b>XRPL Live</b><i>⌄</i></summary>
+        <div class="nav-dropdown-menu xrpl-live-nav-menu">
+          <button type="button" data-primary-view="live">Open XRPL Live</button>
+          <button class="xrpl-signal-menu-action" data-life-action="socialize" type="button">
+            <span class="xrpl-signal-dot" aria-hidden="true"></span>
+            Signal Friend
+          </button>
+        </div>
+      </details>
       <details class="nav-dropdown" id="historyNavDetails">
         <summary class="side-link history-summary"><span>↯</span><b>Settlements + History</b><i>⌄</i></summary>
         <div class="nav-dropdown-menu">
@@ -157,31 +166,23 @@
   </aside>
 
   <main class="main-shell">
+    <div id="rippletDock" class="ripplet-dock" aria-label="Ripplet companion dock">
+      <div class="ripplet-dock-platform" aria-hidden="true"><i></i><b>589</b><i></i></div>
+      <div class="ripplet-dock-copy">
+        <span>RIPPLET DOCK</span>
+        <strong id="rippletDockStatus">ROAMING</strong>
+      </div>
+      <div class="ripplet-dock-actions">
+        <button id="dockRipplet" type="button">Dock</button>
+        <button id="undockRipplet" type="button">Roam</button>
+      </div>
+    </div>
     <div class="global-command-bar" id="globalCommandBar">
       <button type="button" data-primary-view="live" class="global-xrp-price-button">
         <span>XRP / USD</span>
         <strong id="globalXrpPrice">—</strong>
         <small id="globalXrpChange">Loading</small>
       </button>
-
-      <div class="ecosystem-strip" aria-label="Ripplet live ecosystem">
-        <button class="ecosystem-station ecosystem-water" data-life-action="drink" type="button" aria-label="Water fountain">
-          <span class="eco-scene"><i class="fountain-basin"></i><i class="fountain-column"></i><i class="fountain-water"></i></span>
-          <span class="eco-copy"><strong>Water</strong><small id="waterSignal">XRPL flow</small></span>
-        </button>
-        <button class="ecosystem-station ecosystem-food" data-life-action="eat" type="button" aria-label="Food station">
-          <span class="eco-scene"><i class="food-platform"></i><i class="food-core"></i><i class="food-glow"></i></span>
-          <span class="eco-copy"><strong>Food</strong><small id="foodSignal">XRP movement</small></span>
-        </button>
-        <button class="ecosystem-station ecosystem-sleep" data-life-action="sleep" type="button" aria-label="Sleep pod">
-          <span class="eco-scene"><i class="sleep-shell"></i><i class="sleep-bed"></i><i class="sleep-light"></i></span>
-          <span class="eco-copy"><strong>Sleep</strong><small id="sleepSignal">Network quiet</small></span>
-        </button>
-        <button class="ecosystem-station ecosystem-friend" data-life-action="socialize" type="button" aria-label="Signal friend">
-          <span class="eco-scene"><i class="friend-ring"></i><i class="friend-core"></i><i class="friend-beam"></i></span>
-          <span class="eco-copy"><strong>Signal Friend</strong><small id="friendSignal">Events</small></span>
-        </button>
-      </div>
 
       <div class="ecosystem-status">
         <span class="global-xrp-live"><i></i> LIVE</span>
@@ -205,17 +206,6 @@
         </div>
       </div>
     </header>
-    <div id="rippletDock" class="ripplet-dock" aria-label="Ripplet companion dock">
-      <div class="ripplet-dock-platform" aria-hidden="true"><i></i><b>589</b><i></i></div>
-      <div class="ripplet-dock-copy">
-        <span>RIPPLET DOCK</span>
-        <strong id="rippletDockStatus">ROAMING</strong>
-      </div>
-      <div class="ripplet-dock-actions">
-        <button id="dockRipplet" type="button">Dock</button>
-        <button id="undockRipplet" type="button">Roam</button>
-      </div>
-    </div>
     <div id="rippletRoamLayer" class="ripplet-roam-layer" aria-hidden="false">
       <div id="lifeAvatar" class="life-avatar global-life-avatar" aria-label="Ripplet roaming through XRPet">
         <div id="persistentCompanionLayer" class="persistent-companion-layer home-companion-layer" data-home-companion aria-label="Ripplet companion">
@@ -924,7 +914,7 @@
 <script src="/ecosystem.js?v=5.5.2"></script>
 <script src="/app.js?v=5.5.4"></script>
 <script src="/timeline.js?v=5.5.2"></script>
-<script type="module" src="/companion3d.js?v=5.5.4"></script>
+<script type="module" src="/companion3d.js?v=5.5.5"></script>
 
 </body>
 </html>
