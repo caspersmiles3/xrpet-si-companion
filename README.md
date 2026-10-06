@@ -1,4 +1,4 @@
-# XRPet SI Companion™ — v4.5.0
+# XRPet SI Companion™ — v4.6.0
 
 **Don't watch the Ledger. Live with it.**
 
@@ -8,7 +8,7 @@ XRPet is a lightweight, installable companion built around Ripple, XRP and the X
 
 Render service: https://xrpet-si-companion.onrender.com
 
-## v4.5 capabilities
+## v4.6 capabilities
 
 - Live XRPL ledger + fee signals
 - XRP/USD market snapshot with public-data fallback
@@ -154,3 +154,11 @@ The live 3D Ripplet layer is mounted inside the habitat instead of roaming over 
 - XRP Live remains the large data workspace and its transaction cards now include public timestamp and memo data when present, in addition to type, amount, sender, destination, tags, ledger, sequence, fee, status, flags, tickets, and hash.
 - Announcements now use a cleaner official-feed layout with primary-source status and last refresh time.
 - The XRP/USD strip and Ripplet ecosystem remain at the top across Home, XRP Live, History, Announcements, and Ripplet.
+
+
+## v4.6 live reactions, cleaner UI, visitor ticker
+
+- Ripplet now has a non-repeating reaction library for Water, Food, Sleep, and Signal Friend activity. Each system has three distinct reaction sequences and XRPet avoids immediately repeating the same sequence for the same activity.
+- Home has been simplified around the core XRPet purpose, network state, Ripplet state, visitor count, and four direct actions.
+- XRPL Live has a cleaner hero, flatter telemetry cards, and simplified transaction summaries. Detailed public fields remain available by expanding a transaction.
+- Added a live visitor ticker in the top bar and Home. A browser receives a local visitor ID; the server counts that browser once during the current running server process. Open clients poll the counter and animate when it changes.
