@@ -15,6 +15,7 @@ const state={
   floatingPinned:saved.floatingPinned===true,floatX:Number.isFinite(saved.floatX)?saved.floatX:null,floatY:Number.isFinite(saved.floatY)?saved.floatY:null,
   nftCompanion:saved.nftCompanion||null,
   companionKind:saved.companionKind||'nexus',companionGender:saved.companionGender||'boy',
+  eyeStyle:saved.eyeStyle||'cyan',coreStyle:saved.coreStyle||'standard',headGear:saved.headGear||'none',trailStyle:saved.trailStyle||'none',
   soundEnabled:saved.soundEnabled===true,soundVolume:Number.isFinite(saved.soundVolume)?saved.soundVolume:35,
   interfaceSound:saved.interfaceSound!==false,ambientSound:saved.ambientSound!==false,ledgerSound:saved.ledgerSound!==false,
   signalLoreIndex:Number.isFinite(saved.signalLoreIndex)?saved.signalLoreIndex:0
@@ -56,7 +57,7 @@ function persist(){safe(()=>localStorage.setItem(STORE,JSON.stringify({...state,
 function form(){return [...FORMS].reverse().find(x=>state.xp>=x[1])||FORMS[0]}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function setText(sel,text){const el=q(sel);if(el)el.textContent=text}
-function mood(label,speech,cls='calm'){setText('#petMood',label);setText('#petSpeech',speech);const action=cls==='alert'?'alert':cls==='energized'?'happy':'greet';window.XRPet3D?.react?.(action);window.dispatchEvent(new CustomEvent('xrpet:appearance',{detail:{room:state.room,cosmetic:state.cosmetic,companionKind:state.companionKind,companionGender:state.companionGender,mood:cls}}))}
+function mood(label,speech,cls='calm'){setText('#petMood',label);setText('#petSpeech',speech);const action=cls==='alert'?'alert':cls==='energized'?'happy':'greet';window.XRPet3D?.react?.(action);window.dispatchEvent(new CustomEvent('xrpet:appearance',{detail:{room:state.room,cosmetic:state.cosmetic,companionKind:state.companionKind,companionGender:state.companionGender,eyeStyle:state.eyeStyle,coreStyle:state.coreStyle,headGear:state.headGear,trailStyle:state.trailStyle,mood:cls}}))}
 function renderSignal589(){
   const connected=!!state.connected;
   const tx=Number(state.txCount)||0;
@@ -103,6 +104,17 @@ function render(){
   window.XRPet3D?.perform?.('scan');
 });
 
+function bindEquipment(selector,key,label){
+  qa(selector).forEach(b=>b.addEventListener('click',()=>{
+    state[key]=b.dataset[key];persist();render();playSound('cosmetic');
+    setText('#petMood','Reconfigured');setText('#petSpeech',label+' updated. XRPL equipment matrix synchronized.');
+  }));
+}
+bindEquipment('[data-eye-style]','eyeStyle','Eye signal');
+bindEquipment('[data-core-style]','coreStyle','Chest core');
+bindEquipment('[data-head-gear]','headGear','Head hardware');
+bindEquipment('[data-trail-style]','trailStyle','Signal trail');
+
 qa('.room-choice').forEach(b=>{const rank=FORMS.findIndex(x=>x[0]===name),need=b.dataset.room==='aurora'?2:b.dataset.room==='legend'?5:0;b.disabled=rank<need;const active=b.dataset.room===state.room;b.classList.toggle('active',active);const e=b.querySelector('em');if(e&&active)e.textContent='Active';else if(e)e.textContent=need?((b.dataset.room==='aurora')?'Wave+':'Titan+'):'Unlocked'}); qa('.cosmetic-choice').forEach(b=>{const active=b.dataset.cosmetic===state.cosmetic;b.classList.toggle('active',active);const e=b.querySelector('em');if(e)e.textContent=active?'Equipped':'Owned'});
   document.body.classList.remove('room-nexus','room-ocean','room-vault','room-aurora','room-legend');document.body.classList.add('room-'+state.room); const pet=q('#pet'); if(pet){pet.classList.remove('skin-classic','skin-aqua','skin-midnight','skin-pearl','skin-solar','skin-resonance');pet.classList.add('skin-'+state.cosmetic)}
   setText('#unlocksChip',(['nexus','ocean','vault'].length+(FORMS.findIndex(x=>x[0]===name)>=2?1:0)+(FORMS.findIndex(x=>x[0]===name)>=5?1:0))+' unlocked');setText('#homeRoom',ROOM_NAMES[state.room]||state.room);setText('#homeCosmetic',COSMETIC_NAMES[state.cosmetic]||state.cosmetic);setText('#homeCompanionModel',COMPANION_NAMES[state.companionKind]||state.companionKind);setText('#homeCompanionGender',(state.companionGender==='girl'?'Girl':'Boy')+' companion');setText('#companionModelChip',(COMPANION_NAMES[state.companionKind]||state.companionKind)+' · '+(state.companionGender==='girl'?'Girl':'Boy'));
@@ -111,7 +123,11 @@ qa('.room-choice').forEach(b=>{const rank=FORMS.findIndex(x=>x[0]===name),need=b
   if(q('#soundToggle'))q('#soundToggle').checked=state.soundEnabled;if(q('#soundVolume'))q('#soundVolume').value=state.soundVolume;
   if(q('#interfaceSoundToggle'))q('#interfaceSoundToggle').checked=state.interfaceSound;if(q('#ambientSoundToggle'))q('#ambientSoundToggle').checked=state.ambientSound;if(q('#ledgerSoundToggle'))q('#ledgerSoundToggle').checked=state.ledgerSound;
   qa('.companion-choice').forEach(b=>b.classList.toggle('active',b.dataset.companion===state.companionKind));qa('.gender-choice').forEach(b=>b.classList.toggle('active',b.dataset.gender===state.companionGender));
-  window.dispatchEvent(new CustomEvent('xrpet:appearance',{detail:{room:state.room,cosmetic:state.cosmetic,companionKind:state.companionKind,companionGender:state.companionGender,mood:state.networkMood||'calm'}}));
+  qa('[data-eye-style]').forEach(b=>b.classList.toggle('active',b.dataset.eyeStyle===state.eyeStyle));
+  qa('[data-core-style]').forEach(b=>b.classList.toggle('active',b.dataset.coreStyle===state.coreStyle));
+  qa('[data-head-gear]').forEach(b=>b.classList.toggle('active',b.dataset.headGear===state.headGear));
+  qa('[data-trail-style]').forEach(b=>b.classList.toggle('active',b.dataset.trailStyle===state.trailStyle));
+  window.dispatchEvent(new CustomEvent('xrpet:appearance',{detail:{room:state.room,cosmetic:state.cosmetic,companionKind:state.companionKind,companionGender:state.companionGender,eyeStyle:state.eyeStyle,coreStyle:state.coreStyle,headGear:state.headGear,trailStyle:state.trailStyle,mood:state.networkMood||'calm'}}));
   renderMemory();renderSignal589();
 }
 function renderMemory(){const box=q('#memoryList');if(!box)return;box.innerHTML=state.memories.length?state.memories.map((m,i)=>'<span class="memory-chip">'+esc(m)+' <button type="button" data-rm="'+i+'">×</button></span>').join(''):'<span class="muted">No saved preferences.</span>';qa('[data-rm]').forEach(b=>b.addEventListener('click',()=>{state.memories.splice(Number(b.dataset.rm),1);persist();renderMemory()}))}
@@ -231,7 +247,7 @@ bind('#globalSearchForm','submit',e=>{
   const map=[
     [['589','signal','community','lore','theory','theories'], '#signal589Section'],
     [['room','rooms','environment'], '#roomsSection'],
-    [['cosmetic','skin','appearance'], '#cosmeticsSection'],
+    [['cosmetic','skin','appearance','equipment','eye','core','trail','halo'], '#cosmeticsSection'],
     [['wallet','xaman','gemwallet'], '#walletPanel'],
     [['chat','ask','si','assistant'], '#chatPanel'],
     [['ledger','xrpl','xrp','network','price'], '#xrplPanel'],
