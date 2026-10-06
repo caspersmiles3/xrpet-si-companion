@@ -475,7 +475,7 @@ for(const [side,sgn] of [['left',-1],['right',1]]){
 
 // Hover thruster / lower glow.
 const rippletHover=add(new THREE.SphereGeometry(.24,28,18),glassMat,pet,'rippletHover');
-rippletHover.scale.set(.82,.35,.72);rippletHover.position.set(0,-1.1,.02);
+rippletHover.visible=false;rippletHover.scale.set(.82,.35,.72);rippletHover.position.set(0,-1.1,.02);
 
 
 // floating crown orb
@@ -667,6 +667,7 @@ resX2.position.copy(resX1.position);resX2.rotation.z=-.72;
 const holo=new THREE.Group();root.add(holo);holo.position.y=-1.92;
 const holoRing=add(new THREE.TorusGeometry(1.03,.025,12,72),accentMat,holo,'holoRing');holoRing.rotation.x=Math.PI/2;
 const holoRing2=add(new THREE.TorusGeometry(.7,.012,10,60),accentMat,holo,'holoRing2');holoRing2.rotation.x=Math.PI/2;
+holo.visible=false;
 
 // universal XRPet presentation layers for imported GLB companions
 const externalPresentation=new THREE.Group();root.add(externalPresentation);externalPresentation.visible=false;
@@ -869,6 +870,7 @@ const contactShadow=add(new THREE.CircleGeometry(1.62,48),contactShadowMat,scene
 contactShadow.rotation.x=-Math.PI/2;
 contactShadow.position.set(0,-1.72,.1);
 contactShadow.receiveShadow=true;
+contactShadow.visible=false;
 
 
 let nextBlinkAt=performance.now()+1800+Math.random()*2400;
@@ -1016,6 +1018,7 @@ function configureCosmetic(cosmetic){
   coreBall.scale.setScalar(currentCosmetic==='solar'?1.45:currentCosmetic==='resonance'?1.22:1);
   orbGroup.visible=currentCosmetic!=='midnight';
   externalLedgerFrame.visible=true;
+  if(currentKind==='ripplet'){holo.visible=false;contactShadow.visible=false;rippletHover.visible=false;}
 }
 function applyRoom(room){
   const rooms={
@@ -1496,7 +1499,7 @@ function renderFrame(){
   const locomoting=walking||running||climbing;
 
   // levitation and body life
-  let lift=.1+Math.sin(t*(sleeping?.72:1.25))*(sleeping?.018:.035);
+  let lift=sleeping?-.01:0;
   if(celebrating)lift+=Math.abs(Math.sin(t*8))*0.14;
   if(orbiting)lift+=.07+Math.sin(t*2.4)*.04;
   if(greeting)lift+=Math.abs(Math.sin(t*5))*0.045;
@@ -1746,8 +1749,7 @@ function renderFrame(){
   cosmeticGroups.resonance.rotation.y=orbiting?t*.8:0;
   orbGroup.rotation.y=t*(alerting?1.35:.7);orbit1.rotation.z=t*(celebrating?1.5:.62);orbit2.rotation.z=-t*(celebrating?1.7:.78);
   holoRing.rotation.z=t*(alerting?.34:.15);holoRing2.rotation.z=-t*(alerting?.45:.21);
-  contactShadow.scale.setScalar(1+Math.sin(t*.9)*.025+(celebrating?.08:0));
-  contactShadow.material.opacity=(XRPetQuality.lowPower?.16:.26)+(sleeping?.05:0);
+  contactShadow.visible=false;
 
   const targetEmissive=scanning||gulping||tasting?5.2:orbiting||dancing?4.6:focusing||charging?4.2:alerting?4.2:celebrating||splashing||highfiving?5.4:greeting||sipping||biting?3.6:currentCosmetic==='resonance'?3.2:2.5;
   accentMat.emissiveIntensity+=(targetEmissive-accentMat.emissiveIntensity)*.12;

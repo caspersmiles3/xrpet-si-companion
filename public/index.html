@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=5.3.0">
+  <link rel="stylesheet" href="/styles.css?v=5.4.0">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate clean-launch" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
@@ -600,8 +600,8 @@
       <section class="game-panel active" data-game-panel="ledgerRush">
         <div class="game-copy">
           <span class="game-number">01</span>
-          <div><h2>Ledger Rush</h2><p>Validated ledgers are closing. Tap the active validation node before its signal expires. Build a streak before the 30-second round ends.</p></div>
-          <div class="game-stats"><span>Score <b id="rushScore">0</b></span><span>Streak <b id="rushStreak">0</b></span><span>Time <b id="rushTime">30</b></span></div>
+          <div><h2>Ledger Rush</h2><p>Validated ledgers are closing. Validate the real target before its shrinking signal window expires. Avoid decoy nodes, protect network integrity, and survive escalating difficulty.</p></div>
+          <div class="game-stats"><span>Score <b id="rushScore">0</b></span><span>Streak <b id="rushStreak">0</b></span><span>Time <b id="rushTime">40</b></span></div>
         </div>
         <div id="rushArena" class="rush-arena" aria-label="Ledger Rush play area">
           <button id="rushTarget" type="button" class="rush-target" aria-label="Validate active ledger node"><span>X</span></button>
@@ -613,8 +613,8 @@
       <section class="game-panel" data-game-panel="xrpFlow" hidden>
         <div class="game-copy">
           <span class="game-number">02</span>
-          <div><h2>XRP Flow</h2><p>Guide Ripplet's receiver between three settlement lanes. Catch XRP packets and avoid red congestion packets before the 35-second flow window closes.</p></div>
-          <div class="game-stats"><span>Score <b id="flowScore">0</b></span><span>Lives <b id="flowLives">3</b></span><span>Time <b id="flowTime">35</b></span></div>
+          <div><h2>XRP Flow</h2><p>Guide Ripplet's receiver between three settlement lanes. Manage three settlement lanes under increasing traffic. Build combo multipliers, catch shield packets, and avoid congestion as packet speed accelerates.</p></div>
+          <div class="game-stats"><span>Score <b id="flowScore">0</b></span><span>Lives <b id="flowLives">3</b></span><span>Time <b id="flowTime">45</b></span></div>
         </div>
         <div id="flowArena" class="flow-arena" tabindex="0" aria-label="XRP Flow game. Use left and right buttons or arrow keys.">
           <div class="flow-lane"></div><div class="flow-lane"></div><div class="flow-lane"></div>
@@ -631,7 +631,7 @@
       <section class="game-panel" data-game-panel="consensus80" hidden>
         <div class="game-copy">
           <span class="game-number">03</span>
-          <div><h2>Consensus 80</h2><p>Watch the validator sequence, then repeat it. Each successful round adds another signal. This is an arcade interpretation of consensus—not a protocol simulation.</p></div>
+          <div><h2>Consensus 80</h2><p>Watch the validator sequence, then repeat it before the response clock expires. Later rounds accelerate and can add extra validator signals. This remains an arcade interpretation—not a protocol simulation.</p></div>
           <div class="game-stats"><span>Round <b id="consensusRound">0</b></span><span>Best <b id="consensusBest">0</b></span><span>Status <b id="consensusState">READY</b></span></div>
         </div>
         <div class="consensus-board" aria-label="Consensus memory board">
@@ -730,7 +730,7 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 5.3.0 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 5.4.0 · XRP Ledger companion</footer>
   </main>
 </div>
 
@@ -777,12 +777,12 @@
   },6000);
 })();
 </script>
-<script src="/music-player.js?v=5.3.0"></script>
-<script src="/games.js?v=5.3.0"></script>
-<script src="/ecosystem.js?v=5.3.0"></script>
-<script src="/app.js?v=5.3.0"></script>
-<script src="/timeline.js?v=5.3.0"></script>
-<script type="module" src="/companion3d.js?v=5.3.0"></script>
+<script src="/music-player.js?v=5.4.0"></script>
+<script src="/games.js?v=5.4.0"></script>
+<script src="/ecosystem.js?v=5.4.0"></script>
+<script src="/app.js?v=5.4.0"></script>
+<script src="/timeline.js?v=5.4.0"></script>
+<script type="module" src="/companion3d.js?v=5.4.0"></script>
 
 </body>
 </html>

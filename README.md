@@ -1,4 +1,4 @@
-# XRPet SI Companion™ — v5.3.0
+# XRPet SI Companion™ — v5.4.0
 
 **Don't watch the Ledger. Live with it.**
 
@@ -279,3 +279,16 @@ Mini-game events feed back into Ripplet's animation/sound system and award small
 - Long roaming moves automatically use running; shorter moves use walking. Station visits can use reach/grab motions near the destination.
 - The Ripplet page includes manual Physical Motion test controls for verifying each motor action.
 - These motions are physically inspired procedural animation. A dedicated skinned GLB with inverse kinematics and motion-capture clips would be the next step for film-level biomechanical realism.
+
+
+## v5.4 contained interface + advanced arcade + grounded roaming
+
+- XRPet now locks to the browser viewport. The document/body no longer scrolls; the main XRPet interface is the dedicated vertical scroll container.
+- The fixed left rail remains locked while only the main application surface scrolls.
+- Ripplet's roaming layer follows the visible main-shell viewport, including while the user scrolls inside XRPet.
+- Removed the canonical companion's holographic grounding rings, contact-shadow circle, hover-thruster visual, CSS walk/run bob, and constant idle levitation.
+- Ripplet now reads as standing and moving directly on the application surface while retaining true jump motion from the physical motor cortex.
+- Ledger Rush now includes escalating levels, shorter validation windows, decoy nodes, integrity penalties, streak multipliers, and limited integrity recovery.
+- XRP Flow now includes escalating packet speed, increasing congestion probability, combo multipliers, shield packets, and longer survival pressure.
+- Consensus 80 now adds a shrinking response clock, faster validator playback, and extra signals at higher rounds.
+- Arcade events remain local entertainment only: no XRP, tokens, cash, or financial rewards.
