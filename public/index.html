@@ -8,33 +8,59 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=5.0.3">
+  <link rel="stylesheet" href="/styles.css?v=5.0.4">
 </head>
 <body class="launch-locked">
-<div id="launchGate" class="launch-gate clean-launch" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
-  <div class="clean-launch-grid" aria-hidden="true"></div>
-  <div class="clean-launch-content">
-    <div class="clean-xrp-mark" aria-hidden="true">
-      <span class="clean-xrp-arc top"></span>
-      <span class="clean-xrp-dot"></span>
-      <span class="clean-xrp-arc bottom"></span>
+<div id="launchGate" class="launch-gate corporate-launch" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
+  <div class="corp-backdrop" aria-hidden="true">
+    <div class="corp-network-line line-a"></div>
+    <div class="corp-network-line line-b"></div>
+    <div class="corp-network-line line-c"></div>
+  </div>
+
+  <div class="corporate-launch-panel">
+    <div class="corp-header">
+      <div class="corp-brand">
+        <div class="corp-mark" aria-hidden="true">
+          <span class="corp-arc top"></span>
+          <span class="corp-node"></span>
+          <span class="corp-arc bottom"></span>
+        </div>
+        <div>
+          <strong>XRPet</strong>
+          <small>RIPPLE + XRP LEDGER COMPANION</small>
+        </div>
+      </div>
+      <span class="corp-secure"><i></i> MAINNET</span>
     </div>
 
-    <p class="clean-launch-kicker">XRPet // XRP LEDGER</p>
-    <h1 id="launchTitle">Ripplet is waking up.</h1>
-    <p id="launchStatus" class="clean-launch-status" aria-live="polite">Connecting to XRPL live data…</p>
+    <div class="corp-divider"></div>
 
-    <div class="clean-launch-signal">
-      <span><i></i> XRPL MAINNET</span>
-      <strong id="launchLedgerCounter">LIVE</strong>
+    <div class="corp-body">
+      <p class="corp-kicker">LIVE NETWORK INITIALIZATION</p>
+      <h1 id="launchTitle">Connecting to the XRP Ledger</h1>
+      <p id="launchStatus" class="corp-status" aria-live="polite">Initializing XRPL live services…</p>
+
+      <div class="corp-ledger-row">
+        <div><span>NETWORK</span><strong>XRPL MAINNET</strong></div>
+        <div><span>VALIDATED LEDGER</span><strong id="launchLedgerCounter">CONNECTING</strong></div>
+        <div><span>SESSION</span><strong>SECURE</strong></div>
+      </div>
+
+      <div class="corp-progress" aria-hidden="true">
+        <span id="launchProgressBar"></span>
+      </div>
+
+      <div class="corp-actions">
+        <button id="launchEnter" class="corp-enter" type="button">Enter XRPet</button>
+        <small>Live ledger · XRP market · ecosystem intelligence · Ripplet</small>
+      </div>
     </div>
 
-    <div class="clean-launch-progress" aria-hidden="true">
-      <span id="launchProgressBar"></span>
+    <div class="corp-footer">
+      <span>XRPet // SIGNAL 589</span>
+      <span>Independent XRPL companion interface</span>
     </div>
-
-    <button id="launchEnter" class="clean-launch-enter" type="button">Enter XRPet</button>
-    <small class="clean-launch-note">Ripple + XRP + XRPL live companion interface</small>
   </div>
 </div>
 <div class="ambient ambient-one"></div>
@@ -704,7 +730,7 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 5.0.3 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 5.0.4 · XRP Ledger companion</footer>
   </main>
 </div>
 
@@ -721,12 +747,12 @@
   <span class="music-volume-icon" aria-hidden="true">🔊</span><input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.75" aria-label="Music volume">
 </div>
 
-<script src="/music-player.js?v=5.0.3"></script>
-<script src="/games.js?v=5.0.3"></script>
-<script src="/ecosystem.js?v=5.0.3"></script>
-<script src="/app.js?v=5.0.3"></script>
-<script src="/timeline.js?v=5.0.3"></script>
-<script type="module" src="/companion3d.js?v=5.0.3"></script>
+<script src="/music-player.js?v=5.0.4"></script>
+<script src="/games.js?v=5.0.4"></script>
+<script src="/ecosystem.js?v=5.0.4"></script>
+<script src="/app.js?v=5.0.4"></script>
+<script src="/timeline.js?v=5.0.4"></script>
+<script type="module" src="/companion3d.js?v=5.0.4"></script>
 
 </body>
 </html>
