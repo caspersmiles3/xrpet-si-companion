@@ -2,6 +2,7 @@ import express from 'express';
 import * as cheerio from 'cheerio';
 import webpush from 'web-push';
 import { readFileSync } from 'node:fs';
+import { timingSafeEqual } from 'node:crypto';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -69,6 +70,13 @@ const visitorIds = new Set();
 let visitorCount = 0;
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
+const X_POST_SECRET = process.env.X_POST_SECRET || '';
+function authorizedXPost(req){
+  const supplied=String(req.get('x-xrpet-post-key')||'');
+  if(!X_POST_SECRET||!supplied)return false;
+  const a=Buffer.from(supplied),b=Buffer.from(X_POST_SECRET);
+  return a.length===b.length&&timingSafeEqual(a,b);
+}
 if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails('https://xrpet-si-companion.onrender.com', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 }
@@ -594,7 +602,9 @@ app.get('/api/ecosystem/x-feed', async (_req,res)=>{
 app.get('/api/x/status', (_req,res)=>{
   res.json({
     readEnabled:Boolean(process.env.X_BEARER_TOKEN),
-    writeEnabled:Boolean(process.env.X_USER_ACCESS_TOKEN),
+    writeEnabled:Boolean(process.env.X_USER_ACCESS_TOKEN&&X_POST_SECRET),
+    writeTokenConfigured:Boolean(process.env.X_USER_ACCESS_TOKEN),
+    writeProtectionConfigured:Boolean(X_POST_SECRET),
     query:clean(process.env.XRPL_X_QUERY||'(XRPL OR "XRP Ledger") -is:retweet lang:en'),
     provider:'X API v2'
   });
@@ -602,6 +612,8 @@ app.get('/api/x/status', (_req,res)=>{
 app.post('/api/x/post',rateLimit(8,60*1000),async(req,res)=>{
   const token=process.env.X_USER_ACCESS_TOKEN||'';
   if(!token)return res.status(503).json({error:'X posting is not configured',code:'X_WRITE_NOT_CONFIGURED'});
+  if(!X_POST_SECRET)return res.status(503).json({error:'X posting protection is not configured',code:'X_WRITE_PROTECTION_NOT_CONFIGURED'});
+  if(!authorizedXPost(req))return res.status(401).json({error:'Invalid XRPet X post key',code:'X_WRITE_UNAUTHORIZED'});
   const text=clean(req.body?.text||'');
   if(!text)return res.status(400).json({error:'Post text is required'});
   if(text.length>280)return res.status(400).json({error:'Post is too long for this XRPet composer'});
@@ -909,7 +921,7 @@ async function getRuntimeHealth(force=false){
 app.get('/api/self-test', async (_req,res)=>{
   res.setHeader('Cache-Control','no-store');
   const runtime=await getRuntimeHealth();
-  const xRead=Boolean(process.env.X_BEARER_TOKEN),xWrite=Boolean(process.env.X_USER_ACCESS_TOKEN);
+  const xRead=Boolean(process.env.X_BEARER_TOKEN),xWrite=Boolean(process.env.X_USER_ACCESS_TOKEN&&X_POST_SECRET);
   const integrations={
     xrpl:runtime.core.xrpl,
     market:runtime.core.market,
@@ -939,7 +951,7 @@ app.get('/api/health', (_req,res)=>{
       push:Boolean(VAPID_PUBLIC_KEY&&VAPID_PRIVATE_KEY),
       si:Boolean(process.env.SI_PROVIDER_KEY),
       xRead:Boolean(process.env.X_BEARER_TOKEN),
-      xWrite:Boolean(process.env.X_USER_ACCESS_TOKEN)
+      xWrite:Boolean(process.env.X_USER_ACCESS_TOKEN&&X_POST_SECRET)
     }
   });
 });
