@@ -21,12 +21,12 @@ const TEN_MIN = 10 * 60 * 1000;
 const clean = s => (s || '').replace(/\s+/g, ' ').trim();
 
 async function fetchJson(url, options={}) {
-  const r = await fetch(url, { headers: { 'user-agent': 'XRPetSI/0.3 (+xrpl companion)' }, ...options });
+  const r = await fetch(url, { headers: { 'user-agent': 'XRPetSI/1.0 (+xrpl companion)' }, ...options });
   if (!r.ok) throw new Error(`${r.status} ${url}`);
   return r.json();
 }
 async function fetchPage(url) {
-  const r = await fetch(url, { headers: { 'user-agent': 'XRPetSI/0.3 (+xrpl companion)' }});
+  const r = await fetch(url, { headers: { 'user-agent': 'XRPetSI/1.0 (+xrpl companion)' }});
   if (!r.ok) throw new Error(`${r.status} ${url}`);
   return r.text();
 }
@@ -161,6 +161,16 @@ app.post('/api/briefing', async (req, res) => {
 
 app.post('/api/companion', async (req, res) => {
   const { message = '', context = {} } = req.body || {};
+  const petName = clean(context.petName || 'Nexus');
+  const personality = clean(context.personality || 'Guardian');
+  const explainLevel = clean(context.explainLevel || 'balanced');
+  const memories = Array.isArray(context.memories) ? context.memories.slice(-5).map(clean).filter(Boolean) : [];
+  const memoryHint = memories.length ? ' Saved preferences: ' + memories.join(' | ') + '.' : '';
+  const styleHint = explainLevel === 'technical'
+    ? ' Use concise technical XRPL language.'
+    : explainLevel === 'simple'
+      ? ' Keep the explanation simple and short.'
+      : '';
   const m = clean(message);
   const lower = m.toLowerCase();
   let market = null, updates = [];
@@ -178,17 +188,17 @@ app.post('/api/companion', async (req, res) => {
   } else if (/fee|cost/.test(lower)) {
     reply = `Current observed XRPL base fee: ${context.baseFeeDrops ?? 'checking'} drops. I use the live network signal instead of assuming a fixed fee.`;
   } else if (/hello|hi|hey/.test(lower)) {
-    reply = `Hey. I'm ${context.petName || 'Nexus'}, your XRPL companion. The ledger is ${context.connected ? 'connected and pulsing' : 'still connecting'}.`;
+    reply = `Hey. I'm ${petName}, your ${personality.toLowerCase()} XRPL companion. The ledger is ${context.connected ? 'connected and pulsing' : 'still connecting'}.${styleHint}`;
   } else if (/rumor|true|truth|claim|verify/.test(lower)) {
     const claim = m.replace(/^(is|check|verify|truth|rumor)\s+/i,'');
     truth = truthLabelForClaim(claim, updates);
     reply = `Truth Mode: ${truth.label}. ${truth.reason}`;
   } else {
-    reply = `Ask me for “catch me up,” the live XRP price, XRPL fees, a Ripple/XRPL update, or paste a claim and say “verify this.”`;
+    reply = `${petName} here. Ask me for “catch me up,” the live XRP price, XRPL fees, a Ripple/XRPL update, or paste a claim and say “verify this.”${styleHint}${memoryHint}`;
   }
-  res.json({ reply, truth, mode:'grounded-local-si-v0.3', marketSource:market?.source || null });
+  res.json({ reply, truth, mode:'grounded-companion-si-v1.0', personality, explainLevel, marketSource:market?.source || null });
 });
 
-app.get('/api/health', (_req, res) => res.json({ ok:true, product:'XRPet SI Companion', version:'0.3.0' }));
+app.get('/api/health', (_req, res) => res.json({ ok:true, product:'XRPet SI Companion', version:'1.0.0', capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch'] }));
 
-app.listen(PORT, () => console.log(`XRPet SI Companion v0.3 running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`XRPet SI Companion v1.0 running on http://localhost:${PORT}`));
