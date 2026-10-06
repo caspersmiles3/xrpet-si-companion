@@ -397,7 +397,7 @@ async function setExchange(id,{initial=false}={}){
   connectMarketStream();
   if(!initial){
     window.XRPet3D?.perform?.('scan');
-    const details=q('#exchangeNavDetails');if(details)details.open=false;
+    const exchangePage=q('#exchangesSection');if(exchangePage)exchangePage.scrollTop=0;
   }
 }
 function bindExchangeMenu(){
@@ -1427,8 +1427,8 @@ function setPrimaryView(view='home'){
   document.body.dataset.primaryView=view;
   qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));
   document.body.classList.remove('workspace-open','customization-open');
-  const target=view==='home'?'homeSection':view==='live'?'xrplPanel':view==='announcements'?'announcementsSection':view==='ripplet'?'companionSection':view==='ecosystem'?'ecosystemSection':view==='games'?'gamesSection':'xrpHistorySection';
-  ['historyNavDetails','exchangeNavDetails','rippletNavDetails','ecosystemNavDetails','gamesNavDetails','customizeDetails','settingsDetails'].forEach(id=>{q('#'+id)?.removeAttribute('open')});
+  const target=view==='home'?'homeSection':view==='live'?'xrplPanel':view==='exchanges'?'exchangesSection':view==='announcements'?'announcementsSection':view==='ripplet'?'companionSection':view==='ecosystem'?'ecosystemSection':view==='games'?'gamesSection':'xrpHistorySection';
+  ['historyNavDetails','rippletNavDetails','ecosystemNavDetails','gamesNavDetails','customizeDetails','settingsDetails'].forEach(id=>{q('#'+id)?.removeAttribute('open')});
   const pane=q('#'+target);if(pane)pane.scrollTop=0;
   setTimeout(()=>scrollSectionTop(target),0);
 }
@@ -1496,7 +1496,17 @@ function setRippletSubview(view='overview'){
 qa('[data-ripplet-view]').forEach(btn=>btn.addEventListener('click',()=>setRippletSubview(btn.dataset.rippletView)));
 q('#rippletNavDetails > summary')?.addEventListener('click',()=>setTimeout(()=>{if(primaryView!=='ripplet')setPrimaryView('ripplet')},0));
 
-const dismissibleMenus=['historyNavDetails','exchangeNavDetails','rippletNavDetails','ecosystemNavDetails','gamesNavDetails','customizeDetails','settingsDetails'];
+const navDropdowns=qa('.nav-dropdown');
+navDropdowns.forEach(menu=>{
+  menu.addEventListener('toggle',()=>{
+    if(menu.open)navDropdowns.forEach(other=>{if(other!==menu)other.removeAttribute('open')});
+  });
+  let leaveTimer=0;
+  menu.addEventListener('pointerleave',()=>{clearTimeout(leaveTimer);leaveTimer=setTimeout(()=>menu.removeAttribute('open'),420)});
+  menu.addEventListener('pointerenter',()=>clearTimeout(leaveTimer));
+  menu.querySelectorAll('.nav-dropdown-menu button').forEach(button=>button.addEventListener('click',()=>menu.removeAttribute('open')));
+});
+const dismissibleMenus=['historyNavDetails','rippletNavDetails','ecosystemNavDetails','gamesNavDetails','customizeDetails','settingsDetails'];
 document.addEventListener('pointerdown',e=>{
   dismissibleMenus.forEach(id=>{
     const menu=q('#'+id);
