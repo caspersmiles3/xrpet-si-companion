@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=4.5.0">
+  <link rel="stylesheet" href="/styles.css?v=4.6.0">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
@@ -160,6 +160,10 @@
         <input id="globalSearch" placeholder="Search XRPet…">
       </form>
       <div class="top-status">
+        <div class="visitor-ticker" aria-label="XRPet visitor counter">
+          <span class="visitor-label">VISITORS</span>
+          <span class="visitor-reel"><b id="visitorCount">000000</b></span>
+        </div>
         <span id="liveBadge" class="status-pill waiting"><i></i><span>Connecting</span></span>
         <div class="profile-chip">
           <div class="mini-avatar">X</div>
@@ -205,10 +209,6 @@
           <div class="signal-kicker-row"><span class="eyebrow">XRPet // HOME</span><span class="verified-pill">MAINNET // LIVE</span></div>
           <h1>Your XRP Ledger companion.<br><em>Live data. History. Context.</em></h1>
           <p>XRPet is an XRP Ledger intelligence interface built around live XRPL telemetry, Ripple/XRP history, official announcements, settlement context, and Ripplet—the single official companion that reacts to the network.</p>
-          <div class="hero-actions">
-            <button id="catchup" class="primary signal-primary">Catch Me Up</button>
-            <button id="dailyButton" class="secondary signal-secondary">Daily Signal</button>
-          </div>
           <div class="home-signal-strip" aria-label="Signal status">
             <span><i></i> VALIDATED LEDGER</span>
             <span>TRUTH MODE READY</span>
@@ -228,21 +228,36 @@
         </aside>
       </div>
 
-      <div class="home-overview signal-metric-grid">
-        <article><small>COMPANION MODEL</small><strong id="homeCompanionModel">Ripplet</strong><span id="homeCompanionGender">Official XRPet companion</span></article>
-        <article><small>ROOM ENVIRONMENT</small><strong id="homeRoom">Neon Horizon</strong><span>Full application theme</span></article>
-        <article><small>COMPANION BUILD</small><strong id="homeCosmetic">Official Ripplet</strong><span>Signal appearance layer</span></article>
-        <article><small>COMMUNITY SIGNAL</small><strong id="homeSignal589">589 // STANDBY</strong><span id="homeSignalCaption">Community-lore layer</span></article>
-        <article><small>LEDGER HEALTH</small><strong id="homeLedgerHealth">CONNECTING</strong><span>Validated-network telemetry</span></article>
+      <div class="home-clean-grid">
+        <article>
+          <span>NETWORK</span>
+          <strong id="homeLedgerHealth">CONNECTING</strong>
+          <small id="homeNetworkDetail">Waiting for validated XRPL telemetry.</small>
+        </article>
+        <article>
+          <span>RIPPLET</span>
+          <strong id="homePetMood">Watching the Ledger</strong>
+          <small id="homeRippletDetail">Ripplet reacts to transactions, XRP movement, quiet periods, and announcements.</small>
+        </article>
+        <article class="home-visitor-card">
+          <span>XRPet VISITORS</span>
+          <strong id="homeVisitorCount">000000</strong>
+          <small>The ticker turns when a new browser joins XRPet.</small>
+        </article>
       </div>
-      <div class="progress wide-progress"><span id="xpFill"></span></div>
+      <div class="home-quick-actions">
+        <button id="catchup" class="primary signal-primary">Catch Me Up</button>
+        <button id="dailyButton" class="secondary signal-secondary">Daily Signal</button>
+        <button type="button" class="secondary" data-primary-view="live">Open XRP Live</button>
+        <button type="button" class="secondary" data-primary-view="ripplet">Open Ripplet</button>
+      </div>
       <p id="petSpeech" class="pet-speech command-transmission">TRANSMISSION // Connecting to live network data…</p>
     </section>
 
 <section id="xrplPanel" class="top-live panel primary-view-section xrpl-live-expanded" data-view-section="live">
-      <div class="panel-title xrpl-live-title">
-        <div><span class="live-dot"></span><strong>XRPL Live</strong><small>Validated XRP Ledger mainnet telemetry and live public transactions</small></div>
-        <div class="panel-title-actions"><button type="button" class="mini-button" data-primary-view="home">⌂ Home</button><span>Mainnet</span></div>
+      <div class="xrpl-live-hero">
+        <div><span class="eyebrow">XRP LEDGER // MAINNET</span><h1>XRPL Live</h1><p>Live network health, XRP market context, and validated public transactions in one focused view.</p></div>
+        <div class="xrpl-live-actions"><span class="truth-label">LIVE MAINNET</span><button type="button" class="mini-button" data-primary-view="home">⌂ Home</button></div>
       </div>
       <div class="top-metrics xrpl-live-metrics">
         <article class="price-card"><span>XRP / USD</span><strong id="xrpPrice">—</strong><small id="xrpChange">Loading market</small></article>
@@ -253,11 +268,8 @@
 
       <section class="live-transactions-panel">
         <div class="live-transactions-head">
-          <div><span class="eyebrow">PUBLIC XRPL STREAM</span><h2>Live Transactions</h2><p>Validated public transaction data. Wallet seeds/private keys are never exposed or requested.</p></div>
+          <div><span class="eyebrow">VALIDATED TRANSACTION STREAM</span><h2>Live Transactions</h2><p>Tap a transaction to expand its public ledger details. Private keys and wallet seeds never appear here.</p></div>
           <span id="liveTxRate" class="truth-label">WAITING</span>
-        </div>
-        <div class="transaction-column-head" aria-hidden="true">
-          <span>Type / Amount</span><span>From → To</span><span>Ledger / Sequence</span><span>Fee / Status</span>
         </div>
         <div id="liveTransactions" class="live-transactions-list">
           <p class="muted">Connecting to the XRPL transaction stream…</p>
@@ -534,12 +546,12 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 4.5.0 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 4.6.0 · XRP Ledger companion</footer>
   </main>
 </div>
 
-<script src="/app.js?v=4.5.0"></script>
-<script src="/timeline.js?v=4.5.0"></script>
-<script type="module" src="/companion3d.js?v=4.5.0"></script>
+<script src="/app.js?v=4.6.0"></script>
+<script src="/timeline.js?v=4.6.0"></script>
+<script type="module" src="/companion3d.js?v=4.6.0"></script>
 </body>
 </html>

@@ -2067,3 +2067,116 @@ body[data-primary-view="home"] .home-companion-layer .floating-companion{z-index
 
 .tx-memos{grid-column:1/-1}
 .ecosystem-friend .friend-core:after{content:"";position:absolute;left:2px;top:2px;width:7px;height:7px;border-radius:50%;background:#091319;box-shadow:0 0 0 1px #dffcff55}
+
+
+/* XRPet v4.6 — cleaner Home, cleaner XRPL Live, reaction variants, visitor reel */
+.visitor-ticker{
+  display:flex;align-items:center;gap:7px;padding:5px 8px;border:1px solid rgba(96,221,255,.12);
+  border-radius:9px;background:rgba(5,14,20,.7);min-width:112px
+}
+.visitor-label{font-size:.48rem;letter-spacing:.12em;color:#627b87}
+.visitor-reel{position:relative;display:block;overflow:hidden;height:18px;min-width:52px;text-align:right}
+.visitor-reel b,#homeVisitorCount{font-variant-numeric:tabular-nums;letter-spacing:.08em}
+.visitor-reel b{display:inline-block;font-size:.67rem;color:#a9f2ff}
+.ticker-turn{animation:visitorTurn .48s cubic-bezier(.2,.75,.25,1)}
+@keyframes visitorTurn{
+  0%{transform:translateY(-105%);opacity:.25;filter:blur(2px)}
+  60%{transform:translateY(8%);opacity:1;filter:none}
+  100%{transform:none;opacity:1}
+}
+
+/* Home: fewer boxes, stronger hierarchy */
+#homeSection.signal-command-home{padding:30px}
+#homeSection .home-command-grid{
+  grid-template-columns:minmax(0,1.8fr) minmax(220px,.7fr);
+  gap:22px;min-height:260px;align-items:center
+}
+#homeSection .home-command-copy h1{font-size:clamp(2.35rem,5vw,4.4rem);line-height:.98;max-width:880px}
+#homeSection .home-command-copy>p{max-width:760px;font-size:.82rem;line-height:1.65}
+.home-clean-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:18px}
+.home-clean-grid article{
+  padding:16px 17px;border-top:1px solid rgba(106,222,255,.15);
+  background:linear-gradient(180deg,rgba(7,18,24,.36),transparent)
+}
+.home-clean-grid span,.home-clean-grid strong,.home-clean-grid small{display:block}
+.home-clean-grid span{font-size:.53rem;letter-spacing:.12em;color:#607986}
+.home-clean-grid strong{margin-top:6px;font-size:1rem;color:#eafbff}
+.home-clean-grid small{margin-top:5px;font-size:.61rem;line-height:1.45;color:#6b8490}
+.home-visitor-card strong{font-size:1.35rem;font-variant-numeric:tabular-nums;letter-spacing:.09em;color:#9befff}
+.home-quick-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.home-quick-actions button{min-width:125px}
+#homeSection .command-transmission{margin-top:14px}
+
+/* XRP Live: simplified wide telemetry */
+.xrpl-live-expanded{
+  border-color:rgba(99,221,255,.14);
+  background:linear-gradient(180deg,rgba(6,15,21,.96),rgba(4,10,15,.99))
+}
+.xrpl-live-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding-bottom:20px;border-bottom:1px solid rgba(105,220,255,.12)}
+.xrpl-live-hero h1{font-size:clamp(2.2rem,5vw,4.2rem);line-height:1;margin:5px 0 8px;letter-spacing:-.05em}
+.xrpl-live-hero p{margin:0;max-width:740px;color:#748b97;line-height:1.55}
+.xrpl-live-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.xrpl-live-metrics{
+  grid-template-columns:minmax(210px,1.3fr) repeat(3,minmax(150px,1fr));
+  margin:18px 0 0
+}
+.xrpl-live-metrics article{
+  border:0;border-top:1px solid rgba(108,221,255,.14);border-radius:0;
+  background:linear-gradient(180deg,rgba(12,26,34,.42),transparent);
+  box-shadow:none
+}
+.xrpl-live-metrics .price-card{background:radial-gradient(circle at 20% 15%,rgba(70,223,255,.1),transparent 60%)}
+
+.live-transactions-panel{border-top:1px solid rgba(108,221,255,.12)}
+.live-transactions-head{align-items:center}
+.live-transactions-list{gap:6px}
+.live-tx-card.clean-tx{
+  border:1px solid rgba(102,213,240,.09);border-radius:10px;
+  background:rgba(5,14,19,.58);box-shadow:none
+}
+.live-tx-card.clean-tx[open]{border-color:rgba(102,229,255,.22);background:rgba(7,19,26,.78)}
+.live-tx-card.clean-tx summary{
+  display:grid;grid-template-columns:minmax(145px,.8fr) minmax(260px,1.5fr) minmax(160px,.8fr) minmax(110px,.55fr);
+  gap:16px;padding:13px 14px
+}
+.tx-primary,.tx-route,.tx-meta{min-width:0}
+.tx-primary .tx-type{display:inline-block!important;width:auto!important;padding:3px 6px;border:1px solid rgba(97,218,245,.18);border-radius:6px;color:#79eaff;font-size:.54rem!important;letter-spacing:.06em}
+.tx-primary strong{font-size:.73rem!important;margin-top:5px!important}
+.tx-route{display:grid!important;grid-template-columns:auto minmax(0,1fr) 16px auto minmax(0,1fr);align-items:center;gap:5px}
+.tx-route small{margin:0!important;font-size:.43rem!important;color:#526c78!important}
+.tx-route b{font-size:.59rem!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tx-route i{font-style:normal;color:#5b8594;text-align:center}
+.tx-meta b{font-size:.62rem!important}.tx-meta small{font-size:.52rem!important}
+.tx-result{
+  justify-self:end;align-self:center;padding:4px 7px;border-radius:7px;
+  border:1px solid rgba(126,151,162,.18);font-size:.5rem;color:#8ca2ac;white-space:nowrap
+}
+.tx-result.ok{border-color:rgba(85,223,187,.22);color:#83eac8;background:rgba(43,160,128,.06)}
+.live-tx-details{padding:14px;gap:8px}
+.live-tx-details p{background:rgba(5,13,18,.5);border-color:rgba(105,210,236,.07)}
+.tx-hash,.tx-memos,.tx-safety-note{grid-column:1/-1}
+
+/* Reaction variants: each station visit gives Ripplet a different physical accent */
+.global-life-avatar[data-reaction="a"]{animation:rippletReactA .65s ease-in-out 2}
+.global-life-avatar[data-reaction="b"]{animation:rippletReactB .72s ease-in-out 2}
+.global-life-avatar[data-reaction="c"]{animation:rippletReactC .8s ease-in-out 2}
+@keyframes rippletReactA{0%,100%{margin-top:0}45%{margin-top:-10px}}
+@keyframes rippletReactB{0%,100%{filter:none}45%{filter:brightness(1.18) saturate(1.15)}}
+@keyframes rippletReactC{0%,100%{scale:1}45%{scale:1.055}}
+
+@media(max-width:980px){
+  #homeSection .home-command-grid{grid-template-columns:1fr}
+  .home-clean-grid{grid-template-columns:1fr 1fr}
+  .xrpl-live-metrics{grid-template-columns:1fr 1fr}
+  .live-tx-card.clean-tx summary{grid-template-columns:1fr 1fr}
+  .tx-result{justify-self:start}
+}
+@media(max-width:620px){
+  .visitor-ticker{min-width:0}.visitor-label{display:none}
+  .home-clean-grid{grid-template-columns:1fr}
+  .home-quick-actions{display:grid;grid-template-columns:1fr 1fr}
+  .xrpl-live-hero{flex-direction:column}
+  .xrpl-live-actions{width:100%;justify-content:space-between}
+  .live-tx-card.clean-tx summary{grid-template-columns:1fr}
+  .tx-route{grid-template-columns:auto minmax(0,1fr) 14px auto minmax(0,1fr)}
+}
