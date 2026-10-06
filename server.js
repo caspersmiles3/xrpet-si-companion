@@ -1,5 +1,6 @@
 import express from 'express';
 import * as cheerio from 'cheerio';
+import webpush from 'web-push';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,6 +20,12 @@ const cache = {
 const FIVE_MIN = 5 * 60 * 1000;
 const TEN_MIN = 10 * 60 * 1000;
 const clean = s => (s || '').replace(/\s+/g, ' ').trim();
+const pushSubscriptions = new Map();
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
+if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails('https://xrpet-si-companion.onrender.com', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+}
 
 async function fetchJson(url, options={}) {
   const r = await fetch(url, { headers: { 'user-agent': 'XRPetSI/1.0 (+xrpl companion)' }, ...options });
@@ -136,6 +143,37 @@ function truthLabelForClaim(claim, updates) {
   return { label:'RUMOR', reason:'I could not match this claim to the official Ripple/XRPL headlines currently in my feed. Treat it as unconfirmed until a primary source supports it.', source:null };
 }
 
+app.get('/api/config', (_req, res) => {
+  res.json({
+    xamanApiKey: process.env.XAMAN_API_KEY || null,
+    pushEnabled: Boolean(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY),
+    siProviderEnabled: Boolean(process.env.SI_PROVIDER_URL && process.env.SI_PROVIDER_KEY && process.env.SI_MODEL)
+  });
+});
+
+app.get('/api/push/public-key', (_req, res) => {
+  if (!VAPID_PUBLIC_KEY) return res.status(503).json({ enabled:false });
+  res.json({ enabled:true, publicKey:VAPID_PUBLIC_KEY });
+});
+
+app.post('/api/push/subscribe', (req, res) => {
+  const sub = req.body?.subscription;
+  if (!sub?.endpoint) return res.status(400).json({ error:'Invalid subscription' });
+  pushSubscriptions.set(sub.endpoint, sub);
+  res.json({ ok:true, count:pushSubscriptions.size });
+});
+
+async function sendPush(title, body, data={}) {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY || !pushSubscriptions.size) return;
+  const payload = JSON.stringify({ title, body, data });
+  for (const [endpoint, sub] of [...pushSubscriptions.entries()]) {
+    try { await webpush.sendNotification(sub, payload); }
+    catch (e) {
+      if (e?.statusCode === 404 || e?.statusCode === 410) pushSubscriptions.delete(endpoint);
+    }
+  }
+}
+
 app.get('/api/updates', async (_req, res) => {
   try {
     const items = await getUpdates();
@@ -159,6 +197,38 @@ app.post('/api/briefing', async (req, res) => {
   }
 });
 
+async function askExternalSI(message, context, market, updates) {
+  const url = process.env.SI_PROVIDER_URL;
+  const key = process.env.SI_PROVIDER_KEY;
+  const model = process.env.SI_MODEL;
+  if (!url || !key || !model) return null;
+  const official = updates.slice(0, 5).map(x => ({ title:x.title, source:x.source, label:x.label, url:x.url }));
+  const system = [
+    'You are the SI core inside XRPet, an XRP Ledger companion.',
+    'Use supplied live data as ground truth. Separate fact from speculation.',
+    'Never promise XRP price outcomes or ask for a seed phrase/private key.',
+    'Be concise, companion-like, and match the requested explanation level.',
+    'If a claim is not supported, say it is unconfirmed.'
+  ].join(' ');
+  try {
+    const r = await fetch(url, {
+      method:'POST',
+      headers:{ 'content-type':'application/json', 'authorization':'Bearer '+key },
+      body:JSON.stringify({
+        model,
+        messages:[
+          { role:'system', content:system },
+          { role:'user', content:JSON.stringify({ message, context, market, officialUpdates:official }) }
+        ],
+        temperature:0.4
+      })
+    });
+    if (!r.ok) return null;
+    const d = await r.json();
+    return clean(d?.choices?.[0]?.message?.content || d?.output_text || '');
+  } catch { return null; }
+}
+
 app.post('/api/companion', async (req, res) => {
   const { message = '', context = {} } = req.body || {};
   const petName = clean(context.petName || 'Nexus');
@@ -176,6 +246,10 @@ app.post('/api/companion', async (req, res) => {
   let market = null, updates = [];
   try { [market, updates] = await Promise.all([getMarket(), getUpdates()]); } catch {}
   let reply, truth = null;
+  const externalReply = await askExternalSI(m, context, market || {}, updates);
+  if (externalReply && !/rumor|true|truth|claim|verify/.test(lower)) {
+    return res.json({ reply:externalReply, truth:null, mode:'external-si-grounded-v1.5', personality, explainLevel, marketSource:market?.source || null });
+  }
 
   if (/what.*happen|catch.*up|update|news|today/.test(lower)) {
     const b = buildBriefing(context, market || {}, updates);
@@ -199,6 +273,24 @@ app.post('/api/companion', async (req, res) => {
   res.json({ reply, truth, mode:'grounded-companion-si-v1.0', personality, explainLevel, marketSource:market?.source || null });
 });
 
-app.get('/api/health', (_req, res) => res.json({ ok:true, product:'XRPet SI Companion', version:'1.0.0', capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch'] }));
+app.get('/api/health', (_req, res) => res.json({
+  ok:true, product:'XRPet SI Companion', version:'1.5.0',
+  capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch','gemwallet','xaman-hook','web-push','capacitor-mobile','external-si-hook'],
+  integrations:{ xaman:Boolean(process.env.XAMAN_API_KEY), push:Boolean(VAPID_PUBLIC_KEY&&VAPID_PRIVATE_KEY), si:Boolean(process.env.SI_PROVIDER_URL&&process.env.SI_PROVIDER_KEY&&process.env.SI_MODEL) }
+}));
 
-app.listen(PORT, () => console.log(`XRPet SI Companion v1.0 running on http://localhost:${PORT}`));
+let lastPushMarket = null;
+setInterval(async () => {
+  try {
+    const market = await getMarket();
+    if (Number.isFinite(market?.change24h) && Math.abs(market.change24h) >= 5) {
+      const bucket = Math.round(market.change24h);
+      if (bucket !== lastPushMarket) {
+        lastPushMarket = bucket;
+        await sendPush('XRPet market signal', `XRP is ${market.change24h >= 0 ? 'up' : 'down'} ${Math.abs(market.change24h).toFixed(2)}% over 24h. Movement is not a prediction.`, { type:'market' });
+      }
+    }
+  } catch {}
+}, 10 * 60 * 1000);
+
+app.listen(PORT, () => console.log(`XRPet SI Companion v1.5 running on http://localhost:${PORT}`));
