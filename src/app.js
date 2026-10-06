@@ -2219,6 +2219,11 @@ function setRippletMusicDance(playing){
   clearTimeout(rippletMusicDanceTimer);
   if(next){
     clearTimeout(roamTimer);
+    clearTimeout(cryptoCoinMissionTimer);
+    if(pendingCryptoCoin&&pendingCryptoCoin!==heldCryptoCoin){
+      pendingCryptoCoin.classList.remove('is-targeted');
+      pendingCryptoCoin=null;
+    }
     cancelRippletRoute();
     setText('#mindAction','Dancing to music');
     setText('#mindThought','Music is on. I stay grounded and dance where I am.');
@@ -2230,11 +2235,14 @@ function setRippletMusicDance(playing){
     if(lifeAvatar.dataset.reaction==='dance')delete lifeAvatar.dataset.reaction;
   }
   window.XRPet2D?.motor?.('stand');
-  state.mindAction='roam';
-  state.mindThought='The music stopped. I can move through the interface again.';
+  state.mindAction=heldCryptoCoin?'carry':'roam';
+  state.mindThought=heldCryptoCoin
+    ? 'The music stopped. I am finishing my coin delivery to the dock.'
+    : 'The music stopped. I can move through the interface again.';
   renderMind();
   clearTimeout(roamTimer);
-  roamTimer=setTimeout(roamingStep,320);
+  if(heldCryptoCoin)cryptoCoinMissionTimer=setTimeout(carryCryptoCoinToDock,260);
+  roamTimer=setTimeout(roamingStep,420);
 }
 window.addEventListener('xrpet:music-state',e=>setRippletMusicDance(e.detail?.playing===true));
 setTimeout(()=>setRippletMusicDance(window.XRPetMusicPlaying===true),0);
@@ -2243,6 +2251,15 @@ function roamingStep(){
   clearTimeout(roamTimer);
   if(rippletMusicDancing){
     roamTimer=setTimeout(roamingStep,700);
+    return;
+  }
+  if(heldCryptoCoin){
+    if(!rippletRouteBusy())carryCryptoCoinToDock();
+    roamTimer=setTimeout(roamingStep,700);
+    return;
+  }
+  if(pendingCryptoCoin){
+    roamTimer=setTimeout(roamingStep,500);
     return;
   }
   if(rippletRouteBusy()){
@@ -2256,15 +2273,25 @@ function roamingStep(){
     roamTimer=setTimeout(roamingStep,5200+Math.random()*4200);
     return;
   }
+
+  keepRippletInsideActivePage();
+  ensureCryptoCoins(false);
+
   if(rippletPointer.active&&Date.now()-rippletPointer.movedAt<8000){
     followRippletPointer(true);
     roamTimer=setTimeout(roamingStep,650);
     return;
   }
+
   const roll=Math.random();
-  if(roll<.90)playWithInterface();
-  else goRipplet('explore');
-  roamTimer=setTimeout(roamingStep,1900+Math.random()*2600);
+  if(roll<.14){
+    if(!collectRandomCryptoCoin())playWithInterface();
+  }else if(roll<.92){
+    playWithInterface();
+  }else{
+    goRipplet('explore');
+  }
+  roamTimer=setTimeout(roamingStep,1900+Math.random()*2700);
 }
 function renderMind(){
   const labels={roam:'Roaming',dock:'Docked',socialize:'Signal Friend',scan:'Scanning XRPL',wave:'Waving',dance:'Dancing',focus:'Focused',run:'Running',jump:'Jumping',climb:'Climbing',reach:'Reaching',grab:'Grabbing',carry:'Carrying',crouch:'Crouching',turn:'Turning'};
@@ -2484,6 +2511,14 @@ function setPrimaryView(view='home'){
   const target=PRIMARY_VIEW_TARGETS[next];
 
   // Switch the interface first. Companion animation is optional and must never block navigation.
+  clearTimeout(cryptoCoinMissionTimer);
+  cancelRippletRoute();
+  if(pendingCryptoCoin&&pendingCryptoCoin!==heldCryptoCoin){
+    pendingCryptoCoin.classList.remove('is-targeted');
+    pendingCryptoCoin=null;
+  }
+  clearCryptoCoins(true);
+
   primaryView=next;
   qa('[data-view-section]').forEach(section=>{
     const active=section.dataset.viewSection===next;
@@ -2515,13 +2550,20 @@ function setPrimaryView(view='home'){
     try{scrollSectionTop(target)}catch{}
     try{
       syncRoamBounds?.();
+      ensureCryptoCoins?.(true);
       if(lifeAvatar&&!roamDocked&&!rippletMusicDancing)window.XRPet3D?.motor?.('turn',{turn:.18});
       if(!roamDocked&&!rippletMusicDancing)setTimeout(()=>{
         try{
-          if(rippletPointer?.active)followRippletPointer?.(true);
-          else playWithInterface?.(true);
+          if(heldCryptoCoin)carryCryptoCoinToDock?.();
+          else{
+            keepRippletInsideActivePage?.();
+            if(!rippletRouteBusy()){
+              if(rippletPointer?.active)followRippletPointer?.(true);
+              else playWithInterface?.(true);
+            }
+          }
         }catch{}
-      },180);
+      },220);
     }catch{}
   });
 }
