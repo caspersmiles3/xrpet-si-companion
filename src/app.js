@@ -707,23 +707,24 @@ bind('#applyRoom','click',()=>{
 const sidebar=q('#xrpetSidebar');
 const sidebarToggle=q('#sidebarToggle');
 function setSidebarCollapsed(collapsed){
-  document.body.classList.toggle('sidebar-collapsed',Boolean(collapsed));
-  sidebarToggle?.setAttribute('aria-expanded',collapsed?'false':'true');
-  sidebarToggle?.setAttribute('aria-label',collapsed?'Expand sidebar':'Minimize sidebar');
-  sidebarToggle?.setAttribute('title',collapsed?'Expand sidebar':'Minimize sidebar');
-  const arrow=sidebarToggle?.querySelector('span');if(arrow)arrow.textContent=collapsed?'›':'‹';
-  try{localStorage.setItem('xrpet-sidebar-collapsed',collapsed?'1':'0')}catch{}
-  setTimeout(()=>{
-    syncRoamBounds?.();
-    if(!roamDocked){
-      if(rippletPointer?.active)followRippletPointer?.(true);
-      else playWithInterface?.(true);
-    }
-  },180);
+  const isCollapsed=Boolean(collapsed);
+  document.body.classList.toggle('sidebar-collapsed',isCollapsed);
+  sidebarToggle?.setAttribute('aria-expanded',isCollapsed?'false':'true');
+  sidebarToggle?.setAttribute('aria-label',isCollapsed?'Expand sidebar':'Minimize sidebar');
+  sidebarToggle?.setAttribute('title',isCollapsed?'Expand sidebar':'Minimize sidebar');
+  const arrow=sidebarToggle?.querySelector('span');if(arrow)arrow.textContent=isCollapsed?'›':'‹';
+  try{localStorage.setItem('xrpet-sidebar-collapsed',isCollapsed?'1':'0')}catch{}
+  // Do not touch companion/layout globals here; this runs before those systems initialize.
+  setTimeout(()=>window.dispatchEvent(new Event('resize')),240);
 }
 let savedSidebarCollapsed=false;
 try{savedSidebarCollapsed=localStorage.getItem('xrpet-sidebar-collapsed')==='1'}catch{}
-setSidebarCollapsed(savedSidebarCollapsed);
+if(savedSidebarCollapsed)document.body.classList.add('sidebar-collapsed');
+else document.body.classList.remove('sidebar-collapsed');
+sidebarToggle?.setAttribute('aria-expanded',savedSidebarCollapsed?'false':'true');
+sidebarToggle?.setAttribute('aria-label',savedSidebarCollapsed?'Expand sidebar':'Minimize sidebar');
+sidebarToggle?.setAttribute('title',savedSidebarCollapsed?'Expand sidebar':'Minimize sidebar');
+const sidebarArrow=sidebarToggle?.querySelector('span');if(sidebarArrow)sidebarArrow.textContent=savedSidebarCollapsed?'›':'‹';
 sidebarToggle?.addEventListener('click',()=>setSidebarCollapsed(!document.body.classList.contains('sidebar-collapsed')));
 
 function scrollSectionTop(id){
@@ -1725,6 +1726,14 @@ qa('[data-customize-close]').forEach(b=>b.addEventListener('click',closeCustomiz
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCustomizationPanels()});
 
 let primaryView='home';
+function ensurePrimaryViewVisible(){
+  const home=q('#homeSection');
+  if(!qa('.primary-view-section.view-active').length&&home){
+    home.classList.add('view-active');
+    document.body.dataset.primaryView='home';
+  }
+}
+ensurePrimaryViewVisible();
 function setPrimaryView(view='home'){
   if(lifeAvatar&&!roamDocked){
     lifeAvatar.classList.remove('page-hop');
