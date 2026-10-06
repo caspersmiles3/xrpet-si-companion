@@ -69,12 +69,17 @@
   async function loadStats(){
     try{
       const r=await fetch('/api/ecosystem/stats',{cache:'no-store'}),d=await r.json();
+      if(!r.ok)throw new Error(d.error||'XRPL ecosystem stats unavailable');
       const total=d.total_tokens??d.tokens??d.token_count;
       const nfts=d.total_nfts??d.nfts??d.nft_count;
       if(total!=null)q('#ecosystemAssetCount').textContent=number(total)+' assets indexed'+(d.stale?' · cached':'');
-      else if(d.degraded&&d.ledger_index)q('#ecosystemAssetCount').textContent='XRPL ledger '+number(d.ledger_index)+' live';
+      else if(d.degraded&&d.ledger_index)q('#ecosystemAssetCount').textContent='XRPL ledger '+number(d.ledger_index)+' live · directory degraded';
       if(nfts!=null)q('#ecosystemNftCount').textContent=number(nfts)+' NFTs indexed'+(d.stale?' · cached':'');
-    }catch{}
+      else if(d.degraded)q('#ecosystemNftCount').textContent='Directory metadata retrying';
+    }catch{
+      q('#ecosystemAssetCount').textContent='XRPL directory retrying';
+      q('#ecosystemNftCount').textContent='Metadata unavailable';
+    }
   }
 
   async function loadTokens(){
@@ -108,19 +113,23 @@
         fetch('/api/x/status',{cache:'no-store'})
       ]);
       const d=await feedRes.json(),xs=await statusRes.json();
+      if(!statusRes.ok)throw new Error(xs.error||'X status unavailable');
       const write=q('#xWriteStatus'),button=q('#xPostButton');
-      if(write)write.textContent=xs.writeEnabled?'X WRITE CONNECTED':'X WRITE NOT CONFIGURED';
+      if(write)write.textContent=xs.writeEnabled?'X WRITE CONFIGURED':'X WRITE NOT CONFIGURED';
       if(button)button.disabled=!xs.writeEnabled;
+      if(!feedRes.ok)throw new Error(d.detail||d.error||'X feed unavailable');
       if(!d.enabled){
         badge.textContent='X NOT CONNECTED';status.textContent='Metadata links';
         box.innerHTML='<p class="muted">Add X_BEARER_TOKEN on the server to load live XRPL/XRP posts. Project-published X/social links remain available on asset cards.</p>';
         return;
       }
-      badge.textContent='X LIVE';status.textContent='X feed connected';
+      badge.textContent='X LIVE';
+      status.textContent='X feed connected · '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
       const items=d.items||[];
-      box.innerHTML=items.length?items.map(x=>'<article class="ecosystem-x-item"><span>@'+esc(x.username||x.author)+'</span><p>'+esc(x.text)+'</p><a href="'+esc(x.url)+'" target="_blank" rel="noopener">Open on X ↗</a></article>').join(''):'<p class="muted">No recent posts matched the configured XRPL X feed.</p>';
-    }catch{
-      badge.textContent='X RETRYING';box.innerHTML='<p class="muted">X feed is temporarily unavailable. XRPet will retry automatically.</p>';
+      box.innerHTML=items.length?items.map(item=>'<article class="ecosystem-x-item"><span>@'+esc(item.username||item.author)+'</span><p>'+esc(item.text)+'</p><a href="'+esc(item.url)+'" target="_blank" rel="noopener">Open on X ↗</a></article>').join(''):'<p class="muted">X is connected. No recent posts matched the configured XRPL query.</p>';
+    }catch(err){
+      badge.textContent='X DEGRADED';status.textContent='X API retrying';
+      box.innerHTML='<p class="muted">X API is temporarily unavailable: '+esc(err?.message||'request failed')+'. XRPet will retry automatically.</p>';
     }
   }
 
@@ -164,6 +173,8 @@
   q('#ecosystemNext')?.addEventListener('click',()=>{if(offset+PAGE<count)offset+=PAGE;loadTokens();q('#ecosystemSection')?.scrollIntoView({block:'start'})});
 
   loadStats();loadTokens();loadX();
-  setInterval(loadStats,60000);
-  setInterval(loadX,30000);
+  setInterval(()=>{if(!document.hidden)loadStats()},60000);
+  setInterval(()=>{if(!document.hidden)loadX()},30000);
+  setInterval(()=>{if(!document.hidden)loadTokens()},300000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden){loadStats();loadX();loadTokens()}});
 })();
