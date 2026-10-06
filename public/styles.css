@@ -6126,3 +6126,28 @@ body[data-primary-view="games"] .top-command-deck .topbar{display:block!importan
   max-height:34px!important;
   font-size:1rem!important;
 }
+
+
+/* XRPet 5.5.17 — launch video fills the loading screen */
+.clean-launch-video{
+  position:absolute!important;
+  inset:0!important;
+  top:0!important;
+  left:0!important;
+  width:100vw!important;
+  height:100vh!important;
+  max-width:none!important;
+  max-height:none!important;
+  aspect-ratio:auto!important;
+  object-fit:cover!important;
+  object-position:center center!important;
+  transform:none!important;
+  opacity:1!important;
+}
+.clean-launch.launch-complete .clean-launch-video{transform:none!important}
+@media(max-width:760px){
+  .clean-launch-video{width:100vw!important;height:100vh!important;max-height:none!important}
+}
+@media(max-height:620px){
+  .clean-launch-video{width:100vw!important;height:100vh!important;max-width:none!important}
+}
