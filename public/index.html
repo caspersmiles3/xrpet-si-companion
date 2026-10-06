@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=3.9.0">
+  <link rel="stylesheet" href="/styles.css?v=4.0.0">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
@@ -52,7 +52,21 @@
 
     <nav class="side-nav" aria-label="Primary navigation">
       <button class="side-link active" data-scroll="xrplPanel"><span>▥</span>XRPL Live</button>
-      <button class="side-link" data-scroll="xrpHistorySection"><span>↯</span>Settlements + History</button>
+      <details class="nav-dropdown" id="historyNavDetails">
+        <summary class="side-link history-summary"><span>↯</span><b>Settlements + History</b><i>⌄</i></summary>
+        <div class="nav-dropdown-menu">
+          <button type="button" data-history-view="All">Overview + Full Timeline</button>
+          <button type="button" data-history-view="Origins">Origins / Genesis</button>
+          <button type="button" data-history-view="Ripple">Ripple Company</button>
+          <button type="button" data-history-view="XRP">XRP Asset</button>
+          <button type="button" data-history-view="XRPL">XRP Ledger</button>
+          <button type="button" data-history-view="Legal">Legal + Regulation</button>
+          <button type="button" data-history-view="Market">Market Cycles</button>
+          <button type="button" data-history-view="Adoption">Adoption + Partnerships</button>
+          <button type="button" data-history-view="Acquisition">Acquisitions</button>
+          <button type="button" data-history-view="People">People Involved</button>
+        </div>
+      </details>
       <button class="side-link" data-scroll="announcementsSection"><span>◌</span>Announcements</button>
     </nav>
 
@@ -194,6 +208,22 @@
     <article><span>ARCHIVE</span><strong>—</strong><small>Loading</small></article>
   </div>
 
+  <div class="history-jump-panel">
+    <label for="historyJumpSelect">Explore the archive</label>
+    <select id="historyJumpSelect">
+      <option value="All">Overview + Full Timeline</option>
+      <option value="Origins">Origins / Genesis</option>
+      <option value="Ripple">Ripple Company</option>
+      <option value="XRP">XRP Asset</option>
+      <option value="XRPL">XRP Ledger</option>
+      <option value="Legal">Legal + Regulation</option>
+      <option value="Market">Market Cycles</option>
+      <option value="Adoption">Adoption + Partnerships</option>
+      <option value="Acquisition">Acquisitions</option>
+      <option value="People">People Involved</option>
+    </select>
+    <p>Choose a subject to open the archive from the beginning and show only that part of the Ripple/XRP story.</p>
+  </div>
   <div class="history-toolbar">
     <input id="xrpHistorySearch" type="search" placeholder="Search XRP, Ripple, SEC, escrow, ODL, RLUSD, people…">
     <small id="xrpAutoTime">Live layer starting…</small>
@@ -452,6 +482,7 @@
     </section>
 
     <section id="roomsSection" class="flow-section customization-panel" data-customization-panel>
+      <button type="button" class="customization-close" data-customize-close aria-label="Close rooms">×</button>
       <div class="section-heading">
         <div><span class="eyebrow">ROOM ENVIRONMENTS</span><h2>Transform the entire XRPet command environment</h2><p class="section-subcopy">Rooms are now full interface themes. The panels, background, glow, atmosphere, and companion lighting all change together.</p></div>
         <span id="unlocksChip" class="chip">3 unlocked</span>
@@ -477,6 +508,30 @@
           <span class="room-visual legend-room-visual"><i></i></span>
           <span class="room-copy"><strong>Orbital Station</strong><small>Near-black command deck · gold system light · orbital glow · premium high-tier interface</small><b>APP THEME</b><em>Titan+</em></span>
         </button>
+        <button data-room="genesis" class="room-choice detailed-room">
+          <span class="room-visual genesis-room-visual"><i></i></span>
+          <span class="room-copy"><strong>Genesis Chamber</strong><small>Early-ledger laboratory · silver architecture · blue genesis light · archival atmosphere</small><b>APP THEME</b><em>Unlocked</em></span>
+        </button>
+        <button data-room="city" class="room-choice detailed-room">
+          <span class="room-visual city-room-visual"><i></i></span>
+          <span class="room-copy"><strong>Settlement City</strong><small>Futuristic financial district · moving network lights · midnight glass · global payments energy</small><b>APP THEME</b><em>Unlocked</em></span>
+        </button>
+        <button data-room="quantum" class="room-choice detailed-room">
+          <span class="room-visual quantum-room-visual"><i></i></span>
+          <span class="room-copy"><strong>Quantum Ledger Lab</strong><small>Deep indigo research chamber · luminous node lattice · experimental signal atmosphere</small><b>APP THEME</b><em>Unlocked</em></span>
+        </button>
+        <button data-room="desert" class="room-choice detailed-room">
+          <span class="room-visual desert-room-visual"><i></i></span>
+          <span class="room-copy"><strong>Digital Oasis</strong><small>Warm dusk horizon · cool XRP pools · bronze glass · calm settlement sanctuary</small><b>APP THEME</b><em>Unlocked</em></span>
+        </button>
+        <button data-room="arctic" class="room-choice detailed-room">
+          <span class="room-visual arctic-room-visual"><i></i></span>
+          <span class="room-copy"><strong>Arctic Node</strong><small>Ice-white command room · crystalline cyan nodes · clean high-contrast ledger ambience</small><b>APP THEME</b><em>Unlocked</em></span>
+        </button>
+      </div>
+      <div class="room-apply-bar">
+        <span id="roomPendingLabel">Select a room, then apply it.</span>
+        <button id="applyRoom" type="button" class="primary">Apply Room & Close</button>
       </div>
     </section>
 
@@ -522,12 +577,12 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 3.9.0 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 4.0.0 · XRP Ledger companion</footer>
   </main>
 </div>
 
-<script src="/app.js?v=3.9.0"></script>
-<script src="/timeline.js?v=3.9.0"></script>
-<script type="module" src="/companion3d.js?v=3.9.0"></script>
+<script src="/app.js?v=4.0.0"></script>
+<script src="/timeline.js?v=4.0.0"></script>
+<script type="module" src="/companion3d.js?v=4.0.0"></script>
 </body>
 </html>

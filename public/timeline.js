@@ -26,6 +26,21 @@
     }));
     return [...live,...historical].sort((a,b)=>String(b.date).localeCompare(String(a.date)));
   }
+  function significance(x){
+    const map={
+      Origins:'This explains how the XRP Ledger and the organizations around it began.',
+      Ripple:'This is a Ripple-company milestone. It should not be treated as a protocol change unless XRPL is explicitly involved.',
+      XRP:'This directly concerns XRP supply, distribution, usage, or asset-level history.',
+      XRPL:'This concerns the open-source XRP Ledger network, its functionality, amendments, or operational history.',
+      Legal:'This affected the legal or regulatory environment around Ripple and/or XRP and may have influenced access, adoption, or market sentiment.',
+      Market:'This is market-history context. It describes what happened; it is not a forecast of future XRP performance.',
+      Adoption:'This shows a real-world use, integration, customer, market-infrastructure, or payments development connected to Ripple/XRP/XRPL.',
+      Acquisition:'This expanded Ripple’s business or institutional infrastructure through an acquisition.',
+      People:'This explains the role of an individual who materially influenced the XRP Ledger, Ripple, or the XRP ecosystem.',
+      Live:'This is a current official-source item and may be updated as more primary-source information becomes available.'
+    };
+    return map[x.category]||'This event is included because it materially affected the Ripple, XRP, or XRP Ledger story.';
+  }
   function renderTimeline(){
     const box=el('#xrpTimeline'); if(!box||!archive)return;
     const q=query.trim().toLowerCase();
@@ -36,8 +51,16 @@
         <div class="xrp-event-meta"><b>${esc(x.category)}</b>${x.live?'<em>LIVE / AUTO-UPDATED</em>':''}<time>${esc(x.date)}</time></div>
         <h3>${esc(x.title)}</h3>
         <p>${esc(x.summary)}</p>
-        ${(x.people||[]).length?`<small>People: ${esc(x.people.join(', '))}</small>`:''}
-        <a href="${esc(x.source)}" target="_blank" rel="noopener">Primary source ↗</a>
+        <details class="xrp-event-details">
+          <summary>Open detailed context</summary>
+          <div>
+            <strong>Why it matters</strong>
+            <p>${esc(significance(x))}</p>
+            ${(x.people||[]).length?`<p><b>People involved:</b> ${esc(x.people.join(', '))}</p>`:''}
+            <p><b>Status:</b> ${x.live?'Current official-source update':'Historical archive entry'}</p>
+            <a href="${esc(x.source)}" target="_blank" rel="noopener">Open primary source ↗</a>
+          </div>
+        </details>
       </div>
     </article>`).join('') || '<p class="muted">No timeline entries match this filter.</p>';
   }

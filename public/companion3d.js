@@ -845,12 +845,17 @@ function applyRoom(room){
     ocean:[0x55e9ff,0x1289aa,1.12],
     vault:[0xd8b76b,0x6c5220,1.02],
     aurora:[0x79f1ff,0xaa8cff,1.23],
-    legend:[0xf0ce73,0x7b5cff,1.27]
+    legend:[0xf0ce73,0x7b5cff,1.27],
+    genesis:[0x8fdfff,0x6f8fa8,1.16],
+    city:[0x45e9ff,0x176f93,1.2],
+    quantum:[0x9f8cff,0x4ce5ff,1.25],
+    desert:[0xefc27a,0x6bbfe8,1.1],
+    arctic:[0xc7f7ff,0x6eb8d0,1.2]
   };
   const r=rooms[room]||rooms.nexus;
   fill.color.setHex(r[0]);rim.color.setHex(r[1]);sideWarm.color.setHex(r[0]);
   studioRim.color.setHex(r[0]);
-  studioWarm.color.setHex(room==='vault'||room==='legend'?0xd6aa62:0xaec8d1);
+  studioWarm.color.setHex(room==='vault'||room==='legend'||room==='desert'?0xd6aa62:0xaec8d1);
   studioKey.intensity=room==='vault'?3.1:room==='legend'?4.0:3.6;
   faceFill.intensity=room==='vault'?6.2:room==='legend'?8.2:7.5;
   renderer.toneMappingExposure=r[2];
