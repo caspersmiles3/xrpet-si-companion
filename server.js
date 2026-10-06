@@ -473,6 +473,12 @@ function deterministicCompanionDecision(context={}) {
   add('scan',txRecent<15?4:1,'I want to check the live ledger signal.');
   add('wave',1.4,'I feel like greeting whoever is here.');
   add('dance',priceMove>.05?2.6:.5,'The market moved enough to give me some extra energy.');
+  add('run',txRecent<8?1.7:.55,'I want to move quickly across XRPet and check another area.');
+  add('jump',priceMove>.08?1.4:.35,'I have enough energy for a quick jump.');
+  add('crouch',.35,'I want to lower my stance and observe for a moment.');
+  add('turn',.45,'I want to turn and look around the interface.');
+  add('reach',.4,'I want to reach toward something nearby and inspect it.');
+  add('climb',.12,'I want to practice a climbing motion.');
   add('drink',Number(needs.water)<55?4:txRecent<10?2.2:.5,'I want to visit the water fountain and take in the ledger flow.',true);
   add('eat',Number(needs.food)<55?3.5:priceMove>.02?2:.45,'I want to visit the food station and recharge from the market signal.',true);
   add('sleep',Number(needs.rest)<45?4:txRecent>45?1.5:.35,'Things are quiet enough that I want to rest for a little while.',true);
@@ -491,7 +497,7 @@ async function askExternalDecision(context={}) {
   const updates=await getUpdates().catch(()=>[]);
   const prompt=[
     'Choose ONE next autonomous behavior for Ripplet, an XRPet companion.',
-    'Allowed actions: roam, drink, eat, sleep, socialize, scan, wave, dance, focus.',
+    'Allowed actions: roam, drink, eat, sleep, socialize, scan, wave, dance, focus, run, jump, climb, reach, grab, carry, crouch, turn.',
     'Return strict JSON only with keys action, thought, visitStation.',
     'visitStation may only be true for drink, eat, sleep, socialize.',
     'Keep thought under 110 characters.',
@@ -502,7 +508,7 @@ async function askExternalDecision(context={}) {
   try{
     const text=raw.replace(/`{3}json|`{3}/gi,'').trim();
     const parsed=JSON.parse(text);
-    const allowed=new Set(['roam','drink','eat','sleep','socialize','scan','wave','dance','focus']);
+    const allowed=new Set(['roam','drink','eat','sleep','socialize','scan','wave','dance','focus','run','jump','climb','reach','grab','carry','crouch','turn']);
     if(!allowed.has(parsed.action))return null;
     return {
       action:parsed.action,
@@ -578,8 +584,8 @@ app.get('/api/self-test', (_req, res) => {
 });
 
 app.get('/api/health', (_req, res) => res.json({
-  ok:true, product:'XRPet SI Companion', version:'5.2.1',
-  capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch','gemwallet','xaman-hook','web-push','capacitor-mobile','external-si-hook','interactive-webgl-companion','signal-589-community-layer','equipment-matrix','full-audio-engine','room-environments','rigged-glb-roster','glass-studio-ui','orbit-camera','ssao','bloom','adaptive-render-quality','ripple-xrp-living-archive','auto-updating-history','ripplet-single-companion','nft-companion-override','persistent-ripplet','in-app-companion-workspaces','audio-default-on','isolated-primary-views','one-minute-live-refresh','simplified-ripplet-page','ripplet-life-system','bounded-companion-habitat','live-xrpl-transactions','sidebar-history-routing','global-xrp-ticker','cinematic-ripple-launch','global-ripplet-ecosystem','data-driven-companion-life','bounded-roaming-companion','ripplet-primary-tab','varied-live-reactions','visitor-counter','clean-home','clean-xrpl-live','expressive-ripplet-limbs','life-reaction-sounds','visible-ripplet-feet','free-roam-companion','live-reaction-overlays','spontaneous-companion-actions','xrpet-custom-cursor','ripplet-walk-cycle','autonomous-companion-mind','si-behavior-decisions','xrp-market-history','live-market-chart','ripplet-2-runtime','global-eye-tracking','organic-companion-anatomy','xrpet-games','ledger-rush','xrp-flow-game','consensus-80-game','ripplet-3-runtime','superellipsoid-shell-geometry','unified-head-rig','randomized-natural-blink','transparent-direct-alpha-render','high-detail-micro-hardware','validated-mainnet-transaction-feed','xrpl-source-failover','live-bid-ask-spread','24h-market-detail','viewport-layout-guard'],
+  ok:true, product:'XRPet SI Companion', version:'5.3.0',
+  capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch','gemwallet','xaman-hook','web-push','capacitor-mobile','external-si-hook','interactive-webgl-companion','signal-589-community-layer','equipment-matrix','full-audio-engine','room-environments','rigged-glb-roster','glass-studio-ui','orbit-camera','ssao','bloom','adaptive-render-quality','ripple-xrp-living-archive','auto-updating-history','ripplet-single-companion','nft-companion-override','persistent-ripplet','in-app-companion-workspaces','audio-default-on','isolated-primary-views','one-minute-live-refresh','simplified-ripplet-page','ripplet-life-system','bounded-companion-habitat','live-xrpl-transactions','sidebar-history-routing','global-xrp-ticker','cinematic-ripple-launch','global-ripplet-ecosystem','data-driven-companion-life','bounded-roaming-companion','ripplet-primary-tab','varied-live-reactions','visitor-counter','clean-home','clean-xrpl-live','expressive-ripplet-limbs','life-reaction-sounds','visible-ripplet-feet','free-roam-companion','live-reaction-overlays','spontaneous-companion-actions','xrpet-custom-cursor','ripplet-walk-cycle','autonomous-companion-mind','si-behavior-decisions','xrp-market-history','live-market-chart','ripplet-2-runtime','global-eye-tracking','organic-companion-anatomy','xrpet-games','ledger-rush','xrp-flow-game','consensus-80-game','ripplet-3-runtime','superellipsoid-shell-geometry','unified-head-rig','randomized-natural-blink','transparent-direct-alpha-render','high-detail-micro-hardware','validated-mainnet-transaction-feed','xrpl-source-failover','live-bid-ask-spread','24h-market-detail','viewport-layout-guard','physical-motor-cortex','run-gait','jump-arc','climb-cycle','reach-grab-carry','crouch-balance','autonomous-physical-motion'],
   integrations:{ xaman:Boolean(process.env.XAMAN_API_KEY), push:Boolean(VAPID_PUBLIC_KEY&&VAPID_PRIVATE_KEY), si:Boolean(process.env.SI_PROVIDER_KEY) }
 }));
 
@@ -598,7 +604,7 @@ setInterval(async () => {
 }, 10 * 60 * 1000);
 
 app.listen(PORT, () => {
-  console.log(`XRPet // Signal 589 v5.2.1 running on http://localhost:${PORT}`);
+  console.log(`XRPet // Signal 589 v5.3 running on http://localhost:${PORT}`);
   console.log('Integration readiness:', {
     xaman:Boolean(process.env.XAMAN_API_KEY),
     push:Boolean(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY),
