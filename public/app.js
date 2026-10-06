@@ -78,7 +78,7 @@ function mood(label,speech,cls='calm'){setText('#petMood',label);setText('#homeP
 function renderSignal589(){
   const connected=!!state.connected;
   const tx=Number(state.txCount)||0;
-  const change=Number(state.xrpChange24h);
+  const change=finiteNumber(state.xrpChange24h);
   const hasMarket=Number.isFinite(change);
   const pulse=!connected?'OFFLINE':tx>=80?'HIGH FLOW':tx>=20?'STEADY':'QUIET';
   const ledger=connected?'VALIDATED':'WAITING';
@@ -239,11 +239,12 @@ const EXCHANGE_LABELS={
   gateio:{name:'Gate.io',pair:'XRP/USDT',quote:'USDT'},
   mexc:{name:'MEXC',pair:'XRP/USDT',quote:'USDT'}
 };
+function finiteNumber(v){if(v===null||v===undefined||v==='')return null;const n=Number(v);return Number.isFinite(n)?n:null}
 function fmtMarketNumber(v,digits=4){
-  const n=Number(v);return Number.isFinite(n)?'$'+n.toFixed(digits):'—';
+  const n=finiteNumber(v);return Number.isFinite(n)?'$'+n.toFixed(digits):'—';
 }
 function fmtCompact(v,suffix=''){
-  const n=Number(v);if(!Number.isFinite(n))return '—';
+  const n=finiteNumber(v);if(!Number.isFinite(n))return '—';
   if(Math.abs(n)>=1e9)return (n/1e9).toFixed(2)+'B'+suffix;
   if(Math.abs(n)>=1e6)return (n/1e6).toFixed(2)+'M'+suffix;
   if(Math.abs(n)>=1e3)return (n/1e3).toFixed(1)+'K'+suffix;
@@ -266,9 +267,9 @@ function renderExchangeSelection(){
   qa('[data-exchange]').forEach(b=>b.classList.toggle('active',b.dataset.exchange===state.selectedExchange));
 }
 function updateMarketDetail(d={}){
-  const bid=Number(d.bestBid??d.best_bid),ask=Number(d.bestAsk??d.best_ask),price=Number(d.price);
-  const spread=Number.isFinite(bid)&&Number.isFinite(ask)?ask-bid:Number(d.spread);
-  const spreadBps=Number.isFinite(spread)&&Number.isFinite(price)&&price>0?(spread/price)*10000:Number(d.spreadBps);
+  const bid=finiteNumber(d.bestBid??d.best_bid),ask=finiteNumber(d.bestAsk??d.best_ask),price=finiteNumber(d.price);
+  const spread=Number.isFinite(bid)&&Number.isFinite(ask)?ask-bid:finiteNumber(d.spread);
+  const spreadBps=Number.isFinite(spread)&&Number.isFinite(price)&&price>0?(spread/price)*10000:finiteNumber(d.spreadBps);
   const meta=EXCHANGE_LABELS[d.exchange]||selectedExchangeMeta();
   setText('#marketBid',fmtMarketNumber(bid,5));
   setText('#marketAsk',fmtMarketNumber(ask,5));
@@ -276,12 +277,12 @@ function updateMarketDetail(d={}){
   setText('#marketAskVenue',d.exchangeName||meta.name);
   setText('#marketSpread',Number.isFinite(spread)?'$'+spread.toFixed(6):'—');
   setText('#marketSpreadBps',Number.isFinite(spreadBps)?spreadBps.toFixed(2)+' bps':'— bps');
-  setText('#chartOpen',Number.isFinite(Number(d.open24h))?fmtMarketNumber(d.open24h):'—');
-  setText('#chartHigh',Number.isFinite(Number(d.high24h))?fmtMarketNumber(d.high24h):'—');
-  setText('#chartLow',Number.isFinite(Number(d.low24h))?fmtMarketNumber(d.low24h):'—');
-  setText('#chartVolume',Number.isFinite(Number(d.volume24hXrp))?fmtCompact(d.volume24hXrp,' XRP'):'—');
-  setText('#chartVolumeUsd',Number.isFinite(Number(d.volume24hUsd))?'$'+fmtCompact(d.volume24hUsd):'—');
-  setText('#chartRangePct',Number.isFinite(Number(d.range24hPct))?Number(d.range24hPct).toFixed(2)+'%':'—');
+  setText('#chartOpen',Number.isFinite(finiteNumber(d.open24h))?fmtMarketNumber(d.open24h):'—');
+  setText('#chartHigh',Number.isFinite(finiteNumber(d.high24h))?fmtMarketNumber(d.high24h):'—');
+  setText('#chartLow',Number.isFinite(finiteNumber(d.low24h))?fmtMarketNumber(d.low24h):'—');
+  setText('#chartVolume',Number.isFinite(finiteNumber(d.volume24hXrp))?fmtCompact(d.volume24hXrp,' XRP'):'—');
+  setText('#chartVolumeUsd',Number.isFinite(finiteNumber(d.volume24hUsd))?'$'+fmtCompact(d.volume24hUsd):'—');
+  setText('#chartRangePct',Number.isFinite(finiteNumber(d.range24hPct))?finiteNumber(d.range24hPct).toFixed(2)+'%':'—');
   if(d.source)setText('#marketSource',d.source);
   if(d.generatedAt)setText('#marketLastTick',new Date(d.generatedAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'}));
 }
@@ -298,18 +299,18 @@ function mergeLiveTickIntoChart(p){
 }
 function applyLiveMarketTick(ticker={}){
   if(state.selectedExchange!=='coinbase')return;
-  const p=Number(ticker.price);
+  const p=finiteNumber(ticker.price);
   if(!Number.isFinite(p)||p<=0)return;
   const previousPrice=state.lastMarketPrice;
   state.xrpPrice=p;state.lastMarketPrice=p;
-  const change24h=Number(ticker.price_percent_chg_24_h);
+  const change24h=finiteNumber(ticker.price_percent_chg_24_h);
   if(Number.isFinite(change24h))state.xrpChange24h=change24h;
   if(Number.isFinite(previousPrice)&&previousPrice!==p)state.lastPriceTickPct=(p-previousPrice)/previousPrice*100;
   const livePrice='$'+p.toFixed(5);
   const liveChange=Number.isFinite(state.xrpChange24h)?(state.xrpChange24h>=0?'+':'')+state.xrpChange24h.toFixed(2)+'% · 24h':'STREAMING';
   setText('#xrpPrice',livePrice);setText('#xrpChange',liveChange);
   marketLastTickAt=Date.now();
-  const bid=Number(ticker.best_bid),ask=Number(ticker.best_ask),vol=Number(ticker.volume_24_h),hi=Number(ticker.high_24_h),lo=Number(ticker.low_24_h);
+  const bid=finiteNumber(ticker.best_bid),ask=finiteNumber(ticker.best_ask),vol=finiteNumber(ticker.volume_24_h),hi=finiteNumber(ticker.high_24_h),lo=finiteNumber(ticker.low_24_h);
   updateMarketDetail({
     exchange:'coinbase',exchangeName:'Coinbase',price:p,bestBid:bid,bestAsk:ask,
     volume24hXrp:vol,volume24hUsd:Number.isFinite(vol)?vol*p:null,
@@ -364,7 +365,7 @@ async function loadMarket(showOffline=true){
     const r=await fetch('/api/market?exchange='+encodeURIComponent(exchange),{cache:'no-store'}),d=await r.json();
     if(!r.ok)throw new Error(d.detail||'Unavailable');
     const previousPrice=state.lastMarketPrice;
-    state.xrpPrice=Number(d.price);state.xrpChange24h=Number(d.change24h);state.lastMarketPrice=state.xrpPrice;
+    state.xrpPrice=finiteNumber(d.price);state.xrpChange24h=finiteNumber(d.change24h);state.lastMarketPrice=state.xrpPrice;
     if(Number.isFinite(previousPrice)&&Number.isFinite(state.xrpPrice)&&previousPrice!==state.xrpPrice){
       state.lastPriceTickPct=(state.xrpPrice-previousPrice)/previousPrice*100;
     }
@@ -398,19 +399,19 @@ async function setExchange(id,{initial=false}={}){
   }
 }
 let exchangeBoardTimer=0;
-function formatExchangePrice(v){const n=Number(v);return Number.isFinite(n)?'$'+n.toFixed(5):'—';}
-function formatExchangeMove(v){const n=Number(v);return Number.isFinite(n)?(n>=0?'+':'')+n.toFixed(2)+'%':'';}
+function formatExchangePrice(v){const n=finiteNumber(v);return Number.isFinite(n)?'$'+n.toFixed(5):'—';}
+function formatExchangeMove(v){const n=finiteNumber(v);return Number.isFinite(n)?(n>=0?'+':'')+n.toFixed(2)+'%':'';}
 function renderExchangeBoard(data={}){
   const composite=data.composite||{},venues=Array.isArray(data.venues)?data.venues:[];
   [{...composite,id:'all'},...venues].forEach(row=>{
     qa('[data-exchange-price="'+row.id+'"]').forEach(el=>{
       el.textContent=formatExchangePrice(row.price);
-      el.dataset.available=Number.isFinite(Number(row.price))?'true':'false';
+      el.dataset.available=Number.isFinite(finiteNumber(row.price))?'true':'false';
       const move=formatExchangeMove(row.change24h);
       if(move)el.setAttribute('data-move',move);else el.removeAttribute('data-move');
     });
   });
-  const cp=Number(composite.price),cc=Number(composite.change24h);
+  const cp=finiteNumber(composite.price),cc=finiteNumber(composite.change24h);
   setText('#globalXrpPrice',Number.isFinite(cp)?'$'+cp.toFixed(5):'—');
   setText('#globalXrpChange',Number.isFinite(cc)?(cc>=0?'+':'')+cc.toFixed(2)+'% · '+(Number(composite.venueCount)||venues.filter(v=>v.available).length)+' venues':'LIVE COMPOSITE');
 }
@@ -606,7 +607,34 @@ async function loadRecentTransactionsFallback(force=false){
 }
 
 async function loadConfig(){try{const r=await fetch('/api/config',{cache:'no-store'});return await r.json()}catch{return{}}}
-async function integrationCheck(){const box=q('#integrationStatus');if(!box)return;box.innerHTML='<div class="integration-item"><span>System</span><strong>Checking…</strong></div>';try{const [cfg,self]=await Promise.all([loadConfig(),fetch('/api/self-test',{cache:'no-store'}).then(r=>r.json())]);const rows=[['XRPL',state.connected?'LIVE':'CONNECTING'],['Xaman',cfg.xamanApiKey?'READY':'NOT CONFIGURED'],['Web Push',cfg.pushEnabled?'READY':'NOT CONFIGURED'],['Full SI',cfg.siProviderEnabled?'READY':'NOT CONFIGURED']];box.innerHTML=rows.map(([n,s])=>'<div class="integration-item"><span>'+n+'</span><strong class="'+(/LIVE|READY/.test(s)?'ok':'warn')+'">'+s+'</strong></div>').join('')}catch{box.innerHTML='<div class="integration-item"><span>System</span><strong class="warn">Check failed</strong></div>'}}
+async function integrationCheck(){
+  const box=q('#integrationStatus');if(!box)return;
+  box.innerHTML='<div class="integration-item"><span>System</span><strong>Checking live services…</strong></div>';
+  try{
+    const r=await fetch('/api/self-test',{cache:'no-store'});
+    const self=await r.json();
+    const core=self.core||{},integrations=self.integrations||{};
+    const coreLabel=x=>x?.state==='live'?'LIVE':x?.state==='degraded'?'DEGRADED':x?.state==='down'?'DOWN':'CHECKING';
+    const configuredLabel=x=>x?.configured?'CONFIGURED':'NOT CONFIGURED';
+    const xConfigured=integrations.x?.readConfigured||integrations.x?.writeConfigured;
+    const rows=[
+      ['XRPL',coreLabel(core.xrpl)],
+      ['XRP Market',coreLabel(core.market)],
+      ['XRPL Meta',coreLabel(core.ecosystem)],
+      ['Official Updates',coreLabel(core.updates)],
+      ['Xaman',configuredLabel(integrations.xaman)],
+      ['Web Push',configuredLabel(integrations.push)],
+      ['Full SI',integrations.si?.configured?'CONFIGURED':'LOCAL FALLBACK'],
+      ['X API',xConfigured?'CONFIGURED':'NOT CONFIGURED']
+    ];
+    box.innerHTML=rows.map(([name,status])=>{
+      const good=/LIVE|CONFIGURED/.test(status),warn=/DEGRADED|CHECKING|LOCAL/.test(status);
+      return '<div class="integration-item"><span>'+name+'</span><strong class="'+(good?'ok':warn?'warn':'bad')+'">'+status+'</strong></div>';
+    }).join('');
+  }catch{
+    box.innerHTML='<div class="integration-item"><span>System</span><strong class="warn">Health check retrying</strong></div>';
+  }
+}
 async function requestNfts(){
   const box=q('#nftCompanionList'),status=q('#nftStatus');
   if(!state.account){if(status)status.textContent='Connect or watch an XRPL account first.';return}
@@ -1848,7 +1876,7 @@ function executeMindDecision(decision){
 let mindTimer=0,mindBusy=false;
 async function runAutonomousMind(){
   clearTimeout(mindTimer);
-  if(!false&&!mindBusy){
+  if(!mindBusy){
     mindBusy=true;
     try{
       const r=await fetch('/api/companion/decision',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({context:mindContext()})});
@@ -1904,7 +1932,7 @@ q('.main-shell')?.addEventListener('scroll',()=>{
 syncRoamBounds();setTimeout(()=>goRipplet('explore'),300);roamingStep();spontaneousRippletReaction();applyNftCompanion();
 qa('[data-life-action]').forEach(b=>b.addEventListener('click',()=>performLifeActivity(b.dataset.lifeAction,true,false)));
 setInterval(lifeTick,15000);
-dailyVisit();render();registerVisitor();connectLedger();loadRecentTransactionsFallback(true);bindExchangeMenu();setExchange(state.selectedExchange||'all',{initial:true});loadUpdates();integrationCheck();setTimeout(runAutonomousMind,12000);setInterval(()=>{if(Date.now()-marketLastTickAt>18000)loadMarket(false)},18000);setInterval(loadMarketHistory,300000);setInterval(loadUpdates,15000);setInterval(integrationCheck,15000);setInterval(()=>loadRecentTransactionsFallback(false),8000);
+dailyVisit();render();registerVisitor();connectLedger();loadRecentTransactionsFallback(true);bindExchangeMenu();setExchange(state.selectedExchange||'all',{initial:true});loadUpdates();integrationCheck();setTimeout(runAutonomousMind,12000);setInterval(()=>{if(Date.now()-marketLastTickAt>18000)loadMarket(false)},18000);setInterval(loadMarketHistory,300000);setInterval(loadUpdates,60000);setInterval(integrationCheck,30000);setInterval(()=>loadRecentTransactionsFallback(false),8000);
 
 window.addEventListener('xrpet:gameEvent',e=>{
   const d=e.detail||{};
