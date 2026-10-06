@@ -440,4 +440,60 @@ if(state.lastMissionDate===todayKey()){
   charge=7;$('#chargeCount').textContent='7/7';$('#meterFill').style.width='100%';$('#missionText').textContent='Mission complete. New mission arrives tomorrow.';
 }
 connect();loadUpdates();loadMarket();setInterval(loadMarket,300000);setInterval(loadUpdates,900000);
+
+const XRPetSoundtrack=[
+  {name:'Corrupted Transmission 2',file:'/audio/Corrupted%20Transmission%202%20(Instr.).mp3'},
+  {name:'Distant Stars 2',file:'/audio/Distant%20Stars%202%20(Instr.).mp3'},
+  {name:'Kardashev Scale',file:'/audio/Kardashev%20Scale%20(Instr.).mp3'},
+  {name:'Liquid Restlessness',file:'/audio/Liquid%20Restlessness%20(Instr.).mp3'},
+  {name:'Payment Clearing',file:'/audio/Payment%20Clearing%20(Instr.).mp3'},
+  {name:'Unified Pulse',file:'/audio/Unified%20Pulse%20(Instr.).mp3'}
+];
+(function initXRPetMusic(){
+  const audio=$('#xrpetAudio'),toggle=$('#musicToggle'),name=$('#musicTrackName');
+  const prev=$('#musicPrev'),next=$('#musicNext'),shuffleBtn=$('#musicShuffle'),volume=$('#musicVolume');
+  if(!audio||!toggle)return;
+  let saved={index:0,volume:.45,shuffle:false};
+  try{saved={...saved,...JSON.parse(localStorage.getItem('xrpet-music')||'{}')}}catch{}
+  let index=Math.max(0,Math.min(XRPetSoundtrack.length-1,Number(saved.index)||0));
+  let shuffle=!!saved.shuffle;
+  audio.volume=Math.max(0,Math.min(1,Number(saved.volume)??.45));
+  volume.value=String(audio.volume);
+  const persistMusic=()=>localStorage.setItem('xrpet-music',JSON.stringify({index,volume:audio.volume,shuffle}));
+  function loadTrack(i,autoplay=false){
+    index=(i+XRPetSoundtrack.length)%XRPetSoundtrack.length;
+    const t=XRPetSoundtrack[index];
+    audio.src=t.file;
+    name.textContent=t.name;
+    persistMusic();
+    if(autoplay) audio.play().catch(()=>{toggle.textContent='▶'});
+  }
+  function nextIndex(){
+    if(!shuffle)return (index+1)%XRPetSoundtrack.length;
+    if(XRPetSoundtrack.length<2)return index;
+    let n=index; while(n===index)n=Math.floor(Math.random()*XRPetSoundtrack.length); return n;
+  }
+  function setPlaying(on){
+    toggle.textContent=on?'Ⅱ':'▶';
+    toggle.setAttribute('aria-label',on?'Pause soundtrack':'Play soundtrack');
+    document.body.classList.toggle('music-playing',on);
+  }
+  toggle.onclick=async()=>{
+    if(audio.paused){
+      if(!audio.src)loadTrack(index,false);
+      try{await audio.play()}catch{notify?.('Music unavailable','Upload the XRPet soundtrack files to public/audio.','warning')}
+    }else audio.pause();
+  };
+  prev.onclick=()=>loadTrack(index-1,!audio.paused);
+  next.onclick=()=>loadTrack(nextIndex(),!audio.paused);
+  shuffleBtn.onclick=()=>{shuffle=!shuffle;shuffleBtn.classList.toggle('active',shuffle);persistMusic()};
+  volume.oninput=e=>{audio.volume=Number(e.target.value);persistMusic()};
+  audio.onplay=()=>setPlaying(true);
+  audio.onpause=()=>setPlaying(false);
+  audio.onended=()=>loadTrack(nextIndex(),true);
+  audio.onerror=()=>{name.textContent='Track files not uploaded yet';setPlaying(false)};
+  shuffleBtn.classList.toggle('active',shuffle);
+  loadTrack(index,false);
+})();
+
 if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
