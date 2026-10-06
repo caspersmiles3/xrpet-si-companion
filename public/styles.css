@@ -4323,3 +4323,139 @@ body[data-primary-view="games"] .top-command-deck .topbar{display:block!importan
   .command-search-box{grid-column:auto}
   .exchange-interface-grid{grid-template-columns:1fr}
 }
+
+
+/* v5.5.8 — overlap repair + live exchange quote board */
+.command-primary-row{
+  grid-template-columns:minmax(0,1fr) 190px 275px!important;
+  gap:8px!important;
+  min-width:0!important;
+}
+.command-search-box{min-width:0!important}
+.global-xrp-price-button.command-primary-box{
+  position:relative!important;
+  inset:auto!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  overflow:hidden!important;
+}
+.top-command-deck .ripplet-dock.command-primary-box{
+  position:relative!important;
+  inset:auto!important;
+  top:auto!important;
+  right:auto!important;
+  bottom:auto!important;
+  left:auto!important;
+  transform:none!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  z-index:auto!important;
+  overflow:hidden!important;
+}
+.top-command-deck .ripplet-dock-copy{min-width:0!important}
+.top-command-deck .ripplet-dock-actions{flex:0 0 auto!important}
+.top-command-deck .ripplet-dock-actions button{white-space:nowrap!important}
+.top-command-deck{overflow:visible!important}
+
+/* No loose companion toys, copied UI pieces, or floating prop objects over the interface. */
+.companion-play-prop,
+.prop-ui-echo{
+  display:none!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+}
+
+/* Sidebar exchange dropdown becomes a compact live quote board. */
+.exchange-sidebar-dropdown .exchange-nav-menu{
+  width:250px!important;
+  max-height:min(520px,72vh)!important;
+  overflow-y:auto!important;
+}
+.exchange-nav-menu button[data-exchange]{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  grid-template-rows:auto auto!important;
+  column-gap:10px!important;
+  align-items:center!important;
+  text-align:left!important;
+  min-height:42px!important;
+}
+.exchange-nav-menu button[data-exchange]>span{
+  grid-column:1!important;
+  font-size:.58rem!important;
+  color:#91a8b4!important;
+}
+.exchange-nav-menu button[data-exchange]>strong[data-exchange-price]{
+  grid-column:2!important;
+  grid-row:1!important;
+  font-size:.62rem!important;
+  color:#d9fbff!important;
+  white-space:nowrap!important;
+}
+.exchange-nav-menu button[data-exchange]>strong[data-exchange-price]::after{
+  content:attr(data-move);
+  display:block;
+  margin-top:2px;
+  font-size:.43rem;
+  color:#6f96a3;
+  text-align:right;
+}
+.exchange-nav-menu button[data-exchange]>strong[data-exchange-price][data-available="false"]{
+  color:#5f737d!important;
+}
+.exchange-open-board{
+  border-bottom:1px solid rgba(95,226,255,.11)!important;
+  margin-bottom:4px!important;
+}
+
+/* Every exchange card shows its own price without selecting it. */
+.exchange-interface-grid button{
+  grid-template-columns:minmax(0,1fr) auto!important;
+  grid-template-rows:auto auto auto!important;
+  column-gap:9px!important;
+}
+.exchange-interface-grid button>span{grid-column:1!important;grid-row:1!important}
+.exchange-interface-grid button>strong{grid-column:1!important;grid-row:2!important}
+.exchange-interface-grid button>small{grid-column:1!important;grid-row:3!important}
+.exchange-live-price{
+  grid-column:2!important;
+  grid-row:1/4!important;
+  align-self:center!important;
+  font-style:normal!important;
+  font-weight:900!important;
+  font-size:.82rem!important;
+  color:#dffcff!important;
+  text-align:right!important;
+  white-space:nowrap!important;
+}
+.exchange-live-price::after{
+  content:attr(data-move);
+  display:block;
+  margin-top:4px;
+  font-size:.48rem;
+  font-weight:700;
+  color:#6d919d;
+}
+.exchange-live-price[data-available="false"]{color:#5e727c!important}
+
+@media(max-width:1080px){
+  .command-primary-row{
+    grid-template-columns:minmax(0,1fr) 170px 245px!important;
+  }
+}
+@media(max-width:900px){
+  .command-primary-row{
+    grid-template-columns:minmax(0,1fr) 170px!important;
+  }
+  .top-command-deck .ripplet-dock.command-primary-box{
+    grid-column:1/-1!important;
+  }
+}
+@media(max-width:620px){
+  .command-primary-row{grid-template-columns:1fr!important}
+  .command-search-box,
+  .global-xrp-price-button.command-primary-box,
+  .top-command-deck .ripplet-dock.command-primary-box{grid-column:1!important}
+}
