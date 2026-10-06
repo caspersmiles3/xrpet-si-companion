@@ -121,6 +121,47 @@
           </div>
         </section>
 
+      </div>
+
+      <aside class="right-rail">
+        <section id="xrplPanel" class="rail-panel xrpl-live">
+          <div class="rail-head"><div><span class="live-dot"></span><strong>XRPL Live</strong></div><span>Mainnet</span></div>
+          <div class="metric-grid">
+            <article><span>XRP Price</span><strong id="xrpPrice">—</strong><small id="xrpChange">Loading market</small></article>
+            <article><span>Ledger Index</span><strong id="ledger">—</strong><small id="txCount">Waiting for close</small></article>
+            <article><span>Base Fee</span><strong><b id="fee">—</b> drops</strong><small>Reference fee</small></article>
+            <article><span>XRPL Status</span><strong id="status">Connecting</strong><small id="serverState">Live network</small></article>
+          </div>
+        </section>
+
+        <section id="walletPanel" class="rail-panel wallet-panel">
+          <div class="section-head small-head"><div><span class="eyebrow">WALLET + INTEGRATION</span><h3>Connect or watch</h3></div><span id="walletProvider" class="chip">Manual</span></div>
+          <div class="wallet-actions"><button id="connectXaman" class="primary">Connect Xaman</button><button id="connectGem" class="secondary">GemWallet</button></div>
+          <p id="walletConnection" class="muted">No wallet connected. Public wallet watch works without signing access.</p>
+          <form id="watchForm" class="inline-form"><input id="account" autocomplete="off" placeholder="r… XRPL classic address"><button>Watch</button></form>
+          <div id="walletState" class="wallet-state">No public account is being watched.</div>
+          <button id="clearWallet" class="text-button">Clear wallet watch</button>
+        </section>
+
+
+        <section class="rail-panel official-panel">
+          <div class="section-head small-head"><div><span class="eyebrow">OFFICIAL UPDATES</span><h3>Ripple + XRPL</h3></div><button id="refreshNews" class="mini-button">Refresh</button></div>
+          <div id="updates" class="updates"><p class="muted">Loading official sources…</p></div>
+        </section>
+
+        <section id="chatPanel" class="rail-panel chat-panel">
+          <div class="chat-title"><div class="mini-avatar">X</div><div><strong>Chat with <span id="chatPetName">XRPet</span></strong><small><i></i> Online</small></div></div>
+          <div id="chat" class="chat" aria-live="polite"><div class="bubble assistant">I’m your XRPet. Ask me what’s happening on the XRP Ledger.</div></div>
+          <div class="quick"><button data-q="Catch me up">XRPL update</button><button data-q="What is the XRP price?">XRP price</button><button data-q="Verify this claim: ">Truth Mode</button></div>
+          <form id="chatForm" class="composer"><input id="message" maxlength="500" autocomplete="off" placeholder="Message XRPet…"><button>➤</button></form>
+        </section>
+
+        <section class="rail-panel integration-panel">
+          <div class="section-head small-head"><div><span class="eyebrow">SYSTEM</span><h3>Integration health</h3></div><button id="refreshIntegrations" class="mini-button">Check</button></div>
+          <div id="integrationStatus" class="integration-grid"></div>
+        </section>
+      </aside>
+
         <section class="bottom-strip">
           <article id="companionSection" class="content-panel strip-card">
             <div class="section-head">
@@ -177,44 +218,6 @@
           </article>
         </section>
 
-        <section id="walletPanel" class="content-panel wallet-panel">
-          <div class="section-head"><div><span class="eyebrow">WALLET + INTEGRATION</span><h3>Connect or watch</h3></div><span id="walletProvider" class="chip">Manual</span></div>
-          <div class="wallet-actions"><button id="connectXaman" class="primary">Connect Xaman</button><button id="connectGem" class="secondary">GemWallet</button></div>
-          <p id="walletConnection" class="muted">No wallet connected. Public wallet watch works without signing access.</p>
-          <form id="watchForm" class="inline-form"><input id="account" autocomplete="off" placeholder="r… XRPL classic address"><button>Watch</button></form>
-          <div id="walletState" class="wallet-state">No public account is being watched.</div>
-          <button id="clearWallet" class="text-button">Clear wallet watch</button>
-        </section>
-      </div>
-
-      <aside class="right-rail">
-        <section id="xrplPanel" class="rail-panel xrpl-live">
-          <div class="rail-head"><div><span class="live-dot"></span><strong>XRPL Live</strong></div><span>Mainnet</span></div>
-          <div class="metric-grid">
-            <article><span>XRP Price</span><strong id="xrpPrice">—</strong><small id="xrpChange">Loading market</small></article>
-            <article><span>Ledger Index</span><strong id="ledger">—</strong><small id="txCount">Waiting for close</small></article>
-            <article><span>Base Fee</span><strong><b id="fee">—</b> drops</strong><small>Reference fee</small></article>
-            <article><span>XRPL Status</span><strong id="status">Connecting</strong><small id="serverState">Live network</small></article>
-          </div>
-        </section>
-
-        <section class="rail-panel official-panel">
-          <div class="section-head small-head"><div><span class="eyebrow">OFFICIAL UPDATES</span><h3>Ripple + XRPL</h3></div><button id="refreshNews" class="mini-button">Refresh</button></div>
-          <div id="updates" class="updates"><p class="muted">Loading official sources…</p></div>
-        </section>
-
-        <section id="chatPanel" class="rail-panel chat-panel">
-          <div class="chat-title"><div class="mini-avatar">X</div><div><strong>Chat with <span id="chatPetName">XRPet</span></strong><small><i></i> Online</small></div></div>
-          <div id="chat" class="chat" aria-live="polite"><div class="bubble assistant">I’m your XRPet. Ask me what’s happening on the XRP Ledger.</div></div>
-          <div class="quick"><button data-q="Catch me up">XRPL update</button><button data-q="What is the XRP price?">XRP price</button><button data-q="Verify this claim: ">Truth Mode</button></div>
-          <form id="chatForm" class="composer"><input id="message" maxlength="500" autocomplete="off" placeholder="Message XRPet…"><button>➤</button></form>
-        </section>
-
-        <section class="rail-panel integration-panel">
-          <div class="section-head small-head"><div><span class="eyebrow">SYSTEM</span><h3>Integration health</h3></div><button id="refreshIntegrations" class="mini-button">Check</button></div>
-          <div id="integrationStatus" class="integration-grid"></div>
-        </section>
-      </aside>
     </section>
 
     <footer>XRPet SI Companion™ · Beta 2.2 · XRP Ledger companion · Not affiliated with or endorsed by Ripple · Not financial advice</footer>
