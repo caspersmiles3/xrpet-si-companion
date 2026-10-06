@@ -1417,7 +1417,11 @@ function pointerActionFor(hit){
   if(side&&(textual||line))return {mode:'hang',action:'hang'};
   if(my<rect.top-10&&(textual||line))return {mode:'climb',action:'climb'};
   if(nearTop||line)return {mode:'perch',action:Math.random()<.18?'sit':'stand'};
-  if(nearBottom)return {mode:'hop',action:'jump'};
+  if(nearBottom){
+    const hop=interfaceTargetPosition(target,'hop');
+    if(hop&&canJumpOntoTarget(target,hop))return {mode:'hop',action:'jump'};
+    return {mode:'climb',action:'climb'};
+  }
   if(textual&&Math.random()<.30)return {mode:'hang',action:'hang'};
   return {mode:'perch',action:'stand'};
 }
@@ -1932,8 +1936,66 @@ window.XRPetPlayground={
 };
 ensurePlayProps();
 
+function syncDanceButton(){
+  qa('[data-pet-action="dance"]').forEach(button=>{
+    button.disabled=window.XRPetMusicPlaying!==true;
+    button.title=button.disabled?'Start the XRPet music player to let Ripplet dance.':'Dance with the music';
+  });
+}
+function danceToMusicBeat(){
+  clearTimeout(rippletMusicDanceTimer);
+  if(!rippletMusicDancing||window.XRPetMusicPlaying!==true)return;
+  if(rippletRouteBusy()){
+    rippletMusicDanceTimer=setTimeout(danceToMusicBeat,240);
+    return;
+  }
+  if(lifeAvatar){
+    lifeAvatar.dataset.activity='dance';
+    lifeAvatar.dataset.reaction='dance';
+  }
+  window.XRPet3D?.perform?.('dance');
+  state.mindAction='dance';
+  state.mindThought='The music is playing, so I am dancing in place.';
+  renderMind();
+  rippletMusicDanceTimer=setTimeout(danceToMusicBeat,2250);
+}
+function setRippletMusicDance(playing){
+  const next=playing===true;
+  rippletMusicDancing=next;
+  syncDanceButton();
+  clearTimeout(rippletMusicDanceTimer);
+  if(next){
+    clearTimeout(roamTimer);
+    cancelRippletRoute();
+    setText('#mindAction','Dancing to music');
+    setText('#mindThought','Music is on. I stay grounded and dance where I am.');
+    danceToMusicBeat();
+    return;
+  }
+  if(lifeAvatar){
+    if(lifeAvatar.dataset.activity==='dance')lifeAvatar.dataset.activity='stand';
+    if(lifeAvatar.dataset.reaction==='dance')delete lifeAvatar.dataset.reaction;
+  }
+  window.XRPet2D?.motor?.('stand');
+  state.mindAction='roam';
+  state.mindThought='The music stopped. I can move through the interface again.';
+  renderMind();
+  clearTimeout(roamTimer);
+  roamTimer=setTimeout(roamingStep,320);
+}
+window.addEventListener('xrpet:music-state',e=>setRippletMusicDance(e.detail?.playing===true));
+setTimeout(()=>setRippletMusicDance(window.XRPetMusicPlaying===true),0);
+
 function roamingStep(){
   clearTimeout(roamTimer);
+  if(rippletMusicDancing){
+    roamTimer=setTimeout(roamingStep,700);
+    return;
+  }
+  if(rippletRouteBusy()){
+    roamTimer=setTimeout(roamingStep,240);
+    return;
+  }
   if(roamDocked){
     const dockEmotes=['thinking','salute','wave','shrug','happy'];
     const emote=dockEmotes[Math.floor(Math.random()*dockEmotes.length)];
@@ -1943,13 +2005,13 @@ function roamingStep(){
   }
   if(rippletPointer.active&&Date.now()-rippletPointer.movedAt<8000){
     followRippletPointer(true);
-    roamTimer=setTimeout(roamingStep,320);
+    roamTimer=setTimeout(roamingStep,650);
     return;
   }
   const roll=Math.random();
-  if(roll<.93)playWithInterface();
+  if(roll<.90)playWithInterface();
   else goRipplet('explore');
-  roamTimer=setTimeout(roamingStep,1700+Math.random()*2500);
+  roamTimer=setTimeout(roamingStep,1900+Math.random()*2600);
 }
 function renderMind(){
   const labels={roam:'Roaming',dock:'Docked',socialize:'Signal Friend',scan:'Scanning XRPL',wave:'Waving',dance:'Dancing',focus:'Focused',run:'Running',jump:'Jumping',climb:'Climbing',reach:'Reaching',grab:'Grabbing',carry:'Carrying',crouch:'Crouching',turn:'Turning'};
@@ -1973,21 +2035,30 @@ function mindContext(){
   };
 }
 function executeMindDecision(decision){
-  if(!decision||false)return;
-  const action=decision.action||'roam';
+  if(!decision)return;
+  const requested=decision.action||'roam';
+  const action=requested==='dance'&&window.XRPetMusicPlaying!==true?'roam':requested;
   state.mindAction=action;
-  state.mindThought=decision.thought||'I chose my next move.';
+  state.mindThought=requested==='dance'&&action!=='dance'
+    ? 'I only dance when the XRPet music player is on, so I chose to roam instead.'
+    : decision.thought||'I chose my next move.';
   state.mindMode=decision.mode||'local-autonomy';
-  if(action==='socialize'){
+  if(rippletMusicDancing){
+    state.mindAction='dance';
+    state.mindThought='The music is playing, so I am dancing instead of roaming.';
+  }else if(action==='socialize'){
     performLifeActivity('socialize',false,false);
   }else if(action==='roam'){
     state.lifeActivity='explore';window.XRPetRoam?.go?.('explore');
-  }else if(['scan','wave','dance','focus','run','jump','climb','reach','grab','carry','crouch','turn'].includes(action)){
-    if(action==='run'){window.XRPetRoam?.go?.('explore')}
+  }else if(action==='jump'){
+    playWithInterface(true);
+  }else if(['scan','wave','focus','run','climb','reach','grab','carry','crouch','turn'].includes(action)){
+    if(action==='run')window.XRPetRoam?.go?.('explore');
     else window.XRPet3D?.motor?.(action,{side:Math.random()<.5?'left':'right',turn:(Math.random()<.5?-1:1)*.45});
     if(action==='wave')playSound('wave',true);
-    if(action==='dance')playSound('dance',true);
     if(action==='scan')playSound('ledgerTx',true);
+  }else if(action==='dance'&&window.XRPetMusicPlaying===true){
+    setRippletMusicDance(true);
   }
   renderMind();persist();
 }
@@ -2010,18 +2081,18 @@ async function runAutonomousMind(){
 }
 function spontaneousRippletReaction(){
   clearTimeout(spontaneousReactionTimer);
-  {
+  if(!rippletMusicDancing&&!rippletRouteBusy()){
     const options=roamDocked
       ? ['thinking','salute','wave','shrug','happy','surprised']
-      : ['greet','happy','focus','scan','wave','dance','cheer','laugh','shrug','confused','excited','point','salute','thinking','surprised','jump','turn','reach'];
+      : ['greet','happy','focus','scan','wave','cheer','laugh','shrug','confused','excited','point','salute','thinking','surprised','turn','reach'];
     const pick=options[Math.floor(Math.random()*options.length)];
-    if(['jump','turn','reach'].includes(pick))window.XRPet3D?.motor?.(pick,{side:Math.random()<.5?'left':'right',turn:(Math.random()<.5?-1:1)*.35});
+    if(['turn','reach'].includes(pick))window.XRPet3D?.motor?.(pick,{side:Math.random()<.5?'left':'right',turn:(Math.random()<.5?-1:1)*.35});
     else window.XRPet3D?.perform?.(pick);
     if(lifeAvatar){
       lifeAvatar.dataset.reaction=pick;
       setTimeout(()=>{if(lifeAvatar?.dataset.reaction===pick)delete lifeAvatar.dataset.reaction},1800);
     }
-    if(Math.random()<.28)playSound(pick==='dance'?'dance':pick==='wave'?'wave':pick==='scan'?'ledgerTx':'pet',true);
+    if(Math.random()<.28)playSound(pick==='wave'?'wave':pick==='scan'?'ledgerTx':'pet',true);
   }
   spontaneousReactionTimer=setTimeout(spontaneousRippletReaction,4200+Math.random()*5200);
 }
