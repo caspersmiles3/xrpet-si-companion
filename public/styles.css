@@ -1583,3 +1583,70 @@ body.room-genesis .update,body.room-city .update,body.room-quantum .update,body.
 .xrp-event-details>div{margin-top:9px;padding:11px;border:1px solid rgba(119,218,255,.11);border-radius:10px;background:rgba(4,12,18,.55)}
 .xrp-event-details>div strong{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:#a9efff}
 .xrp-event-details>div p{margin:7px 0;font-size:.84rem}
+
+
+/* v4.1 persistent Ripplet + in-app companion workspaces */
+.persistent-companion-layer{position:relative;z-index:35;pointer-events:none}
+.persistent-ripplet{pointer-events:none}
+.persistent-ripplet .companion3d-host,.persistent-ripplet .floating-tag{pointer-events:auto}
+
+.customization-panel.is-open{
+  display:block!important;
+  position:relative!important;
+  inset:auto!important;
+  z-index:1!important;
+  overflow:visible!important;
+  margin:16px 0 0!important;
+  padding:22px!important;
+  border:1px solid rgba(123,229,255,.18)!important;
+  border-radius:18px!important;
+  background:linear-gradient(180deg,rgba(8,17,24,.97),rgba(6,13,19,.99))!important;
+  box-shadow:0 18px 55px rgba(0,0,0,.28)!important;
+}
+.customization-panel.is-open:before{display:none!important}
+body.workspace-open #xrplPanel,
+body.workspace-open #xrpHistorySection,
+body.workspace-open #announcementsSection{display:none!important}
+body.workspace-open footer{display:none}
+body.workspace-open .main-shell{min-height:100vh}
+
+.workspace-nav{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:-4px 0 18px;
+  padding-bottom:12px;
+  border-bottom:1px solid rgba(122,224,255,.12)
+}
+.workspace-nav span{font-size:.66rem;letter-spacing:.12em;color:#73909d}
+.workspace-back{
+  border:1px solid #245064;
+  background:#091820;
+  color:#a8efff;
+  border-radius:10px;
+  padding:9px 12px;
+  cursor:pointer;
+  font-weight:700
+}
+.workspace-back:hover{background:#0d202a;border-color:#3a7b93;color:#effcff}
+
+.studio-companion-placeholder{
+  min-height:300px;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  gap:8px;
+  text-align:center;
+  padding:28px;
+  border:1px dashed rgba(111,217,255,.16);
+  border-radius:16px;
+  background:radial-gradient(circle at 50% 40%,rgba(66,224,255,.08),transparent 38%)
+}
+.studio-companion-placeholder strong{color:#dffaff}
+.studio-companion-placeholder small{max-width:460px;color:#718995;line-height:1.5}
+
+@media(max-width:760px){
+  .customization-panel.is-open{padding:15px!important;margin-top:10px!important}
+  .workspace-nav{align-items:flex-start;flex-direction:column}
+}

@@ -2,6 +2,7 @@ const q=s=>document.querySelector(s), qa=s=>[...document.querySelectorAll(s)];
 const STORE='xrpet-v2-state';
 const safe=(fn)=>{try{return fn()}catch(e){console.warn(e);return null}};
 const saved=safe(()=>JSON.parse(localStorage.getItem(STORE)||'{}'))||{};
+const enableAudioDefaults=saved.audioDefaultsV41!==true;
 const state={
   connected:false,ledgerIndex:null,txCount:0,baseFeeDrops:null,
   xrpPrice:null,xrpChange24h:null,
@@ -17,8 +18,9 @@ const state={
   companionKind:'ripplet',companionGender:'neutral',
   eyeStyle:saved.eyeStyle||'cyan',coreStyle:saved.coreStyle||'standard',headGear:saved.headGear||'none',trailStyle:saved.trailStyle||'none',
   graphicsQuality:saved.graphicsQuality||'auto',
-  soundEnabled:saved.soundEnabled!==false,soundVolume:Number.isFinite(saved.soundVolume)?saved.soundVolume:35,
-  interfaceSound:saved.interfaceSound!==false,ambientSound:saved.ambientSound!==false,ledgerSound:saved.ledgerSound!==false,
+  audioDefaultsV41:true,
+  soundEnabled:enableAudioDefaults?true:saved.soundEnabled!==false,soundVolume:Number.isFinite(saved.soundVolume)?saved.soundVolume:35,
+  interfaceSound:enableAudioDefaults?true:saved.interfaceSound!==false,ambientSound:enableAudioDefaults?true:saved.ambientSound!==false,ledgerSound:enableAudioDefaults?true:saved.ledgerSound!==false,
   signalLoreIndex:Number.isFinite(saved.signalLoreIndex)?saved.signalLoreIndex:0
 };
 const FORMS=[['Drop',0],['Ripple',50],['Wave',150],['Surge',350],['Nexus',700],['Titan',1200],['Legend',2000]];
@@ -255,7 +257,8 @@ function scrollSectionTop(id){
   window.scrollTo({top:y,behavior:'smooth'});
 }
 qa('[data-scroll]').forEach(b=>b.addEventListener('click',()=>{
-  closeCustomizationPanels();
+  qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));
+  document.body.classList.remove('customization-open','workspace-open');
   scrollSectionTop(b.dataset.scroll);
 }));
 bind('#explainLevel','change',e=>{state.explainLevel=e.target.value;persist()});bind('#notifyLevel','change',e=>{state.notifyLevel=e.target.value;persist()});bind('#truthToggle','change',e=>{state.truthMode=e.target.checked;persist();renderSignal589()});bind('#marketMoodToggle','change',e=>{state.marketMood=e.target.checked;persist()});
@@ -643,7 +646,8 @@ if('serviceWorker' in navigator){
 
 function closeCustomizationPanels(){
   qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));
-  document.body.classList.remove('customization-open');
+  document.body.classList.remove('customization-open','workspace-open');
+  setTimeout(()=>scrollSectionTop('xrplPanel'),20);
 }
 qa('[data-customize-target]').forEach(b=>b.addEventListener('click',()=>{
   closeCustomizationPanels();
@@ -655,9 +659,10 @@ qa('[data-customize-target]').forEach(b=>b.addEventListener('click',()=>{
       setText('#roomPendingLabel','Current room: '+(ROOM_NAMES[state.room]||state.room)+'. Choose another room, then apply.');
     }
     panel.classList.add('is-open');
-    document.body.classList.add('customization-open');
+    document.body.classList.add('workspace-open');
     q('#customizeDetails')?.removeAttribute('open');
     panel.scrollTop=0;
+    setTimeout(()=>scrollSectionTop(panel.id),20);
   }
 }));
 qa('[data-customize-close]').forEach(b=>b.addEventListener('click',closeCustomizationPanels));

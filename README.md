@@ -1,4 +1,4 @@
-# XRPet SI Companion™ — v4.0.0
+# XRPet SI Companion™ — v4.1.0
 
 **Don't watch the Ledger. Live with it.**
 
@@ -8,7 +8,7 @@ XRPet is a lightweight, installable companion built around Ripple, XRP and the X
 
 Render service: https://xrpet-si-companion.onrender.com
 
-## v4.0 capabilities
+## v4.1 capabilities
 
 - Live XRPL ledger + fee signals
 - XRP/USD market snapshot with public-data fallback
@@ -97,3 +97,12 @@ Ripplet reacts to XRPL connection state, wallet activity, XRP market movement, a
 - Companion & Cosmetics opens downward from the left sidebar.
 - Rooms now use select → preview → **Apply Room & Close**, with an explicit close button.
 - Added Genesis Chamber, Settlement City, Quantum Ledger Lab, Digital Oasis, and Arctic Node environments.
+
+
+## v4.1 companion workspace fixes
+
+- Master audio, interface sounds, room ambience, and XRPL pulse sounds default to ON. A one-time v4.1 migration also enables them for existing installs; after that, user settings are respected.
+- Ripplet's live 3D host is persistent and no longer lives inside a hidden Companion panel, so the official companion remains visible throughout the primary XRPet interface.
+- Ripplet Chat, Rooms, Ripplet Appearance, Wallet/NFT Override, and the Ripplet studio now open as in-app workspaces inside the existing XRPet shell instead of fixed full-screen overlays.
+- Every companion workspace has a visible **Back to XRP Interface** control.
+- Rooms retain **Apply Room & Close**, so selecting a room no longer requires the Escape key.
