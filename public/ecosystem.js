@@ -115,7 +115,7 @@
       const d=await feedRes.json(),xs=await statusRes.json();
       if(!statusRes.ok)throw new Error(xs.error||'X status unavailable');
       const write=q('#xWriteStatus'),button=q('#xPostButton');
-      if(write)write.textContent=xs.writeEnabled?'X WRITE CONFIGURED':'X WRITE NOT CONFIGURED';
+      if(write)write.textContent=xs.writeEnabled?'X WRITE READY · ADMIN KEY REQUIRED':'X WRITE NOT CONFIGURED';
       if(button)button.disabled=!xs.writeEnabled;
       if(!feedRes.ok)throw new Error(d.detail||d.error||'X feed unavailable');
       if(!d.enabled){
@@ -133,7 +133,9 @@
     }
   }
 
-  const xText=q('#xPostText'),xForm=q('#xPostForm'),xResult=q('#xPostResult'),xCount=q('#xPostCount');
+  const xText=q('#xPostText'),xForm=q('#xPostForm'),xResult=q('#xPostResult'),xCount=q('#xPostCount'),xPostKey=q('#xPostKey');
+  try{if(xPostKey)xPostKey.value=sessionStorage.getItem('xrpet-x-post-key')||''}catch{}
+  xPostKey?.addEventListener('input',()=>{try{sessionStorage.setItem('xrpet-x-post-key',xPostKey.value)}catch{}});
   xText?.addEventListener('input',()=>{if(xCount)xCount.textContent=String(xText.value.length)});
   xForm?.addEventListener('submit',async e=>{
     e.preventDefault();
@@ -141,7 +143,9 @@
     const button=q('#xPostButton');if(button)button.disabled=true;
     if(xResult)xResult.textContent='Posting to X…';
     try{
-      const r=await fetch('/api/x/post',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({text})});
+      const postKey=(xPostKey?.value||'').trim();
+      if(!postKey)throw new Error('Enter your XRPet admin post key before posting.');
+      const r=await fetch('/api/x/post',{method:'POST',headers:{'content-type':'application/json','x-xrpet-post-key':postKey},body:JSON.stringify({text})});
       const d=await r.json();if(!r.ok)throw new Error(d.detail||d.error||'X post failed');
       if(xResult)xResult.innerHTML='Posted successfully'+(d.url?' · <a href="'+esc(d.url)+'" target="_blank" rel="noopener">Open on X ↗</a>':'');
       if(xText)xText.value='';if(xCount)xCount.textContent='0';
