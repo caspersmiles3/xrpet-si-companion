@@ -1065,8 +1065,8 @@ function dockPosition(){
   const dock=q('#rippletDock'),layer=roamLayer?.getBoundingClientRect(),avatar=lifeAvatar?.getBoundingClientRect();
   if(!dock||!layer)return null;
   const r=dock.getBoundingClientRect();
-  const w=Math.max(54,avatar?.width||70);
-  const h=Math.max(66,avatar?.height||86);
+  const w=Math.max(26,avatar?.width||30);
+  const h=Math.max(36,avatar?.height||42);
   return {
     x:r.left-layer.left+r.width/2-w/2,
     y:Math.max(6,r.top-layer.top+Math.max(4,(r.height-h)*.16))
@@ -1112,8 +1112,8 @@ function goRipplet(activity='explore'){
   if(activity==='socialize')target=null;
   if(activity==='ledger')target={x:layer.width*.72,y:Math.max(165,layer.height*.34)};
   if(!target){
-    const avatarH=Math.max(66,avatar?.height||86);
-    const avatarW=Math.max(54,avatar?.width||70);
+    const avatarH=Math.max(36,avatar?.height||42);
+    const avatarW=Math.max(26,avatar?.width||30);
     target={
       x:14+Math.random()*Math.max(40,layer.width-avatarW-28),
       y:12+Math.random()*Math.max(36,layer.height-avatarH-24)
@@ -1195,7 +1195,7 @@ function visibleInterfaceTargets(){
 function interfaceTargetPosition(el,mode='perch'){
   const layer=roamLayer?.getBoundingClientRect(),avatar=lifeAvatar?.getBoundingClientRect(),r=el?.__rect||el?.getBoundingClientRect?.();
   if(!layer||!r)return null;
-  const aw=Math.max(54,avatar?.width||70),ah=Math.max(66,avatar?.height||86);
+  const aw=Math.max(26,avatar?.width||30),ah=Math.max(36,avatar?.height||42);
   const localLeft=r.left-layer.left,localTop=r.top-layer.top;
   const centerX=localLeft+r.width*.5-aw*.5;
   const rightEdge=localLeft+r.width-aw*.78;
@@ -1216,6 +1216,12 @@ function interfaceTargetPosition(el,mode='perch'){
     return {
       x:Math.max(8,localLeft-aw*.72),
       y:Math.max(8,Math.min(layer.height-ah-6,localTop+r.height*.5-ah*.58))
+    };
+  }
+  if(mode==='hang'){
+    return {
+      x:Math.max(6,Math.min(layer.width-aw-4,localLeft+r.width-aw*.62)),
+      y:Math.max(6,Math.min(layer.height-ah-4,localTop+r.height*.72-ah*.16))
     };
   }
   return {
@@ -1256,14 +1262,14 @@ function dropPlayProp(){
 function makeInterfaceEcho(){return null;}
 function playWithInterface(force=false){
   if(roamDocked||!lifeAvatar||!roamLayer)return false;
-  if(!force&&Date.now()-lastInterfacePlayAt<2600)return false;
+  if(!force&&Date.now()-lastInterfacePlayAt<1900)return false;
 
   const words=visibleTextTerrain();
   const elements=visibleInterfaceTargets();
   if(!words.length&&!elements.length)return false;
   lastInterfacePlayAt=Date.now();
 
-  const preferWord=words.length&&(Math.random()<.72||!elements.length);
+  const preferWord=words.length&&(Math.random()<.76||!elements.length);
   const target=preferWord
     ? words[Math.floor(Math.random()*words.length)]
     : elements[Math.floor(Math.random()*elements.length)];
@@ -1274,24 +1280,42 @@ function playWithInterface(force=false){
   const roll=Math.random();
 
   let mode='perch',action='walk';
-  if(target.__terrain){mode='hop';action=roll<.68?'jump':'walk'}
-  else if(heading&&roll<.55){mode='climb';action='climb'}
-  else if(card&&roll<.38){mode='climb';action='climb'}
-  else if(roll<.62){mode='hop';action='jump'}
+  if(target.__terrain){
+    if(roll<.24){mode='hang';action='hang'}
+    else if(roll<.70){mode='hop';action='jump'}
+    else{mode='perch';action='walk'}
+  }else if((heading||card)&&roll<.30){
+    mode='hang';action='hang';
+  }else if((heading||card)&&roll<.62){
+    mode='climb';action='climb';
+  }else if(roll<.78){
+    mode='hop';action='jump';
+  }
 
   const p=interfaceTargetPosition(target,mode);if(!p)return false;
   markInterfaceTarget(target,true);
 
-  if(action==='jump'){
+  if(action==='hang'){
+    window.XRPet3D?.motor?.('hang');
+    setRoamPosition(p.x,p.y,'hang');
+    setText('#mindAction',target.__terrain?'Hanging from letters':'Hanging from a box');
+    setText('#mindThought','I grabbed the edge and I am hanging on.');
+    setTimeout(()=>{
+      if(roamDocked)return;
+      window.XRPet3D?.motor?.('climb');
+      const up=interfaceTargetPosition(target,'perch');
+      if(up)setRoamPosition(up.x,up.y,'climb');
+    },850);
+  }else if(action==='jump'){
     window.XRPet3D?.motor?.('jump');
     setRoamPosition(p.x,p.y,'jump');
-    setText('#mindAction','Word hopping');
-    setText('#mindThought','I am using the page text as terrain.');
+    setText('#mindAction','Jumping between letters');
+    setText('#mindThought','I am using the words as little platforms.');
   }else if(action==='climb'){
     window.XRPet3D?.motor?.('climb');
     setRoamPosition(p.x,p.y,'climb');
     setText('#mindAction','Climbing the interface');
-    setText('#mindThought','I am climbing a heading or box edge.');
+    setText('#mindThought','I grabbed the edge and climbed onto it.');
   }else{
     window.XRPet3D?.motor?.('walk');
     setRoamPosition(p.x,p.y,'walk');
@@ -1301,11 +1325,11 @@ function playWithInterface(force=false){
 
   setTimeout(()=>{
     markInterfaceTarget(target,false);
-    if(!roamDocked&&Math.random()<.55){
-      const emotes=['wave','thinking','happy','salute','shrug'];
+    if(!roamDocked&&Math.random()<.42){
+      const emotes=['wave','thinking','happy','salute'];
       window.XRPet3D?.perform?.(emotes[Math.floor(Math.random()*emotes.length)]);
     }
-  },1200);
+  },1450);
 
   return true;
 }
@@ -1339,9 +1363,9 @@ function roamingStep(){
     return;
   }
   const roll=Math.random();
-  if(roll<.86)playWithInterface();
+  if(roll<.93)playWithInterface();
   else goRipplet('explore');
-  roamTimer=setTimeout(roamingStep,2200+Math.random()*3200);
+  roamTimer=setTimeout(roamingStep,1700+Math.random()*2500);
 }
 function renderMind(){
   const labels={roam:'Roaming',dock:'Docked',socialize:'Signal Friend',scan:'Scanning XRPL',wave:'Waving',dance:'Dancing',focus:'Focused',run:'Running',jump:'Jumping',climb:'Climbing',reach:'Reaching',grab:'Grabbing',carry:'Carrying',crouch:'Crouching',turn:'Turning'};
@@ -1491,6 +1515,12 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCustomizationPa
 
 let primaryView='home';
 function setPrimaryView(view='home'){
+  if(lifeAvatar&&!roamDocked){
+    lifeAvatar.classList.remove('page-hop');
+    void lifeAvatar.offsetWidth;
+    lifeAvatar.classList.add('page-hop');
+    window.XRPet3D?.motor?.('jump');
+  }
   primaryView=view;
   qa('[data-view-section]').forEach(section=>section.classList.toggle('view-active',section.dataset.viewSection===view));
   qa('[data-primary-view]').forEach(b=>b.classList.toggle('active',b.dataset.primaryView===view));
@@ -1503,7 +1533,10 @@ function setPrimaryView(view='home'){
   setTimeout(()=>{
     scrollSectionTop(target);
     syncRoamBounds();
-    if(!roamDocked)setTimeout(()=>playWithInterface(true),180);
+    if(!roamDocked)setTimeout(()=>{
+      playWithInterface(true);
+      lifeAvatar?.classList.remove('page-hop');
+    },220);
   },0);
 }
 qa('[data-primary-view]').forEach(b=>b.addEventListener('click',()=>setPrimaryView(b.dataset.primaryView)));
