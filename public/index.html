@@ -64,7 +64,23 @@
     <nav class="side-nav" aria-label="Primary navigation">
       <button class="side-link active" data-primary-view="home"><span>⌂</span>Home</button>
       <button class="side-link" data-primary-view="live"><span>▥</span>XRPL Live</button>
-      <button class="side-link" data-primary-view="exchanges"><span>⇄</span>Exchanges</button>
+      <details class="nav-dropdown exchange-sidebar-dropdown" id="exchangeNavDetails">
+        <summary class="side-link nav-parent-summary"><span>⇄</span><b>Exchanges</b><i>⌄</i></summary>
+        <div class="nav-dropdown-menu exchange-nav-menu">
+          <button type="button" data-primary-view="exchanges" class="exchange-open-board">Open Exchange Board</button>
+          <button type="button" data-exchange="all"><span>All Exchanges</span><strong data-exchange-price="all">—</strong></button>
+          <button type="button" data-exchange="coinbase"><span>Coinbase</span><strong data-exchange-price="coinbase">—</strong></button>
+          <button type="button" data-exchange="kraken"><span>Kraken</span><strong data-exchange-price="kraken">—</strong></button>
+          <button type="button" data-exchange="bitstamp"><span>Bitstamp</span><strong data-exchange-price="bitstamp">—</strong></button>
+          <button type="button" data-exchange="bitfinex"><span>Bitfinex</span><strong data-exchange-price="bitfinex">—</strong></button>
+          <button type="button" data-exchange="binanceus"><span>Binance.US</span><strong data-exchange-price="binanceus">—</strong></button>
+          <button type="button" data-exchange="okx"><span>OKX</span><strong data-exchange-price="okx">—</strong></button>
+          <button type="button" data-exchange="bybit"><span>Bybit</span><strong data-exchange-price="bybit">—</strong></button>
+          <button type="button" data-exchange="kucoin"><span>KuCoin</span><strong data-exchange-price="kucoin">—</strong></button>
+          <button type="button" data-exchange="gateio"><span>Gate.io</span><strong data-exchange-price="gateio">—</strong></button>
+          <button type="button" data-exchange="mexc"><span>MEXC</span><strong data-exchange-price="mexc">—</strong></button>
+        </div>
+      </details>
       <details class="nav-dropdown" id="historyNavDetails">
         <summary class="side-link history-summary"><span>↯</span><b>Settlements + History</b><i>⌄</i></summary>
         <div class="nav-dropdown-menu">
@@ -177,7 +193,7 @@
         </form>
 
         <button type="button" data-primary-view="live" class="global-xrp-price-button command-primary-box">
-          <span>XRP / USD</span>
+          <span>XRP COMPOSITE</span>
           <strong id="globalXrpPrice">—</strong>
           <small id="globalXrpChange">Loading</small>
         </button>
@@ -362,17 +378,17 @@
         <div class="exchange-selected-chip"><span>ACTIVE SOURCE</span><strong id="selectedExchangeName">All Exchanges</strong></div>
       </div>
       <div class="exchange-interface-grid">
-        <button type="button" data-exchange="all"><span>COMPOSITE</span><strong>All Exchanges</strong><small>XRP/USD + XRP/USDT</small></button>
-        <button type="button" data-exchange="coinbase"><span>USD</span><strong>Coinbase</strong><small>XRP/USD</small></button>
-        <button type="button" data-exchange="kraken"><span>USD</span><strong>Kraken</strong><small>XRP/USD</small></button>
-        <button type="button" data-exchange="bitstamp"><span>USD</span><strong>Bitstamp</strong><small>XRP/USD</small></button>
-        <button type="button" data-exchange="bitfinex"><span>USD</span><strong>Bitfinex</strong><small>XRP/USD</small></button>
-        <button type="button" data-exchange="binanceus"><span>USDT</span><strong>Binance.US</strong><small>XRP/USDT</small></button>
-        <button type="button" data-exchange="okx"><span>USDT</span><strong>OKX</strong><small>XRP/USDT</small></button>
-        <button type="button" data-exchange="bybit"><span>USDT</span><strong>Bybit</strong><small>XRP/USDT</small></button>
-        <button type="button" data-exchange="kucoin"><span>USDT</span><strong>KuCoin</strong><small>XRP/USDT</small></button>
-        <button type="button" data-exchange="gateio"><span>USDT</span><strong>Gate.io</strong><small>XRP/USDT</small></button>
-        <button type="button" data-exchange="mexc"><span>USDT</span><strong>MEXC</strong><small>XRP/USDT</small></button>
+        <button type="button" data-exchange="all"><span>COMPOSITE</span><strong>All Exchanges</strong><em class="exchange-live-price" data-exchange-price="all">—</em><small>XRP/USD + XRP/USDT</small></button>
+        <button type="button" data-exchange="coinbase"><span>USD</span><strong>Coinbase</strong><em class="exchange-live-price" data-exchange-price="coinbase">—</em><small>XRP/USD</small></button>
+        <button type="button" data-exchange="kraken"><span>USD</span><strong>Kraken</strong><em class="exchange-live-price" data-exchange-price="kraken">—</em><small>XRP/USD</small></button>
+        <button type="button" data-exchange="bitstamp"><span>USD</span><strong>Bitstamp</strong><em class="exchange-live-price" data-exchange-price="bitstamp">—</em><small>XRP/USD</small></button>
+        <button type="button" data-exchange="bitfinex"><span>USD</span><strong>Bitfinex</strong><em class="exchange-live-price" data-exchange-price="bitfinex">—</em><small>XRP/USD</small></button>
+        <button type="button" data-exchange="binanceus"><span>USDT</span><strong>Binance.US</strong><em class="exchange-live-price" data-exchange-price="binanceus">—</em><small>XRP/USDT</small></button>
+        <button type="button" data-exchange="okx"><span>USDT</span><strong>OKX</strong><em class="exchange-live-price" data-exchange-price="okx">—</em><small>XRP/USDT</small></button>
+        <button type="button" data-exchange="bybit"><span>USDT</span><strong>Bybit</strong><em class="exchange-live-price" data-exchange-price="bybit">—</em><small>XRP/USDT</small></button>
+        <button type="button" data-exchange="kucoin"><span>USDT</span><strong>KuCoin</strong><em class="exchange-live-price" data-exchange-price="kucoin">—</em><small>XRP/USDT</small></button>
+        <button type="button" data-exchange="gateio"><span>USDT</span><strong>Gate.io</strong><em class="exchange-live-price" data-exchange-price="gateio">—</em><small>XRP/USDT</small></button>
+        <button type="button" data-exchange="mexc"><span>USDT</span><strong>MEXC</strong><em class="exchange-live-price" data-exchange-price="mexc">—</em><small>XRP/USDT</small></button>
       </div>
       <div class="exchange-interface-note">Selecting a venue updates XRP Live immediately. No account login or exchange credentials are required.</div>
     </section>
