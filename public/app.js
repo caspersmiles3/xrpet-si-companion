@@ -1468,7 +1468,7 @@ function playWithInterface(force=false){
 
   if(action==='hang'){
     window.XRPet3D?.motor?.('hang');
-    routeRippletTo(p.x,p.y,'hang',hit.target);
+    routeRippletTo(p.x,p.y,'hang',target);
     setText('#mindAction',target.__terrain?'Hanging from letters':'Hanging from a box');
     setText('#mindThought','I grabbed the edge and I am hanging on.');
     setTimeout(()=>{
@@ -1479,17 +1479,17 @@ function playWithInterface(force=false){
     },850);
   }else if(action==='jump'){
     window.XRPet3D?.motor?.('jump');
-    routeRippletTo(p.x,p.y,'jump',hit.target);
+    routeRippletTo(p.x,p.y,'jump',target);
     setText('#mindAction','Jumping between letters');
     setText('#mindThought','I am using the words as little platforms.');
   }else if(action==='climb'){
     window.XRPet3D?.motor?.('climb');
-    routeRippletTo(p.x,p.y,'climb',hit.target);
+    routeRippletTo(p.x,p.y,'climb',target);
     setText('#mindAction','Climbing the interface');
     setText('#mindThought','I grabbed the edge and climbed onto it.');
   }else{
     window.XRPet3D?.motor?.('walk');
-    setRoamPosition(p.x,p.y,'walk');
+    routeRippletTo(p.x,p.y,'stand',target);
     setText('#mindAction',target.__terrain?'Walking on words':'Exploring the page');
     setText('#mindThought',target.__terrain?'I found another word to stand on.':'I am moving through this page on my own.');
   }
