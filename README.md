@@ -8,7 +8,7 @@ XRPet is a lightweight, installable companion built around Ripple, XRP and the X
 
 Render service: https://xrpet-si-companion.onrender.com
 
-## v1.0 capabilities
+## v3.7 capabilities
 
 - Live XRPL ledger + fee signals
 - XRP/USD market snapshot with public-data fallback
@@ -46,13 +46,13 @@ Open http://localhost:3000.
 
 ## Privacy and wallet safety
 
-v1.0 stores companion profile, XP, rooms, notification history, preferences, memories, and the watched public XRPL address in the user's browser local storage. The server does not need those values persisted.
+v3.7 stores companion profile, XP, rooms, notification history, preferences, memories, and the watched public XRPL address in the user's browser local storage. The server does not need those values persisted.
 
 **Never enter a seed phrase or private key into XRPet.** Wallet Watch accepts a public XRPL classic address only. Future transaction signing should use an external wallet handoff such as Xaman or another reputable XRPL wallet.
 
 ## SI design
 
-The v1.0 SI layer is grounded and provider-neutral. It prioritizes:
+The v3.7 SI layer is grounded and provider-neutral. It prioritizes:
 1. live XRPL data,
 2. public XRP market data,
 3. official Ripple/XRPL sources,
