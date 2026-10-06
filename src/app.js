@@ -21,8 +21,8 @@ function setText(sel,text){const el=q(sel);if(el)el.textContent=text}
 function mood(label,speech,cls='calm'){setText('#petMood',label);setText('#petSpeech',speech);const p=q('#pet');if(p){p.classList.remove('calm','energized','alert');p.classList.add(cls)}}
 function render(){
   const [name,min]=form(); const i=FORMS.findIndex(x=>x[0]===name); const next=FORMS[Math.min(i+1,FORMS.length-1)];
-  setText('#petName',state.petName);setText('#chatPetName',state.petName);setText('#topPetName',state.petName);setText('#evolution',name.toUpperCase());
-  const lvl=Math.floor(state.xp/100)+1; setText('#level','Lv. '+lvl);setText('#xpLabel',state.xp+' XP');setText('#topLevel','Level '+lvl);setText('#topXp',state.xp+' XP');
+  setText('#petName',state.petName);setText('#chatPetName',state.petName);setText('#topPetName',state.petName);setText('#stripPetName',state.petName);setText('#evolution',name.toUpperCase());
+  const lvl=Math.floor(state.xp/100)+1; setText('#level','Lv. '+lvl);setText('#xpLabel',state.xp+' XP');setText('#topLevel','Level '+lvl);setText('#topXp',state.xp+' XP');setText('#stripLevel','Level '+lvl);
   const pct=name==='Legend'?100:Math.max(0,Math.min(100,(state.xp-min)/(next[1]-min)*100));
   if(q('#xpFill'))q('#xpFill').style.width=pct+'%';
   if(q('#profileName'))q('#profileName').value=state.petName;
@@ -32,7 +32,7 @@ function render(){
   if(q('#account'))q('#account').value=state.account||'';
   setText('#walletProvider',state.walletProvider==='manual'?'Manual':state.walletProvider);
   setText('#walletState',state.account?'Watching '+state.account.slice(0,8)+'…'+state.account.slice(-6)+' for validated activity.':'No public account is being watched.');
-  qa('.room-choice').forEach(b=>{const rank=FORMS.findIndex(x=>x[0]===name),need=b.dataset.room==='aurora'?2:b.dataset.room==='legend'?5:0;b.disabled=rank<need;b.classList.toggle('active',b.dataset.room===state.room)}); qa('.cosmetic-choice').forEach(b=>b.classList.toggle('active',b.dataset.cosmetic===state.cosmetic));
+  qa('.room-choice').forEach(b=>{const rank=FORMS.findIndex(x=>x[0]===name),need=b.dataset.room==='aurora'?2:b.dataset.room==='legend'?5:0;b.disabled=rank<need;b.classList.toggle('active',b.dataset.room===state.room)}); qa('.cosmetic-choice').forEach(b=>{const active=b.dataset.cosmetic===state.cosmetic;b.classList.toggle('active',active);const s=b.querySelector('small');if(s)s.textContent=active?'Equipped':'Owned'}); qa('.variant-dot').forEach(b=>b.classList.toggle('active',b.dataset.cosmetic===state.cosmetic));
   document.body.classList.remove('room-nexus','room-ocean','room-vault','room-aurora','room-legend');document.body.classList.add('room-'+state.room); const pet=q('#pet'); if(pet){pet.classList.remove('skin-classic','skin-aqua','skin-midnight','skin-pearl','skin-solar');pet.classList.add('skin-'+state.cosmetic)}
   setText('#unlocksChip',(['nexus','ocean','vault'].length+(FORMS.findIndex(x=>x[0]===name)>=2?1:0)+(FORMS.findIndex(x=>x[0]===name)>=5?1:0))+' unlocked');
   if(q('#explainLevel'))q('#explainLevel').value=state.explainLevel;if(q('#notifyLevel'))q('#notifyLevel').value=state.notifyLevel;
@@ -75,7 +75,6 @@ bind('#connectXaman','click',connectXaman);bind('#connectGem','click',connectGem
 let charge=0;bind('#charge','click',()=>{const t=new Date().toISOString().slice(0,10);if(state.lastMissionDate===t){mood('Complete','Today’s core mission is already complete.','calm');return}charge=Math.min(7,charge+1);setText('#chargeCount',charge+'/7');if(q('#meterFill'))q('#meterFill').style.width=(charge/7*100)+'%';if(charge===7){state.lastMissionDate=t;addXp(15);setText('#missionText','Mission complete. +15 XP. New pulse tomorrow.');mood('Charged','Core synchronized. Mission complete.','energized')}});
 qa('.room-choice').forEach(b=>b.addEventListener('click',()=>{if(b.disabled)return;state.room=b.dataset.room;persist();render();mood('Room changed','Environment synchronized to '+b.querySelector('strong')?.textContent+'.','calm')})); qa('.cosmetic-choice').forEach(b=>b.addEventListener('click',()=>{state.cosmetic=b.dataset.cosmetic;persist();render();mood('Customized','Companion finish changed to '+b.querySelector('strong')?.textContent+'.','energized')}));
 qa('[data-scroll]').forEach(b=>b.addEventListener('click',()=>q('#'+b.dataset.scroll)?.scrollIntoView({behavior:'smooth',block:'center'})));
-bind('#settingsButton','click',()=>{const m=q('#settingsMenu');if(!m)return;const opening=m.classList.contains('hidden');m.classList.toggle('hidden');q('#settingsButton')?.setAttribute('aria-expanded',String(opening))});
 bind('#explainLevel','change',e=>{state.explainLevel=e.target.value;persist()});bind('#notifyLevel','change',e=>{state.notifyLevel=e.target.value;persist()});bind('#truthToggle','change',e=>{state.truthMode=e.target.checked;persist()});bind('#marketMoodToggle','change',e=>{state.marketMood=e.target.checked;persist()});
 bind('#notifyButton','click',async()=>{if(!('Notification'in window)){alert('Browser notifications are not supported here.');return}const p=await Notification.requestPermission();if(p==='granted')new Notification('XRPet alerts enabled',{body:'Browser alerts are ready while XRPet is open.'});});
 bind('#refreshIntegrations','click',integrationCheck);
@@ -99,12 +98,7 @@ bind('#globalSearchForm','submit',e=>{
 qa('.side-link').forEach(b=>b.addEventListener('click',()=>{
   qa('.side-link').forEach(x=>x.classList.remove('active'));b.classList.add('active');
 }));
-document.addEventListener('click',e=>{
-  const menu=q('#settingsMenu'), trigger=q('#settingsButton');
-  if(menu && !menu.classList.contains('hidden') && !menu.contains(e.target) && !trigger?.contains(e.target)){
-    menu.classList.add('hidden');trigger?.setAttribute('aria-expanded','false');
-  }
-});
 
+qa('.variant-dot').forEach(b=>b.addEventListener('click',()=>{state.cosmetic=b.dataset.cosmetic;persist();render();mood('Customized','Companion variant updated.','energized')}));
 bind('#pet','click',()=>{mood('Responsive','Core pulse received.','energized');setTimeout(()=>mood('Connected','Live XRPL data is flowing.','calm'),900)});
 dailyVisit();render();connectLedger();loadMarket();loadUpdates();integrationCheck();setInterval(loadMarket,120000);setInterval(integrationCheck,60000);
