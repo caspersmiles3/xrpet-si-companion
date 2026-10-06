@@ -3889,3 +3889,47 @@ body[data-primary-view="games"] .main-shell{overflow-y:hidden!important;padding-
   .companion-play-prop{min-width:23px;height:23px;font-size:.49rem}
   .companion-play-prop.prop-chip{min-width:32px}
 }
+
+
+/* v5.5.6 — live exchange selector */
+.exchange-nav-menu{
+  max-height:390px;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
+.exchange-menu-current{
+  display:grid;
+  gap:3px;
+  padding:10px 11px;
+  margin:3px 4px 7px;
+  border:1px solid rgba(100,230,255,.13);
+  border-radius:10px;
+  background:rgba(7,19,26,.88);
+}
+.exchange-menu-current span{
+  font-size:.52rem;
+  letter-spacing:.13em;
+  color:#657e89;
+}
+.exchange-menu-current strong{
+  font-size:.72rem;
+  color:#b9f7ff;
+}
+.exchange-nav-menu button[data-exchange]{
+  position:relative;
+}
+.exchange-nav-menu button[data-exchange].active{
+  color:#c8fbff;
+  background:linear-gradient(90deg,rgba(66,216,245,.13),rgba(66,216,245,.025));
+  border-color:rgba(102,231,255,.22);
+}
+.exchange-nav-menu button[data-exchange].active::after{
+  content:"LIVE";
+  margin-left:auto;
+  padding-left:8px;
+  font-size:.48rem;
+  letter-spacing:.11em;
+  color:#7ceeff;
+}
+.exchange-nav-menu::-webkit-scrollbar{width:6px}
+.exchange-nav-menu::-webkit-scrollbar-thumb{background:#163b49;border-radius:99px}
