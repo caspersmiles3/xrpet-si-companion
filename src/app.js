@@ -22,7 +22,7 @@ const state={
   signalLoreIndex:Number.isFinite(saved.signalLoreIndex)?saved.signalLoreIndex:0
 };
 const FORMS=[['Drop',0],['Ripple',50],['Wave',150],['Surge',350],['Nexus',700],['Titan',1200],['Legend',2000]];
-const ROOM_NAMES={nexus:'Neon Horizon',ocean:'Ripple Sanctuary',vault:'Ledger Vault',aurora:'Sky Garden',legend:'Orbital Station'};
+const ROOM_NAMES={nexus:'Neon Horizon',ocean:'Ripple Sanctuary',vault:'Ledger Vault',aurora:'Sky Garden',legend:'Orbital Station',genesis:'Genesis Chamber',city:'Settlement City',quantum:'Quantum Ledger Lab',desert:'Digital Oasis',arctic:'Arctic Node'};
 const COSMETIC_NAMES={classic:'Classic Nexus',aqua:'Ripple Scout',midnight:'Ledger Guardian',pearl:'Oracle Halo',solar:'Solar Vanguard',resonance:'589 Resonance'};
 const COMPANION_NAMES={ripplet:'Ripplet'};
 const SIGNAL_589_LORE=[
@@ -117,7 +117,7 @@ bindEquipment('[data-head-gear]','headGear','Head hardware');
 bindEquipment('[data-trail-style]','trailStyle','Signal trail');
 
 qa('.room-choice').forEach(b=>{const rank=FORMS.findIndex(x=>x[0]===name),need=b.dataset.room==='aurora'?2:b.dataset.room==='legend'?5:0;b.disabled=rank<need;const active=b.dataset.room===state.room;b.classList.toggle('active',active);const e=b.querySelector('em');if(e&&active)e.textContent='Active';else if(e)e.textContent=need?((b.dataset.room==='aurora')?'Wave+':'Titan+'):'Unlocked'}); qa('.cosmetic-choice').forEach(b=>{const active=b.dataset.cosmetic===state.cosmetic;b.classList.toggle('active',active);const e=b.querySelector('em');if(e)e.textContent=active?'Equipped':'Owned'});
-  document.body.classList.remove('room-nexus','room-ocean','room-vault','room-aurora','room-legend');document.body.classList.add('room-'+state.room); const pet=q('#pet'); if(pet){pet.classList.remove('skin-classic','skin-aqua','skin-midnight','skin-pearl','skin-solar','skin-resonance');pet.classList.add('skin-'+state.cosmetic)}
+  document.body.classList.remove('room-nexus','room-ocean','room-vault','room-aurora','room-legend','room-genesis','room-city','room-quantum','room-desert','room-arctic');document.body.classList.add('room-'+state.room); const pet=q('#pet'); if(pet){pet.classList.remove('skin-classic','skin-aqua','skin-midnight','skin-pearl','skin-solar','skin-resonance');pet.classList.add('skin-'+state.cosmetic)}
   setText('#unlocksChip',(['nexus','ocean','vault'].length+(FORMS.findIndex(x=>x[0]===name)>=2?1:0)+(FORMS.findIndex(x=>x[0]===name)>=5?1:0))+' unlocked');setText('#homeRoom',ROOM_NAMES[state.room]||state.room);setText('#homeCosmetic',COSMETIC_NAMES[state.cosmetic]||state.cosmetic);setText('#homeCompanionModel',COMPANION_NAMES[state.companionKind]||state.companionKind);setText('#homeCompanionGender','Official XRPet companion');setText('#companionModelChip','OFFICIAL // RIPPLET');
   if(q('#explainLevel'))q('#explainLevel').value=state.explainLevel;if(q('#notifyLevel'))q('#notifyLevel').value=state.notifyLevel;
   if(q('#truthToggle'))q('#truthToggle').checked=state.truthMode;if(q('#marketMoodToggle'))q('#marketMoodToggle').checked=state.marketMood;
@@ -235,8 +235,29 @@ qa('[data-pet-action]').forEach(b=>b.addEventListener('click',()=>{
   else if(action==='orbit'){playSound('cosmetic');setText('#petMood','Orbiting');setText('#petSpeech','Signal hardware released into orbital display mode.')}
   else{playSound('pet');setText('#petMood','Linked');setText('#petSpeech','Companion link acknowledged.')}
 }));
-qa('.room-choice').forEach(b=>b.addEventListener('click',()=>{if(b.disabled)return;state.room=b.dataset.room;persist();render();playSound('room');setRoomAmbience(state.room);mood('Theme changed','The entire XRPet interface is now running '+b.querySelector('strong')?.textContent+'.','calm')})); qa('.cosmetic-choice').forEach(b=>b.addEventListener('click',()=>{state.cosmetic=b.dataset.cosmetic;state.nftCompanion=null;persist();applyNftCompanion();render();mood('Reconfigured','Companion build changed to '+b.querySelector('strong')?.textContent+'.','energized')}));
-qa('[data-scroll]').forEach(b=>b.addEventListener('click',()=>q('#'+b.dataset.scroll)?.scrollIntoView({behavior:'smooth',block:'center'})));
+let pendingRoom=state.room;
+qa('.room-choice').forEach(b=>b.addEventListener('click',()=>{
+  if(b.disabled)return;
+  pendingRoom=b.dataset.room;
+  qa('.room-choice').forEach(x=>x.classList.toggle('pending',x.dataset.room===pendingRoom));
+  setText('#roomPendingLabel','Ready to apply: '+(ROOM_NAMES[pendingRoom]||pendingRoom));
+  playSound('select');
+}));
+bind('#applyRoom','click',()=>{
+  state.room=pendingRoom||state.room;
+  persist();render();playSound('room');setRoomAmbience(state.room);
+  mood('Theme changed','The entire XRPet interface is now running '+(ROOM_NAMES[state.room]||state.room)+'.','calm');
+  closeCustomizationPanels();
+}); qa('.cosmetic-choice').forEach(b=>b.addEventListener('click',()=>{state.cosmetic=b.dataset.cosmetic;state.nftCompanion=null;persist();applyNftCompanion();render();mood('Reconfigured','Companion build changed to '+b.querySelector('strong')?.textContent+'.','energized')}));
+function scrollSectionTop(id){
+  const target=q('#'+id); if(!target)return;
+  const y=Math.max(0,target.getBoundingClientRect().top+window.scrollY-14);
+  window.scrollTo({top:y,behavior:'smooth'});
+}
+qa('[data-scroll]').forEach(b=>b.addEventListener('click',()=>{
+  closeCustomizationPanels();
+  scrollSectionTop(b.dataset.scroll);
+}));
 bind('#explainLevel','change',e=>{state.explainLevel=e.target.value;persist()});bind('#notifyLevel','change',e=>{state.notifyLevel=e.target.value;persist()});bind('#truthToggle','change',e=>{state.truthMode=e.target.checked;persist();renderSignal589()});bind('#marketMoodToggle','change',e=>{state.marketMood=e.target.checked;persist()});
 bind('#graphicsQuality','change',e=>{
   state.graphicsQuality=e.target.value;persist();playSound('select');
@@ -631,3 +652,30 @@ qa('[data-customize-target]').forEach(b=>b.addEventListener('click',()=>{
 }));
 qa('[data-customize-close]').forEach(b=>b.addEventListener('click',closeCustomizationPanels));
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCustomizationPanels()});
+
+function openHistoryView(view='All'){
+  closeCustomizationPanels();
+  const section=q('#xrpHistorySection');
+  if(!section)return;
+  scrollSectionTop('xrpHistorySection');
+  const select=q('#historyJumpSelect');
+  if(select)select.value=view;
+  const input=q('#xrpHistorySearch');
+  if(input&&view!=='People')input.value='';
+  if(view==='People'){
+    setTimeout(()=>q('.people-heading')?.scrollIntoView({behavior:'smooth',block:'start'}),260);
+  }else{
+    const filterButton=[...qa('#xrpFilters [data-xcat]')].find(b=>b.dataset.xcat===view);
+    filterButton?.click();
+  }
+  q('#historyNavDetails')?.removeAttribute('open');
+}
+qa('[data-history-view]').forEach(b=>b.addEventListener('click',()=>openHistoryView(b.dataset.historyView)));
+bind('#historyJumpSelect','change',e=>openHistoryView(e.target.value));
+
+q('#customizeDetails')?.addEventListener('toggle',e=>{
+  if(e.target.open) q('#settingsDetails')?.removeAttribute('open');
+});
+q('#settingsDetails')?.addEventListener('toggle',e=>{
+  if(e.target.open) q('#customizeDetails')?.removeAttribute('open');
+});
