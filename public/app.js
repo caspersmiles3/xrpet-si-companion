@@ -261,7 +261,57 @@ async function registerVisitor(){
     const d=await r.json();if(r.ok)animateVisitorCount(d.count);
   }catch{}
   clearInterval(visitorPollTimer);
-  visitorPollTimer=setInterval(async()=>{try{const r=await fetch('/api/visitor-count',{cache:'no-store'});const d=await r.json();if(r.ok&&Number(d.count)!==visitorShown)animateVisitorCount(d.count)}catch{}},10000);
+  visitorPollTimer=setInterval(async()=>{try{const r=await fetch('/api/visitor-count',{cache:'no-store'});const d=await r.json();if(r.ok&&Number(d.count)!==visitorShown)animateVisitorCount(d.count)}catch{}},3000);
+}
+
+let marketWs=null,marketRetry=0,marketLastTickAt=0,liveChartPoints=[];
+function applyLiveMarketTick(price,change24h=null){
+  const p=Number(price);
+  if(!Number.isFinite(p)||p<=0)return;
+  const previousPrice=state.lastMarketPrice;
+  state.xrpPrice=p;state.lastMarketPrice=p;
+  if(Number.isFinite(Number(change24h)))state.xrpChange24h=Number(change24h);
+  if(Number.isFinite(previousPrice)&&previousPrice!==p){
+    const delta=(p-previousPrice)/previousPrice*100;
+    state.lastPriceTickPct=delta;
+    setText('#foodSignal',(delta>=0?'+':'')+delta.toFixed(3)+'% tick');
+  }
+  const livePrice='$'+p.toFixed(4);
+  const liveChange=Number.isFinite(state.xrpChange24h)?(state.xrpChange24h>=0?'+':'')+state.xrpChange24h.toFixed(2)+'% · 24h':'STREAMING';
+  setText('#xrpPrice',livePrice);setText('#xrpChange',liveChange);
+  setText('#globalXrpPrice',livePrice);setText('#globalXrpChange',liveChange);
+  setText('#chartRange','LIVE');
+  marketLastTickAt=Date.now();
+  const now=Date.now();
+  liveChartPoints.push({time:now,open:p,high:p,low:p,close:p,volume:0});
+  if(liveChartPoints.length>240)liveChartPoints.shift();
+  if(liveChartPoints.length>=2)renderMarketChart(liveChartPoints);
+  renderSignal589();
+}
+function scheduleMarketReconnect(){
+  clearTimeout(marketRetry);
+  marketRetry=setTimeout(connectMarketStream,2500);
+}
+function connectMarketStream(){
+  clearTimeout(marketRetry);
+  try{marketWs=new WebSocket('wss://advanced-trade-ws.coinbase.com')}catch{return scheduleMarketReconnect()}
+  marketWs.onopen=()=>{
+    marketWs.send(JSON.stringify({type:'subscribe',product_ids:['XRP-USD'],channel:'ticker'}));
+    marketWs.send(JSON.stringify({type:'subscribe',channel:'heartbeats'}));
+    setText('#globalXrpChange','LIVE STREAM');
+  };
+  marketWs.onmessage=e=>{
+    let m;try{m=JSON.parse(e.data)}catch{return}
+    if(m.channel!=='ticker'||!Array.isArray(m.events))return;
+    for(const ev of m.events){
+      for(const t of ev.tickers||[]){
+        if(t.product_id!=='XRP-USD')continue;
+        applyLiveMarketTick(t.price,t.price_percent_chg_24_h);
+      }
+    }
+  };
+  marketWs.onclose=scheduleMarketReconnect;
+  marketWs.onerror=()=>{try{marketWs.close()}catch{}};
 }
 async function loadMarket(){try{const r=await fetch('/api/market',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error();const previousPrice=state.lastMarketPrice;state.xrpPrice=Number(d.price);state.xrpChange24h=Number(d.change24h);state.lastMarketPrice=state.xrpPrice;renderSignal589();
 if(Number.isFinite(previousPrice)&&Number.isFinite(state.xrpPrice)&&previousPrice!==state.xrpPrice){
@@ -299,7 +349,8 @@ async function loadMarketHistory(){
   try{
     const r=await fetch('/api/market-history',{cache:'no-store'}),d=await r.json();
     if(!r.ok||!Array.isArray(d.points))throw new Error();
-    renderMarketChart(d.points);
+    liveChartPoints=(d.points||[]).slice(-120).map(p=>({...p,time:Number(p.time)}));
+    renderMarketChart(liveChartPoints);
   }catch{setText('#chartRange','MARKET CHART OFFLINE')}
 }
 async function loadUpdates(){const box=q('#updates');if(box)box.innerHTML='<p class="muted">Checking official Ripple and XRPL sources…</p>';try{const r=await fetch('/api/updates',{cache:'no-store'});const d=await r.json();if(!r.ok||!Array.isArray(d.items)||!d.items.length)throw new Error();const items=d.items.slice(0,12);box.innerHTML=items.map((x,i)=>'<article class="announcement-card"><div class="announcement-index">'+String(i+1).padStart(2,'0')+'</div><div><span class="announcement-source">'+esc(x.source)+' · '+esc(x.label||'CONFIRMED')+'</span><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title)+'</a><small>Official source ↗</small></div></article>').join('');setText('#announcementStatus','Live');setText('#announcementUpdated','Updated '+new Date().toLocaleTimeString());const newest=items[0]?.title||'';setText('#friendSignal',newest?'New signal':'Standing by');if(newest&&state.lastAnnouncementTitle&&newest!==state.lastAnnouncementTitle&&!false){state.lastAnnouncementAt=Date.now();performLifeActivity('socialize')}state.lastAnnouncementTitle=newest;persist()}catch{if(box)box.innerHTML='<p class="muted">Official update feed is temporarily unavailable.</p>';setText('#announcementStatus','Unavailable');setText('#announcementUpdated','Retrying automatically')}}
@@ -904,7 +955,7 @@ addEventListener('scroll',syncRoamBounds,{passive:true});
 syncRoamBounds();setTimeout(()=>goRipplet('explore'),300);roamingStep();spontaneousRippletReaction();applyNftCompanion();
 qa('[data-life-action]').forEach(b=>b.addEventListener('click',()=>performLifeActivity(b.dataset.lifeAction,true)));
 setInterval(lifeTick,15000);
-dailyVisit();render();registerVisitor();connectLedger();loadMarket();loadMarketHistory();loadUpdates();integrationCheck();setTimeout(runAutonomousMind,12000);setInterval(loadMarket,60000);setInterval(loadMarketHistory,60000);setInterval(loadUpdates,60000);setInterval(integrationCheck,60000);
+dailyVisit();render();registerVisitor();connectLedger();loadMarket();loadMarketHistory();connectMarketStream();loadUpdates();integrationCheck();setTimeout(runAutonomousMind,12000);setInterval(()=>{if(Date.now()-marketLastTickAt>15000)loadMarket()},15000);setInterval(loadMarketHistory,300000);setInterval(loadUpdates,15000);setInterval(integrationCheck,15000);
 
 window.addEventListener('xrpet:gameEvent',e=>{
   const d=e.detail||{};
