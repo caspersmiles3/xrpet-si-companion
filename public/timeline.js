@@ -11,9 +11,7 @@
   }
   function renderFilters(){
     const box=el('#xrpFilters'); if(!box||!archive)return;
-    const cats=['All',...new Set(archive.events.map(e=>e.category))];
-    box.innerHTML=cats.map(c=>`<button type="button" class="${filter===c?'active':''}" data-xcat="${esc(c)}">${esc(c)}</button>`).join('');
-    box.querySelectorAll('[data-xcat]').forEach(b=>b.addEventListener('click',()=>{filter=b.dataset.xcat;renderFilters();renderTimeline()}));
+    box.innerHTML='';
   }
   function allItems(){
     const historical=(archive?.events||[]).map(e=>({...e,live:false}));
@@ -87,6 +85,13 @@
       const t=el('#xrpAutoTime'); if(t)t.textContent='Last auto-refresh: '+new Date().toLocaleTimeString();
     }catch{}
   }
+  function setView(view='All'){
+    filter=view==='People'?'All':view;
+    query='';
+    const input=el('#xrpHistorySearch'); if(input)input.value='';
+    renderTimeline();
+  }
+  window.XRPetHistory={setView};
   async function init(){
     const root=el('#xrpHistorySection'); if(!root)return;
     try{
