@@ -1214,10 +1214,10 @@ function goRipplet(activity='explore'){
   if(!target){
     const avatarH=Math.max(72,avatar?.height||72);
     const avatarW=Math.max(52,avatar?.width||52);
-    for(let tries=0;tries<18&&!target;tries++){
+    for(let tries=0;tries<22&&!target;tries++){
       const candidate={
         x:14+Math.random()*Math.max(40,layer.width-avatarW-28),
-        y:12+Math.random()*Math.max(36,layer.height-avatarH-24)
+        y:Math.max(12,Math.min(layer.height-avatarH-24,currentY+(Math.random()-.5)*34))
       };
       target=findNearestClearPosition(candidate.x,candidate.y);
     }
@@ -1225,7 +1225,6 @@ function goRipplet(activity='explore'){
   if(!target)return false;
   const distance=Math.hypot(target.x-currentX,target.y-currentY);
   const locomotion=activity==='dock'?'walk':distance>Math.max(180,layer.width*.24)?'run':'walk';
-  window.XRPet3D?.motor?.(locomotion);
   const moved=routeRippletTo(target.x,target.y,locomotion);
   if(activity==='socialize'&&moved)window.XRPet3D?.perform?.('wave');
   return moved;
