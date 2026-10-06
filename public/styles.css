@@ -529,3 +529,8 @@ body.launch-locked{overflow:hidden}
 /* XRPet v3.3 complete real-model roster */
 .companion-choice .rigged-badge{display:inline-block}
 .model-credit{max-width:980px}
+
+
+/* XRPet v3.4 sound engine settings */
+#settingsMenu .switch-row span{display:flex;align-items:center;gap:7px}
+#settingsMenu input[type="range"]{accent-color:var(--cyan)}
