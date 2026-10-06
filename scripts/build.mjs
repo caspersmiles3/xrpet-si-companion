@@ -4,6 +4,13 @@ await mkdir('public',{recursive:true});
 await mkdir('public/vendor',{recursive:true});
 await mkdir('public/media',{recursive:true});
 
+const packageJson=JSON.parse(await readFile('package.json','utf8'));
+let indexHtml=await readFile('public/index.html','utf8');
+indexHtml=indexHtml
+  .replace(/data-xrpet-build="[^"]+"/,'data-xrpet-build="'+packageJson.version+'"')
+  .replace(/\?v=\d+\.\d+\.\d+/g,'?v='+packageJson.version);
+await writeFile('public/index.html',indexHtml);
+
 await copyFile('src/app.js','public/app.js');
 await copyFile('node_modules/three/build/three.module.js','public/vendor/three.module.js');
 
