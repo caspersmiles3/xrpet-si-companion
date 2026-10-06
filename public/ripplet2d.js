@@ -104,7 +104,7 @@
   let blinkTimer = 0;
 
   const durationFor = state => ({
-    idle: 0, walk: 1600, run: 1050, jump: 900, climb: 1500,
+    idle: 0, walk: 1600, run: 1050, jump: 900, climb: 1500, hang: 1500,
     wave: 1600, salute: 1500, thinking: 2200, happy: 1700,
     excited: 1800, cheer: 1900, celebrate: 1900, dance: 2600,
     shrug: 1700, confused: 1900, surprised: 1500, focus: 1900,
