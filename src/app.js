@@ -14,7 +14,8 @@ const state={
   truthMode:saved.truthMode!==false,marketMood:saved.marketMood!==false,
   floatingPinned:saved.floatingPinned===true,floatX:Number.isFinite(saved.floatX)?saved.floatX:null,floatY:Number.isFinite(saved.floatY)?saved.floatY:null,
   nftCompanion:saved.nftCompanion||null,
-  companionKind:saved.companionKind||'nexus',companionGender:saved.companionGender||'boy'
+  companionKind:saved.companionKind||'nexus',companionGender:saved.companionGender||'boy',
+  soundEnabled:saved.soundEnabled===true,soundVolume:Number.isFinite(saved.soundVolume)?saved.soundVolume:35
 };
 const FORMS=[['Drop',0],['Ripple',50],['Wave',150],['Surge',350],['Nexus',700],['Titan',1200],['Legend',2000]];
 const ROOM_NAMES={nexus:'Neon Horizon',ocean:'Ripple Sanctuary',vault:'Ledger Vault',aurora:'Sky Garden',legend:'Orbital Station'};
@@ -64,6 +65,7 @@ function render(){
   setText('#unlocksChip',(['nexus','ocean','vault'].length+(FORMS.findIndex(x=>x[0]===name)>=2?1:0)+(FORMS.findIndex(x=>x[0]===name)>=5?1:0))+' unlocked');setText('#homeRoom',ROOM_NAMES[state.room]||state.room);setText('#homeCosmetic',COSMETIC_NAMES[state.cosmetic]||state.cosmetic);setText('#homeCompanionModel',COMPANION_NAMES[state.companionKind]||state.companionKind);setText('#homeCompanionGender',(state.companionGender==='girl'?'Girl':'Boy')+' companion');setText('#companionModelChip',(COMPANION_NAMES[state.companionKind]||state.companionKind)+' · '+(state.companionGender==='girl'?'Girl':'Boy'));
   if(q('#explainLevel'))q('#explainLevel').value=state.explainLevel;if(q('#notifyLevel'))q('#notifyLevel').value=state.notifyLevel;
   if(q('#truthToggle'))q('#truthToggle').checked=state.truthMode;if(q('#marketMoodToggle'))q('#marketMoodToggle').checked=state.marketMood;
+  if(q('#soundToggle'))q('#soundToggle').checked=state.soundEnabled;if(q('#soundVolume'))q('#soundVolume').value=state.soundVolume;
   qa('.companion-choice').forEach(b=>b.classList.toggle('active',b.dataset.companion===state.companionKind));qa('.gender-choice').forEach(b=>b.classList.toggle('active',b.dataset.gender===state.companionGender));
   window.dispatchEvent(new CustomEvent('xrpet:appearance',{detail:{room:state.room,cosmetic:state.cosmetic,companionKind:state.companionKind,companionGender:state.companionGender,mood:state.networkMood||'calm'}}));
   renderMemory();
@@ -123,13 +125,28 @@ async function renderNfts(nfts){
 }
 function applyNftCompanion(){
   const wrap=q('#nftFloatingCompanion'),img=q('#nftFloatingImage'),canvas=q('#companion3d');
-  if(state.nftCompanion?.image){
-    if(img){img.src=state.nftCompanion.image;img.alt=state.nftCompanion.name||'XRPL NFT companion'}
-    wrap?.classList.remove('hidden');wrap?.setAttribute('aria-hidden','false');canvas?.classList.add('nft-hidden');
-    setText('#floatingPetName',state.nftCompanion.name||state.petName);
-  }else{
-    wrap?.classList.add('hidden');wrap?.setAttribute('aria-hidden','true');canvas?.classList.remove('nft-hidden');
-  }
+  if(!wrap||!img||!canvas)return;
+  const nft=state.nftCompanion;
+  // Never cover the 3D companion until external NFT media has actually loaded.
+  wrap.classList.add('hidden');wrap.setAttribute('aria-hidden','true');canvas.classList.remove('nft-hidden');
+  setText('#floatingPetName',state.petName);
+  if(!nft?.image){img.removeAttribute('src');return}
+  const url=nft.image;
+  img.onload=()=>{
+    if(state.nftCompanion?.image!==url)return;
+    wrap.classList.remove('hidden');wrap.setAttribute('aria-hidden','false');canvas.classList.add('nft-hidden');
+    setText('#floatingPetName',nft.name||state.petName);
+  };
+  img.onerror=()=>{
+    if(state.nftCompanion?.image!==url)return;
+    state.nftCompanion=null;persist();
+    wrap.classList.add('hidden');wrap.setAttribute('aria-hidden','true');canvas.classList.remove('nft-hidden');
+    setText('#floatingPetName',state.petName);
+    setText('#nftStatus','NFT artwork could not load; your regular companion has been restored.');
+  };
+  img.alt=nft.name||'XRPL NFT companion';
+  img.src=url;
+  if(img.complete&&img.naturalWidth>0)img.onload();
 }
 async function connectXaman(){const status=q('#walletConnection');if(status)status.textContent='Loading Xaman…';try{const cfg=await loadConfig();if(!cfg.xamanApiKey)throw new Error('Xaman API key is not configured.');if(!window.Xumm){await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://xumm.app/assets/cdn/xumm.min.js';s.onload=resolve;s.onerror=()=>reject(new Error('Xaman SDK could not load'));document.head.appendChild(s)})}const x=new window.Xumm(cfg.xamanApiKey);if(status)status.textContent='Approve the connection in Xaman…';await x.authorize();let account=await x.user?.account;if(typeof account==='function')account=await account();if(!account)throw new Error('Xaman did not return an account.');state.account=account;state.walletProvider='Xaman';persist();subscribeAccount(account);render();if(status)status.textContent='Xaman connected: '+account.slice(0,8)+'…'+account.slice(-6)}catch(e){if(status)status.textContent='Xaman connection failed: '+e.message}}
 async function connectGem(){const status=q('#walletConnection');if(status)status.textContent='Checking GemWallet…';try{const api=await import('https://esm.sh/@gemwallet/api@3.7.0');const installed=await api.isInstalled();if(!installed?.result?.isInstalled)throw new Error('GemWallet extension is not installed.');const a=await api.getAddress();const account=a?.result?.address;if(!account)throw new Error('GemWallet did not share an address.');state.account=account;state.walletProvider='GemWallet';persist();subscribeAccount(account);render();if(status)status.textContent='GemWallet connected: '+account.slice(0,8)+'…'+account.slice(-6)}catch(e){if(status)status.textContent='GemWallet connection failed: '+e.message}}
@@ -144,8 +161,8 @@ bind('#clearWallet','click',()=>{if(watchedSubscribed&&ws?.readyState===1)ws.sen
 bind('#connectXaman','click',connectXaman);bind('#connectGem','click',connectGem);
 let charge=0;bind('#charge','click',()=>{const t=new Date().toISOString().slice(0,10);if(state.lastMissionDate===t){mood('Complete','Today’s core mission is already complete.','calm');return}charge=Math.min(7,charge+1);setText('#chargeCount',charge+'/7');if(q('#meterFill'))q('#meterFill').style.width=(charge/7*100)+'%';if(charge===7){state.lastMissionDate=t;addXp(15);setText('#missionText','Mission complete. +15 XP. New pulse tomorrow.');mood('Charged','Core synchronized. Mission complete.','energized')}});
 qa('.companion-choice').forEach(b=>b.addEventListener('click',()=>{state.companionKind=b.dataset.companion;state.nftCompanion=null;persist();applyNftCompanion();render();mood('Companion changed',(COMPANION_NAMES[state.companionKind]||state.companionKind)+' is now your active companion.','energized')}));
-qa('.gender-choice').forEach(b=>b.addEventListener('click',()=>{state.companionGender=b.dataset.gender;persist();render();mood('Companion updated',(state.companionGender==='girl'?'Girl':'Boy')+' companion presentation selected.','calm')}));
-qa('.room-choice').forEach(b=>b.addEventListener('click',()=>{if(b.disabled)return;state.room=b.dataset.room;persist();render();mood('Theme changed','The entire XRPet interface is now running '+b.querySelector('strong')?.textContent+'.','calm')})); qa('.cosmetic-choice').forEach(b=>b.addEventListener('click',()=>{state.cosmetic=b.dataset.cosmetic;persist();render();mood('Reconfigured','Companion build changed to '+b.querySelector('strong')?.textContent+'.','energized')}));
+qa('.gender-choice').forEach(b=>b.addEventListener('click',()=>{state.companionGender=b.dataset.gender;state.nftCompanion=null;persist();applyNftCompanion();render();mood('Companion updated',(state.companionGender==='girl'?'Girl':'Boy')+' companion presentation selected.','calm')}));
+qa('.room-choice').forEach(b=>b.addEventListener('click',()=>{if(b.disabled)return;state.room=b.dataset.room;persist();render();mood('Theme changed','The entire XRPet interface is now running '+b.querySelector('strong')?.textContent+'.','calm')})); qa('.cosmetic-choice').forEach(b=>b.addEventListener('click',()=>{state.cosmetic=b.dataset.cosmetic;state.nftCompanion=null;persist();applyNftCompanion();render();mood('Reconfigured','Companion build changed to '+b.querySelector('strong')?.textContent+'.','energized')}));
 qa('[data-scroll]').forEach(b=>b.addEventListener('click',()=>q('#'+b.dataset.scroll)?.scrollIntoView({behavior:'smooth',block:'center'})));
 bind('#explainLevel','change',e=>{state.explainLevel=e.target.value;persist()});bind('#notifyLevel','change',e=>{state.notifyLevel=e.target.value;persist()});bind('#truthToggle','change',e=>{state.truthMode=e.target.checked;persist()});bind('#marketMoodToggle','change',e=>{state.marketMood=e.target.checked;persist()});
 bind('#notifyButton','click',async()=>{if(!('Notification'in window)){alert('Browser notifications are not supported here.');return}const p=await Notification.requestPermission();if(p==='granted')new Notification('XRPet alerts enabled',{body:'Browser alerts are ready while XRPet is open.'});});
@@ -172,8 +189,47 @@ qa('.side-link').forEach(b=>b.addEventListener('click',()=>{
 }));
 
 qa('.variant-dot').forEach(b=>b.addEventListener('click',()=>{state.cosmetic=b.dataset.cosmetic;persist();render();mood('Customized','Companion variant updated.','energized')}));
-window.addEventListener('xrpet:petInteract',()=>{mood('Responsive','Core pulse received. Drag me to rotate, click to react.','energized');setTimeout(()=>mood('Connected','Live XRPL data is flowing.','calm'),900)});
+window.addEventListener('xrpet:petInteract',()=>{playSound('pet');revealFloatControls();mood('Responsive','Core pulse received. Drag me to rotate, click to react.','energized');setTimeout(()=>mood('Connected','Live XRPL data is flowing.','calm'),900)});
 window.addEventListener('xrpet:3d-ready',()=>render());
+
+
+let audioContext=null,lastSoundAt=0;
+function playSound(kind='tap',force=false){
+  if(!force&&!state.soundEnabled)return;
+  const now=performance.now();
+  if(!force&&now-lastSoundAt<95)return;
+  lastSoundAt=now;
+  try{
+    const Context=window.AudioContext||window.webkitAudioContext;
+    if(!Context)return;
+    if(!audioContext)audioContext=new Context();
+    if(audioContext.state==='suspended')audioContext.resume().catch(()=>{});
+    const t=audioContext.currentTime+0.01;
+    const volume=Math.max(0,Math.min(.85,state.soundVolume/100*.4));
+    const tones=kind==='pet'?[[440,660,.0,.18,'sine'],[660,990,.1,.23,'sine']]:
+      kind==='room'?[[220,440,0,.24,'sine'],[330,660,.12,.27,'triangle']]:
+      kind==='cosmetic'?[[480,600,0,.09,'triangle'],[710,860,.07,.15,'sine']]:
+      kind==='success'?[[490,650,0,.13,'sine'],[730,980,.12,.2,'sine']]:
+      [[630,770,0,.075,'sine']];
+    for(const [low,high,delay,duration,wave] of tones){
+      const osc=audioContext.createOscillator(),gain=audioContext.createGain();
+      osc.type=wave;osc.frequency.setValueAtTime(low,t+delay);
+      osc.frequency.exponentialRampToValueAtTime(high,t+delay+duration);
+      gain.gain.setValueAtTime(.0001,t+delay);
+      gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume*.13),t+delay+.014);
+      gain.gain.exponentialRampToValueAtTime(.0001,t+delay+duration);
+      osc.connect(gain);gain.connect(audioContext.destination);
+      osc.start(t+delay);osc.stop(t+delay+duration+.015);
+    }
+  }catch(err){console.warn('Audio unavailable',err)}
+}
+bind('#soundToggle','change',e=>{state.soundEnabled=e.target.checked;persist();if(state.soundEnabled)playSound('success',true)});
+bind('#soundVolume','input',e=>{state.soundVolume=Number(e.target.value)||0;persist()});
+bind('#testSound','click',()=>playSound('pet',true));
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b||b.id==='testSound'||b.id==='soundToggle')return;
+  playSound(b.dataset.room?'room':b.dataset.cosmetic||b.dataset.companion||b.dataset.gender?'cosmetic':'tap');
+});
 
 const floatEl=q('#floatingCompanion'),floatHandle=q('#floatingHandle');
 let floatPinned=state.floatingPinned,dragFloat=false,dragDX=0,dragDY=0,floatRAF=0;
@@ -215,5 +271,22 @@ bind('#toggleFloat','click',()=>setPinned(!floatPinned));
 bind('#centerFloat','click',()=>{setPinned(true);if(floatEl){const r=floatEl.getBoundingClientRect();state.floatX=Math.max(0,(innerWidth-r.width)/2);state.floatY=Math.max(0,(innerHeight-r.height)/2);clampFloat();persist()}});
 addEventListener('resize',()=>{if(floatPinned)clampFloat()});
 if(floatPinned)clampFloat();setPinned(floatPinned);requestAnimationFrame(animateFloat);applyNftCompanion();
+
+let controlsHideTimer=null;
+function revealFloatControls(){
+  if(!floatEl)return;
+  floatEl.classList.remove('controls-hidden');
+  clearTimeout(controlsHideTimer);
+  controlsHideTimer=setTimeout(()=>{if(!dragFloat&&!floatEl.matches(':hover')&&!floatEl.matches(':focus-within'))floatEl.classList.add('controls-hidden')},4800);
+}
+floatEl?.addEventListener('pointerenter',revealFloatControls);
+floatEl?.addEventListener('pointerleave',()=>{
+  clearTimeout(controlsHideTimer);
+  controlsHideTimer=setTimeout(()=>{if(!dragFloat)floatEl.classList.add('controls-hidden')},2000);
+});
+floatEl?.addEventListener('focusin',revealFloatControls);
+floatEl?.addEventListener('focusout',()=>setTimeout(()=>{if(!floatEl.matches(':focus-within'))floatEl.classList.add('controls-hidden')},2200));
+revealFloatControls();
+
 
 dailyVisit();render();connectLedger();loadMarket();loadUpdates();integrationCheck();setInterval(loadMarket,120000);setInterval(integrationCheck,60000);
