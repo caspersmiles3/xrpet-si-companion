@@ -8529,3 +8529,34 @@ body.sidebar-collapsed #xrpetSidebar #sidebarToggle{
     width:100%!important;
   }
 }
+
+
+/* XRPet 5.5.24 — portrait video side panels replace black launch pillars */
+.launch-pillar{display:none!important}
+.launch-side-video{
+  position:absolute!important;
+  top:0!important;
+  bottom:0!important;
+  height:100vh!important;
+  width:max(0px,calc((100vw - 133.333vh)/2))!important;
+  object-fit:cover!important;
+  object-position:center center!important;
+  background:#000!important;
+  z-index:2!important;
+  pointer-events:none!important;
+  user-select:none!important;
+  opacity:1!important;
+}
+.launch-side-left{
+  left:0!important;
+}
+.launch-side-right{
+  right:0!important;
+  transform:scaleX(-1)!important;
+}
+.clean-launch-video-shade{z-index:3!important}
+.clean-launch .clean-launch-grid{z-index:4!important}
+.clean-launch .clean-launch-content{z-index:5!important}
+@media(max-aspect-ratio:4/3){
+  .launch-side-video{display:none!important}
+}
