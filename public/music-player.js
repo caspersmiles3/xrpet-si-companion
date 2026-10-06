@@ -7,6 +7,8 @@
   const shuffleBtn=document.getElementById('musicShuffle');
   const volume=document.getElementById('musicVolume');
   const name=document.getElementById('musicTrackName');
+  const waveform=document.getElementById('musicWaveform');
+  const waveCtx=waveform?.getContext?.('2d')||null;
   if(!player||!audio||!play||!name)return;
 
   const tracks=[
@@ -43,6 +45,58 @@
   const localUrl=file=>'/audio/'+encodeURIComponent(file).replace(/%2F/g,'/');
   const rawUrl=file=>'https://raw.githubusercontent.com/caspersmiles3/xrpet-si-companion/main/public/audio/'+encodeURIComponent(file).replace(/%2F/g,'/');
   let usingFallback=false;
+  let audioCtx=null,analyser=null,mediaSource=null,waveRaf=0;
+  let waveData=null;
+
+  function resizeWave(){
+    if(!waveform||!waveCtx)return;
+    const rect=waveform.getBoundingClientRect();
+    const dpr=Math.min(2,window.devicePixelRatio||1);
+    const w=Math.max(80,Math.round(rect.width*dpr)),h=Math.max(24,Math.round(rect.height*dpr));
+    if(waveform.width!==w||waveform.height!==h){waveform.width=w;waveform.height=h}
+  }
+  function ensureAnalyser(){
+    if(analyser||!waveform)return;
+    try{
+      audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+      analyser=audioCtx.createAnalyser();analyser.fftSize=128;analyser.smoothingTimeConstant=.82;
+      mediaSource=audioCtx.createMediaElementSource(audio);
+      mediaSource.connect(analyser);analyser.connect(audioCtx.destination);
+      waveData=new Uint8Array(analyser.frequencyBinCount);
+    }catch(err){
+      console.warn('XRPet waveform analyser unavailable; using visual fallback',err);
+      analyser=null;audioCtx=null;
+    }
+  }
+  function drawWave(){
+    cancelAnimationFrame(waveRaf);
+    if(!waveform||!waveCtx)return;
+    resizeWave();
+    const W=waveform.width,H=waveform.height,dpr=Math.min(2,window.devicePixelRatio||1);
+    waveCtx.clearRect(0,0,W,H);
+    const bars=36,gap=2*dpr,bw=Math.max(1,(W-gap*(bars-1))/bars);
+    if(analyser&&waveData){analyser.getByteFrequencyData(waveData)}
+    const playing=!audio.paused&&!audio.ended;
+    const now=performance.now()/1000;
+    for(let i=0;i<bars;i++){
+      let level;
+      if(analyser&&waveData){
+        const idx=Math.floor(i/bars*waveData.length);
+        level=waveData[idx]/255;
+      }else{
+        level=playing?(0.18+0.48*(.5+.5*Math.sin(now*4+i*.72))*(.65+.35*Math.sin(now*1.7+i*.23))):.08;
+      }
+      const bh=Math.max(2*dpr,level*H*.9);
+      const x=i*(bw+gap),y=(H-bh)/2;
+      const grad=waveCtx.createLinearGradient(0,y,0,y+bh);
+      grad.addColorStop(0,'rgba(126,244,255,.95)');
+      grad.addColorStop(.55,'rgba(63,209,238,.78)');
+      grad.addColorStop(1,'rgba(45,122,151,.28)');
+      waveCtx.fillStyle=grad;
+      waveCtx.fillRect(x,y,bw,bh);
+    }
+    waveRaf=requestAnimationFrame(drawWave);
+  }
 
   function loadTrack(i,autoplay=false){
     state.index=(i+tracks.length)%tracks.length;
@@ -62,6 +116,8 @@
     audio.defaultMuted=false;
     if(audio.volume<=0.01){state.volume=.75;audio.volume=.75;if(volume)volume.value='.75';save()}
     try{
+      ensureAnalyser();
+      if(audioCtx?.state==='suspended')await audioCtx.resume();
       await audio.play();
       syncButton();
     }catch(err){
@@ -121,4 +177,6 @@
   shuffleBtn?.classList.toggle('active',state.shuffle);
   loadTrack(state.index,false);
   syncButton();
+  drawWave();
+  window.addEventListener('resize',resizeWave,{passive:true});
 })();
