@@ -1036,7 +1036,9 @@ if(launchGate){
   q('#launchLiveOrbit')?.addEventListener('click',()=>{
     launchGate.classList.remove('launch-pulse');
     requestAnimationFrame(()=>launchGate.classList.add('launch-pulse'));
-    updateLaunchActivity('Interactive XRPL signal ping');
+    updateLaunchActivity('XRPL signal ping acknowledged');
+    setText('#launchStatus','Mainnet signal received. Ripplet is listening.');
+    playSound('notification',true);
   });
 }else{
   document.body.classList.remove('launch-locked');
