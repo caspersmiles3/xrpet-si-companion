@@ -593,6 +593,28 @@ app.get('/api/exchanges', (_req,res)=>{
     generatedAt:new Date().toISOString()
   });
 });
+app.get('/api/exchange-board', async (_req,res)=>{
+  const ids=Object.keys(EXCHANGE_MARKETS);
+  const settled=await Promise.allSettled(ids.map(id=>getExchangeMarket(id)));
+  const venues=settled.map((result,i)=>{
+    const meta=EXCHANGE_MARKETS[ids[i]];
+    if(result.status==='fulfilled'){
+      const d=result.value;
+      return {id:meta.id,name:meta.name,pair:meta.pair,quote:meta.quote,available:true,price:d.price,change24h:d.change24h,generatedAt:d.generatedAt};
+    }
+    return {id:meta.id,name:meta.name,pair:meta.pair,quote:meta.quote,available:false,price:null,change24h:null};
+  });
+  const live=venues.filter(v=>v.available&&Number.isFinite(v.price));
+  const prices=live.map(v=>v.price).sort((a,b)=>a-b);
+  const compositePrice=prices.length?prices[Math.floor(prices.length/2)]:null;
+  const changes=live.map(v=>v.change24h).filter(Number.isFinite).sort((a,b)=>a-b);
+  const compositeChange=changes.length?changes[Math.floor(changes.length/2)]:null;
+  res.json({
+    composite:{id:'all',name:'All Exchanges',pair:'XRP/USD + XRP/USDT',price:compositePrice,change24h:compositeChange,venueCount:live.length},
+    venues,
+    generatedAt:new Date().toISOString()
+  });
+});
 app.get('/api/market', async (req, res) => {
   const exchange=clean(req.query.exchange||'coinbase').toLowerCase();
   if(exchange!=='all'&&!EXCHANGE_MARKETS[exchange])return res.status(400).json({error:'Unsupported exchange'});
