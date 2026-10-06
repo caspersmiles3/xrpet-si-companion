@@ -76,7 +76,6 @@
       <div class="settings-menu customize-menu">
         <button type="button" class="menu-action" data-customize-target="companionSection">Ripplet</button>
         <button type="button" class="menu-action" data-customize-target="roomsSection">Rooms</button>
-        <button type="button" class="menu-action" data-customize-target="cosmeticsSection">Ripplet Appearance</button>
         <button type="button" class="menu-action" data-customize-target="walletPanel">NFT Companion Override</button>
         <button type="button" class="menu-action" data-customize-target="chatPanel">Ripplet Chat</button>
       </div>
@@ -327,142 +326,51 @@
       <form id="chatForm" class="composer"><input id="message" maxlength="500" autocomplete="off" placeholder="Message XRPet…"><button>Send</button></form>
     </section>
 
-<section id="companionSection" class="flow-section customization-panel in-app-workspace" data-customization-panel>
+<section id="companionSection" class="flow-section customization-panel in-app-workspace ripplet-page" data-customization-panel>
       <div class="workspace-nav"><button type="button" class="workspace-back" data-customize-close>← Back to XRP Interface</button><span>COMPANION // RIPPLET</span></div>
-      <div class="section-heading">
-        <div><span class="eyebrow">OFFICIAL COMPANION // RIPPLET</span><h2>Meet Ripplet—the one official XRPet companion.</h2><p class="section-subcopy">Ripplet combines Ripple-inspired flow with an XRP energy core: one small floating character that watches the ledger, reacts to live signals, and represents XRPet across the entire app.</p></div>
-        <span id="personalityChip" class="chip">Guardian</span>
-      </div>
 
-
-      <div class="companion-studio-layout">
-        <div class="studio-viewer glass-surface">
-          <div class="studio-viewer-head">
-            <div>
-              <span class="command-label">LIVE COMPANION VIEWPORT</span>
-              <strong id="studioCompanionName">RIPPLET</strong>
-            </div>
-            <div class="studio-status-row">
-              <span id="studioRenderBadge" class="studio-badge">THREE.JS</span>
-              <span id="studioQualityBadge" class="studio-badge muted-badge">AUTO QUALITY</span>
-            </div>
-          </div>
-
-          <div id="studioViewerMount" class="studio-viewport">
-            <div class="studio-backdrop" aria-hidden="true">
-              <span class="studio-horizon"></span>
-              <span class="studio-ring sr-one"></span>
-              <span class="studio-ring sr-two"></span>
-              <span class="studio-grid-plane"></span>
-            </div>
-            <div class="studio-companion-placeholder">
-              <strong>Ripplet is active in the main interface.</strong>
-              <small>Use the floating Ripplet companion while adjusting reactions, camera, and appearance.</small>
-            </div>
-            <div class="studio-vignette" aria-hidden="true"></div>
-          </div>
-
-          <div class="studio-camera-bar" aria-label="3D camera controls">
-            <div class="camera-presets">
-              <button id="studioViewFront" type="button">Front</button>
-              <button id="studioViewThreeQuarter" type="button">¾ View</button>
-              <button id="studioViewProfile" type="button">Profile</button>
-              <button id="studioResetCamera" type="button">Reset</button>
-            </div>
-            <div class="studio-help"><span>Drag to orbit</span><span>Wheel to zoom</span><span>Double-click to reset</span></div>
-          </div>
-        </div>
-
-        <aside class="studio-sidebar glass-surface">
-          <article class="detail-card companion-selector-card ripplet-identity-card">
-        <div class="card-title">
-          <div><h3>Ripplet</h3><p>The permanent built-in XRPet mascot: a tiny floating Ripple/XRP signal character with a white-silver shell, graphite seams, cyan energy, expressive eyes, side-flow fins, and an XRP core.</p></div>
-          <span id="companionModelChip" class="chip">OFFICIAL // RIPPLET</span>
-        </div>
-        <div class="ripplet-spec-grid">
-          <div><span>ROLE</span><strong>XRPL Signal Companion</strong></div>
-          <div><span>IDENTITY</span><strong>Ripple + XRP Fusion</strong></div>
-          <div><span>DEFAULT</span><strong>Always Ripplet</strong></div>
-          <div><span>OVERRIDE</span><strong>Optional XRPL NFT</strong></div>
-        </div>
-        <div class="companion-reactions" aria-label="Ripplet reactions">
-          <span>Ripplet Reactions</span>
+      <div class="ripplet-page-column">
+        <div class="section-heading">
           <div>
-            <button type="button" data-pet-action="greet">Greet</button>
-            <button type="button" data-pet-action="celebrate">Celebrate</button>
-            <button type="button" data-pet-action="alert">Alert</button>
-            <button type="button" data-pet-action="sleep">Rest</button>
-            <button type="button" data-pet-action="focus">Focus</button>
-            <button type="button" data-pet-action="scan">Scan XRPL</button>
-            <button type="button" data-pet-action="orbit">Orbit</button>
+            <span class="eyebrow">OFFICIAL COMPANION // RIPPLET</span>
+            <h2>Ripplet</h2>
+            <p class="section-subcopy">The single official XRPet companion. This page is intentionally simple so the current placeholder can be replaced by the finished interactive 3D character without rebuilding the rest of the interface.</p>
           </div>
-        </div>
-        <div class="model-runtime-status">
-          <span>Official Runtime</span>
-          <strong id="modelRuntimeMode">Loading Ripplet…</strong>
-        </div>
-        <p class="model-credit">Ripplet is the single built-in XRPet companion. User-owned XRPL NFTs can optionally override Ripplet without changing the app’s official mascot.</p>
-      </article>
-          <div class="equipment-matrix">
-        <div class="equipment-matrix-head">
-          <div><span class="command-label">RIPPLET APPEARANCE</span><h3>Optional appearance accents for Ripplet. These never create a different built-in companion.</h3></div>
-          <span class="truth-label">LIVE 3D</span>
+          <span id="personalityChip" class="chip">Guardian</span>
         </div>
 
-        <div class="equipment-grid">
-          <article class="equipment-group">
-            <span>EYE SIGNAL</span>
-            <div class="equipment-options">
-              <button type="button" data-eye-style="cyan" class="active"><i class="eq-swatch cyan"></i>Cyan</button>
-              <button type="button" data-eye-style="white"><i class="eq-swatch white"></i>White</button>
-              <button type="button" data-eye-style="violet"><i class="eq-swatch violet"></i>Violet</button>
-              <button type="button" data-eye-style="amber"><i class="eq-swatch amber"></i>Amber</button>
+        <article class="detail-card ripplet-character-slot">
+          <div>
+            <span class="command-label">3D COMPANION SLOT</span>
+            <h3>Interactive Ripplet will live here.</h3>
+            <p>The existing procedural appearance controls have been removed. This area is reserved for the final interactive 3D Ripplet model.</p>
+          </div>
+          <div class="ripplet-slot-mark" aria-hidden="true"><span>R</span></div>
+        </article>
+
+        <article class="detail-card ripplet-identity-card">
+          <div class="card-title"><div><h3>Official Identity</h3><p>One mascot across XRPet.</p></div><span id="companionModelChip" class="chip">OFFICIAL // RIPPLET</span></div>
+          <div class="ripplet-spec-grid">
+            <div><span>ROLE</span><strong>XRPL Signal Companion</strong></div>
+            <div><span>IDENTITY</span><strong>Ripple + XRP Fusion</strong></div>
+            <div><span>PERSONALITY</span><strong>Calm · Smart · Watchful</strong></div>
+            <div><span>DEFAULT</span><strong>Always Ripplet</strong></div>
+          </div>
+          <p class="ripplet-description">Ripplet translates live ledger activity, settlement context, XRP market movement, official announcements, and verified information into a recognizable companion presence.</p>
+        </article>
+
+        <article class="detail-card">
+          <div class="mission-head"><h3>Ripplet Reactions</h3><span>behavior layer</span></div>
+          <div class="companion-reactions" aria-label="Ripplet reactions">
+            <div>
+              <button type="button" data-pet-action="greet">Greet</button>
+              <button type="button" data-pet-action="celebrate">Celebrate</button>
+              <button type="button" data-pet-action="alert">Alert</button>
+              <button type="button" data-pet-action="sleep">Rest</button>
+              <button type="button" data-pet-action="focus">Focus</button>
+              <button type="button" data-pet-action="scan">Scan XRPL</button>
             </div>
-          </article>
-
-          <article class="equipment-group">
-            <span>CHEST CORE</span>
-            <div class="equipment-options">
-              <button type="button" data-core-style="standard" class="active">Standard X</button>
-              <button type="button" data-core-style="ripple">Ripple Split</button>
-              <button type="button" data-core-style="vault">Vault Seal</button>
-              <button type="button" data-core-style="589">589 Core</button>
-            </div>
-          </article>
-
-          <article class="equipment-group">
-            <span>HEAD HARDWARE</span>
-            <div class="equipment-options">
-              <button type="button" data-head-gear="none" class="active">Clean</button>
-              <button type="button" data-head-gear="crest">Signal Crest</button>
-              <button type="button" data-head-gear="halo">Oracle Halo</button>
-              <button type="button" data-head-gear="ridge">Guardian Ridge</button>
-            </div>
-          </article>
-
-          <article class="equipment-group">
-            <span>SIGNAL TRAIL</span>
-            <div class="equipment-options">
-              <button type="button" data-trail-style="none" class="active">None</button>
-              <button type="button" data-trail-style="pulse">XRP Pulse</button>
-              <button type="button" data-trail-style="nodes">Node Trace</button>
-              <button type="button" data-trail-style="resonance">589 Shimmer</button>
-            </div>
-          </article>
-        </div>
-      </div>
-        </aside>
-      </div>
-
-      
-
-      <div class="detail-grid companion-detail">
-        <article class="detail-card identity-card ripplet-lore-card">
-          <h3>Ripplet Identity</h3>
-          <p><strong>Name:</strong> Ripplet</p>
-          <p><strong>Nature:</strong> A tiny living signal-being that fuses Ripple-style fluid connectivity with XRP-inspired geometric energy.</p>
-          <p><strong>Personality:</strong> Intelligent, friendly, watchful, calm, slightly playful, and grounded in verified XRPL data.</p>
-          <p><strong>Purpose:</strong> Translate live ledger activity, market context, settlements, announcements, and truth-checked information into a visible companion presence.</p>
+          </div>
         </article>
 
         <article class="detail-card mission-card">
@@ -470,24 +378,23 @@
           <p id="missionText">Charge the core 7 times to complete today's mission.</p>
           <div class="mission-meter"><span id="meterFill"></span></div>
           <button id="charge" class="secondary full">Charge Core · <span id="chargeCount">0/7</span></button>
-          <div class="evolution-track"><span>Drop</span><span>Ripple</span><span>Wave</span><span>Surge</span><span>Nexus</span><span>Titan</span><span>Legend</span></div>
+        </article>
+
+        <article class="detail-card memory-card">
+          <div class="card-title"><h3>Companion Memory</h3><span>stored locally</span></div>
+          <form id="memoryForm" class="inline-form"><input id="memoryInput" maxlength="120" placeholder="Remember that I want short XRP summaries…"><button>Remember</button></form>
+          <div id="memoryList" class="memory-list"></div>
+        </article>
+
+        <article class="detail-card nft-companion-card">
+          <div class="card-title">
+            <div><h3>Bring Your Own Companion</h3><p>Optionally use eligible XRPL NFT artwork as a personal override. Ripplet remains the official default.</p></div>
+            <div class="nft-actions"><button id="useNativeCompanion" class="mini-button secondary">Restore Ripplet</button><button id="loadNfts" class="mini-button">Load my NFTs</button></div>
+          </div>
+          <div id="nftStatus" class="muted">Connect or watch an XRPL account, then load its NFTs.</div>
+          <div id="nftCompanionList" class="nft-companion-list"></div>
         </article>
       </div>
-
-      <article class="detail-card memory-card">
-        <div class="card-title"><h3>Companion Memory</h3><span>stored locally</span></div>
-        <form id="memoryForm" class="inline-form"><input id="memoryInput" maxlength="120" placeholder="Remember that I want short XRP summaries…"><button>Remember</button></form>
-        <div id="memoryList" class="memory-list"></div>
-      </article>
-
-      <article class="detail-card nft-companion-card">
-        <div class="card-title">
-          <div><h3>Bring Your Own Companion</h3><p>Optionally use an eligible image-based XRPL NFT as your personal companion override. Ripplet remains the official default.</p></div>
-          <div class="nft-actions"><button id="useNativeCompanion" class="mini-button secondary">Restore Ripplet</button><button id="loadNfts" class="mini-button">Load my NFTs</button></div>
-        </div>
-        <div id="nftStatus" class="muted">Connect or watch an XRPL account, then load its NFTs.</div>
-        <div id="nftCompanionList" class="nft-companion-list"></div>
-      </article>
     </section>
 
     <section id="roomsSection" class="flow-section customization-panel in-app-workspace" data-customization-panel>
@@ -542,21 +449,6 @@
         <span id="roomPendingLabel">Select a room, then apply it.</span>
         <button id="applyRoom" type="button" class="primary">Apply Room & Close</button>
       </div>
-    </section>
-
-    <section id="cosmeticsSection" class="flow-section customization-panel in-app-workspace ripplet-appearance-section" data-customization-panel>
-      <div class="workspace-nav"><button type="button" class="workspace-back" data-customize-close>← Back to XRP Interface</button><span>RIPPLET APPEARANCE</span></div>
-      <div class="section-heading">
-        <div><span class="eyebrow">RIPPLET // OFFICIAL APPEARANCE</span><h2>One character. One recognizable identity.</h2><p class="section-subcopy">Ripplet always keeps the official white-silver shell, graphite seams, Ripple-flow side fins, cyan signal light, and XRP core. Personalization is limited to subtle signal accents in the companion studio.</p></div>
-        <span class="chip">LOCKED IDENTITY</span>
-      </div>
-      <div class="ripplet-design-grid">
-        <article><span>SHELL</span><strong>White + Silver</strong><small>Permanent official body finish</small></article>
-        <article><span>ENERGY</span><strong>Cyan / Electric Blue</strong><small>Ledger-aware signal glow</small></article>
-        <article><span>CORE</span><strong>XRP Energy Core</strong><small>Central chest identity</small></article>
-        <article><span>FLOW</span><strong>Ripple Side Fins</strong><small>Fluid connectivity motif</small></article>
-      </div>
-      <div class="signal-disclosure"><strong>OFFICIAL MASCOT RULE</strong><p>Appearance controls may add subtle effects, but they never turn Ripplet into another built-in species, gender, character, or mascot.</p></div>
     </section>
 
     <section id="walletPanel" class="flow-section customization-panel in-app-workspace" data-customization-panel>
