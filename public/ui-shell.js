@@ -1,6 +1,7 @@
 (() => {
   const q=(s,r=document)=>r.querySelector(s);
   const qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
   const VIEW_TARGETS={
     home:'homeSection',
@@ -14,21 +15,36 @@
     games:'gamesSection'
   };
 
+  const HISTORY_META={
+    All:['Overview + Full Timeline','The complete Ripple, XRP and XRP Ledger chronology.'],
+    Origins:['Origins / Genesis','How the XRP Ledger began, its original design, launch and earliest organizational history.'],
+    Ripple:['Ripple Company','Company milestones, products, leadership and strategic development connected to Ripple.'],
+    XRP:['XRP Asset','XRP supply, distribution, utility and asset-level milestones.'],
+    XRPL:['XRP Ledger','Protocol, amendments, network operations and XRP Ledger infrastructure.'],
+    Legal:['Legal + Regulation','Court cases, regulatory events and legal milestones affecting Ripple and XRP.'],
+    Market:['Market Cycles','Major XRP market-cycle context and historical price-era milestones without predictions.'],
+    Adoption:['Adoption + Partnerships','Payments, integrations, institutional use and ecosystem adoption milestones.'],
+    Acquisition:['Acquisitions','Ripple acquisitions and infrastructure expansion.'],
+    People:['People Involved','Key people who shaped the XRP Ledger, Ripple and the XRP ecosystem.']
+  };
+
   function closeSidebarMenus(except=null){
     qa('#xrpetSidebar details[open]').forEach(menu=>{
       if(menu!==except)menu.removeAttribute('open');
     });
   }
 
-  function showView(view='home',{keepMenu=null}={}){
-    const next=VIEW_TARGETS[view]?view:'home';
-
-    // Primary navigation always exits tools/customization mode.
+  function resetWorkspace(){
     document.body.classList.remove('workspace-open','customization-open');
     qa('[data-customization-panel]').forEach(panel=>{
       panel.classList.remove('is-open');
       panel.hidden=true;
     });
+  }
+
+  function showView(view='home',{keepMenu=null}={}){
+    const next=VIEW_TARGETS[view]?view:'home';
+    resetWorkspace();
 
     qa('[data-view-section]').forEach(section=>{
       const active=section.dataset.viewSection===next;
@@ -40,8 +56,10 @@
         section.style.removeProperty('opacity');
       }
     });
+
     qa('[data-primary-view]').forEach(el=>el.classList.toggle('active',el.dataset.primaryView===next));
     document.body.dataset.primaryView=next;
+
     const shell=q('.main-shell');
     const target=q('#'+VIEW_TARGETS[next]);
     if(target){
@@ -49,88 +67,137 @@
       target.scrollTop=0;
     }
     closeSidebarMenus(keepMenu);
+
     if(shell&&target){
       const deck=q('#topCommandDeck');
       const gap=(deck?.offsetHeight||0)+12;
-      requestAnimationFrame(()=>{
-        shell.scrollTop=Math.max(0,target.offsetTop-gap);
-      });
+      requestAnimationFrame(()=>{shell.scrollTop=Math.max(0,target.offsetTop-gap)});
     }else if(shell){
       shell.scrollTop=0;
     }
+
+    if(next==='announcements')loadAnnouncements();
+    if(next==='exchanges')refreshMarket();
     window.dispatchEvent(new CustomEvent('xrpet:view-change',{detail:{view:next}}));
+  }
+
+  function showHistory(view='All'){
+    showView('history');
+    const section=q('#xrpHistorySection');
+    if(section)section.dataset.historyMode=view;
+    const meta=HISTORY_META[view]||HISTORY_META.All;
+    const header=q('#historySelectedHeader');
+    if(header)header.hidden=view==='All';
+    if(q('#historySelectedTitle'))q('#historySelectedTitle').textContent=meta[0];
+    if(q('#historySelectedDescription'))q('#historySelectedDescription').textContent=meta[1];
+    window.XRPetHistoryPending=view;
+    try{window.XRPetHistory?.setView?.(view)}catch{}
+    setTimeout(()=>{try{window.XRPetHistory?.setView?.(view)}catch{}},250);
+  }
+
+  function showLearn(name='xrp'){
+    showView('learn');
+    const target=qa('[data-learn-panel]').some(p=>p.dataset.learnPanel===name)?name:'xrp';
+    qa('[data-learn-panel]').forEach(panel=>{
+      const active=panel.dataset.learnPanel===target;
+      panel.classList.toggle('active',active);
+      panel.hidden=!active;
+    });
+    qa('[data-learn-module]').forEach(btn=>btn.classList.toggle('active',btn.dataset.learnModule===target));
+    const section=q('#learnSection');if(section)section.scrollTop=0;
+  }
+
+  function showEcosystem(view='directory'){
+    showView('ecosystem');
+    const target=qa('[data-ecosystem-panel]').some(p=>p.dataset.ecosystemPanel===view)?view:'directory';
+    qa('[data-ecosystem-panel]').forEach(panel=>{
+      const active=panel.dataset.ecosystemPanel===target;
+      panel.classList.toggle('active',active);
+      panel.hidden=!active;
+    });
+    qa('[data-ecosystem-view]').forEach(btn=>btn.classList.toggle('active',btn.dataset.ecosystemView===target));
+  }
+
+  function showGame(id='ledgerRush'){
+    showView('games');
+    const target=qa('[data-game-panel]').some(p=>p.dataset.gamePanel===id)?id:'ledgerRush';
+    qa('[data-game-tab]').forEach(btn=>{
+      const active=btn.dataset.gameTab===target;
+      btn.classList.toggle('active',active);
+      btn.setAttribute('aria-selected',String(active));
+    });
+    qa('[data-game-panel]').forEach(panel=>{
+      const active=panel.dataset.gamePanel===target;
+      panel.classList.toggle('active',active);
+      panel.hidden=!active;
+    });
+    qa('[data-game-nav]').forEach(btn=>btn.classList.toggle('active',btn.dataset.gameNav===target));
+  }
+
+  function showRipplet(){
+    showView('ripplet');
+    qa('[data-ripplet-panel]').forEach(panel=>{
+      const active=panel.dataset.rippletPanel==='overview';
+      panel.classList.toggle('active',active);
+      panel.hidden=!active;
+    });
   }
 
   function showCustomization(id){
     const panel=q('#'+id);
     if(!panel)return;
-    qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));
-    panel.classList.add('is-open');
+    qa('[data-customization-panel]').forEach(p=>{
+      const active=p===panel;
+      p.classList.toggle('is-open',active);
+      p.hidden=!active;
+    });
     panel.hidden=false;
     document.body.classList.add('workspace-open');
+    document.body.classList.remove('customization-open');
+    closeSidebarMenus();
     const shell=q('.main-shell');if(shell)shell.scrollTop=0;
     requestAnimationFrame(()=>panel.scrollIntoView({block:'start',behavior:'auto'}));
   }
 
-  document.addEventListener('click',e=>{
-    const summary=e.target.closest?.('#xrpetSidebar summary[data-primary-view]');
-    if(summary&&!summary.closest('details')?.disabled){
-      showView(summary.dataset.primaryView,{keepMenu:summary.closest('details')});
-      return;
+  async function selectExchange(id='all'){
+    showView('exchanges');
+    qa('[data-exchange]').forEach(btn=>btn.classList.toggle('active',btn.dataset.exchange===id));
+    const clicked=q('[data-exchange="'+CSS.escape(id)+'"]');
+    const name=clicked?.querySelector('strong')?.textContent?.trim()||'All Exchanges';
+    if(q('#selectedExchangeName'))q('#selectedExchangeName').textContent=name;
+    try{
+      const r=await fetch('/api/market?exchange='+encodeURIComponent(id),{cache:'no-store'});
+      const d=await r.json();
+      if(!r.ok)throw new Error(d.detail||d.error||'Market unavailable');
+      const price=Number(d.price),change=Number(d.change24h);
+      if(Number.isFinite(price)){
+        if(q('#xrpPrice'))q('#xrpPrice').textContent='$'+price.toFixed(5);
+        qa('[data-exchange-price="'+id+'"]').forEach(el=>el.textContent='$'+price.toFixed(5));
+      }
+      if(Number.isFinite(change)&&q('#xrpChange'))q('#xrpChange').textContent=(change>=0?'+':'')+change.toFixed(2)+'% · 24h';
+      if(q('#marketSource'))q('#marketSource').textContent=d.source||name+' live market API';
+    }catch{
+      if(q('#marketSource'))q('#marketSource').textContent=name+' feed reconnecting';
     }
+  }
 
-    const primary=e.target.closest?.('[data-primary-view]');
-    if(primary&&!primary.disabled){
-      showView(primary.dataset.primaryView);
-      return;
+  async function loadAnnouncements(){
+    const box=q('#updates');if(!box)return;
+    box.innerHTML='<p class="muted">Checking official Ripple and XRP Ledger sources…</p>';
+    try{
+      const r=await fetch('/api/updates',{cache:'no-store'});
+      const d=await r.json();
+      const items=Array.isArray(d.items)?d.items.slice(0,16):[];
+      if(!r.ok||!items.length)throw new Error(d.detail||d.error||'No updates returned');
+      box.innerHTML=items.map((x,i)=>'<article class="announcement-card"><div class="announcement-index">'+String(i+1).padStart(2,'0')+'</div><div><span class="announcement-source">'+esc(x.source)+' · '+esc(x.label||'CONFIRMED')+'</span><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title)+'</a><small>Official source ↗</small></div></article>').join('');
+      if(q('#announcementStatus'))q('#announcementStatus').textContent='Live';
+      if(q('#announcementUpdated'))q('#announcementUpdated').textContent='Updated '+new Date().toLocaleTimeString();
+    }catch{
+      box.innerHTML='<p class="muted">Official Ripple/XRPL feed is reconnecting. Use Refresh now to retry immediately.</p>';
+      if(q('#announcementStatus'))q('#announcementStatus').textContent='Reconnecting';
+      if(q('#announcementUpdated'))q('#announcementUpdated').textContent='Automatic retry active';
     }
-
-    const exchange=e.target.closest?.('[data-exchange]');
-    if(exchange&&!exchange.disabled){
-      showView('exchanges');
-      return;
-    }
-
-    const history=e.target.closest?.('[data-history-view]');
-    if(history&&!history.disabled){
-      showView('history');
-      return;
-    }
-
-    const ripplet=e.target.closest?.('[data-ripplet-view]');
-    if(ripplet&&!ripplet.disabled){
-      showView('ripplet');
-      return;
-    }
-
-    const ecosystem=e.target.closest?.('[data-ecosystem-view]');
-    if(ecosystem&&!ecosystem.disabled){
-      showView('ecosystem');
-      return;
-    }
-
-    const game=e.target.closest?.('[data-game-nav]');
-    if(game&&!game.disabled){
-      showView('games');
-      return;
-    }
-
-    const custom=e.target.closest?.('[data-customize-target]');
-    if(custom&&!custom.disabled){
-      closeSidebarMenus();
-      showCustomization(custom.dataset.customizeTarget);
-    }
-  },true);
-
-  // Keep only one sidebar flyout open at a time without blocking native <details>.
-  qa('#xrpetSidebar details').forEach(details=>{
-    details.addEventListener('toggle',()=>{
-      if(!details.open)return;
-      qa('#xrpetSidebar details').forEach(other=>{
-        if(other!==details)other.removeAttribute('open');
-      });
-    });
-  });
+  }
 
   async function refreshMarket(){
     let data=null;
@@ -138,47 +205,96 @@
       const r=await fetch('/api/exchange-board',{cache:'no-store'});
       if(r.ok)data=await r.json();
     }catch{}
-    if(!data){
+    if(!data||!Number.isFinite(Number(data?.composite?.price))){
       try{
         const r=await fetch('/api/market?exchange=all',{cache:'no-store'});
         if(r.ok){
           const m=await r.json();
-          data={
-            composite:{
-              price:Number(m.price),
-              change24h:Number(m.change24h),
-              venueCount:Number(m.venueCount)||0
-            },
-            venues:[]
-          };
+          data={composite:{price:Number(m.price),change24h:Number(m.change24h),venueCount:Number(m.venueCount)||0},venues:[]};
         }
       }catch{}
     }
     if(!data)return;
 
     const composite=data.composite||{};
-    const price=Number(composite.price);
-    const change=Number(composite.change24h);
+    const price=Number(composite.price),change=Number(composite.change24h);
     if(Number.isFinite(price)){
       const text='$'+price.toFixed(5);
-      const top=q('#globalXrpPrice');if(top)top.textContent=text;
-      const live=q('#xrpPrice');if(live)live.textContent=text;
+      if(q('#globalXrpPrice'))q('#globalXrpPrice').textContent=text;
+      if(q('#xrpPrice'))q('#xrpPrice').textContent=text;
+      qa('[data-exchange-price="all"]').forEach(el=>el.textContent=text);
     }
     if(Number.isFinite(change)){
       const move=(change>=0?'+':'')+change.toFixed(2)+'%';
       const count=Number(composite.venueCount)||((data.venues||[]).filter(v=>v&&v.available).length);
-      const topChange=q('#globalXrpChange');if(topChange)topChange.textContent=move+(count?' · '+count+' venues':'');
-      const liveChange=q('#xrpChange');if(liveChange)liveChange.textContent=move+' · 24h';
+      if(q('#globalXrpChange'))q('#globalXrpChange').textContent=move+(count?' · '+count+' venues':'');
+      if(q('#xrpChange'))q('#xrpChange').textContent=move+' · 24h';
     }
-    [...(data.venues||[]),{...composite,id:'all'}].forEach(row=>{
-      const p=Number(row.price);
-      if(!Number.isFinite(p))return;
-      qa('[data-exchange-price="'+row.id+'"]').forEach(el=>el.textContent='$'+p.toFixed(5));
-    });
+    for(const row of data.venues||[]){
+      const p=Number(row?.price);
+      qa('[data-exchange-price="'+row.id+'"]').forEach(el=>{
+        el.textContent=Number.isFinite(p)?'$'+p.toFixed(5):'—';
+        el.dataset.available=Number.isFinite(p)?'true':'false';
+      });
+    }
   }
 
-  window.XRPetShell={showView,refreshMarket,closeSidebarMenus};
+  document.addEventListener('click',e=>{
+    const summary=e.target.closest?.('#xrpetSidebar summary[data-primary-view]');
+    if(summary){
+      const view=summary.dataset.primaryView;
+      if(view==='history')showView('history',{keepMenu:summary.closest('details')});
+      else if(view==='ecosystem')showView('ecosystem',{keepMenu:summary.closest('details')});
+      else if(view==='games')showView('games',{keepMenu:summary.closest('details')});
+      return;
+    }
+
+    const primary=e.target.closest?.('[data-primary-view]');
+    if(primary&&!primary.disabled){
+      const view=primary.dataset.primaryView;
+      if(view==='ripplet')showRipplet(); else showView(view);
+      return;
+    }
+
+    const history=e.target.closest?.('[data-history-view]');
+    if(history&&!history.disabled){showHistory(history.dataset.historyView);return}
+
+    const eco=e.target.closest?.('[data-ecosystem-view]');
+    if(eco&&!eco.disabled){showEcosystem(eco.dataset.ecosystemView);return}
+
+    const game=e.target.closest?.('[data-game-nav]');
+    if(game&&!game.disabled){showGame(game.dataset.gameNav);return}
+
+    const learn=e.target.closest?.('[data-learn-module],[data-learn-next]');
+    if(learn&&!learn.disabled){showLearn(learn.dataset.learnModule||learn.dataset.learnNext);return}
+
+    const exchange=e.target.closest?.('[data-exchange]');
+    if(exchange&&!exchange.disabled){selectExchange(exchange.dataset.exchange);return}
+
+    const custom=e.target.closest?.('[data-customize-target]');
+    if(custom&&!custom.disabled){showCustomization(custom.dataset.customizeTarget);return}
+  },true);
+
+  qa('#xrpetSidebar details').forEach(details=>{
+    details.addEventListener('toggle',()=>{
+      if(!details.open)return;
+      qa('#xrpetSidebar details').forEach(other=>{if(other!==details)other.removeAttribute('open')});
+    });
+  });
+
+  q('#refreshNews')?.addEventListener('click',loadAnnouncements);
+  q('#xrpRefreshHistory')?.addEventListener('click',()=>{try{window.XRPetHistory?.setView?.(window.XRPetHistoryPending||'All')}catch{}});
+  window.addEventListener('xrpet:view-change',e=>{
+    if(e.detail?.view==='announcements')loadAnnouncements();
+  });
+
+  window.XRPetShell={showView,showHistory,showLearn,showEcosystem,showGame,showCustomization,selectExchange,refreshMarket,loadAnnouncements,closeSidebarMenus};
+
   if(!qa('.primary-view-section.view-active').length)showView('home');
+  else resetWorkspace();
+
   refreshMarket();
+  loadAnnouncements();
   setInterval(refreshMarket,5000);
+  setInterval(loadAnnouncements,15000);
 })();
