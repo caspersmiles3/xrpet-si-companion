@@ -1,4 +1,4 @@
-# XRPet SI Companion™ — v1.0
+# XRPet SI Companion™ — v3.7.0
 
 **Don't watch the Ledger. Live with it.**
 
@@ -12,7 +12,7 @@ Render service: https://xrpet-si-companion.onrender.com
 
 - Live XRPL ledger + fee signals
 - XRP/USD market snapshot with public-data fallback
-- Official Ripple + XRPL update feed
+- Official Ripple + XRPL update feed\n- Ripple + XRP Living Archive from 2011 to present\n- Self-updating current-event layer merged into the historical timeline\n- Key-person directory covering XRPL creators and Ripple leadership\n- Searchable filters for legal, market, XRPL, adoption, acquisition and XRP events
 - Catch Me Up / daily grounded briefing
 - Truth Mode: CONFIRMED / LIKELY / SPECULATION / RUMOR / MISLEADING
 - Companion name + personality
@@ -66,7 +66,7 @@ Drop → Ripple → Wave → Surge → Nexus → Titan → Legend
 
 Evolution is driven by participation and learning, not investment size.
 
-## Low-maintenance design
+## Ripple + XRP Living Archive\n\nThe app includes a primary-source historical archive and automatically merges fresh official Ripple/XRPL headlines into the timeline. The live layer refreshes every five minutes while the app is open, while server-side official-source caching prevents unnecessary repeated requests. Ripple the company, XRP the asset, and XRPL the network are kept distinct.\n\n## Low-maintenance design
 
 The app automatically reads public feeds and live XRPL events. It does not require the creator to manually post content each day.
 
