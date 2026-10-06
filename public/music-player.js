@@ -9,6 +9,7 @@
   const name=document.getElementById('musicTrackName');
   const waveform=document.getElementById('musicWaveform');
   const waveCtx=waveform?.getContext?.('2d')||null;
+  window.XRPetMusicPlaying=false;
   if(!player||!audio||!play||!name)return;
 
   const tracks=[
@@ -134,11 +135,20 @@
     return n;
   }
 
-  function syncButton(){
+  function musicState(reason='state'){
+    const playing=!audio.paused&&!audio.ended&&!audio.error;
+    window.XRPetMusicPlaying=playing;
+    window.dispatchEvent(new CustomEvent('xrpet:music-state',{
+      detail:{playing,reason,index:state.index,track:tracks[state.index]?.[0]||''}
+    }));
+    return playing;
+  }
+  function syncButton(reason='state'){
     const playing=!audio.paused&&!audio.ended;
     play.textContent=playing?'Ⅱ':'▶';
     play.setAttribute('aria-label',playing?'Pause soundtrack':'Play soundtrack');
     player.classList.toggle('playing',playing);
+    musicState(reason);
   }
 
   play.addEventListener('click',async()=>{
@@ -153,12 +163,15 @@
     save();
   });
 
-  audio.addEventListener('play',syncButton);
-  audio.addEventListener('pause',syncButton);
+  audio.addEventListener('play',()=>syncButton('play'));
+  audio.addEventListener('pause',()=>syncButton('pause'));
   audio.addEventListener('volumechange',()=>{
     if(!audio.muted && volume) volume.value=String(audio.volume);
   });
-  audio.addEventListener('ended',()=>loadTrack(randomNext(),true));
+  audio.addEventListener('ended',()=>{
+    syncButton('ended');
+    loadTrack(randomNext(),true);
+  });
   audio.addEventListener('error',()=>{
     const file=tracks[state.index][1];
     if(!usingFallback){
@@ -171,12 +184,12 @@
     }
     console.error('XRPet audio failed',audio.currentSrc,audio.error?.code);
     name.textContent='Audio could not load';
-    syncButton();
+    syncButton('error');
   });
 
   shuffleBtn?.classList.toggle('active',state.shuffle);
   loadTrack(state.index,false);
-  syncButton();
+  syncButton('init');
   drawWave();
   window.addEventListener('resize',resizeWave,{passive:true});
 })();
