@@ -1428,7 +1428,8 @@ function setPrimaryView(view='home'){
   qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));
   document.body.classList.remove('workspace-open','customization-open');
   const target=view==='home'?'homeSection':view==='live'?'xrplPanel':view==='announcements'?'announcementsSection':view==='ripplet'?'companionSection':view==='ecosystem'?'ecosystemSection':view==='games'?'gamesSection':'xrpHistorySection';
-  ['historyNavDetails','ecosystemNavDetails','gamesNavDetails'].forEach(id=>{if((view==='history'&&id==='historyNavDetails')||(view==='ecosystem'&&id==='ecosystemNavDetails')||(view==='games'&&id==='gamesNavDetails'))return;q('#'+id)?.removeAttribute('open')});
+  ['historyNavDetails','exchangeNavDetails','rippletNavDetails','ecosystemNavDetails','gamesNavDetails','customizeDetails','settingsDetails'].forEach(id=>{q('#'+id)?.removeAttribute('open')});
+  const pane=q('#'+target);if(pane)pane.scrollTop=0;
   setTimeout(()=>scrollSectionTop(target),0);
 }
 qa('[data-primary-view]').forEach(b=>b.addEventListener('click',()=>setPrimaryView(b.dataset.primaryView)));
@@ -1484,6 +1485,31 @@ qa('[data-game-nav]').forEach(btn=>btn.addEventListener('click',()=>setGameSubvi
 
 q('#ecosystemNavDetails > summary')?.addEventListener('click',()=>setTimeout(()=>{if(primaryView!=='ecosystem')setPrimaryView('ecosystem')},0));
 q('#gamesNavDetails > summary')?.addEventListener('click',()=>setTimeout(()=>{if(primaryView!=='games')setPrimaryView('games')},0));
+
+function setRippletSubview(view='overview'){
+  setPrimaryView('ripplet');
+  qa('[data-ripplet-panel]').forEach(panel=>panel.classList.toggle('active',panel.dataset.rippletPanel===view));
+  qa('[data-ripplet-view]').forEach(btn=>btn.classList.toggle('active',btn.dataset.rippletView===view));
+  q('#rippletNavDetails')?.removeAttribute('open');
+  const section=q('#companionSection');if(section)section.scrollTop=0;
+}
+qa('[data-ripplet-view]').forEach(btn=>btn.addEventListener('click',()=>setRippletSubview(btn.dataset.rippletView)));
+q('#rippletNavDetails > summary')?.addEventListener('click',()=>setTimeout(()=>{if(primaryView!=='ripplet')setPrimaryView('ripplet')},0));
+
+const dismissibleMenus=['historyNavDetails','exchangeNavDetails','rippletNavDetails','ecosystemNavDetails','gamesNavDetails','customizeDetails','settingsDetails'];
+document.addEventListener('pointerdown',e=>{
+  dismissibleMenus.forEach(id=>{
+    const menu=q('#'+id);
+    if(menu?.open&&!menu.contains(e.target))menu.removeAttribute('open');
+  });
+},{capture:true});
+document.addEventListener('focusin',e=>{
+  dismissibleMenus.forEach(id=>{
+    const menu=q('#'+id);
+    if(menu?.open&&!menu.contains(e.target))menu.removeAttribute('open');
+  });
+});
+
 
 q('#customizeDetails')?.addEventListener('toggle',e=>{
   if(e.target.open) q('#settingsDetails')?.removeAttribute('open');
