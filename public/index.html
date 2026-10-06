@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=2.5.0">
+  <link rel="stylesheet" href="/styles.css?v=2.6.0">
 </head>
 <body>
 <div class="ambient ambient-one"></div>
@@ -67,33 +67,11 @@
       </div>
     </header>
 
-    <section id="xrplPanel" class="top-live panel">
-      <div class="panel-title">
-        <div><span class="live-dot"></span><strong>XRPL Live</strong></div>
-        <span>Mainnet</span>
-      </div>
-      <div class="top-metrics">
-        <article><span>XRP / USD</span><strong id="xrpPrice">—</strong><small id="xrpChange">Loading market</small></article>
-        <article><span>Ledger Index</span><strong id="ledger">—</strong><small id="txCount">Waiting for close</small></article>
-        <article><span>Base Fee</span><strong><b id="fee">—</b> drops</strong><small>Network reference</small></article>
-        <article><span>XRPL Status</span><strong id="status">Connecting</strong><small id="serverState">Live network</small></article>
-      </div>
-    </section>
+    
 
-    <section id="chatPanel" class="top-chat panel">
-      <div class="chat-head">
-        <div class="chat-identity"><div class="mini-avatar">X</div><div><strong>Chat with <span id="chatPetName">XRPet</span></strong><small><i></i> Online · grounded SI</small></div></div>
-        <span class="truth-badge">TRUTH MODE</span>
-      </div>
-      <div id="chat" class="chat" aria-live="polite"><div class="bubble assistant">I’m your XRPet. Ask me what’s happening on the XRP Ledger.</div></div>
-      <div class="quick">
-        <button data-q="Catch me up">XRPL update</button>
-        <button data-q="What is the XRP price?">XRP price</button>
-        <button data-q="What is the live XRPL fee?">Live fee</button>
-        <button data-q="Verify this claim: ">Truth Mode</button>
-      </div>
-      <form id="chatForm" class="composer"><input id="message" maxlength="500" autocomplete="off" placeholder="Message XRPet…"><button>Send</button></form>
-    </section>
+    
+
+    
 
     <section id="homeSection" class="flow-section home-section">
       <div class="section-copy">
@@ -112,7 +90,35 @@
       <p id="petSpeech" class="pet-speech">Connecting to live network data…</p>
     </section>
 
-    <section id="companionSection" class="flow-section">
+<section id="xrplPanel" class="top-live panel">
+      <div class="panel-title">
+        <div><span class="live-dot"></span><strong>XRPL Live</strong></div>
+        <span>Mainnet</span>
+      </div>
+      <div class="top-metrics">
+        <article><span>XRP / USD</span><strong id="xrpPrice">—</strong><small id="xrpChange">Loading market</small></article>
+        <article><span>Ledger Index</span><strong id="ledger">—</strong><small id="txCount">Waiting for close</small></article>
+        <article><span>Base Fee</span><strong><b id="fee">—</b> drops</strong><small>Network reference</small></article>
+        <article><span>XRPL Status</span><strong id="status">Connecting</strong><small id="serverState">Live network</small></article>
+      </div>
+    </section>
+
+<section id="chatPanel" class="top-chat panel">
+      <div class="chat-head">
+        <div class="chat-identity"><div class="mini-avatar">X</div><div><strong>Chat with <span id="chatPetName">XRPet</span></strong><small><i></i> Online · grounded SI</small></div></div>
+        <span class="truth-badge">TRUTH MODE</span>
+      </div>
+      <div id="chat" class="chat" aria-live="polite"><div class="bubble assistant">I’m your XRPet. Ask me what’s happening on the XRP Ledger.</div></div>
+      <div class="quick">
+        <button data-q="Catch me up">XRPL update</button>
+        <button data-q="What is the XRP price?">XRP price</button>
+        <button data-q="What is the live XRPL fee?">Live fee</button>
+        <button data-q="Verify this claim: ">Truth Mode</button>
+      </div>
+      <form id="chatForm" class="composer"><input id="message" maxlength="500" autocomplete="off" placeholder="Message XRPet…"><button>Send</button></form>
+    </section>
+
+<section id="companionSection" class="flow-section">
       <div class="section-heading">
         <div><span class="eyebrow">COMPANION</span><h2>Build the personality, memory, and evolution</h2></div>
         <span id="personalityChip" class="chip">Guardian</span>
@@ -156,44 +162,44 @@
 
     <section id="roomsSection" class="flow-section">
       <div class="section-heading">
-        <div><span class="eyebrow">ROOMS</span><h2>Choose the world your XRPet lives in</h2></div>
+        <div><span class="eyebrow">ROOM THEMES</span><h2>Change the atmosphere of the entire XRPet application</h2><p class="section-subcopy">Rooms are now full interface themes. The panels, background, glow, atmosphere, and companion lighting all change together.</p></div>
         <span id="unlocksChip" class="chip">3 unlocked</span>
       </div>
       <div class="room-showcase">
         <button data-room="nexus" class="room-choice detailed-room active">
           <span class="room-visual nexus-room-visual"><i></i></span>
-          <span class="room-copy"><strong>Neon Horizon</strong><small>XRPL penthouse · city lights · cool cyan ambience</small><em>Default</em></span>
+          <span class="room-copy"><strong>Neon Horizon</strong><small>Glass-black panels · cyan ledger glow · digital skyline · cool metallic ambience</small><b>APP THEME</b><em>Default</em></span>
         </button>
         <button data-room="ocean" class="room-choice detailed-room">
           <span class="room-visual ocean-room-visual"><i></i></span>
-          <span class="room-copy"><strong>Ripple Sanctuary</strong><small>Water, reflection, calm blue light, open horizon</small><em>Unlocked</em></span>
+          <span class="room-copy"><strong>Ripple Sanctuary</strong><small>Deep-water gradients · liquid reflections · softer panels · calm open-world ambience</small><b>APP THEME</b><em>Unlocked</em></span>
         </button>
         <button data-room="vault" class="room-choice detailed-room">
           <span class="room-visual vault-room-visual"><i></i></span>
-          <span class="room-copy"><strong>Ledger Vault</strong><small>Dark secure chamber, bronze accents, archive atmosphere</small><em>Unlocked</em></span>
+          <span class="room-copy"><strong>Ledger Vault</strong><small>Obsidian surfaces · bronze-gold edge light · secure archive styling · heavier contrast</small><b>APP THEME</b><em>Unlocked</em></span>
         </button>
         <button data-room="aurora" class="room-choice detailed-room">
           <span class="room-visual aurora-room-visual"><i></i></span>
-          <span class="room-copy"><strong>Sky Garden</strong><small>Floating garden, aurora light, soft violet atmosphere</small><em>Wave+</em></span>
+          <span class="room-copy"><strong>Sky Garden</strong><small>Aurora gradients · translucent panels · sky-blue and violet light · airy atmosphere</small><b>APP THEME</b><em>Wave+</em></span>
         </button>
         <button data-room="legend" class="room-choice detailed-room">
           <span class="room-visual legend-room-visual"><i></i></span>
-          <span class="room-copy"><strong>Orbital Station</strong><small>Space view, gold accents, high-tier command deck</small><em>Titan+</em></span>
+          <span class="room-copy"><strong>Orbital Station</strong><small>Near-black command deck · gold system light · orbital glow · premium high-tier interface</small><b>APP THEME</b><em>Titan+</em></span>
         </button>
       </div>
     </section>
 
     <section id="cosmeticsSection" class="flow-section">
       <div class="section-heading">
-        <div><span class="eyebrow">COSMETICS</span><h2>Change the companion’s material and energy style</h2></div>
+        <div><span class="eyebrow">COMPANION COSMETICS</span><h2>Change the companion’s actual build, silhouette, and equipment</h2><p class="section-subcopy">Cosmetics now alter physical features—not only color.</p></div>
         <span class="chip">3D materials</span>
       </div>
       <div class="cosmetics-showcase">
-        <button class="cosmetic-choice cosmetic-card active" data-cosmetic="classic"><span class="cosmetic-model classic"></span><strong>Classic</strong><small>Silver shell · cyan core</small><em>Equipped</em></button>
-        <button class="cosmetic-choice cosmetic-card" data-cosmetic="aqua"><span class="cosmetic-model aqua"></span><strong>Aqua Core</strong><small>Ice-blue shell · brighter emissive core</small><em>Owned</em></button>
-        <button class="cosmetic-choice cosmetic-card" data-cosmetic="midnight"><span class="cosmetic-model midnight"></span><strong>Midnight</strong><small>Dark graphite · electric blue highlights</small><em>Owned</em></button>
-        <button class="cosmetic-choice cosmetic-card" data-cosmetic="pearl"><span class="cosmetic-model pearl"></span><strong>Pearl</strong><small>Bright ceramic shell · soft white reflection</small><em>Owned</em></button>
-        <button class="cosmetic-choice cosmetic-card" data-cosmetic="solar"><span class="cosmetic-model solar"></span><strong>Solar Flare</strong><small>Warm alloy · amber energy</small><em>Owned</em></button>
+        <button class="cosmetic-choice cosmetic-card active" data-cosmetic="classic"><span class="cosmetic-model classic"><i></i></span><strong>Classic Nexus</strong><small>Balanced ears · shoulder pods · orbit core · silver XRPL shell</small><b>STANDARD BUILD</b><em>Equipped</em></button>
+        <button class="cosmetic-choice cosmetic-card" data-cosmetic="aqua"><span class="cosmetic-model aqua"><i></i></span><strong>Ripple Scout</strong><small>Swept fins · lighter shoulder hardware · dual orbit rings · aqua energy</small><b>SCOUT BUILD</b><em>Owned</em></button>
+        <button class="cosmetic-choice cosmetic-card" data-cosmetic="midnight"><span class="cosmetic-model midnight"><i></i></span><strong>Ledger Guardian</strong><small>Heavy shoulder armor · shortened ears · protected core · graphite plating</small><b>GUARDIAN BUILD</b><em>Owned</em></button>
+        <button class="cosmetic-choice cosmetic-card" data-cosmetic="pearl"><span class="cosmetic-model pearl"><i></i></span><strong>Oracle Halo</strong><small>Tall signal ears · triple halo system · floating crown node · pearl shell</small><b>ORACLE BUILD</b><em>Owned</em></button>
+        <button class="cosmetic-choice cosmetic-card" data-cosmetic="solar"><span class="cosmetic-model solar"><i></i></span><strong>Solar Vanguard</strong><small>Angular fins · reinforced chest · larger core · amber reactor halo</small><b>VANGUARD BUILD</b><em>Owned</em></button>
       </div>
     </section>
 
@@ -224,7 +230,7 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet SI Companion™ · Beta 2.5 · XRP Ledger companion · Not affiliated with or endorsed by Ripple · Not financial advice</footer>
+    <footer>XRPet SI Companion™ · Beta 2.6 · XRP Ledger companion · Not affiliated with or endorsed by Ripple · Not financial advice</footer>
   </main>
 </div>
 
@@ -246,7 +252,7 @@
   </div>
 </div>
 
-<script src="/app.js?v=2.5.0"></script>
-<script type="module" src="/companion3d.js?v=2.5.0"></script>
+<script src="/app.js?v=2.6.0"></script>
+<script type="module" src="/companion3d.js?v=2.6.0"></script>
 </body>
 </html>
