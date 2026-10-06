@@ -1083,6 +1083,7 @@ let roamPinned=false,roamDocked=false,roamX=.72,roamY=.72,roamTimer=0;
 let rippletPointer={x:0,y:0,active:false,movedAt:0};
 let rippletPointerTimer=0;
 let rippletLastPointerTarget=null;
+let rippletRouteToken=0;
 
 function syncRoamBounds(){
   const shell=q('.main-shell');if(!shell||!roamLayer)return;
@@ -1566,6 +1567,7 @@ function routeRippletTo(x,y,activity='walk',ignoreTarget=null){
   const route=findClearRoute(current,end,ignoreTarget);
   if(!route)return false;
 
+  const routeToken=++rippletRouteToken;
   let delay=0,from=current;
   route.forEach((point,index)=>{
     const final=index===route.length-1;
@@ -1574,6 +1576,7 @@ function routeRippletTo(x,y,activity='walk',ignoreTarget=null){
     const stepActivity=final?finalActivity:(segment>120?'run':'walk');
     const stepDelay=stepActivity==='run'?760:stepActivity==='jump'?620:stepActivity==='climb'||stepActivity==='hang'?1020:1180;
     setTimeout(()=>{
+      if(routeToken!==rippletRouteToken)return;
       if(roamDocked&&activity!=='dock')return;
       window.XRPet2D?.motor?.(final?(activity==='stand'?'stand':activity==='sit'?'sit':activity):stepActivity);
       setRoamPosition(point.x,point.y,stepActivity);
