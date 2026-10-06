@@ -1054,7 +1054,8 @@ function performAction(name='greet',options={}){
   const allowed=new Set(['greet','celebrate','alert','sleep','wake','happy','focus','scan','orbit','walk','run','jump','climb','reach','grab','carry','crouch','turn','sip','gulp','splash','bite','taste','charge','curl','dream','snore','wave','highfive','dance','cheer','laugh','shrug','confused','sad','excited','point','salute','thinking','victory','surprised']);
   action=allowed.has(name)?name:'greet';
   actionStarted=performance.now();
-  actionUntil=actionStarted+(['sleep','curl','dream','snore'].includes(action)?9000:action==='walk'?5000:action==='orbit'||action==='dance'?5200:action==='scan'||action==='gulp'||action==='taste'?3200:action==='focus'||action==='charge'?4200:action==='celebrate'||action==='splash'||action==='highfive'?2800:action==='alert'?2200:motorDuration(action));
+  const expressive=new Set(['happy','cheer','laugh','shrug','confused','sad','excited','point','salute','thinking','victory','surprised']);
+  actionUntil=actionStarted+(['sleep','curl','dream','snore'].includes(action)?9000:action==='walk'?5000:action==='orbit'||action==='dance'?5200:expressive.has(action)?3600:action==='scan'||action==='gulp'||action==='taste'?3200:action==='focus'||action==='charge'?4200:action==='celebrate'||action==='splash'||action==='highfive'?3000:action==='alert'?2400:motorDuration(action));
   motor.mode=action;
   motor.reachSide=options.side==='left'?-1:1;
   motor.turn=Number(options.turn)||0;
@@ -1064,6 +1065,7 @@ function performAction(name='greet',options={}){
   if(action==='wake')actionUntil=performance.now()+700;
   if(['happy','greet','celebrate','splash','bite','charge','wave','highfive','dance','sip','gulp','taste','cheer','laugh','excited','victory','surprised'].includes(action))boost=1;
   playExternalAction(action);
+  window.dispatchEvent(new CustomEvent('xrpet:emotion',{detail:{emotion:action,until:actionUntil}}));
 }
 function currentAction(){
   if(action!=='idle'&&performance.now()>actionUntil){action='idle'}
@@ -1224,6 +1226,108 @@ function animateExternalRipplet(t,state){
     poseExternalPart('Shin_L',{rot:[Math.max(0,walk)*.28,0,0]},.30);
     poseExternalPart('Shin_R',{rot:[Math.max(0,-walk)*.28,0,0]},.30);
     poseExternalPart('Ripplet_Head',{rot:[-.025,0,-walk*.015],pos:[0,Math.abs(walk)*.03,0]},.24);
+  }
+}
+
+function animateNativeRippletExpression(t,state){
+  if(externalKind!=='ripplet'||!externalModel||!externalNativeRig||state==='idle')return;
+  const wave=Math.sin(t*7.5),quick=Math.sin(t*10.5),slow=Math.sin(t*2.6);
+
+  if(state==='happy'||state==='excited'){
+    poseExternalPart('UpperArm_L',{rot:[-.12,0,.64+wave*.08]},.34);
+    poseExternalPart('UpperArm_R',{rot:[-.12,0,-.64-wave*.08]},.34);
+    poseExternalPart('Forearm_L',{rot:[-.05,0,.30]},.34);
+    poseExternalPart('Forearm_R',{rot:[-.05,0,-.30]},.34);
+    poseExternalPart('Ripplet_Head',{rot:[-.10,slow*.08,wave*.025],pos:[0,.04+Math.abs(wave)*.02,0]},.30);
+    poseExternalPart('EnergyEye_L',{scale:[1,1.12,1.08]},.30);
+    poseExternalPart('EnergyEye_R',{scale:[1,1.12,1.08]},.30);
+  }else if(state==='celebrate'||state==='cheer'||state==='victory'||state==='dance'){
+    poseExternalPart('UpperArm_L',{rot:[-.18,0,1.05+wave*.16],pos:[0,.08,0]},.38);
+    poseExternalPart('UpperArm_R',{rot:[-.18,0,-1.05-wave*.16],pos:[0,.08,0]},.38);
+    poseExternalPart('Forearm_L',{rot:[-.08,0,.62+quick*.12]},.38);
+    poseExternalPart('Forearm_R',{rot:[-.08,0,-.62-quick*.12]},.38);
+    poseExternalPart('Ripplet_Head',{rot:[-.10,Math.sin(t*5)*.13,wave*.04],pos:[0,.06+Math.abs(wave)*.035,0]},.34);
+    poseExternalPart('Ripplet_Torso',{rot:[-.05,0,wave*.035],pos:[0,Math.abs(wave)*.025,0]},.30);
+  }else if(state==='laugh'){
+    poseExternalPart('UpperArm_L',{rot:[-.10,0,.38]},.30);
+    poseExternalPart('UpperArm_R',{rot:[-.10,0,-.38]},.30);
+    poseExternalPart('Forearm_L',{rot:[-.15,0,.48]},.34);
+    poseExternalPart('Forearm_R',{rot:[-.15,0,-.48]},.34);
+    poseExternalPart('Ripplet_Head',{rot:[-.18,0,wave*.045],pos:[0,Math.abs(quick)*.035,0]},.34);
+    poseExternalPart('Ripplet_Torso',{rot:[-.08,0,0],pos:[0,Math.abs(quick)*.025,0]},.30);
+  }else if(state==='shrug'){
+    poseExternalPart('UpperArm_L',{rot:[0,0,.52],pos:[0,.06,0]},.34);
+    poseExternalPart('UpperArm_R',{rot:[0,0,-.52],pos:[0,.06,0]},.34);
+    poseExternalPart('Forearm_L',{rot:[0,0,.72]},.34);
+    poseExternalPart('Forearm_R',{rot:[0,0,-.72]},.34);
+    poseExternalPart('Hand_L',{rot:[0,.18,.12]},.30);
+    poseExternalPart('Hand_R',{rot:[0,-.18,-.12]},.30);
+    poseExternalPart('Ripplet_Head',{rot:[0,-.08,.08]},.28);
+  }else if(state==='confused'){
+    poseExternalPart('Ripplet_Head',{rot:[.02,Math.sin(t*2.2)*.12,.18]},.32);
+    poseExternalPart('UpperArm_R',{rot:[-.18,0,-.48]},.30);
+    poseExternalPart('Forearm_R',{rot:[-.34,0,-.66]},.34);
+    poseExternalPart('EnergyEye_L',{scale:[1,.72,1]},.28);
+    poseExternalPart('EnergyEye_R',{scale:[1,1.08,1]},.28);
+  }else if(state==='sad'){
+    poseExternalPart('Ripplet_Head',{rot:[.22,0,.04],pos:[0,-.045,0]},.30);
+    poseExternalPart('UpperArm_L',{rot:[.10,0,.18]},.26);
+    poseExternalPart('UpperArm_R',{rot:[.10,0,-.18]},.26);
+    poseExternalPart('Forearm_L',{rot:[.08,0,.12]},.26);
+    poseExternalPart('Forearm_R',{rot:[.08,0,-.12]},.26);
+    poseExternalPart('EnergyEye_L',{scale:[1,.52,1]},.30);
+    poseExternalPart('EnergyEye_R',{scale:[1,.52,1]},.30);
+  }else if(state==='point'){
+    poseExternalPart('UpperArm_R',{rot:[-.82,0,-.34]},.38);
+    poseExternalPart('Forearm_R',{rot:[-.52,0,-.10],pos:[0,.04,.10]},.38);
+    poseExternalPart('Hand_R',{rot:[-.18,0,0],pos:[0,.08,.14]},.38);
+    poseExternalPart('Ripplet_Head',{rot:[-.04,.14,0]},.30);
+  }else if(state==='salute'){
+    poseExternalPart('UpperArm_R',{rot:[-.22,0,-.72]},.38);
+    poseExternalPart('Forearm_R',{rot:[-.58,0,-1.00],pos:[0,.05,.03]},.40);
+    poseExternalPart('Hand_R',{rot:[-.12,0,-.18],pos:[0,.10,.06]},.38);
+    poseExternalPart('Ripplet_Head',{rot:[-.04,.04,0]},.28);
+  }else if(state==='thinking'){
+    poseExternalPart('Ripplet_Head',{rot:[.05,-.11,.10]},.28);
+    poseExternalPart('UpperArm_L',{rot:[-.18,0,.42]},.30);
+    poseExternalPart('Forearm_L',{rot:[-.62,0,.82],pos:[0,.05,.05]},.36);
+    poseExternalPart('Hand_L',{rot:[-.18,.10,.08],pos:[0,.08,.08]},.34);
+    poseExternalPart('EnergyEye_L',{scale:[1,.68,1]},.28);
+    poseExternalPart('EnergyEye_R',{scale:[1,.78,1]},.28);
+  }else if(state==='surprised'){
+    poseExternalPart('UpperArm_L',{rot:[-.18,0,.48]},.32);
+    poseExternalPart('UpperArm_R',{rot:[-.18,0,-.48]},.32);
+    poseExternalPart('Forearm_L',{rot:[-.20,0,.32]},.30);
+    poseExternalPart('Forearm_R',{rot:[-.20,0,-.32]},.30);
+    poseExternalPart('Ripplet_Head',{rot:[-.14,0,0],pos:[0,.05,0]},.34);
+    poseExternalPart('EnergyEye_L',{scale:[1,1.28,1.14]},.40);
+    poseExternalPart('EnergyEye_R',{scale:[1,1.28,1.14]},.40);
+  }else if(state==='scan'){
+    const scan=Math.sin(t*2.8);
+    poseExternalPart('Ripplet_Head',{rot:[0,scan*.34,0]},.34);
+    poseExternalPart('Ripplet_FacePlate',{rot:[0,scan*.24,0]},.32);
+    poseExternalPart('EnergyEye_L',{scale:[1,.58,1.10]},.32);
+    poseExternalPart('EnergyEye_R',{scale:[1,.58,1.10]},.32);
+  }else if(state==='focus'){
+    poseExternalPart('Ripplet_Head',{rot:[-.12,0,0]},.30);
+    poseExternalPart('UpperArm_L',{rot:[-.08,0,.10]},.24);
+    poseExternalPart('UpperArm_R',{rot:[-.08,0,-.10]},.24);
+    poseExternalPart('EnergyEye_L',{scale:[1,.54,1.08]},.30);
+    poseExternalPart('EnergyEye_R',{scale:[1,.54,1.08]},.30);
+  }else if(state==='alert'){
+    poseExternalPart('UpperArm_L',{rot:[-.18,0,.24]},.32);
+    poseExternalPart('UpperArm_R',{rot:[-.18,0,-.24]},.32);
+    poseExternalPart('Forearm_L',{rot:[-.10,0,.16]},.30);
+    poseExternalPart('Forearm_R',{rot:[-.10,0,-.16]},.30);
+    poseExternalPart('Ripplet_Head',{rot:[-.10,Math.sin(t*8)*.08,0]},.32);
+    poseExternalPart('EnergyEye_L',{scale:[1,.72,1.16]},.34);
+    poseExternalPart('EnergyEye_R',{scale:[1,.72,1.16]},.34);
+  }else if(state==='sleep'||state==='curl'||state==='dream'||state==='snore'){
+    poseExternalPart('Ripplet_Head',{rot:[.24,0,.10],pos:[0,-.05,0]},.28);
+    poseExternalPart('UpperArm_L',{rot:[.12,0,.18]},.24);
+    poseExternalPart('UpperArm_R',{rot:[.12,0,-.18]},.24);
+    poseExternalPart('EnergyEye_L',{scale:[1,.08,1]},.40);
+    poseExternalPart('EnergyEye_R',{scale:[1,.08,1]},.40);
   }
 }
 async function loadExternalModel(url,options={}){
@@ -1495,6 +1599,7 @@ function renderFrame(){
       externalNextBlinkAt=performance.now()+1900+Math.random()*3600;
     }
   }
+  animateNativeRippletExpression(t,state);
   animateExternalRipplet(t,state);
   if(externalModel){
     const extSleep=state==='sleep',extCelebrate=state==='celebrate',extAlert=state==='alert',extFocus=state==='focus',extScan=state==='scan',extOrbit=state==='orbit',extRun=state==='run',extJump=state==='jump',extClimb=state==='climb',extCrouch=state==='crouch';
