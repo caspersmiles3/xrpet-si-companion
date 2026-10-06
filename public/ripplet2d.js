@@ -49,39 +49,39 @@
           </g>
 
           <g class="r2-arm r2-arm-left">
-            <circle class="r2-joint r2-shoulder" cx="21" cy="41" r="2.8"/>
-            <g class="r2-upper-arm">
-              <rect class="r2-limb" x="15.8" y="40" width="5" height="11" rx="2.5"/>
-              <circle class="r2-joint r2-elbow" cx="18.3" cy="51" r="2.3"/>
-            </g>
-            <g class="r2-forearm">
-              <rect class="r2-limb" x="15.9" y="51" width="4.8" height="9.3" rx="2.4"/>
-              <circle class="r2-joint r2-wrist" cx="18.3" cy="60" r="1.8"/>
-              <g class="r2-hand"><rect x="15.6" y="60" width="5.4" height="4.4" rx="2.2"/></g>
+            <circle class="r2-joint r2-shoulder" cx="22" cy="41" r="3"/>
+            <g class="r2-arm-motion r2-arm-motion-left">
+              <rect class="r2-limb r2-upper-arm" x="18.2" y="40.5" width="4.6" height="10.7" rx="2.3"/>
+              <circle class="r2-joint r2-elbow" cx="20.5" cy="51" r="2.25"/>
+              <g class="r2-forearm r2-forearm-left">
+                <rect class="r2-limb" x="18.25" y="50.7" width="4.5" height="9.2" rx="2.25"/>
+                <circle class="r2-joint r2-wrist" cx="20.5" cy="59.9" r="1.75"/>
+                <g class="r2-hand r2-hand-left"><rect x="17.9" y="59.4" width="5.2" height="4.3" rx="2.15"/></g>
+              </g>
             </g>
           </g>
 
           <g class="r2-arm r2-arm-right">
-            <circle class="r2-joint r2-shoulder" cx="43" cy="41" r="2.8"/>
-            <g class="r2-upper-arm">
-              <rect class="r2-limb" x="43.2" y="40" width="5" height="11" rx="2.5"/>
-              <circle class="r2-joint r2-elbow" cx="45.7" cy="51" r="2.3"/>
-            </g>
-            <g class="r2-forearm">
-              <rect class="r2-limb" x="43.3" y="51" width="4.8" height="9.3" rx="2.4"/>
-              <circle class="r2-joint r2-wrist" cx="45.7" cy="60" r="1.8"/>
-              <g class="r2-hand"><rect x="43" y="60" width="5.4" height="4.4" rx="2.2"/></g>
+            <circle class="r2-joint r2-shoulder" cx="42" cy="41" r="3"/>
+            <g class="r2-arm-motion r2-arm-motion-right">
+              <rect class="r2-limb r2-upper-arm" x="41.2" y="40.5" width="4.6" height="10.7" rx="2.3"/>
+              <circle class="r2-joint r2-elbow" cx="43.5" cy="51" r="2.25"/>
+              <g class="r2-forearm r2-forearm-right">
+                <rect class="r2-limb" x="41.25" y="50.7" width="4.5" height="9.2" rx="2.25"/>
+                <circle class="r2-joint r2-wrist" cx="43.5" cy="59.9" r="1.75"/>
+                <g class="r2-hand r2-hand-right"><rect x="40.9" y="59.4" width="5.2" height="4.3" rx="2.15"/></g>
+              </g>
             </g>
           </g>
 
           <g class="r2-head">
             <g class="r2-ear r2-ear-left">
-              <path d="M19 18 L11 12 L14 26 Z"/>
-              <path class="r2-ear-inner" d="M17.5 19 L13.6 15.7 L15 22.7 Z"/>
+              <path d="M20 18 L15 13 L16.5 25 Z"/>
+              <path class="r2-ear-inner" d="M19 19 L16.7 16.4 L17.3 22.4 Z"/>
             </g>
             <g class="r2-ear r2-ear-right">
-              <path d="M45 18 L53 12 L50 26 Z"/>
-              <path class="r2-ear-inner" d="M46.5 19 L50.4 15.7 L49 22.7 Z"/>
+              <path d="M44 18 L49 13 L47.5 25 Z"/>
+              <path class="r2-ear-inner" d="M45 19 L47.3 16.4 L46.7 22.4 Z"/>
             </g>
 
             <rect class="r2-head-shell" x="17" y="14" width="30" height="24" rx="9"/>
