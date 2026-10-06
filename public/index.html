@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=3.8.0">
+  <link rel="stylesheet" href="/styles.css?v=3.9.0">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
@@ -59,11 +59,11 @@
     <details class="settings-wrap customize-wrap" id="customizeDetails">
       <summary class="settings-trigger customize-trigger"><span>✦</span><b>Companion & Cosmetics</b><i>⌄</i></summary>
       <div class="settings-menu customize-menu">
-        <button type="button" class="menu-action" data-customize-target="companionSection">Companion</button>
+        <button type="button" class="menu-action" data-customize-target="companionSection">Ripplet</button>
         <button type="button" class="menu-action" data-customize-target="roomsSection">Rooms</button>
-        <button type="button" class="menu-action" data-customize-target="cosmeticsSection">Cosmetics & Equipment</button>
-        <button type="button" class="menu-action" data-customize-target="walletPanel">Wallet & NFT Companion</button>
-        <button type="button" class="menu-action" data-customize-target="chatPanel">Companion Chat</button>
+        <button type="button" class="menu-action" data-customize-target="cosmeticsSection">Ripplet Appearance</button>
+        <button type="button" class="menu-action" data-customize-target="walletPanel">NFT Companion Override</button>
+        <button type="button" class="menu-action" data-customize-target="chatPanel">Chat with Ripplet</button>
       </div>
     </details>
 
@@ -109,7 +109,7 @@
         <span id="liveBadge" class="status-pill waiting"><i></i><span>Connecting</span></span>
         <div class="profile-chip">
           <div class="mini-avatar">X</div>
-          <div><strong id="topPetName">NEXUS-589</strong><small><span id="topLevel">Level 1</span> · <span id="topXp">0 XP</span></small></div>
+          <div><strong id="topPetName">RIPPLET</strong><small><span id="topLevel">Level 1</span> · <span id="topXp">0 XP</span></small></div>
         </div>
       </div>
     </header>
@@ -138,7 +138,7 @@
         </div>
         <aside class="home-command-aside">
           <span class="command-label">ACTIVE COMPANION</span>
-          <strong id="petName">NEXUS-589</strong>
+          <strong id="petName">RIPPLET</strong>
           <small id="petMood">Watching the Ledger</small>
           <div class="command-rule"></div>
           <dl>
@@ -263,10 +263,10 @@
 <section id="chatPanel" class="top-chat panel customization-panel" data-customization-panel>
       <button type="button" class="customization-close" data-customize-close aria-label="Close companion chat">×</button>
       <div class="chat-head">
-        <div class="chat-identity"><div class="mini-avatar">X</div><div><strong>Chat with <span id="chatPetName">XRPet</span></strong><small><i></i> Online · grounded SI</small></div></div>
+        <div class="chat-identity"><div class="mini-avatar">X</div><div><strong>Chat with <span id="chatPetName">Ripplet</span></strong><small><i></i> Online · grounded SI</small></div></div>
         <span class="truth-badge">TRUTH MODE</span>
       </div>
-      <div id="chat" class="chat" aria-live="polite"><div class="bubble assistant">I’m your XRPet. Ask me what’s happening on the XRP Ledger.</div></div>
+      <div id="chat" class="chat" aria-live="polite"><div class="bubble assistant">I’m Ripplet, your XRP Ledger companion. Ask me what’s happening on the XRP Ledger.</div></div>
       <div class="quick">
         <button data-q="Catch me up">XRPL update</button>
         <button data-q="What is the XRP price?">XRP price</button>
@@ -278,7 +278,7 @@
 
 <section id="companionSection" class="flow-section customization-panel" data-customization-panel>
       <div class="section-heading">
-        <div><span class="eyebrow">COMPANION // DIGITAL FAMILIAR</span><h2>Choose an XRPL-native identity—not a generic pet.</h2><p class="section-subcopy">Every companion uses a distinct silhouette, real-model path, XRP signal equipment, reactions, memory, and evolution.</p></div>
+        <div><span class="eyebrow">OFFICIAL COMPANION // RIPPLET</span><h2>Meet Ripplet—the one official XRPet companion.</h2><p class="section-subcopy">Ripplet combines Ripple-inspired flow with an XRP energy core: one small floating character that watches the ledger, reacts to live signals, and represents XRPet across the entire app.</p></div>
         <span id="personalityChip" class="chip">Guardian</span>
       </div>
 
@@ -288,7 +288,7 @@
           <div class="studio-viewer-head">
             <div>
               <span class="command-label">LIVE COMPANION VIEWPORT</span>
-              <strong id="studioCompanionName">NEXUS-589</strong>
+              <strong id="studioCompanionName">RIPPLET</strong>
             </div>
             <div class="studio-status-row">
               <span id="studioRenderBadge" class="studio-badge">THREE.JS</span>
@@ -309,10 +309,10 @@
     <div class="nft-holo-ring"></div>
   </div>
   <div id="companion3d" class="companion3d-host" role="application" aria-label="Interactive 3D XRPet companion">
-    <div class="companion3d-loading"><span class="loading-orb"></span><small>INITIALIZING XRPET</small></div>
+    <div class="companion3d-loading"><span class="loading-orb"></span><small>INITIALIZING RIPPLET</small></div>
   </div>
   <div id="floatingHandle" class="floating-tag">
-    <strong id="floatingPetName">NEXUS-589</strong>
+    <strong id="floatingPetName">RIPPLET</strong>
     <span id="floatingModeLabel">Move via this tag · Tap XRPet to show controls</span>
     <div class="floating-controls">
       <button id="toggleFloat" type="button">Pin</button>
@@ -335,39 +335,19 @@
         </div>
 
         <aside class="studio-sidebar glass-surface">
-          <article class="detail-card companion-selector-card">
+          <article class="detail-card companion-selector-card ripplet-identity-card">
         <div class="card-title">
-          <div><h3>Choose Your Companion</h3><p>Pick a boy or girl companion, then choose the species/model. Cosmetics apply on top of this choice.</p></div>
-          <span id="companionModelChip" class="chip">Nexus · Boy</span>
+          <div><h3>Ripplet</h3><p>The permanent built-in XRPet mascot: a tiny floating Ripple/XRP signal character with a white-silver shell, graphite seams, cyan energy, expressive eyes, side-flow fins, and an XRP core.</p></div>
+          <span id="companionModelChip" class="chip">OFFICIAL // RIPPLET</span>
         </div>
-
-        <div class="gender-selector" role="group" aria-label="Companion gender">
-          <button type="button" class="gender-choice active" data-gender="boy"><span>♂</span><strong>Boy</strong><small>Boy companion presentation</small></button>
-          <button type="button" class="gender-choice" data-gender="girl"><span>♀</span><strong>Girl</strong><small>Girl companion presentation</small></button>
+        <div class="ripplet-spec-grid">
+          <div><span>ROLE</span><strong>XRPL Signal Companion</strong></div>
+          <div><span>IDENTITY</span><strong>Ripple + XRP Fusion</strong></div>
+          <div><span>DEFAULT</span><strong>Always Ripplet</strong></div>
+          <div><span>OVERRIDE</span><strong>Optional XRPL NFT</strong></div>
         </div>
-
-        <div class="companion-roster">
-          <button type="button" class="companion-choice active" data-companion="nexus">
-            <span class="companion-preview-icon nexus-preview"><i></i></span><strong>Nexus</strong><span class="companion-role">FLAGSHIP</span><small>Command guardian · structured intelligence · core-ledger authority</small><b class="rigged-badge">RIGGED 3D</b>
-          </button>
-          <button type="button" class="companion-choice" data-companion="fox">
-            <span class="companion-preview-icon fox-preview"><i></i></span><strong>Ripple Fox</strong><span class="companion-role">SCOUT</span><small>Fast signal scout · alert · curious · responsive</small><b class="rigged-badge">RIGGED 3D</b>
-          </button>
-          <button type="button" class="companion-choice" data-companion="pup">
-            <span class="companion-preview-icon pup-preview"><i></i></span><strong>Ledger Pup</strong><span class="companion-role">GUARDIAN</span><small>Loyal ledger protector · dependable · encouraging</small><b class="rigged-badge">REAL 3D</b>
-          </button>
-          <button type="button" class="companion-choice" data-companion="cat">
-            <span class="companion-preview-icon cat-preview"><i></i></span><strong>Vault Cat</strong><span class="companion-role">VAULT</span><small>Silent watcher · precise · stealth-oriented</small><b class="rigged-badge">REAL 3D</b>
-          </button>
-          <button type="button" class="companion-choice" data-companion="bird">
-            <span class="companion-preview-icon bird-preview"><i></i></span><strong>Pulse Bird</strong><span class="companion-role">PULSE</span><small>Signal messenger · live-ledger awareness · airborne energy</small><b class="rigged-badge">RIGGED 3D</b>
-          </button>
-          <button type="button" class="companion-choice" data-companion="turtle">
-            <span class="companion-preview-icon turtle-preview"><i></i></span><strong>Wave Turtle</strong><span class="companion-role">ANCHOR</span><small>Ancient-future guardian · stability · long-horizon temperament</small><b class="rigged-badge">REAL 3D</b>
-          </button>
-        </div>
-        <div class="companion-reactions" aria-label="Companion reactions">
-          <span>Companion Reactions</span>
+        <div class="companion-reactions" aria-label="Ripplet reactions">
+          <span>Ripplet Reactions</span>
           <div>
             <button type="button" data-pet-action="greet">Greet</button>
             <button type="button" data-pet-action="celebrate">Celebrate</button>
@@ -379,14 +359,14 @@
           </div>
         </div>
         <div class="model-runtime-status">
-          <span>3D Engine</span>
-          <strong id="modelRuntimeMode">Loading companion…</strong>
+          <span>Official Runtime</span>
+          <strong id="modelRuntimeMode">Loading Ripplet…</strong>
         </div>
-        <p class="model-credit">3D credits: Nexus RobotExpressive — Tomás Laulhé / Don McCurdy (CC0 1.0). Ripple Fox — PixelMannen, tomkranis, AsoboStudio &amp; scurest (CC0 / CC BY 4.0). Ledger Pup/Shiba Inu and Vault Cat — Quaternius via Poly Pizza (CC0 1.0). Pulse Bird/Scarlet Macaw — Mateus Schwaab (CC BY 4.0). Wave Turtle — Poly by Google via Poly Pizza (CC BY).</p>
+        <p class="model-credit">Ripplet is the single built-in XRPet companion. User-owned XRPL NFTs can optionally override Ripplet without changing the app’s official mascot.</p>
       </article>
           <div class="equipment-matrix">
         <div class="equipment-matrix-head">
-          <div><span class="command-label">EQUIPMENT MATRIX</span><h3>Layer individual hardware over the selected build.</h3></div>
+          <div><span class="command-label">RIPPLET APPEARANCE</span><h3>Optional appearance accents for Ripplet. These never create a different built-in companion.</h3></div>
           <span class="truth-label">LIVE 3D</span>
         </div>
 
@@ -438,14 +418,12 @@
       
 
       <div class="detail-grid companion-detail">
-        <article class="detail-card identity-card">
-          <h3>Identity</h3>
-          <form id="profileForm" class="form-grid">
-            <label>Name<input id="profileName" maxlength="24"></label>
-            <label>Personality<select id="profilePersonality"><option>Guardian</option><option>Explorer</option><option>Oracle</option><option>Builder</option><option>Spark</option><option>Jester</option></select></label>
-            <label class="wide">Focus<input id="profileFocus" maxlength="80" placeholder="XRP, XRPL, learning, building…"></label>
-            <button class="primary wide">Save companion</button>
-          </form>
+        <article class="detail-card identity-card ripplet-lore-card">
+          <h3>Ripplet Identity</h3>
+          <p><strong>Name:</strong> Ripplet</p>
+          <p><strong>Nature:</strong> A tiny living signal-being that fuses Ripple-style fluid connectivity with XRP-inspired geometric energy.</p>
+          <p><strong>Personality:</strong> Intelligent, friendly, watchful, calm, slightly playful, and grounded in verified XRPL data.</p>
+          <p><strong>Purpose:</strong> Translate live ledger activity, market context, settlements, announcements, and truth-checked information into a visible companion presence.</p>
         </article>
 
         <article class="detail-card mission-card">
@@ -465,8 +443,8 @@
 
       <article class="detail-card nft-companion-card">
         <div class="card-title">
-          <div><h3>XRPL NFT Companions</h3><p>Use characters and collectibles owned by the connected or watched XRPL account.</p></div>
-          <div class="nft-actions"><button id="useNativeCompanion" class="mini-button secondary">Use XRPet Companion</button><button id="loadNfts" class="mini-button">Load my NFTs</button></div>
+          <div><h3>Bring Your Own Companion</h3><p>Optionally use an eligible image-based XRPL NFT as your personal companion override. Ripplet remains the official default.</p></div>
+          <div class="nft-actions"><button id="useNativeCompanion" class="mini-button secondary">Restore Ripplet</button><button id="loadNfts" class="mini-button">Load my NFTs</button></div>
         </div>
         <div id="nftStatus" class="muted">Connect or watch an XRPL account, then load its NFTs.</div>
         <div id="nftCompanionList" class="nft-companion-list"></div>
@@ -502,22 +480,19 @@
       </div>
     </section>
 
-    <section id="cosmeticsSection" class="flow-section customization-panel" data-customization-panel>
+    <section id="cosmeticsSection" class="flow-section customization-panel ripplet-appearance-section" data-customization-panel>
+      <button type="button" class="customization-close" data-customize-close aria-label="Close Ripplet appearance">×</button>
       <div class="section-heading">
-        <div><span class="eyebrow">COMPANION EQUIPMENT</span><h2>Build identity through hardware, cores, halos, armor, and signal trails.</h2><p class="section-subcopy">These are physical XRPL equipment layers—not simple recolors.</p></div>
-        <span class="chip">3D materials</span>
+        <div><span class="eyebrow">RIPPLET // OFFICIAL APPEARANCE</span><h2>One character. One recognizable identity.</h2><p class="section-subcopy">Ripplet always keeps the official white-silver shell, graphite seams, Ripple-flow side fins, cyan signal light, and XRP core. Personalization is limited to subtle signal accents in the companion studio.</p></div>
+        <span class="chip">LOCKED IDENTITY</span>
       </div>
-      <div class="preset-build-intro"><span>BUILD PRESETS</span><p>Selecting a build updates the live studio companion immediately. Fine-tune hardware in the Companion studio.</p></div>
-      <div class="cosmetics-showcase">
-        <button class="cosmetic-choice cosmetic-card active" data-cosmetic="classic"><span class="cosmetic-model classic"><i></i></span><strong>Classic Nexus</strong><small>Balanced ears · shoulder pods · orbit core · silver XRPL shell</small><b>STANDARD BUILD</b><em>Equipped</em></button>
-        <button class="cosmetic-choice cosmetic-card" data-cosmetic="aqua"><span class="cosmetic-model aqua"><i></i></span><strong>Ripple Scout</strong><small>Swept fins · lighter shoulder hardware · dual orbit rings · aqua energy</small><b>SCOUT BUILD</b><em>Owned</em></button>
-        <button class="cosmetic-choice cosmetic-card" data-cosmetic="midnight"><span class="cosmetic-model midnight"><i></i></span><strong>Ledger Guardian</strong><small>Heavy shoulder armor · shortened ears · protected core · graphite plating</small><b>GUARDIAN BUILD</b><em>Owned</em></button>
-        <button class="cosmetic-choice cosmetic-card" data-cosmetic="pearl"><span class="cosmetic-model pearl"><i></i></span><strong>Oracle Halo</strong><small>Tall signal ears · triple halo system · floating crown node · pearl shell</small><b>ORACLE BUILD</b><em>Owned</em></button>
-        <button class="cosmetic-choice cosmetic-card" data-cosmetic="solar"><span class="cosmetic-model solar"><i></i></span><strong>Solar Vanguard</strong><small>Angular fins · reinforced chest · larger core · amber reactor halo</small><b>VANGUARD BUILD</b><em>Owned</em></button>
-              <button class="cosmetic-choice cosmetic-card resonance-card" data-cosmetic="resonance"><span class="cosmetic-model resonance"><i></i></span><strong>589 Resonance</strong><small>Signal lattice · split-X core · five/eight/nine node sequence · community aura</small><b>RARE SIGNAL BUILD</b><em>Owned</em></button>
+      <div class="ripplet-design-grid">
+        <article><span>SHELL</span><strong>White + Silver</strong><small>Permanent official body finish</small></article>
+        <article><span>ENERGY</span><strong>Cyan / Electric Blue</strong><small>Ledger-aware signal glow</small></article>
+        <article><span>CORE</span><strong>XRP Energy Core</strong><small>Central chest identity</small></article>
+        <article><span>FLOW</span><strong>Ripple Side Fins</strong><small>Fluid connectivity motif</small></article>
       </div>
-
-      
+      <div class="signal-disclosure"><strong>OFFICIAL MASCOT RULE</strong><p>Appearance controls may add subtle effects, but they never turn Ripplet into another built-in species, gender, character, or mascot.</p></div>
     </section>
 
     <section id="walletPanel" class="flow-section customization-panel" data-customization-panel>
@@ -547,12 +522,12 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 3.8.0 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 3.9.0 · XRP Ledger companion</footer>
   </main>
 </div>
 
-<script src="/app.js?v=3.8.0"></script>
-<script src="/timeline.js?v=3.8.0"></script>
-<script type="module" src="/companion3d.js?v=3.8.0"></script>
+<script src="/app.js?v=3.9.0"></script>
+<script src="/timeline.js?v=3.9.0"></script>
+<script type="module" src="/companion3d.js?v=3.9.0"></script>
 </body>
 </html>

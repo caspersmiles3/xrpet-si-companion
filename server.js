@@ -410,8 +410,8 @@ app.get('/api/self-test', (_req, res) => {
 });
 
 app.get('/api/health', (_req, res) => res.json({
-  ok:true, product:'XRPet SI Companion', version:'3.8.0',
-  capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch','gemwallet','xaman-hook','web-push','capacitor-mobile','external-si-hook','interactive-webgl-companion','signal-589-community-layer','equipment-matrix','full-audio-engine','room-environments','rigged-glb-roster','glass-studio-ui','orbit-camera','ssao','bloom','adaptive-render-quality','ripple-xrp-living-archive','auto-updating-history'],
+  ok:true, product:'XRPet SI Companion', version:'3.9.0',
+  capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch','gemwallet','xaman-hook','web-push','capacitor-mobile','external-si-hook','interactive-webgl-companion','signal-589-community-layer','equipment-matrix','full-audio-engine','room-environments','rigged-glb-roster','glass-studio-ui','orbit-camera','ssao','bloom','adaptive-render-quality','ripple-xrp-living-archive','auto-updating-history','ripplet-single-companion','nft-companion-override'],
   integrations:{ xaman:Boolean(process.env.XAMAN_API_KEY), push:Boolean(VAPID_PUBLIC_KEY&&VAPID_PRIVATE_KEY), si:Boolean(process.env.SI_PROVIDER_KEY) }
 }));
 
@@ -430,7 +430,7 @@ setInterval(async () => {
 }, 10 * 60 * 1000);
 
 app.listen(PORT, () => {
-  console.log(`XRPet // Signal 589 v3.8 running on http://localhost:${PORT}`);
+  console.log(`XRPet // Signal 589 v3.9 running on http://localhost:${PORT}`);
   console.log('Integration readiness:', {
     xaman:Boolean(process.env.XAMAN_API_KEY),
     push:Boolean(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY),
