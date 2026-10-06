@@ -810,24 +810,30 @@ function openHistoryView(view='All'){
   q('[data-home-companion]')?.classList.remove('view-active');
   qa('[data-primary-view]').forEach(b=>b.classList.remove('active'));
   document.body.dataset.primaryView='history';
-  closeCustomizationPanels();
-  const section=q('#xrpHistorySection');
-  if(!section)return;
-  scrollSectionTop('xrpHistorySection');
-  const select=q('#historyJumpSelect');
-  if(select)select.value=view;
-  const input=q('#xrpHistorySearch');
-  if(input&&view!=='People')input.value='';
-  if(view==='People'){
-    setTimeout(()=>q('.people-heading')?.scrollIntoView({behavior:'smooth',block:'start'}),260);
-  }else{
-    const filterButton=[...qa('#xrpFilters [data-xcat]')].find(b=>b.dataset.xcat===view);
-    filterButton?.click();
-  }
+  const section=q('#xrpHistorySection');if(!section)return;
+  section.dataset.historyMode=view;
+  const titles={
+    All:['Overview + Full Timeline','The complete Ripple, XRP and XRP Ledger chronology.'],
+    Origins:['Origins / Genesis','How the XRP Ledger began, its original design, launch and earliest organizational history.'],
+    Ripple:['Ripple Company','Company milestones, products, leadership and strategic development connected to Ripple.'],
+    XRP:['XRP Asset','XRP supply, distribution, utility and asset-level milestones.'],
+    XRPL:['XRP Ledger','Protocol, amendments, network operations and XRP Ledger infrastructure.'],
+    Legal:['Legal + Regulation','Court cases, regulatory events and legal milestones affecting Ripple and XRP.'],
+    Market:['Market Cycles','Major XRP market-cycle context and historical price-era milestones without predictions.'],
+    Adoption:['Adoption + Partnerships','Payments, integrations, institutional use and ecosystem adoption milestones.'],
+    Acquisition:['Acquisitions','Ripple acquisitions and infrastructure expansion.'],
+    People:['People Involved','Key people who shaped the XRP Ledger, Ripple and the XRP ecosystem.']
+  };
+  const meta=titles[view]||titles.All;
+  const header=q('#historySelectedHeader');if(header)header.hidden=view==='All';
+  setText('#historySelectedTitle',meta[0]);setText('#historySelectedDescription',meta[1]);
+  window.XRPetHistory?.setView?.(view);
+  document.body.classList.remove('workspace-open','customization-open');
+  qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));
   q('#historyNavDetails')?.removeAttribute('open');
+  setTimeout(()=>scrollSectionTop('xrpHistorySection'),10);
 }
 qa('[data-history-view]').forEach(b=>b.addEventListener('click',()=>openHistoryView(b.dataset.historyView)));
-bind('#historyJumpSelect','change',e=>openHistoryView(e.target.value));
 
 q('#customizeDetails')?.addEventListener('toggle',e=>{
   if(e.target.open) q('#settingsDetails')?.removeAttribute('open');
