@@ -153,6 +153,9 @@ const glassMat=new THREE.MeshPhysicalMaterial({
   metalness:.05,transmission:.32,transparent:true,opacity:.94,clearcoat:1
 });
 const blackMat=new THREE.MeshPhysicalMaterial({color:0x010305,metalness:.35,roughness:.08,clearcoat:1});
+
+const irisMat=new THREE.MeshPhysicalMaterial({color:0x72efff,emissive:0x23cce9,emissiveIntensity:3.2,metalness:.08,roughness:.12,clearcoat:1,clearcoatRoughness:.03});
+const skinJointMat=new THREE.MeshPhysicalMaterial({color:0x17242b,metalness:.72,roughness:.22,clearcoat:.72,clearcoatRoughness:.08});
 const softMat=new THREE.MeshPhysicalMaterial({color:0x25313a,metalness:.3,roughness:.42,clearcoat:.35});
 const detailTextures={};
 function makeDetailTexture(kind){
@@ -268,6 +271,14 @@ for(const x of [-.42,.42]){
   const pupil=add(new THREE.SphereGeometry(.105,30,22),blackMat,pet,'pupil');
   pupil.scale.set(.74,1,.4);pupil.position.set(x,1.11,1.52);pupils.push(pupil);
 
+  const iris=add(new THREE.SphereGeometry(.145,40,28),irisMat,pet,'iris');
+  iris.scale.set(.9,1,.28);iris.position.set(x,1.11,1.49);
+  iris.userData.eyeIndex=eyes.length-1;
+
+  const cornea=add(new THREE.SphereGeometry(.292,48,36),glassMat,pet,'cornea');
+  cornea.scale.set(1.01,.93,.5);cornea.position.set(x,1.11,1.3);cornea.material=cornea.material.clone();
+  cornea.material.opacity=.24;cornea.material.transparent=true;cornea.material.depthWrite=false;
+
   const glint=add(new THREE.SphereGeometry(.032,14,10),new THREE.MeshBasicMaterial({color:0xffffff}),pet,'glint');
   glint.position.set(x-.035,1.2,1.58);
 
@@ -275,6 +286,15 @@ for(const x of [-.42,.42]){
   lid.scale.set(1.02,.16,.51);lid.position.set(x,1.32,1.28);lids.push(lid);
 }
 
+
+const foreheadPlate=tag(add(new THREE.SphereGeometry(.74,56,38),shellMat,pet,'foreheadPlate'),'foreheadPlate');
+foreheadPlate.scale.set(1,.28,.72);foreheadPlate.position.set(0,1.53,.56);
+const jawPlate=tag(add(new THREE.SphereGeometry(.62,52,36),shellMat,pet,'jawPlate'),'jawPlate');
+jawPlate.scale.set(1,.24,.55);jawPlate.position.set(0,.64,.72);
+for(const x of [-.56,.56]){
+  const temple=tag(add(new THREE.SphereGeometry(.28,38,28),shellMat,pet,'templePlate'),'templePlate');
+  temple.scale.set(.62,1.05,.5);temple.position.set(x,1.12,.72);
+}
 // ears
 const ears=[];
 for(const [x,s] of [[-.72,-1],[.72,1]]){
@@ -296,6 +316,27 @@ for(const [x,s] of [[-.89,-1],[.89,1]]){
   fore.position.set(x*1.02,-.67,.13);fore.rotation.z=s*.09;forearms.push(fore);
 }
 
+
+// Ripplet 2.0: articulated upper arms, palms and finger pads for a less primitive silhouette.
+const upperArms=[],hands=[],fingerPads=[];
+for(const [x,sgn] of [[-.78,-1],[.78,1]]){
+  const upper=tag(add(new THREE.CapsuleGeometry(.145,.38,12,32),shellMat,pet,'upperArm'),'upperArm');
+  upper.position.set(x,-.48,.08);upper.rotation.z=sgn*.08;upper.scale.set(.92,1.08,.88);upperArms.push(upper);
+
+  const elbow=tag(add(new THREE.SphereGeometry(.17,36,28),skinJointMat,pet,'elbow'),'elbow');
+  elbow.scale.set(1,.82,.92);elbow.position.set(sgn*.86,-.71,.12);
+
+  const hand=tag(add(new THREE.SphereGeometry(.21,42,32),shellMat,pet,'hand'),'hand');
+  hand.scale.set(.92,.7,.82);hand.position.set(sgn*.94,-.96,.2);hands.push(hand);
+
+  for(let n=0;n<3;n++){
+    const pad=tag(add(new THREE.SphereGeometry(.055,24,18),softMat,pet,'fingerPad'),'fingerPad');
+    pad.scale.set(.7,1.15,.62);
+    pad.position.set(sgn*(.88+.06*n),-.99-.03*n,.37+.015*n);
+    fingerPads.push(pad);
+  }
+}
+
 // legs
 const legs=[],feet=[];
 for(const [x,s] of [[-.37,-1],[.37,1]]){
@@ -305,6 +346,15 @@ for(const [x,s] of [[-.37,-1],[.37,1]]){
   ankle.position.set(x,-1.49,.14);ankle.rotation.x=Math.PI/2;
   const foot=tag(add(new THREE.SphereGeometry(.25,30,20),shellDarkMat,pet,'foot'),'foot');
   foot.scale.set(1.18,.38,1.35);foot.position.set(x,-1.6,.23);feet.push(foot);
+}
+
+
+const calves=[],toeCaps=[];
+for(const [x,sgn] of [[-.29,-1],[.29,1]]){
+  const calf=tag(add(new THREE.CapsuleGeometry(.13,.31,12,28),shellDarkMat,pet,'calf'),'calf');
+  calf.position.set(x,-1.26,.1);calf.scale.set(.9,1.08,.84);calves.push(calf);
+  const toe=tag(add(new THREE.SphereGeometry(.18,34,24),shellMat,pet,'toeCap'),'toeCap');
+  toe.scale.set(1.18,.35,1.5);toe.position.set(x,-1.5,.36);toeCaps.push(toe);
 }
 
 // core
@@ -776,7 +826,7 @@ const BUILTIN_MODELS={
 };
 
 let currentKind='ripplet', currentGender='neutral', currentCosmetic='classic';
-let targetRotY=0,targetRotX=0,dragging=false,lastX=0,lastY=0,pointerX=0,pointerY=0,boost=0,lastInteract=0;
+let targetRotY=0,targetRotX=0,dragging=false,lastX=0,lastY=0,pointerX=0,pointerY=0,globalClientX=innerWidth*.5,globalClientY=innerHeight*.5,gazeX=0,gazeY=0,boost=0,lastInteract=0;
 let action='idle',actionUntil=0,externalModel=null,externalMixer=null,externalKind=null,externalActions={},externalActiveAction=null,externalLoadToken=0,externalLoadingKind=null,externalLoadingPromise=null,externalParts={};
 const baseEarTransforms=ears.map(e=>({scale:e.scale.clone(),rot:e.rotation.clone()}));
 
@@ -789,7 +839,7 @@ function resetBaseShape(){
 }
 function applySurfaceProfile(kind){
   const profiles={
-    ripplet:{metalness:.7,roughness:.2,clearcoat:1,darkMetal:.8,darkRough:.16},
+    ripplet:{metalness:.58,roughness:.24,clearcoat:1,darkMetal:.7,darkRough:.2},
     nexus:{metalness:.72,roughness:.22,clearcoat:1,darkMetal:.82,darkRough:.18},
     fox:{metalness:.28,roughness:.5,clearcoat:.34,darkMetal:.24,darkRough:.55},
     pup:{metalness:.24,roughness:.54,clearcoat:.3,darkMetal:.22,darkRough:.58},
@@ -816,16 +866,20 @@ function configureSpecies(){
   resetBaseShape();
 
   // Ripplet: oversized smooth head, tiny floating body, no animal muzzle/legs.
-  head.scale.set(1.08,.9,.96);
-  face.scale.set(1.02,.72,.8);
-  torso.scale.set(.72,.72,.68);
-  pelvis.scale.set(.68,.38,.62);
+  head.scale.set(1.03,.94,.98);
+  face.scale.set(1,.76,.84);
+  torso.scale.set(.78,.88,.72);
+  pelvis.scale.set(.72,.48,.66);
   muzzle.visible=false;
   nose.visible=false;
   ears.forEach(e=>e.visible=false);
   legs.forEach((e,i)=>{e.visible=true;e.scale.set(.58,.54,.58);e.position.set(i===0?-.28:.28,-1.08,.02)});
   feet.forEach((o,i)=>{o.visible=true;o.scale.set(.72,.28,.9);o.position.set(i===0?-.29:.29,-1.42,.2)});
-  shoulders.forEach((o,i)=>{o.scale.set(.62,.72,.52);o.position.set(i===0?-.72:.72,-.18,.08)});
+  shoulders.forEach((o,i)=>{o.scale.set(.68,.82,.62);o.position.set(i===0?-.7:.7,-.2,.08)});
+  upperArms.forEach((o,i)=>{o.visible=true;o.position.x=i===0?-.77:.77});
+  forearms.forEach((o,i)=>{o.visible=true;o.position.x=i===0?-.88:.88});
+  hands.forEach((o,i)=>{o.visible=true;o.position.x=i===0?-.94:.94});
+  calves.forEach(o=>o.visible=true);toeCaps.forEach(o=>o.visible=true);
 }
 function configureGender(){
   currentGender='neutral';
@@ -1126,7 +1180,7 @@ function useProceduralModel(kind=currentKind){
   if(externalModel){root.remove(externalModel);externalModel=null}
   externalMixer=null;externalKind=null;externalActions={};externalActiveAction=null;externalLoadingKind=null;externalLoadingPromise=null;
   pet.visible=true;externalPresentation.visible=false;
-  window.dispatchEvent(new CustomEvent('xrpet:model-ready',{detail:{kind,mode:'procedural',animations:[],credit:''}}));
+  window.dispatchEvent(new CustomEvent('xrpet:model-ready',{detail:{kind,mode:'ripplet-2.0-runtime',animations:[],credit:'XRPet Ripplet 2.0 runtime model'}}));
 }
 
 let modelLoadTimer=0;
@@ -1137,7 +1191,7 @@ function setAppearance(detail={}){
   configureEquipment(detail);
   applyRoom(detail.room||'nexus');
   clearTimeout(modelLoadTimer);
-  modelLoadTimer=setTimeout(()=>ensureBuiltInModel('ripplet'),80);
+  useProceduralModel('ripplet');
 }
 window.addEventListener('xrpet:appearance',e=>setAppearance(e.detail||{}));
 setAppearance({room:'nexus',cosmetic:'classic'});
@@ -1155,6 +1209,10 @@ function setCameraPreset(name='front'){
   if(orbitControls){orbitControls.target.copy(targetGoal)}
   lastInteract=performance.now();
 }
+
+window.addEventListener('pointermove',e=>{
+  globalClientX=e.clientX;globalClientY=e.clientY;lastInteract=performance.now();
+},{passive:true});
 
 renderer.domElement.addEventListener('pointerdown',e=>{
   if(orbitControls){lastInteract=performance.now();return}
@@ -1277,11 +1335,21 @@ function renderFrame(){
   pet.position.y=lift+boost*.06;
   chestPanel.position.y=-.3+Math.sin(t*(sleeping?.8:1.65))*(sleeping?.004:.009);
 
-  // head follows the pointer and has small natural micro-movements
-  const headFollowX=sleeping?.13:pointerY*.055;
-  const headFollowY=sleeping?0:pointerX*.085;
-  head.rotation.x+=(headFollowX-head.rotation.x)*.065;
-  head.rotation.y+=(headFollowY-head.rotation.y)*.065;
+  // Ripplet 2.0 gaze: track the mouse across the entire XRPet interface, not only the canvas.
+  const hr=host.getBoundingClientRect();
+  const hx=hr.left+hr.width*.5,hy=hr.top+hr.height*.42;
+  const rawGX=Math.max(-1,Math.min(1,(globalClientX-hx)/Math.max(180,innerWidth*.42)));
+  const rawGY=Math.max(-1,Math.min(1,(globalClientY-hy)/Math.max(140,innerHeight*.36)));
+  const idleGlanceX=idle?Math.sin(t*.31)*.16:0;
+  const idleGlanceY=idle?Math.sin(t*.23+1.4)*.08:0;
+  gazeX+=(rawGX+idleGlanceX-gazeX)*.09;
+  gazeY+=(rawGY+idleGlanceY-gazeY)*.09;
+  pointerX=gazeX;pointerY=gazeY;
+  const headFollowX=sleeping?.13:pointerY*.12;
+  const headFollowY=sleeping?0:pointerX*.19;
+  head.rotation.x+=(headFollowX-head.rotation.x)*.085;
+  head.rotation.y+=(headFollowY-head.rotation.y)*.085;
+  torso.rotation.y+=( (sleeping?0:pointerX*.035)-torso.rotation.y)*.05;
   head.rotation.z+=( (sleeping?.08:Math.sin(t*.48)*.012) - head.rotation.z)*.07;
   if(greeting)head.rotation.z+=Math.sin(t*4)*.018;
   if(sipping)head.rotation.x+=.18+Math.sin(t*3)*.025;
@@ -1295,8 +1363,9 @@ function renderFrame(){
   // eye tracking + pupil response
   pupils.forEach((p,i)=>{
     const bx=i===0?-.42:.42;
-    p.position.x=bx+(sleeping?0:pointerX*.043);
-    p.position.y=1.11-(sleeping?0:pointerY*.034);
+    p.position.x=bx+(sleeping?0:pointerX*.075);
+    p.position.y=1.11-(sleeping?0:pointerY*.058);
+    p.position.z=1.52-Math.min(.025,Math.abs(pointerX)*.012+Math.abs(pointerY)*.012);
     const ps=alerting?1.12:sleeping?.82:1;
     p.scale.set(.74*ps,1*ps,.4);
   });
@@ -1326,6 +1395,24 @@ function renderFrame(){
     if(walking){rz=side*Math.sin(t*7+i*Math.PI)*.22;rx=Math.sin(t*7+i*Math.PI)*.08}
     if(dancing){rz=side*(.45+Math.sin(t*7+i*Math.PI)*.32)}
     sh.rotation.z+=(rz-sh.rotation.z)*.18;sh.rotation.x+=(rx-sh.rotation.x)*.18;
+  });
+  upperArms.forEach((arm,i)=>{
+    const side=i===0?-1:1;let rz=side*.04,rx=0;
+    if(walking){rz=side*Math.sin(t*7+i*Math.PI)*.16;rx=Math.sin(t*7+i*Math.PI)*.09}
+    if(sipping||biting){rz=side*(i===0?.36:.12);rx=-.1}
+    if(gulping||charging){rz=side*.45;rx=-.16}
+    if(highfiving){rz=side*(i===0?.64:.14);rx=-.19}
+    if(dancing){rz=side*(.28+Math.sin(t*7+i*Math.PI)*.22)}
+    arm.rotation.z+=(rz-arm.rotation.z)*.18;arm.rotation.x+=(rx-arm.rotation.x)*.18;
+  });
+  hands.forEach((hand,i)=>{
+    const side=i===0?-1:1;let rz=0,rx=0;
+    if(sipping||biting){rz=side*(i===0?.35:.08);rx=-.12}
+    if(gulping){rz=side*.42;rx=-.18}
+    if(splashing){rz=side*Math.sin(t*9+i*Math.PI)*.35}
+    if(highfiving){rz=side*(i===0?.58:.1);rx=-.2}
+    if(dancing){rz=side*Math.sin(t*8+i*Math.PI)*.28;rx=Math.sin(t*6+i)*.1}
+    hand.rotation.z+=(rz-hand.rotation.z)*.2;hand.rotation.x+=(rx-hand.rotation.x)*.2;
   });
   forearms.forEach((fore,i)=>{
     const side=i===0?-1:1;
