@@ -236,7 +236,60 @@
         <span id="personalityChip" class="chip">Guardian</span>
       </div>
 
-      <article class="detail-card companion-selector-card">
+
+      <div class="companion-studio-layout">
+        <div class="studio-viewer glass-surface">
+          <div class="studio-viewer-head">
+            <div>
+              <span class="command-label">LIVE COMPANION VIEWPORT</span>
+              <strong id="studioCompanionName">NEXUS-589</strong>
+            </div>
+            <div class="studio-status-row">
+              <span id="studioRenderBadge" class="studio-badge">THREE.JS</span>
+              <span id="studioQualityBadge" class="studio-badge muted-badge">AUTO QUALITY</span>
+            </div>
+          </div>
+
+          <div id="studioViewerMount" class="studio-viewport">
+            <div class="studio-backdrop" aria-hidden="true">
+              <span class="studio-horizon"></span>
+              <span class="studio-ring sr-one"></span>
+              <span class="studio-ring sr-two"></span>
+              <span class="studio-grid-plane"></span>
+            </div>
+            <div id="floatingCompanion" class="floating-companion studio-docked" aria-label="Floating interactive XRPet">
+  <div id="nftFloatingCompanion" class="nft-floating-companion hidden" aria-hidden="true">
+    <img id="nftFloatingImage" alt="">
+    <div class="nft-holo-ring"></div>
+  </div>
+  <div id="companion3d" class="companion3d-host" role="application" aria-label="Interactive 3D XRPet companion">
+    <div class="companion3d-loading"><span class="loading-orb"></span><small>INITIALIZING XRPET</small></div>
+  </div>
+  <div id="floatingHandle" class="floating-tag">
+    <strong id="floatingPetName">NEXUS-589</strong>
+    <span id="floatingModeLabel">Move via this tag · Tap XRPet to show controls</span>
+    <div class="floating-controls">
+      <button id="toggleFloat" type="button">Pin</button>
+      <button id="centerFloat" type="button">Center</button>
+    </div>
+  </div>
+</div>
+            <div class="studio-vignette" aria-hidden="true"></div>
+          </div>
+
+          <div class="studio-camera-bar" aria-label="3D camera controls">
+            <div class="camera-presets">
+              <button id="studioViewFront" type="button">Front</button>
+              <button id="studioViewThreeQuarter" type="button">¾ View</button>
+              <button id="studioViewProfile" type="button">Profile</button>
+              <button id="studioResetCamera" type="button">Reset</button>
+            </div>
+            <div class="studio-help"><span>Drag to orbit</span><span>Wheel to zoom</span><span>Double-click to reset</span></div>
+          </div>
+        </div>
+
+        <aside class="studio-sidebar glass-surface">
+          <article class="detail-card companion-selector-card">
         <div class="card-title">
           <div><h3>Choose Your Companion</h3><p>Pick a boy or girl companion, then choose the species/model. Cosmetics apply on top of this choice.</p></div>
           <span id="companionModelChip" class="chip">Nexus · Boy</span>
@@ -285,6 +338,58 @@
         </div>
         <p class="model-credit">3D credits: Nexus RobotExpressive — Tomás Laulhé / Don McCurdy (CC0 1.0). Ripple Fox — PixelMannen, tomkranis, AsoboStudio &amp; scurest (CC0 / CC BY 4.0). Ledger Pup/Shiba Inu and Vault Cat — Quaternius via Poly Pizza (CC0 1.0). Pulse Bird/Scarlet Macaw — Mateus Schwaab (CC BY 4.0). Wave Turtle — Poly by Google via Poly Pizza (CC BY).</p>
       </article>
+          <div class="equipment-matrix">
+        <div class="equipment-matrix-head">
+          <div><span class="command-label">EQUIPMENT MATRIX</span><h3>Layer individual hardware over the selected build.</h3></div>
+          <span class="truth-label">LIVE 3D</span>
+        </div>
+
+        <div class="equipment-grid">
+          <article class="equipment-group">
+            <span>EYE SIGNAL</span>
+            <div class="equipment-options">
+              <button type="button" data-eye-style="cyan" class="active"><i class="eq-swatch cyan"></i>Cyan</button>
+              <button type="button" data-eye-style="white"><i class="eq-swatch white"></i>White</button>
+              <button type="button" data-eye-style="violet"><i class="eq-swatch violet"></i>Violet</button>
+              <button type="button" data-eye-style="amber"><i class="eq-swatch amber"></i>Amber</button>
+            </div>
+          </article>
+
+          <article class="equipment-group">
+            <span>CHEST CORE</span>
+            <div class="equipment-options">
+              <button type="button" data-core-style="standard" class="active">Standard X</button>
+              <button type="button" data-core-style="ripple">Ripple Split</button>
+              <button type="button" data-core-style="vault">Vault Seal</button>
+              <button type="button" data-core-style="589">589 Core</button>
+            </div>
+          </article>
+
+          <article class="equipment-group">
+            <span>HEAD HARDWARE</span>
+            <div class="equipment-options">
+              <button type="button" data-head-gear="none" class="active">Clean</button>
+              <button type="button" data-head-gear="crest">Signal Crest</button>
+              <button type="button" data-head-gear="halo">Oracle Halo</button>
+              <button type="button" data-head-gear="ridge">Guardian Ridge</button>
+            </div>
+          </article>
+
+          <article class="equipment-group">
+            <span>SIGNAL TRAIL</span>
+            <div class="equipment-options">
+              <button type="button" data-trail-style="none" class="active">None</button>
+              <button type="button" data-trail-style="pulse">XRP Pulse</button>
+              <button type="button" data-trail-style="nodes">Node Trace</button>
+              <button type="button" data-trail-style="resonance">589 Shimmer</button>
+            </div>
+          </article>
+        </div>
+      </div>
+        </aside>
+      </div>
+
+      
 
       <div class="detail-grid companion-detail">
         <article class="detail-card identity-card">
@@ -356,6 +461,7 @@
         <div><span class="eyebrow">COMPANION EQUIPMENT</span><h2>Build identity through hardware, cores, halos, armor, and signal trails.</h2><p class="section-subcopy">These are physical XRPL equipment layers—not simple recolors.</p></div>
         <span class="chip">3D materials</span>
       </div>
+      <div class="preset-build-intro"><span>BUILD PRESETS</span><p>Selecting a build updates the live studio companion immediately. Fine-tune hardware in the Companion studio.</p></div>
       <div class="cosmetics-showcase">
         <button class="cosmetic-choice cosmetic-card active" data-cosmetic="classic"><span class="cosmetic-model classic"><i></i></span><strong>Classic Nexus</strong><small>Balanced ears · shoulder pods · orbit core · silver XRPL shell</small><b>STANDARD BUILD</b><em>Equipped</em></button>
         <button class="cosmetic-choice cosmetic-card" data-cosmetic="aqua"><span class="cosmetic-model aqua"><i></i></span><strong>Ripple Scout</strong><small>Swept fins · lighter shoulder hardware · dual orbit rings · aqua energy</small><b>SCOUT BUILD</b><em>Owned</em></button>
@@ -365,54 +471,7 @@
               <button class="cosmetic-choice cosmetic-card resonance-card" data-cosmetic="resonance"><span class="cosmetic-model resonance"><i></i></span><strong>589 Resonance</strong><small>Signal lattice · split-X core · five/eight/nine node sequence · community aura</small><b>RARE SIGNAL BUILD</b><em>Owned</em></button>
       </div>
 
-      <div class="equipment-matrix">
-        <div class="equipment-matrix-head">
-          <div><span class="command-label">EQUIPMENT MATRIX</span><h3>Layer individual hardware over the selected build.</h3></div>
-          <span class="truth-label">LIVE 3D</span>
-        </div>
-
-        <div class="equipment-grid">
-          <article class="equipment-group">
-            <span>EYE SIGNAL</span>
-            <div class="equipment-options">
-              <button type="button" data-eye-style="cyan" class="active"><i class="eq-swatch cyan"></i>Cyan</button>
-              <button type="button" data-eye-style="white"><i class="eq-swatch white"></i>White</button>
-              <button type="button" data-eye-style="violet"><i class="eq-swatch violet"></i>Violet</button>
-              <button type="button" data-eye-style="amber"><i class="eq-swatch amber"></i>Amber</button>
-            </div>
-          </article>
-
-          <article class="equipment-group">
-            <span>CHEST CORE</span>
-            <div class="equipment-options">
-              <button type="button" data-core-style="standard" class="active">Standard X</button>
-              <button type="button" data-core-style="ripple">Ripple Split</button>
-              <button type="button" data-core-style="vault">Vault Seal</button>
-              <button type="button" data-core-style="589">589 Core</button>
-            </div>
-          </article>
-
-          <article class="equipment-group">
-            <span>HEAD HARDWARE</span>
-            <div class="equipment-options">
-              <button type="button" data-head-gear="none" class="active">Clean</button>
-              <button type="button" data-head-gear="crest">Signal Crest</button>
-              <button type="button" data-head-gear="halo">Oracle Halo</button>
-              <button type="button" data-head-gear="ridge">Guardian Ridge</button>
-            </div>
-          </article>
-
-          <article class="equipment-group">
-            <span>SIGNAL TRAIL</span>
-            <div class="equipment-options">
-              <button type="button" data-trail-style="none" class="active">None</button>
-              <button type="button" data-trail-style="pulse">XRP Pulse</button>
-              <button type="button" data-trail-style="nodes">Node Trace</button>
-              <button type="button" data-trail-style="resonance">589 Shimmer</button>
-            </div>
-          </article>
-        </div>
-      </div>
+      
     </section>
 
     <section id="walletPanel" class="flow-section">
@@ -444,24 +503,6 @@
 
     <footer>XRPet // SIGNAL 589 · Beta 3.5.1 · XRP Ledger companion</footer>
   </main>
-</div>
-
-<div id="floatingCompanion" class="floating-companion" aria-label="Floating interactive XRPet">
-  <div id="nftFloatingCompanion" class="nft-floating-companion hidden" aria-hidden="true">
-    <img id="nftFloatingImage" alt="">
-    <div class="nft-holo-ring"></div>
-  </div>
-  <div id="companion3d" class="companion3d-host" role="application" aria-label="Interactive 3D XRPet companion">
-    <div class="companion3d-loading"><span class="loading-orb"></span><small>INITIALIZING XRPET</small></div>
-  </div>
-  <div id="floatingHandle" class="floating-tag">
-    <strong id="floatingPetName">NEXUS-589</strong>
-    <span id="floatingModeLabel">Move via this tag · Tap XRPet to show controls</span>
-    <div class="floating-controls">
-      <button id="toggleFloat" type="button">Pin</button>
-      <button id="centerFloat" type="button">Center</button>
-    </div>
-  </div>
 </div>
 
 <script src="/app.js?v=3.5.1"></script>
