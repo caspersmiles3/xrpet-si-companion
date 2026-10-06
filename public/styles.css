@@ -2331,7 +2331,7 @@ body.music-playing .music-main{box-shadow:0 0 22px rgba(72,227,255,.25)}
   #musicPrev,#musicShuffle,#musicVolume{display:none!important}
 }
 
-/* XRPet v4.10.5 Ripple/XRP cinematic loader */
+/* XRPet v4.10.6 Ripple/XRP cinematic loader */
 .launch-gate{
   background:
     radial-gradient(circle at 50% 42%,rgba(69,230,255,.12),transparent 27%),
@@ -2435,7 +2435,7 @@ body.music-playing .music-main{box-shadow:0 0 22px rgba(72,227,255,.25)}
   transform:translate(-50%,-50%) translateY(-20px) scale(1.12);opacity:0;
 }
 
-/* XRPet v4.10.5 standalone compact music player */
+/* XRPet v4.10.6 standalone compact music player */
 .xrpet-music-player{
   position:fixed!important;
   left:16px!important;
@@ -2574,7 +2574,7 @@ body.music-playing .music-main{box-shadow:0 0 22px rgba(72,227,255,.25)}
   .consensus-board button{min-height:100px}
 }
 
-/* XRPet v4.10.5 locked soundtrack dock */
+/* XRPet v4.10.6 locked soundtrack dock */
 body{padding-bottom:52px!important}
 .xrpet-music-player{
   position:fixed!important;
