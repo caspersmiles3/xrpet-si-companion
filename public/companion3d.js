@@ -17,7 +17,24 @@ renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.domElement.className='companion3d-canvas';
 renderer.domElement.setAttribute('aria-label','Interactive cinematic XRPet companion');
+
 host.appendChild(renderer.domElement);
+
+// Physically based reflection environment. Failure here never blocks the companion.
+(async()=>{
+  try{
+    const envMod=await import('https://esm.sh/three@0.169.0/examples/jsm/environments/RoomEnvironment.js?deps=three@0.169.0');
+    const pmrem=new THREE.PMREMGenerator(renderer);
+    const envScene=new envMod.RoomEnvironment();
+    const target=pmrem.fromScene(envScene,.035);
+    scene.environment=target.texture;
+    envScene.dispose?.();
+    pmrem.dispose();
+  }catch(err){
+    console.warn('XRPet reflection environment unavailable',err);
+  }
+})();
+
 
 const root=new THREE.Group();
 root.position.y=.08;
@@ -384,6 +401,9 @@ const key=new THREE.SpotLight(0xffffff,44,20,.5,.5,1.3);key.position.set(-4,5,5)
 const fill=new THREE.PointLight(0x45e8ff,24,9,1.7);fill.position.set(2.9,1.3,3.6);scene.add(fill);
 const rim=new THREE.PointLight(0x6b6dff,17,8,1.7);rim.position.set(-3.1,1.2,-2.1);scene.add(rim);
 const under=new THREE.PointLight(0x35ddff,10,5,2);under.position.set(0,-1.2,1.8);scene.add(under);
+const faceFill=new THREE.PointLight(0xffffff,7.5,7,2);faceFill.position.set(0,1.8,3.8);scene.add(faceFill);
+const sideWarm=new THREE.PointLight(0x9ad7ff,5.5,7,2);sideWarm.position.set(3.4,-.2,-.8);scene.add(sideWarm);
+
 
 // state
 let currentKind='nexus', currentGender='boy', currentCosmetic='classic';
@@ -472,7 +492,10 @@ function applyRoom(room){
     aurora:[0x79f1ff,0xaa8cff,1.23],
     legend:[0xf0ce73,0x7b5cff,1.27]
   };
-  const r=rooms[room]||rooms.nexus;fill.color.setHex(r[0]);rim.color.setHex(r[1]);renderer.toneMappingExposure=r[2];
+  const r=rooms[room]||rooms.nexus;
+  fill.color.setHex(r[0]);rim.color.setHex(r[1]);sideWarm.color.setHex(r[0]);
+  faceFill.intensity=room==='vault'?6.2:room==='legend'?8.2:7.5;
+  renderer.toneMappingExposure=r[2];
 }
 function performAction(name='greet'){
   const allowed=new Set(['greet','celebrate','alert','sleep','wake','happy']);
