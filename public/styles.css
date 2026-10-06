@@ -8645,3 +8645,43 @@ body:not(.workspace-open) .main-shell>.primary-view-section:not(.view-active){
 .top-command-deck input{
   pointer-events:auto!important;
 }
+
+
+/* v5.5.32 — deterministic Settlements + History subpages */
+#xrpHistorySection[data-history-mode="All"] #xrpTimeline,
+#xrpHistorySection[data-history-mode="Origins"] #xrpTimeline,
+#xrpHistorySection[data-history-mode="Ripple"] #xrpTimeline,
+#xrpHistorySection[data-history-mode="XRP"] #xrpTimeline,
+#xrpHistorySection[data-history-mode="XRPL"] #xrpTimeline,
+#xrpHistorySection[data-history-mode="Legal"] #xrpTimeline,
+#xrpHistorySection[data-history-mode="Market"] #xrpTimeline,
+#xrpHistorySection[data-history-mode="Adoption"] #xrpTimeline,
+#xrpHistorySection[data-history-mode="Acquisition"] #xrpTimeline{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+#xrpHistorySection[data-history-mode="People"] #xrpTimeline{
+  display:none!important;
+}
+#xrpHistorySection[data-history-mode="People"] .history-people-only{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+#xrpHistorySection[data-history-mode]:not([data-history-mode="All"]) .history-selected-header{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+.history-empty-state{
+  padding:18px!important;
+  border:1px solid rgba(83,214,241,.12)!important;
+  border-radius:10px!important;
+  background:#071118!important;
+}
+.history-empty-state strong{
+  display:block!important;
+  color:#dffaff!important;
+  margin-bottom:6px!important;
+}
