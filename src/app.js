@@ -5,7 +5,7 @@ const saved=safe(()=>JSON.parse(localStorage.getItem(STORE)||'{}'))||{};
 const state={
   connected:false,ledgerIndex:null,txCount:0,baseFeeDrops:null,
   xrpPrice:null,xrpChange24h:null,
-  petName:saved.petName||'NEXUS-589',personality:saved.personality||'Guardian',
+  petName:'Ripplet',personality:'Guardian',
   focus:saved.focus||'',xp:Number(saved.xp)||0,streak:Number(saved.streak)||0,
   lastVisitDate:saved.lastVisitDate||null,lastMissionDate:saved.lastMissionDate||null,
   room:saved.room||'nexus',cosmetic:saved.cosmetic||'classic',memories:Array.isArray(saved.memories)?saved.memories:[],
@@ -14,7 +14,7 @@ const state={
   truthMode:saved.truthMode!==false,marketMood:saved.marketMood!==false,
   floatingPinned:saved.floatingPinned===true,floatX:Number.isFinite(saved.floatX)?saved.floatX:null,floatY:Number.isFinite(saved.floatY)?saved.floatY:null,
   nftCompanion:saved.nftCompanion||null,
-  companionKind:saved.companionKind||'nexus',companionGender:saved.companionGender||'boy',
+  companionKind:'ripplet',companionGender:'neutral',
   eyeStyle:saved.eyeStyle||'cyan',coreStyle:saved.coreStyle||'standard',headGear:saved.headGear||'none',trailStyle:saved.trailStyle||'none',
   graphicsQuality:saved.graphicsQuality||'auto',
   soundEnabled:saved.soundEnabled!==false,soundVolume:Number.isFinite(saved.soundVolume)?saved.soundVolume:35,
@@ -24,7 +24,7 @@ const state={
 const FORMS=[['Drop',0],['Ripple',50],['Wave',150],['Surge',350],['Nexus',700],['Titan',1200],['Legend',2000]];
 const ROOM_NAMES={nexus:'Neon Horizon',ocean:'Ripple Sanctuary',vault:'Ledger Vault',aurora:'Sky Garden',legend:'Orbital Station'};
 const COSMETIC_NAMES={classic:'Classic Nexus',aqua:'Ripple Scout',midnight:'Ledger Guardian',pearl:'Oracle Halo',solar:'Solar Vanguard',resonance:'589 Resonance'};
-const COMPANION_NAMES={nexus:'Nexus',fox:'Ripple Fox',pup:'Ledger Pup',cat:'Vault Cat',bird:'Pulse Bird',turtle:'Wave Turtle'};
+const COMPANION_NAMES={ripplet:'Ripplet'};
 const SIGNAL_589_LORE=[
   'Community lore note: 589 has become a long-running XRP cultural symbol. XRPet treats it as an easter egg, not a confirmed price target.',
   'Signal archive: XRP communities have attached meaning to recurring numbers, screenshots, riddles, and historical posts. These interpretations remain community speculation.',
@@ -54,7 +54,7 @@ async function resolveNftMedia(uri){
     return {uri,media:img,model:/\.(glb|gltf)(\?.*)?$/i.test(anim||'')?anim:null,name:d.name||null,description:d.description||null};
   }catch{return {uri,media:null,model:null}}
 }
-function persist(){safe(()=>localStorage.setItem(STORE,JSON.stringify({...state,connected:undefined,ledgerIndex:undefined,txCount:undefined,baseFeeDrops:undefined,xrpPrice:undefined,xrpChange24h:undefined})))}
+function persist(){state.petName='Ripplet';state.personality='Guardian';state.companionKind='ripplet';state.companionGender='neutral';safe(()=>localStorage.setItem(STORE,JSON.stringify({...state,connected:undefined,ledgerIndex:undefined,txCount:undefined,baseFeeDrops:undefined,xrpPrice:undefined,xrpChange24h:undefined})))}
 function form(){return [...FORMS].reverse().find(x=>state.xp>=x[1])||FORMS[0]}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function setText(sel,text){const el=q(sel);if(el)el.textContent=text}
@@ -92,10 +92,7 @@ function render(){
   const lvl=Math.floor(state.xp/100)+1; setText('#level','Lv. '+lvl);setText('#xpLabel',state.xp+' XP');setText('#topLevel','Level '+lvl);setText('#topXp',state.xp+' XP');
   const pct=name==='Legend'?100:Math.max(0,Math.min(100,(state.xp-min)/(next[1]-min)*100));
   if(q('#xpFill'))q('#xpFill').style.width=pct+'%';
-  if(q('#profileName'))q('#profileName').value=state.petName;
-  if(q('#profilePersonality'))q('#profilePersonality').value=state.personality;
-  if(q('#profileFocus'))q('#profileFocus').value=state.focus;
-  setText('#personalityChip',state.personality);setText('#streakChip',state.streak+' day streak');
+    setText('#personalityChip',state.personality);setText('#streakChip',state.streak+' day streak');
   if(q('#account'))q('#account').value=state.account||'';
   setText('#walletProvider',state.walletProvider==='manual'?'Manual':state.walletProvider);
   setText('#walletState',state.account?'Watching '+state.account.slice(0,8)+'…'+state.account.slice(-6)+' for validated activity.':'No public account is being watched.');
@@ -118,12 +115,11 @@ bindEquipment('[data-trail-style]','trailStyle','Signal trail');
 
 qa('.room-choice').forEach(b=>{const rank=FORMS.findIndex(x=>x[0]===name),need=b.dataset.room==='aurora'?2:b.dataset.room==='legend'?5:0;b.disabled=rank<need;const active=b.dataset.room===state.room;b.classList.toggle('active',active);const e=b.querySelector('em');if(e&&active)e.textContent='Active';else if(e)e.textContent=need?((b.dataset.room==='aurora')?'Wave+':'Titan+'):'Unlocked'}); qa('.cosmetic-choice').forEach(b=>{const active=b.dataset.cosmetic===state.cosmetic;b.classList.toggle('active',active);const e=b.querySelector('em');if(e)e.textContent=active?'Equipped':'Owned'});
   document.body.classList.remove('room-nexus','room-ocean','room-vault','room-aurora','room-legend');document.body.classList.add('room-'+state.room); const pet=q('#pet'); if(pet){pet.classList.remove('skin-classic','skin-aqua','skin-midnight','skin-pearl','skin-solar','skin-resonance');pet.classList.add('skin-'+state.cosmetic)}
-  setText('#unlocksChip',(['nexus','ocean','vault'].length+(FORMS.findIndex(x=>x[0]===name)>=2?1:0)+(FORMS.findIndex(x=>x[0]===name)>=5?1:0))+' unlocked');setText('#homeRoom',ROOM_NAMES[state.room]||state.room);setText('#homeCosmetic',COSMETIC_NAMES[state.cosmetic]||state.cosmetic);setText('#homeCompanionModel',COMPANION_NAMES[state.companionKind]||state.companionKind);setText('#homeCompanionGender',(state.companionGender==='girl'?'Girl':'Boy')+' companion');setText('#companionModelChip',(COMPANION_NAMES[state.companionKind]||state.companionKind)+' · '+(state.companionGender==='girl'?'Girl':'Boy'));
+  setText('#unlocksChip',(['nexus','ocean','vault'].length+(FORMS.findIndex(x=>x[0]===name)>=2?1:0)+(FORMS.findIndex(x=>x[0]===name)>=5?1:0))+' unlocked');setText('#homeRoom',ROOM_NAMES[state.room]||state.room);setText('#homeCosmetic',COSMETIC_NAMES[state.cosmetic]||state.cosmetic);setText('#homeCompanionModel',COMPANION_NAMES[state.companionKind]||state.companionKind);setText('#homeCompanionGender','Official XRPet companion');setText('#companionModelChip','OFFICIAL // RIPPLET');
   if(q('#explainLevel'))q('#explainLevel').value=state.explainLevel;if(q('#notifyLevel'))q('#notifyLevel').value=state.notifyLevel;
   if(q('#truthToggle'))q('#truthToggle').checked=state.truthMode;if(q('#marketMoodToggle'))q('#marketMoodToggle').checked=state.marketMood;
   if(q('#soundToggle'))q('#soundToggle').checked=state.soundEnabled;if(q('#soundVolume'))q('#soundVolume').value=state.soundVolume;
   if(q('#interfaceSoundToggle'))q('#interfaceSoundToggle').checked=state.interfaceSound;if(q('#ambientSoundToggle'))q('#ambientSoundToggle').checked=state.ambientSound;if(q('#ledgerSoundToggle'))q('#ledgerSoundToggle').checked=state.ledgerSound;if(q('#graphicsQuality'))q('#graphicsQuality').value=state.graphicsQuality;
-  qa('.companion-choice').forEach(b=>b.classList.toggle('active',b.dataset.companion===state.companionKind));qa('.gender-choice').forEach(b=>b.classList.toggle('active',b.dataset.gender===state.companionGender));
   qa('[data-eye-style]').forEach(b=>b.classList.toggle('active',b.dataset.eyeStyle===state.eyeStyle));
   qa('[data-core-style]').forEach(b=>b.classList.toggle('active',b.dataset.coreStyle===state.coreStyle));
   qa('[data-head-gear]').forEach(b=>b.classList.toggle('active',b.dataset.headGear===state.headGear));
@@ -179,7 +175,7 @@ async function renderNfts(nfts){
     card.querySelector('button').addEventListener('click',()=>{
       if(!meta.media)return;
       state.nftCompanion={id:nft.NFTokenID,name:meta.name||('NFT #'+(nft.nft_serial??'')),image:meta.media,model:meta.model||null};
-      persist();applyNftCompanion();mood('NFT companion','XRPL NFT companion equipped.','energized');
+      persist();applyNftCompanion();mood('NFT companion','XRPL NFT companion override equipped. Ripplet remains your official default.','energized');
     });
     box.appendChild(card);
   }
@@ -203,7 +199,7 @@ function applyNftCompanion(){
     state.nftCompanion=null;persist();
     wrap.classList.add('hidden');wrap.setAttribute('aria-hidden','true');canvas.classList.remove('nft-hidden');
     setText('#floatingPetName',state.petName);
-    setText('#nftStatus','NFT artwork could not load; your regular companion has been restored.');
+    setText('#nftStatus','NFT artwork could not load; Ripplet has been restored.');
   };
   img.alt=nft.name||'XRPL NFT companion';
   img.src=url;
@@ -215,14 +211,13 @@ function bind(sel,event,fn){const el=q(sel);if(el)el.addEventListener(event,fn)}
 bind('#chatForm','submit',e=>{e.preventDefault();const i=q('#message');const m=i?.value.trim();if(!m)return;i.value='';ask(m)});
 qa('.quick button').forEach(b=>b.addEventListener('click',()=>{const m=b.dataset.q;if(m.endsWith(': ')){const i=q('#message');i.value=m;i.focus()}else ask(m)}));
 bind('#catchup','click',()=>{ask('Catch me up');loadMarket();loadUpdates()});bind('#dailyButton','click',()=>ask('Give me a concise daily XRP and XRPL briefing.'));
-bind('#refreshNews','click',()=>{loadUpdates();loadMarket()});bind('#profileForm','submit',e=>{e.preventDefault();state.petName=q('#profileName').value.trim()||'NEXUS-589';state.personality=q('#profilePersonality').value;state.focus=q('#profileFocus').value.trim();persist();render();playSound('success');mood('Personalized',state.petName+' is now running '+state.personality+' mode.','calm')});
+bind('#refreshNews','click',()=>{loadUpdates();loadMarket()});
 bind('#memoryForm','submit',e=>{e.preventDefault();const i=q('#memoryInput');const v=i.value.trim();if(!v)return;state.memories.push(v);state.memories=state.memories.slice(-8);i.value='';persist();renderMemory();playSound('success')});
 bind('#watchForm','submit',e=>{e.preventDefault();const a=q('#account').value.trim();if(!/^r[1-9A-HJ-NP-Za-km-z]{24,34}$/.test(a)){setText('#walletState','That does not look like a valid XRPL classic address.');playSound('error');return}state.account=a;state.walletProvider='manual';persist();subscribeAccount(a);render();playSound('wallet');mood('Watching wallet','Public account watch is active.','calm')});
 bind('#clearWallet','click',()=>{if(watchedSubscribed&&ws?.readyState===1)ws.send(JSON.stringify({id:'unwatch',command:'unsubscribe',accounts:[watchedSubscribed]}));watchedSubscribed=null;state.account=null;state.walletProvider='manual';persist();render();playSound('wallet');setText('#walletConnection','No wallet connected. Public wallet watch still works.')});
 bind('#connectXaman','click',connectXaman);bind('#connectGem','click',connectGem);
 let charge=0;bind('#charge','click',()=>{const t=new Date().toISOString().slice(0,10);if(state.lastMissionDate===t){playSound('notification');mood('Complete','Today’s core mission is already complete.','calm');return}charge=Math.min(7,charge+1);setText('#chargeCount',charge+'/7');if(q('#meterFill'))q('#meterFill').style.width=(charge/7*100)+'%';playSound(charge===7?'success':'mission');if(charge===7){state.lastMissionDate=t;addXp(15);setText('#missionText','Mission complete. +15 XP. New pulse tomorrow.');mood('Charged','Core synchronized. Mission complete.','energized')}});
-qa('.companion-choice').forEach(b=>b.addEventListener('click',()=>{state.companionKind=b.dataset.companion;state.nftCompanion=null;persist();applyNftCompanion();render();mood('Companion changed',(COMPANION_NAMES[state.companionKind]||state.companionKind)+' is now your active companion.','energized')}));
-qa('.gender-choice').forEach(b=>b.addEventListener('click',()=>{state.companionGender=b.dataset.gender;state.nftCompanion=null;persist();applyNftCompanion();render();mood('Companion updated',(state.companionGender==='girl'?'Girl':'Boy')+' companion presentation selected.','calm')}));
+
 qa('[data-pet-action]').forEach(b=>b.addEventListener('click',()=>{
   const action=b.dataset.petAction;
   state.nftCompanion=null;applyNftCompanion();
@@ -246,7 +241,7 @@ bind('#notifyButton','click',async()=>{if(!('Notification'in window)){playSound(
 bind('#refreshIntegrations','click',integrationCheck);bind('#loadNfts','click',requestNfts);
 bind('#useNativeCompanion','click',()=>{
   state.nftCompanion=null;persist();applyNftCompanion();render();playSound('companion');
-  mood('Native companion','Returned to the XRPet 3D companion roster.','calm');
+  state.companionKind='ripplet';state.companionGender='neutral';mood('Ripplet restored','Ripplet is active again as your official XRPet companion.','calm');
 });
 
 bind('#globalSearchForm','submit',e=>{
