@@ -907,15 +907,15 @@ function syncRoamBounds(){
   const shell=q('.main-shell');if(!shell||!roamLayer)return;
   const r=shell.getBoundingClientRect();
   roamLayer.style.left=Math.max(0,r.left)+'px';
-  roamLayer.style.top='0px';
+  roamLayer.style.top=Math.max(0,r.top)+'px';
   roamLayer.style.width=Math.max(0,r.width)+'px';
-  roamLayer.style.height=innerHeight+'px';
+  roamLayer.style.height=Math.max(0,r.height)+'px';
 }
 function setRoamPosition(x,y,activity='explore'){
   if(!lifeAvatar||!roamLayer)return;
   const layer=roamLayer.getBoundingClientRect(),avatar=lifeAvatar.getBoundingClientRect();
   const maxX=Math.max(0,layer.width-avatar.width-10),maxY=Math.max(0,layer.height-avatar.height-10);
-  const px=Math.max(8,Math.min(maxX,x)),py=Math.max(92,Math.min(maxY,y));
+  const px=Math.max(8,Math.min(maxX,x)),py=Math.max(12,Math.min(maxY,y));
   lifeAvatar.style.transitionDuration=activity==='run'?'1.35s':activity==='jump'?'1.05s':'2.8s';
   lifeAvatar.style.transform='translate3d('+px+'px,'+py+'px,0)';
   lifeAvatar.dataset.activity=activity;
@@ -937,9 +937,10 @@ function goRipplet(activity='explore'){
   if(activity==='drink'||activity==='eat'||activity==='sleep'||activity==='socialize')target=stationPosition(activity);
   if(activity==='ledger')target={x:layer.width*.72,y:Math.max(165,layer.height*.34)};
   if(!target){
+    const avatarH=Math.max(150,avatar?.height||210);
     target={
-      x:70+Math.random()*Math.max(60,layer.width-300),
-      y:190+Math.random()*Math.max(40,layer.height-430)
+      x:28+Math.random()*Math.max(60,layer.width-(avatar?.width||180)-56),
+      y:18+Math.random()*Math.max(40,layer.height-avatarH-36)
     };
   }
   const distance=Math.hypot(target.x-currentX,target.y-currentY);
@@ -1030,7 +1031,7 @@ function setRoamPinned(){
 }
 window.XRPetRoam={go:goRipplet,pin:()=>setRoamPinned(false),sync:syncRoamBounds};
 addEventListener('resize',()=>{syncRoamBounds();goRipplet(state.lifeActivity||'explore')});
-addEventListener('scroll',syncRoamBounds,{passive:true});
+q('.main-shell')?.addEventListener('scroll',()=>{syncRoamBounds()},{passive:true});
 syncRoamBounds();setTimeout(()=>goRipplet('explore'),300);roamingStep();spontaneousRippletReaction();applyNftCompanion();
 qa('[data-life-action]').forEach(b=>b.addEventListener('click',()=>performLifeActivity(b.dataset.lifeAction,true)));
 setInterval(lifeTick,15000);
