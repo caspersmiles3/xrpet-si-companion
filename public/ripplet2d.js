@@ -2,6 +2,21 @@
   const host = document.getElementById('floatingCompanion');
   if (!host) return;
 
+  // Hard-lock the visible companion tree to Atari-scale dimensions.
+  // The roaming wrapper alone is not enough because older child sizing rules can overflow it.
+  const roam=document.getElementById('lifeAvatar');
+  const persistent=document.getElementById('persistentCompanionLayer');
+  const companionHost=document.getElementById('companion3d');
+  for(const node of [roam,persistent,host,companionHost]){
+    if(!node)continue;
+    node.style.setProperty('width','6px','important');
+    node.style.setProperty('height','8px','important');
+    node.style.setProperty('min-width','6px','important');
+    node.style.setProperty('min-height','8px','important');
+    node.style.setProperty('max-width','6px','important');
+    node.style.setProperty('max-height','8px','important');
+  }
+
   host.innerHTML = `
     <div id="ripplet2d" class="ripplet2d" data-state="idle" data-facing="right" aria-label="Ripplet">
       <svg class="ripplet2d-svg" viewBox="0 0 64 88" role="img" aria-label="Ripplet 2D companion">
@@ -100,6 +115,21 @@
   `;
 
   const el = document.getElementById('ripplet2d');
+  if(el){
+    el.style.setProperty('width','6px','important');
+    el.style.setProperty('height','8px','important');
+    el.style.setProperty('min-width','6px','important');
+    el.style.setProperty('min-height','8px','important');
+    el.style.setProperty('max-width','6px','important');
+    el.style.setProperty('max-height','8px','important');
+    const svg=el.querySelector('.ripplet2d-svg');
+    if(svg){
+      svg.style.setProperty('width','6px','important');
+      svg.style.setProperty('height','8px','important');
+      svg.style.setProperty('max-width','6px','important');
+      svg.style.setProperty('max-height','8px','important');
+    }
+  }
   let resetTimer = 0;
   let blinkTimer = 0;
 
