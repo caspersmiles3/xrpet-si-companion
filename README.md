@@ -1,4 +1,4 @@
-# XRPet SI Companion™ — v4.2.0
+# XRPet SI Companion™ — v4.3.0
 
 **Don't watch the Ledger. Live with it.**
 
@@ -8,7 +8,7 @@ XRPet is a lightweight, installable companion built around Ripple, XRP and the X
 
 Render service: https://xrpet-si-companion.onrender.com
 
-## v4.2 capabilities
+## v4.3 capabilities
 
 - Live XRPL ledger + fee signals
 - XRP/USD market snapshot with public-data fallback
@@ -118,3 +118,10 @@ Ripplet reacts to XRPL connection state, wallet activity, XRP market movement, a
 - Ripplet is shown on Home rather than floating over every primary data page.
 - The Ripplet workspace is now a compact **single-column** in-app page.
 - Removed Eye Signal, Chest Core, Head Hardware, Signal Trail, and the separate Ripplet Appearance workspace. The page now includes a clean reserved slot for the future final interactive 3D Ripplet model.
+
+
+## v4.3 Ripplet life system
+
+Home now includes a bounded companion habitat with a water fountain, food station, sleep pod, and Signal Friend social area. Ripplet has persistent simulated needs for food, water, rest, and social interaction. A lightweight autonomous behavior engine chooses activities from those needs, can roam between stations, watch the XRP Ledger, sleep, eat, drink, or socialize, and stores its state locally so time away from the app affects the routine.
+
+The live 3D Ripplet layer is mounted inside the habitat instead of roaming over the whole application. Its renderer remains transparent and its movement container is clipped to the main Home habitat, preventing it from entering the sidebar or leaving the interface. Users can toggle roaming or use **Sit & Stay** to pin Ripplet's routine.
