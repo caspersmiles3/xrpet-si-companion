@@ -406,7 +406,7 @@ $('#marketMoodToggle').onchange=e=>{state.marketMood=e.target.checked;persist()}
 
 let onboardStep=1;
 function renderOnboarding(){
-  $('[data-step]').forEach(s=>s.classList.toggle('hidden',Number(s.dataset.step)!==onboardStep));
+  $$('[data-step]').forEach(s=>s.classList.toggle('hidden',Number(s.dataset.step)!==onboardStep));
   $('#onboardBack').classList.toggle('hidden',onboardStep===1);
   $('#onboardNext').classList.toggle('hidden',onboardStep===3);
   $('#onboardFinish').classList.toggle('hidden',onboardStep!==3);
