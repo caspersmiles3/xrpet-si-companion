@@ -161,7 +161,6 @@
       <div class="ecosystem-status">
         <span class="global-xrp-live"><i></i> LIVE</span>
         <strong id="lifeMode">Exploring</strong>
-        <button id="lifeSitStay" type="button">Sit & Stay</button>
       </div>
     </div>
     <header class="topbar">
@@ -663,7 +662,6 @@
 </div>
 
 <div id="xrpetMusicPlayer" class="xrpet-music-player" aria-label="XRPet soundtrack">
-  <button id="musicDrag" class="music-drag" type="button" aria-label="Move music player">⋮⋮</button>
   <audio id="xrpetAudio" preload="metadata"></audio>
   <button id="musicToggle" class="music-main" type="button" aria-label="Play soundtrack">▶</button>
   <div class="music-meta">
@@ -673,7 +671,7 @@
   <button id="musicPrev" type="button" aria-label="Previous track">‹</button>
   <button id="musicNext" type="button" aria-label="Next track">›</button>
   <button id="musicShuffle" type="button" aria-label="Toggle shuffle">⤨</button>
-  <input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.45" aria-label="Music volume">
+  <span class="music-volume-icon" aria-hidden="true">🔊</span><input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.75" aria-label="Music volume">
 </div>
 
 <script src="/music-player.js?v=5.0.0"></script>
