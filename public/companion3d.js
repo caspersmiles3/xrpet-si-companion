@@ -628,11 +628,12 @@ async function ensureBuiltInModel(kind){
   })();
   return externalLoadingPromise;
 }
-function useProceduralModel(){
+function useProceduralModel(kind=currentKind){
   externalLoadToken++;
   if(externalModel){root.remove(externalModel);externalModel=null}
   externalMixer=null;externalKind=null;externalActions={};externalActiveAction=null;externalLoadingKind=null;externalLoadingPromise=null;
   pet.visible=true;
+  window.dispatchEvent(new CustomEvent('xrpet:model-ready',{detail:{kind,mode:'procedural',animations:[],credit:''}}));
 }
 
 function setAppearance(detail={}){
@@ -641,8 +642,10 @@ function setAppearance(detail={}){
   configureGender(detail.companionGender||currentGender);
   configureCosmetic(detail.cosmetic||currentCosmetic);
   applyRoom(detail.room||'nexus');
-  if(BUILTIN_MODELS[kind])ensureBuiltInModel(kind);
-  else useProceduralModel();
+  if(BUILTIN_MODELS[kind]){
+    window.dispatchEvent(new CustomEvent('xrpet:model-loading',{detail:{kind}}));
+    ensureBuiltInModel(kind);
+  }else useProceduralModel(kind);
 }
 window.addEventListener('xrpet:appearance',e=>setAppearance(e.detail||{}));
 
