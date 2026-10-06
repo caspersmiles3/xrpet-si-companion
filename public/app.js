@@ -377,7 +377,6 @@ async function loadMarket(showOffline=true){
   }catch{
     if(showOffline){
       setText('#xrpPrice','Unavailable');setText('#xrpChange','Exchange feed offline');
-      setText('#globalXrpPrice','Unavailable');setText('#globalXrpChange','Exchange feed offline');
       setText('#marketSource',selectedExchangeMeta().name+' feed unavailable');
     }
     renderSignal589();
