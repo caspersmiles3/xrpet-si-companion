@@ -15,12 +15,22 @@ const state={
   floatingPinned:saved.floatingPinned===true,floatX:Number.isFinite(saved.floatX)?saved.floatX:null,floatY:Number.isFinite(saved.floatY)?saved.floatY:null,
   nftCompanion:saved.nftCompanion||null,
   companionKind:saved.companionKind||'nexus',companionGender:saved.companionGender||'boy',
-  soundEnabled:saved.soundEnabled===true,soundVolume:Number.isFinite(saved.soundVolume)?saved.soundVolume:35
+  soundEnabled:saved.soundEnabled===true,soundVolume:Number.isFinite(saved.soundVolume)?saved.soundVolume:35,
+  interfaceSound:saved.interfaceSound!==false,ambientSound:saved.ambientSound!==false,ledgerSound:saved.ledgerSound!==false,
+  signalLoreIndex:Number.isFinite(saved.signalLoreIndex)?saved.signalLoreIndex:0
 };
 const FORMS=[['Drop',0],['Ripple',50],['Wave',150],['Surge',350],['Nexus',700],['Titan',1200],['Legend',2000]];
 const ROOM_NAMES={nexus:'Neon Horizon',ocean:'Ripple Sanctuary',vault:'Ledger Vault',aurora:'Sky Garden',legend:'Orbital Station'};
-const COSMETIC_NAMES={classic:'Classic Nexus',aqua:'Ripple Scout',midnight:'Ledger Guardian',pearl:'Oracle Halo',solar:'Solar Vanguard'};
+const COSMETIC_NAMES={classic:'Classic Nexus',aqua:'Ripple Scout',midnight:'Ledger Guardian',pearl:'Oracle Halo',solar:'Solar Vanguard',resonance:'589 Resonance'};
 const COMPANION_NAMES={nexus:'Nexus',fox:'Ripple Fox',pup:'Ledger Pup',cat:'Vault Cat',bird:'Pulse Bird',turtle:'Wave Turtle'};
+const SIGNAL_589_LORE=[
+  'Community lore note: 589 has become a long-running XRP cultural symbol. XRPet treats it as an easter egg, not a confirmed price target.',
+  'Signal archive: XRP communities have attached meaning to recurring numbers, screenshots, riddles, and historical posts. These interpretations remain community speculation.',
+  'Ledger truth check: XRPL validation, fees, account activity, and transaction data are measurable. Symbolic 589 interpretations are a separate culture layer.',
+  'Signal discipline: a memorable number can become community mythology without becoming protocol evidence. XRPet keeps those categories visibly separated.',
+  'Community signal: use the mystery for lore, collectibles, and discovery—not as proof of future XRP price or Ripple plans.',
+  'Archive 589: the strongest version of the idea is cultural identity—hidden markers, rare equipment, serials, and community references built around a shared motif.'
+];
 function hexToUtf8(hex){try{return decodeURIComponent(hex.match(/.{1,2}/g).map(b=>'%'+b).join(''))}catch{return''}}
 function mediaUrl(uri){
   if(!uri)return null;
@@ -47,6 +57,33 @@ function form(){return [...FORMS].reverse().find(x=>state.xp>=x[1])||FORMS[0]}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function setText(sel,text){const el=q(sel);if(el)el.textContent=text}
 function mood(label,speech,cls='calm'){setText('#petMood',label);setText('#petSpeech',speech);const action=cls==='alert'?'alert':cls==='energized'?'happy':'greet';window.XRPet3D?.react?.(action);window.dispatchEvent(new CustomEvent('xrpet:appearance',{detail:{room:state.room,cosmetic:state.cosmetic,companionKind:state.companionKind,companionGender:state.companionGender,mood:cls}}))}
+function renderSignal589(){
+  const connected=!!state.connected;
+  const tx=Number(state.txCount)||0;
+  const change=Number(state.xrpChange24h);
+  const hasMarket=Number.isFinite(change);
+  const pulse=!connected?'OFFLINE':tx>=80?'HIGH FLOW':tx>=20?'STEADY':'QUIET';
+  const ledger=connected?'VALIDATED':'WAITING';
+  const health=connected?'LIVE / VALIDATED':'CONNECTING';
+  const stateLabel=connected?'SIGNAL LOCKED':'STANDBY';
+  const lore=SIGNAL_589_LORE[((state.signalLoreIndex%SIGNAL_589_LORE.length)+SIGNAL_589_LORE.length)%SIGNAL_589_LORE.length];
+
+  setText('#signal589State',stateLabel);
+  setText('#signal589Message',lore);
+  setText('#signalLedger',ledger);
+  setText('#communityPulse',pulse);
+  setText('#signalTruth',state.truthMode?'SEPARATED':'BASIC');
+  setText('#homeSignal589',connected?'589 // LOCKED':'589 // STANDBY');
+  setText('#homeSignalCaption','Community lore · not protocol fact');
+  setText('#homeLedgerHealth',health);
+
+  const section=q('#signal589Section');
+  if(section){
+    section.dataset.pulse=pulse.toLowerCase().replace(/\s+/g,'-');
+    section.dataset.market=hasMarket?(change>2?'positive':change<-2?'negative':'neutral'):'unknown';
+  }
+}
+
 function render(){
   const [name,min]=form(); const i=FORMS.findIndex(x=>x[0]===name); const next=FORMS[Math.min(i+1,FORMS.length-1)];
   setText('#petName',state.petName);setText('#chatPetName',state.petName);setText('#topPetName',state.petName);setText('#floatingPetName',state.petName);setText('#evolution',name.toUpperCase());
@@ -60,8 +97,14 @@ function render(){
   if(q('#account'))q('#account').value=state.account||'';
   setText('#walletProvider',state.walletProvider==='manual'?'Manual':state.walletProvider);
   setText('#walletState',state.account?'Watching '+state.account.slice(0,8)+'…'+state.account.slice(-6)+' for validated activity.':'No public account is being watched.');
-  qa('.room-choice').forEach(b=>{const rank=FORMS.findIndex(x=>x[0]===name),need=b.dataset.room==='aurora'?2:b.dataset.room==='legend'?5:0;b.disabled=rank<need;const active=b.dataset.room===state.room;b.classList.toggle('active',active);const e=b.querySelector('em');if(e&&active)e.textContent='Active';else if(e)e.textContent=need?((b.dataset.room==='aurora')?'Wave+':'Titan+'):'Unlocked'}); qa('.cosmetic-choice').forEach(b=>{const active=b.dataset.cosmetic===state.cosmetic;b.classList.toggle('active',active);const e=b.querySelector('em');if(e)e.textContent=active?'Equipped':'Owned'});
-  document.body.classList.remove('room-nexus','room-ocean','room-vault','room-aurora','room-legend');document.body.classList.add('room-'+state.room); const pet=q('#pet'); if(pet){pet.classList.remove('skin-classic','skin-aqua','skin-midnight','skin-pearl','skin-solar');pet.classList.add('skin-'+state.cosmetic)}
+  bind('#decode589','click',()=>{
+  state.signalLoreIndex=(state.signalLoreIndex+1)%SIGNAL_589_LORE.length;
+  persist();renderSignal589();playSound('notification');
+  window.XRPet3D?.perform?.('scan');
+});
+
+qa('.room-choice').forEach(b=>{const rank=FORMS.findIndex(x=>x[0]===name),need=b.dataset.room==='aurora'?2:b.dataset.room==='legend'?5:0;b.disabled=rank<need;const active=b.dataset.room===state.room;b.classList.toggle('active',active);const e=b.querySelector('em');if(e&&active)e.textContent='Active';else if(e)e.textContent=need?((b.dataset.room==='aurora')?'Wave+':'Titan+'):'Unlocked'}); qa('.cosmetic-choice').forEach(b=>{const active=b.dataset.cosmetic===state.cosmetic;b.classList.toggle('active',active);const e=b.querySelector('em');if(e)e.textContent=active?'Equipped':'Owned'});
+  document.body.classList.remove('room-nexus','room-ocean','room-vault','room-aurora','room-legend');document.body.classList.add('room-'+state.room); const pet=q('#pet'); if(pet){pet.classList.remove('skin-classic','skin-aqua','skin-midnight','skin-pearl','skin-solar','skin-resonance');pet.classList.add('skin-'+state.cosmetic)}
   setText('#unlocksChip',(['nexus','ocean','vault'].length+(FORMS.findIndex(x=>x[0]===name)>=2?1:0)+(FORMS.findIndex(x=>x[0]===name)>=5?1:0))+' unlocked');setText('#homeRoom',ROOM_NAMES[state.room]||state.room);setText('#homeCosmetic',COSMETIC_NAMES[state.cosmetic]||state.cosmetic);setText('#homeCompanionModel',COMPANION_NAMES[state.companionKind]||state.companionKind);setText('#homeCompanionGender',(state.companionGender==='girl'?'Girl':'Boy')+' companion');setText('#companionModelChip',(COMPANION_NAMES[state.companionKind]||state.companionKind)+' · '+(state.companionGender==='girl'?'Girl':'Boy'));
   if(q('#explainLevel'))q('#explainLevel').value=state.explainLevel;if(q('#notifyLevel'))q('#notifyLevel').value=state.notifyLevel;
   if(q('#truthToggle'))q('#truthToggle').checked=state.truthMode;if(q('#marketMoodToggle'))q('#marketMoodToggle').checked=state.marketMood;
@@ -69,7 +112,7 @@ function render(){
   if(q('#interfaceSoundToggle'))q('#interfaceSoundToggle').checked=state.interfaceSound;if(q('#ambientSoundToggle'))q('#ambientSoundToggle').checked=state.ambientSound;if(q('#ledgerSoundToggle'))q('#ledgerSoundToggle').checked=state.ledgerSound;
   qa('.companion-choice').forEach(b=>b.classList.toggle('active',b.dataset.companion===state.companionKind));qa('.gender-choice').forEach(b=>b.classList.toggle('active',b.dataset.gender===state.companionGender));
   window.dispatchEvent(new CustomEvent('xrpet:appearance',{detail:{room:state.room,cosmetic:state.cosmetic,companionKind:state.companionKind,companionGender:state.companionGender,mood:state.networkMood||'calm'}}));
-  renderMemory();
+  renderMemory();renderSignal589();
 }
 function renderMemory(){const box=q('#memoryList');if(!box)return;box.innerHTML=state.memories.length?state.memories.map((m,i)=>'<span class="memory-chip">'+esc(m)+' <button type="button" data-rm="'+i+'">×</button></span>').join(''):'<span class="muted">No saved preferences.</span>';qa('[data-rm]').forEach(b=>b.addEventListener('click',()=>{state.memories.splice(Number(b.dataset.rm),1);persist();renderMemory()}))}
 function addXp(n){state.xp+=n;persist();render()}
@@ -81,16 +124,16 @@ async function ask(message){
   try{const r=await fetch('/api/companion',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message,context:context()})});const d=await r.json();if(!r.ok)throw new Error(d.error||'SI request failed');if(pending)pending.textContent=d.reply||'No response returned.';playSound('chatReceive')}
   catch(e){if(pending)pending.textContent='SI is unavailable right now: '+e.message;playSound('error')}
 }
-async function loadMarket(){try{const r=await fetch('/api/market',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error();state.xrpPrice=Number(d.price);state.xrpChange24h=Number(d.change24h);setText('#xrpPrice',Number.isFinite(state.xrpPrice)?'$'+state.xrpPrice.toFixed(4):'Unavailable');setText('#xrpChange',Number.isFinite(state.xrpChange24h)?(state.xrpChange24h>=0?'+':'')+state.xrpChange24h.toFixed(2)+'% · 24h':'24h unavailable');if(state.marketMood&&Number.isFinite(state.xrpChange24h)&&Math.abs(state.xrpChange24h)>=5)mood(state.xrpChange24h>0?'Excited':'Watchful','XRP moved '+Math.abs(state.xrpChange24h).toFixed(2)+'% over 24 hours. Movement is not a prediction.',state.xrpChange24h>0?'energized':'alert')}catch{setText('#xrpPrice','Unavailable');setText('#xrpChange','Market feed offline')}}
+async function loadMarket(){try{const r=await fetch('/api/market',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error();state.xrpPrice=Number(d.price);state.xrpChange24h=Number(d.change24h);renderSignal589();setText('#xrpPrice',Number.isFinite(state.xrpPrice)?'$'+state.xrpPrice.toFixed(4):'Unavailable');setText('#xrpChange',Number.isFinite(state.xrpChange24h)?(state.xrpChange24h>=0?'+':'')+state.xrpChange24h.toFixed(2)+'% · 24h':'24h unavailable');if(state.marketMood&&Number.isFinite(state.xrpChange24h)&&Math.abs(state.xrpChange24h)>=5)mood(state.xrpChange24h>0?'Excited':'Watchful','XRP moved '+Math.abs(state.xrpChange24h).toFixed(2)+'% over 24 hours. Movement is not a prediction.',state.xrpChange24h>0?'energized':'alert')}catch{setText('#xrpPrice','Unavailable');setText('#xrpChange','Market feed offline');renderSignal589()}}
 async function loadUpdates(){const box=q('#updates');if(box)box.innerHTML='<p class="muted">Checking official Ripple and XRPL sources…</p>';try{const r=await fetch('/api/updates',{cache:'no-store'});const d=await r.json();if(!r.ok||!Array.isArray(d.items)||!d.items.length)throw new Error();box.innerHTML=d.items.slice(0,9).map(x=>'<div class="update"><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title)+'</a><small>'+esc(x.source)+' · '+esc(x.label||'CONFIRMED')+'</small></div>').join('')}catch{if(box)box.innerHTML='<p class="muted">Official update feed is temporarily unavailable.</p>'}}
 let ws,retry,watchedSubscribed=null;
 function subscribeAccount(a){if(!a||!ws||ws.readyState!==1)return;if(watchedSubscribed&&watchedSubscribed!==a)ws.send(JSON.stringify({id:'unwatch',command:'unsubscribe',accounts:[watchedSubscribed]}));ws.send(JSON.stringify({id:'watch',command:'subscribe',accounts:[a]}));watchedSubscribed=a}
 function connectLedger(){clearTimeout(retry);try{ws=new WebSocket('wss://xrplcluster.com/')}catch{return scheduleReconnect()}
-  ws.onopen=()=>{state.connected=true;setText('#status','Live');const b=q('#liveBadge');if(b){b.className='status-pill live';b.innerHTML='<i></i><span>XRPL Live</span>'}mood('Connected','Live XRPL data is flowing.','calm');ws.send(JSON.stringify({id:'ledger',command:'subscribe',streams:['ledger','server']}));ws.send(JSON.stringify({id:'fee',command:'fee'}));if(state.account)subscribeAccount(state.account)};
-  ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='ledgerClosed'){state.ledgerIndex=m.ledger_index;state.txCount=m.txn_count??0;state.baseFeeDrops=m.fee_base??state.baseFeeDrops;setText('#ledger',Number(m.ledger_index).toLocaleString());setText('#txCount',(m.txn_count??0)+' transactions');if(m.fee_base!=null)setText('#fee',m.fee_base)}else if(m.type==='serverStatus'){setText('#serverState',m.server_status||'Connected')}else if(m.id==='fee'&&m.result){const drops=m.result?.drops?.base_fee;if(drops!=null){state.baseFeeDrops=Number(drops);setText('#fee',drops)}}else if(m.id==='xrpet-nfts'&&Array.isArray(m.result?.account_nfts)){
+  ws.onopen=()=>{state.connected=true;renderSignal589();setText('#status','Live');const b=q('#liveBadge');if(b){b.className='status-pill live';b.innerHTML='<i></i><span>XRPL Live</span>'}mood('Connected','Live XRPL data is flowing.','calm');ws.send(JSON.stringify({id:'ledger',command:'subscribe',streams:['ledger','server']}));ws.send(JSON.stringify({id:'fee',command:'fee'}));if(state.account)subscribeAccount(state.account)};
+  ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='ledgerClosed'){state.ledgerIndex=m.ledger_index;state.txCount=m.txn_count??0;state.baseFeeDrops=m.fee_base??state.baseFeeDrops;setText('#ledger',Number(m.ledger_index).toLocaleString());setText('#txCount',(m.txn_count??0)+' transactions');if(m.fee_base!=null)setText('#fee',m.fee_base);renderSignal589()}else if(m.type==='serverStatus'){setText('#serverState',m.server_status||'Connected')}else if(m.id==='fee'&&m.result){const drops=m.result?.drops?.base_fee;if(drops!=null){state.baseFeeDrops=Number(drops);setText('#fee',drops)}}else if(m.id==='xrpet-nfts'&&Array.isArray(m.result?.account_nfts)){
     renderNfts(m.result.account_nfts);
   }else if(m.type==='transaction'&&state.account){window.XRPet3D?.celebrate?.();if(state.ledgerSound)playSound('ledgerTx');mood('Wallet activity','Validated activity detected on the watched account.','energized');addXp(3)}};
-  ws.onclose=()=>{state.connected=false;setText('#status','Reconnecting');const b=q('#liveBadge');if(b){b.className='status-pill waiting';b.innerHTML='<i></i><span>Reconnecting</span>'}scheduleReconnect()};ws.onerror=()=>safe(()=>ws.close())
+  ws.onclose=()=>{state.connected=false;renderSignal589();setText('#status','Reconnecting');const b=q('#liveBadge');if(b){b.className='status-pill waiting';b.innerHTML='<i></i><span>Reconnecting</span>'}scheduleReconnect()};ws.onerror=()=>safe(()=>ws.close())
 }
 function scheduleReconnect(){clearTimeout(retry);retry=setTimeout(connectLedger,4000)}
 async function loadConfig(){try{const r=await fetch('/api/config',{cache:'no-store'});return await r.json()}catch{return{}}}
@@ -167,14 +210,17 @@ qa('[data-pet-action]').forEach(b=>b.addEventListener('click',()=>{
   const action=b.dataset.petAction;
   state.nftCompanion=null;applyNftCompanion();
   window.XRPet3D?.perform?.(action);
-  if(action==='celebrate'){playSound('success');setText('#petMood','Celebrating');setText('#petSpeech','Ledger core charged. Celebration sequence active.')}
-  else if(action==='alert'){playSound('cosmetic');setText('#petMood','Alert');setText('#petSpeech','Sensors focused. Watching the ledger closely.')}
-  else if(action==='sleep'){playSound('tap');setText('#petMood','Resting');setText('#petSpeech','Low-power rest mode. I am still watching quietly.')}
-  else{playSound('pet');setText('#petMood','Hello');setText('#petSpeech','Companion link acknowledged.')}
+  if(action==='celebrate'){playSound('success');setText('#petMood','Celebrating');setText('#petSpeech','Celebration protocol active. XRP signal lattice energized.')}
+  else if(action==='alert'){playSound('alert');setText('#petMood','Alert');setText('#petSpeech','Sensors focused. Watching validated ledger activity closely.')}
+  else if(action==='sleep'){playSound('sleep');setText('#petMood','Resting');setText('#petSpeech','Low-power rest mode. Ledger watch remains active.')}
+  else if(action==='focus'){playSound('select');setText('#petMood','Focused');setText('#petSpeech','Distractions reduced. Companion focus lock engaged.')}
+  else if(action==='scan'){playSound('ledgerTx');setText('#petMood','Scanning');setText('#petSpeech','Scanning current XRPL telemetry and watched-account signals.');loadMarket()}
+  else if(action==='orbit'){playSound('cosmetic');setText('#petMood','Orbiting');setText('#petSpeech','Signal hardware released into orbital display mode.')}
+  else{playSound('pet');setText('#petMood','Linked');setText('#petSpeech','Companion link acknowledged.')}
 }));
 qa('.room-choice').forEach(b=>b.addEventListener('click',()=>{if(b.disabled)return;state.room=b.dataset.room;persist();render();playSound('room');setRoomAmbience(state.room);mood('Theme changed','The entire XRPet interface is now running '+b.querySelector('strong')?.textContent+'.','calm')})); qa('.cosmetic-choice').forEach(b=>b.addEventListener('click',()=>{state.cosmetic=b.dataset.cosmetic;state.nftCompanion=null;persist();applyNftCompanion();render();mood('Reconfigured','Companion build changed to '+b.querySelector('strong')?.textContent+'.','energized')}));
 qa('[data-scroll]').forEach(b=>b.addEventListener('click',()=>q('#'+b.dataset.scroll)?.scrollIntoView({behavior:'smooth',block:'center'})));
-bind('#explainLevel','change',e=>{state.explainLevel=e.target.value;persist()});bind('#notifyLevel','change',e=>{state.notifyLevel=e.target.value;persist()});bind('#truthToggle','change',e=>{state.truthMode=e.target.checked;persist()});bind('#marketMoodToggle','change',e=>{state.marketMood=e.target.checked;persist()});
+bind('#explainLevel','change',e=>{state.explainLevel=e.target.value;persist()});bind('#notifyLevel','change',e=>{state.notifyLevel=e.target.value;persist()});bind('#truthToggle','change',e=>{state.truthMode=e.target.checked;persist();renderSignal589()});bind('#marketMoodToggle','change',e=>{state.marketMood=e.target.checked;persist()});
 bind('#notifyButton','click',async()=>{if(!('Notification'in window)){playSound('error');alert('Browser notifications are not supported here.');return}const p=await Notification.requestPermission();if(p==='granted')new Notification('XRPet alerts enabled',{body:'Browser alerts are ready while XRPet is open.'});});
 bind('#refreshIntegrations','click',integrationCheck);bind('#loadNfts','click',requestNfts);
 
@@ -183,6 +229,7 @@ bind('#globalSearchForm','submit',e=>{
   const term=(q('#globalSearch')?.value||'').trim().toLowerCase();
   if(!term)return;
   const map=[
+    [['589','signal','community','lore','theory','theories'], '#signal589Section'],
     [['room','rooms','environment'], '#roomsSection'],
     [['cosmetic','skin','appearance'], '#cosmeticsSection'],
     [['wallet','xaman','gemwallet'], '#walletPanel'],
@@ -342,7 +389,7 @@ function classifyButtonSound(b){
   if(b.dataset.cosmetic)return 'cosmetic';
   if(b.dataset.companion)return 'companion';
   if(b.dataset.gender)return 'gender';
-  if(b.dataset.petAction)return b.dataset.petAction==='celebrate'?'celebrate':b.dataset.petAction==='alert'?'alert':b.dataset.petAction==='sleep'?'sleep':'greet';
+  if(b.dataset.petAction)return b.dataset.petAction==='celebrate'?'celebrate':b.dataset.petAction==='alert'?'alert':b.dataset.petAction==='sleep'?'sleep':b.dataset.petAction==='scan'?'ledgerTx':b.dataset.petAction==='focus'?'select':b.dataset.petAction==='orbit'?'cosmetic':'greet';
   if(/connect|wallet|watch|clearWallet/i.test(b.id))return 'wallet';
   if(/catchup|daily|refresh|search/i.test(b.id))return 'nav';
   if(/charge/i.test(b.id))return 'mission';
