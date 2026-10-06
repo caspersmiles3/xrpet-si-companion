@@ -6853,3 +6853,61 @@ body.sidebar-collapsed .main-shell{
     padding:8px 10px 26px!important;
   }
 }
+
+
+/* XRPet 5.5.22 — hard black pillar masks for 4:3 launch video */
+.launch-gate.clean-launch{
+  position:fixed!important;
+  inset:0!important;
+  z-index:2147483000!important;
+  opacity:1;
+  background:#000!important;
+  background-image:none!important;
+  overflow:hidden!important;
+}
+.launch-gate.clean-launch::before{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  z-index:0!important;
+  opacity:1!important;
+  background:#000!important;
+  background-image:none!important;
+  mask-image:none!important;
+  pointer-events:none!important;
+}
+.clean-launch-video{
+  z-index:1!important;
+  background:#000!important;
+}
+.launch-pillar{
+  position:absolute!important;
+  top:0!important;
+  bottom:0!important;
+  z-index:2!important;
+  background:#000!important;
+  pointer-events:none!important;
+}
+.launch-pillar-left{
+  left:0!important;
+  width:max(0px,calc((100vw - 133.333vh)/2))!important;
+}
+.launch-pillar-right{
+  right:0!important;
+  width:max(0px,calc((100vw - 133.333vh)/2))!important;
+}
+.clean-launch-video-shade{
+  z-index:3!important;
+}
+.clean-launch .clean-launch-grid{
+  z-index:4!important;
+}
+.clean-launch .clean-launch-content{
+  z-index:5!important;
+}
+@media(max-aspect-ratio:4/3){
+  .launch-pillar-left,
+  .launch-pillar-right{
+    width:0!important;
+  }
+}
