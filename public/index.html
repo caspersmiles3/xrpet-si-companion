@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=2.1.0">
+  <link rel="stylesheet" href="/styles.css?v=2.2.0">
 </head>
 <body>
 <div class="ambient ambient-one"></div>
@@ -31,11 +31,11 @@
       <button class="side-link" data-scroll="chatPanel"><span>◌</span>Chat</button>
     </nav>
 
-    <div class="settings-wrap">
-      <button id="settingsButton" class="settings-trigger" aria-expanded="false">
+    <details class="settings-wrap" id="settingsDetails">
+      <summary class="settings-trigger">
         <span>⚙</span><b>Settings</b><i>⌄</i>
-      </button>
-      <div id="settingsMenu" class="settings-menu hidden">
+      </summary>
+      <div id="settingsMenu" class="settings-menu">
         <label>Explanation
           <select id="explainLevel">
             <option value="simple">Simple</option>
@@ -54,7 +54,7 @@
         <label class="switch-row"><input id="marketMoodToggle" type="checkbox"><span>Market-reactive mood</span></label>
         <button id="notifyButton" class="menu-action">Enable browser alerts</button>
       </div>
-    </div>
+    </details>
 
     <div class="ledger-badge">
       <span class="ledger-x">X</span>
@@ -92,6 +92,7 @@
             <div class="city-light c1"></div><div class="city-light c2"></div><div class="city-light c3"></div>
             <div class="orbital-ring r1"></div><div class="orbital-ring r2"></div>
             <button id="pet" class="pet-3d calm skin-classic" aria-label="XRPet companion">
+              <span class="orbit-orb"><i></i></span>
               <span class="ear ear-l"></span><span class="ear ear-r"></span>
               <span class="head-shell">
                 <i class="reflection"></i>
@@ -102,6 +103,8 @@
               </span>
               <span class="neck-ring"></span>
               <span class="body-shell"><i class="body-light"></i><b class="core-mark">X</b></span>
+              <span class="shoulder pod-l"></span><span class="shoulder pod-r"></span>
+              <span class="leg leg-l"><i></i></span><span class="leg leg-r"><i></i></span>
               <span class="hover-ring"></span>
             </button>
             <div class="pedestal"><span></span><b>X</b></div>
@@ -118,50 +121,60 @@
           </div>
         </section>
 
-        <section id="companionSection" class="content-panel companion-panel">
-          <div class="section-head">
-            <div><span class="eyebrow">COMPANION</span><h3>Identity + evolution</h3></div>
-            <span id="personalityChip" class="chip">Guardian</span>
-          </div>
-          <div class="companion-layout">
-            <form id="profileForm" class="form-grid">
-              <label>Name<input id="profileName" maxlength="24"></label>
-              <label>Personality<select id="profilePersonality"><option>Guardian</option><option>Explorer</option><option>Oracle</option><option>Builder</option><option>Spark</option><option>Jester</option></select></label>
-              <label class="wide">Your focus<input id="profileFocus" maxlength="80" placeholder="XRP, XRPL, learning, building…"></label>
-              <button class="primary wide">Save companion</button>
-            </form>
-            <div class="mission-card">
-              <div class="mission-head"><strong>Daily Pulse</strong><span id="streakChip">0 day streak</span></div>
-              <p id="missionText">Charge the core 7 times to complete today's mission.</p>
-              <div class="mission-meter"><span id="meterFill"></span></div>
-              <button id="charge" class="secondary full">Charge Core · <span id="chargeCount">0/7</span></button>
-              <div class="evolution-track"><span>Drop</span><span>Ripple</span><span>Wave</span><span>Surge</span><span>Nexus</span><span>Titan</span><span>Legend</span></div>
+        <section class="bottom-strip">
+          <article id="companionSection" class="content-panel strip-card">
+            <div class="section-head">
+              <div><span class="eyebrow">COMPANION</span><h3>Current companion</h3></div>
+              <span id="personalityChip" class="chip">Guardian</span>
             </div>
-          </div>
-          <form id="memoryForm" class="inline-form memory-form"><input id="memoryInput" maxlength="120" placeholder="Remember a preference…"><button>Remember</button></form>
-          <div id="memoryList" class="memory-list"></div>
-        </section>
+            <div class="companion-strip">
+              <div class="companion-preview">
+                <div class="mini-pet mini-classic"><span>X</span></div>
+                <div><strong id="stripPetName">NEXUS-589</strong><small><span id="stripLevel">Level 1</span> · current</small></div>
+              </div>
+              <div class="variant-stack">
+                <button type="button" class="variant-dot v1" data-cosmetic="classic" aria-label="Classic companion"></button>
+                <button type="button" class="variant-dot v2" data-cosmetic="midnight" aria-label="Midnight companion"></button>
+                <button type="button" class="variant-dot v3" data-cosmetic="pearl" aria-label="Pearl companion"></button>
+              </div>
+            </div>
+            <form id="profileForm" class="compact-profile">
+              <input id="profileName" maxlength="24" placeholder="Companion name">
+              <select id="profilePersonality"><option>Guardian</option><option>Explorer</option><option>Oracle</option><option>Builder</option><option>Spark</option><option>Jester</option></select>
+              <input id="profileFocus" maxlength="80" placeholder="Focus">
+              <button class="primary">Save</button>
+            </form>
+            <div class="mission-mini">
+              <span id="streakChip">0 day streak</span>
+              <button id="charge" class="secondary">Charge · <span id="chargeCount">0/7</span></button>
+            </div>
+            <p id="missionText" class="sr-only">Charge the core 7 times to complete today's mission.</p>
+            <div class="mission-meter"><span id="meterFill"></span></div>
+            <div class="evolution-track"><span>Drop</span><span>Ripple</span><span>Wave</span><span>Surge</span><span>Nexus</span><span>Titan</span><span>Legend</span></div>
+            <form id="memoryForm" class="memory-compact"><input id="memoryInput" maxlength="120" placeholder="Remember a preference…"><button>+</button></form>
+            <div id="memoryList" class="memory-list"></div>
+          </article>
 
-        <section id="roomsSection" class="content-panel">
-          <div class="section-head"><div><span class="eyebrow">ROOMS</span><h3>Immersive environments</h3></div><span id="unlocksChip" class="chip">3 unlocked</span></div>
-          <div class="visual-grid rooms-grid">
-            <button data-room="nexus" class="visual-card room-choice active"><span class="thumb nexus-thumb"></span><strong>Neon Horizon</strong><small>XRPL penthouse</small></button>
-            <button data-room="ocean" class="visual-card room-choice"><span class="thumb ocean-thumb"></span><strong>Ripple Sanctuary</strong><small>Liquid signal chamber</small></button>
-            <button data-room="vault" class="visual-card room-choice"><span class="thumb vault-thumb"></span><strong>Ledger Vault</strong><small>Secure archive</small></button>
-            <button data-room="aurora" class="visual-card room-choice"><span class="thumb aurora-thumb"></span><strong>Sky Garden</strong><small>Wave+ unlock</small></button>
-            <button data-room="legend" class="visual-card room-choice"><span class="thumb legend-thumb"></span><strong>Orbital Station</strong><small>Titan+ unlock</small></button>
-          </div>
-        </section>
+          <article id="roomsSection" class="content-panel strip-card rooms-strip">
+            <div class="section-head"><div><span class="eyebrow">ROOMS</span><h3>Environment</h3></div><span id="unlocksChip" class="chip">3 unlocked</span></div>
+            <div class="visual-grid rooms-grid">
+              <button data-room="nexus" class="visual-card room-choice active"><span class="thumb nexus-thumb"></span><strong>Neon Horizon</strong><small>XRPL penthouse</small></button>
+              <button data-room="ocean" class="visual-card room-choice"><span class="thumb ocean-thumb"></span><strong>Ripple Sanctuary</strong><small>Nature + water</small></button>
+              <button data-room="aurora" class="visual-card room-choice"><span class="thumb aurora-thumb"></span><strong>Sky Garden</strong><small>Floating oasis</small></button>
+              <button data-room="legend" class="visual-card room-choice"><span class="thumb legend-thumb"></span><strong>Orbital Station</strong><small>Space view</small></button>
+            </div>
+          </article>
 
-        <section id="cosmeticsSection" class="content-panel">
-          <div class="section-head"><div><span class="eyebrow">COSMETICS</span><h3>Companion finishes</h3></div><span class="chip">Local collection</span></div>
-          <div class="visual-grid cosmetics-grid">
-            <button class="cosmetic-choice active" data-cosmetic="classic"><span class="cosmetic-sphere classic"></span><strong>Classic</strong><small>Equipped</small></button>
-            <button class="cosmetic-choice" data-cosmetic="aqua"><span class="cosmetic-sphere aqua"></span><strong>Aqua Core</strong><small>Owned</small></button>
-            <button class="cosmetic-choice" data-cosmetic="midnight"><span class="cosmetic-sphere midnight"></span><strong>Midnight</strong><small>Owned</small></button>
-            <button class="cosmetic-choice" data-cosmetic="pearl"><span class="cosmetic-sphere pearl"></span><strong>Pearl</strong><small>Owned</small></button>
-            <button class="cosmetic-choice" data-cosmetic="solar"><span class="cosmetic-sphere solar"></span><strong>Solar Flare</strong><small>Owned</small></button>
-          </div>
+          <article id="cosmeticsSection" class="content-panel strip-card cosmetics-strip">
+            <div class="section-head"><div><span class="eyebrow">COSMETICS</span><h3>Finishes</h3></div><span class="chip">Owned</span></div>
+            <div class="cosmetic-tabs"><button class="active">All</button><button>Skins</button><button>Effects</button></div>
+            <div class="visual-grid cosmetics-grid">
+              <button class="cosmetic-choice active" data-cosmetic="classic"><span class="cosmetic-sphere classic"></span><strong>Classic</strong><small>Equipped</small></button>
+              <button class="cosmetic-choice" data-cosmetic="midnight"><span class="cosmetic-sphere midnight"></span><strong>Midnight</strong><small>Owned</small></button>
+              <button class="cosmetic-choice" data-cosmetic="solar"><span class="cosmetic-sphere solar"></span><strong>Solar Flare</strong><small>Owned</small></button>
+              <button class="cosmetic-choice" data-cosmetic="aqua"><span class="cosmetic-sphere aqua"></span><strong>Aqua Core</strong><small>Owned</small></button>
+            </div>
+          </article>
         </section>
 
         <section id="walletPanel" class="content-panel wallet-panel">
@@ -204,9 +217,9 @@
       </aside>
     </section>
 
-    <footer>XRPet SI Companion™ · Beta 2.1 · XRP Ledger companion · Not affiliated with or endorsed by Ripple · Not financial advice</footer>
+    <footer>XRPet SI Companion™ · Beta 2.2 · XRP Ledger companion · Not affiliated with or endorsed by Ripple · Not financial advice</footer>
   </main>
 </div>
-<script src="/app.js?v=2.1.0"></script>
+<script src="/app.js?v=2.2.0"></script>
 </body>
 </html>
