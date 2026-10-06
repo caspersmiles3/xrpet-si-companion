@@ -1,4 +1,4 @@
-# XRPet SI Companion™ — v4.9.0
+# XRPet SI Companion™ — v5.0.0
 
 **Don't watch the Ledger. Live with it.**
 
@@ -8,7 +8,7 @@ XRPet is a lightweight, installable companion built around Ripple, XRP and the X
 
 Render service: https://xrpet-si-companion.onrender.com
 
-## v4.9 capabilities
+## v5.0 capabilities
 
 - Live XRPL ledger + fee signals
 - XRP/USD market snapshot with public-data fallback
@@ -196,3 +196,22 @@ The live 3D Ripplet layer is mounted inside the habitat instead of roaming over 
 - The Ripplet tab now shows current intention, current thought, and whether the last higher-level decision came from connected SI or local autonomy.
 - XRP Live now includes a rolling XRP/USD market chart based on public Coinbase 5-minute candles, covering roughly the latest 24 hours and refreshing every 60 seconds.
 - The chart includes high, low, aggregate XRP volume, time range, and direction styling. It is descriptive market data, not a forecast.
+
+
+## v5.0 Ripplet 2.0 + XRPet Arcade
+
+### Ripplet 2.0
+- The upgraded procedural runtime model is now the canonical Ripplet instead of being replaced by the older `/models/Ripplet.glb` after startup.
+- Body construction now includes smoother proportions, layered forehead/jaw/temple armor, articulated upper arms, elbows, palms, finger pads, calves, toe caps, and refined torso/hip proportions.
+- Eye construction now includes luminous irises plus transparent cornea layers.
+- Whole-app pointer tracking restores the behavior where Ripplet follows the user's mouse even though his roaming canvas itself does not receive pointer events.
+- Head movement, pupil travel, torso follow, natural blinking, and autonomous idle glances combine so the face keeps moving even when the user is not interacting.
+- Existing Water/Food/Sleep/Signal Friend reactions, free roaming, autonomous mind, sounds, walk cycles, and live XRPL/XRP behavior remain connected.
+
+### Games
+A new **Games** primary navigation tab contains three original XRPet mini games:
+1. **Ledger Rush** — a 30-second reaction game where the player validates changing ledger nodes and builds a streak.
+2. **XRP Flow** — a three-lane settlement arcade game where the player catches XRP packets and avoids congestion packets.
+3. **Consensus 80** — a validator-sequence memory game inspired by consensus concepts. It is explicitly an arcade interpretation, not a technical simulation of XRPL consensus.
+
+Mini-game events feed back into Ripplet's animation/sound system and award small amounts of local XRPet XP. Games do not award XRP, tokens, money, or financial value.
