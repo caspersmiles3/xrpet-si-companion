@@ -29,7 +29,10 @@ const state={
   lifeActivity:saved.lifeActivity||'explore',
   lifeRoaming:saved.lifeRoaming!==false,
   lifePinned:saved.lifePinned===true,
-  lifeLastTick:Number(saved.lifeLastTick)||Date.now()
+  lifeLastTick:Number(saved.lifeLastTick)||Date.now(),
+  lastLedgerTxAt:Number(saved.lastLedgerTxAt)||0,
+  lastAnnouncementTitle:saved.lastAnnouncementTitle||'',
+  lastMarketPrice:Number.isFinite(saved.lastMarketPrice)?saved.lastMarketPrice:null
 };
 const FORMS=[['Drop',0],['Ripple',50],['Wave',150],['Surge',350],['Nexus',700],['Titan',1200],['Legend',2000]];
 const ROOM_NAMES={nexus:'Neon Horizon',ocean:'Ripple Sanctuary',vault:'Ledger Vault',aurora:'Sky Garden',legend:'Orbital Station',genesis:'Genesis Chamber',city:'Settlement City',quantum:'Quantum Ledger Lab',desert:'Digital Oasis',arctic:'Arctic Node'};
@@ -98,85 +101,44 @@ function renderSignal589(){
 
 
 const LIFE_STATIONS={
-  drink:{x:12,y:20,label:'Drinking from the fountain',thought:'I was thirsty. A quick drink, then I can get back to exploring.'},
-  eat:{x:76,y:18,label:'Eating',thought:'Food first. Ledger watching is easier with a charged core.'},
-  sleep:{x:14,y:70,label:'Sleeping',thought:'Resting for a while. I will check the Ledger when I wake up.'},
-  socialize:{x:77,y:70,label:'Visiting my signal friend',thought:'Spending time with my signal friend keeps my social core healthy.'},
-  explore:{x:48,y:48,label:'Exploring Home',thought:'I am roaming around and deciding what to do next.'},
-  ledger:{x:51,y:28,label:'Watching the XRP Ledger',thought:'I am watching the live ledger and waiting for something interesting.'},
-  sit:{x:52,y:73,label:'Sitting & staying',thought:'I will stay right here until you let me roam again.'}
+  drink:{label:'Drinking XRPL flow',thought:'Transactions are moving through the XRP Ledger. I am taking in the flow.'},
+  eat:{label:'Feeding on market energy',thought:'XRP moved. I am checking the market energy without treating movement as a prediction.'},
+  sleep:{label:'Sleeping',thought:'The ledger is quiet right now, so I am resting until the signal changes.'},
+  socialize:{label:'With Signal Friend',thought:'A new official signal arrived. I am checking it with my Signal Friend.'},
+  explore:{label:'Roaming XRPet',thought:'I am walking through XRPet and watching for the next live signal.'},
+  ledger:{label:'Watching XRPL',thought:'I am monitoring validated XRP Ledger activity.'},
+  sit:{label:'Sitting & staying',thought:'I will stay here until you unpin me.'}
 };
 function clampNeed(v){return Math.max(0,Math.min(100,Number(v)||0))}
 function applyOfflineLifeDecay(){
-  const now=Date.now();
-  const elapsed=Math.min(12*60*60*1000,Math.max(0,now-state.lifeLastTick));
-  const minutes=elapsed/60000;
-  state.lifeFood=clampNeed(state.lifeFood-minutes*.11);
-  state.lifeWater=clampNeed(state.lifeWater-minutes*.16);
-  state.lifeRest=clampNeed(state.lifeRest-minutes*.08);
-  state.lifeSocial=clampNeed(state.lifeSocial-minutes*.06);
-  state.lifeLastTick=now;
-}
-function chooseLifeActivity(){
-  if(state.lifePinned)return 'sit';
-  const needs=[
-    ['drink',state.lifeWater],
-    ['eat',state.lifeFood],
-    ['sleep',state.lifeRest],
-    ['socialize',state.lifeSocial]
-  ].sort((x,y)=>x[1]-y[1]);
-  if(needs[0][1]<42)return needs[0][0];
-  if(!state.lifeRoaming)return 'ledger';
-  const roll=Math.random();
-  if(roll<.28)return 'ledger';
-  if(roll<.56)return 'explore';
-  if(roll<.67)return 'drink';
-  if(roll<.78)return 'eat';
-  if(roll<.89)return 'socialize';
-  return 'sleep';
-}
-function performLifeActivity(activity,manual=false){
-  const cfg=LIFE_STATIONS[activity]||LIFE_STATIONS.explore;
-  state.lifeActivity=activity;
-  const avatar=q('#lifeAvatar');
-  if(avatar){
-    avatar.style.setProperty('--life-x',cfg.x+'%');
-    avatar.style.setProperty('--life-y',cfg.y+'%');
-    avatar.dataset.activity=activity;
-  }
-  setText('#lifeMode',cfg.label);
-  setText('#lifeThought',cfg.thought);
-  if(activity==='drink')state.lifeWater=clampNeed(state.lifeWater+(manual?28:18));
-  if(activity==='eat')state.lifeFood=clampNeed(state.lifeFood+(manual?28:18));
-  if(activity==='sleep')state.lifeRest=clampNeed(state.lifeRest+(manual?24:15));
-  if(activity==='socialize')state.lifeSocial=clampNeed(state.lifeSocial+(manual?28:18));
-  const reaction=activity==='sleep'?'sleep':activity==='ledger'?'scan':activity==='socialize'?'greet':'happy';
-  window.XRPet3D?.perform?.(reaction);
-  renderLife();
-  persist();
+  const now=Date.now(),elapsed=Math.min(12*60*60*1000,Math.max(0,now-state.lifeLastTick)),minutes=elapsed/60000;
+  state.lifeFood=clampNeed(state.lifeFood-minutes*.05);state.lifeWater=clampNeed(state.lifeWater-minutes*.06);
+  state.lifeRest=clampNeed(state.lifeRest-minutes*.04);state.lifeSocial=clampNeed(state.lifeSocial-minutes*.04);state.lifeLastTick=now;
 }
 function renderLife(){
-  const values={Food:state.lifeFood,Water:state.lifeWater,Rest:state.lifeRest,Social:state.lifeSocial};
-  for(const [k,v] of Object.entries(values)){
-    const n=Math.round(clampNeed(v));
-    setText('#life'+k,n+'%');
-    const bar=q('#life'+k+'Bar');if(bar)bar.style.width=n+'%';
-  }
   const cfg=LIFE_STATIONS[state.lifePinned?'sit':state.lifeActivity]||LIFE_STATIONS.explore;
-  setText('#lifeMode',cfg.label);
-  setText('#lifeThought',cfg.thought);
-  const roam=q('#lifeRoamToggle');if(roam)roam.textContent='Roam: '+(state.lifeRoaming&&!state.lifePinned?'On':'Off');
+  setText('#lifeMode',cfg.label);setText('#lifeThought',cfg.thought);
   const stay=q('#lifeSitStay');if(stay)stay.textContent=state.lifePinned?'Unpin & Roam':'Sit & Stay';
 }
+function performLifeActivity(activity,manual=false){
+  if(state.lifePinned&&activity!=='sit'&&!manual)return;
+  state.lifeActivity=activity;
+  if(activity==='drink')state.lifeWater=clampNeed(state.lifeWater+(manual?12:4));
+  if(activity==='eat')state.lifeFood=clampNeed(state.lifeFood+(manual?12:4));
+  if(activity==='sleep')state.lifeRest=clampNeed(state.lifeRest+(manual?10:3));
+  if(activity==='socialize')state.lifeSocial=clampNeed(state.lifeSocial+(manual?12:4));
+  const reaction=activity==='sleep'?'sleep':activity==='ledger'?'scan':activity==='socialize'?'greet':activity==='drink'?'happy':activity==='eat'?'happy':'greet';
+  window.XRPet3D?.perform?.(reaction);
+  window.XRPetRoam?.go?.(activity);
+  renderLife();persist();
+}
 function lifeTick(){
-  state.lifeFood=clampNeed(state.lifeFood-.18);
-  state.lifeWater=clampNeed(state.lifeWater-.25);
-  state.lifeRest=clampNeed(state.lifeRest-(state.lifeActivity==='sleep'?-.52:.12));
-  state.lifeSocial=clampNeed(state.lifeSocial-(state.lifeActivity==='socialize'?-.48:.09));
-  state.lifeLastTick=Date.now();
-  if(state.lifeActivity==='drink')state.lifeWater=clampNeed(state.lifeWater+.8);
-  if(state.lifeActivity==='eat')state.lifeFood=clampNeed(state.lifeFood+.8);
-  if(!state.lifePinned&&Math.random()<.36)performLifeActivity(chooseLifeActivity());
+  state.lifeFood=clampNeed(state.lifeFood-.03);state.lifeWater=clampNeed(state.lifeWater-.04);
+  state.lifeRest=clampNeed(state.lifeRest+(state.lifeActivity==='sleep'?.16:-.03));
+  state.lifeSocial=clampNeed(state.lifeSocial-.02);state.lifeLastTick=Date.now();
+  const quiet=Date.now()-(state.lastLedgerTxAt||0)>20000;
+  if(!state.lifePinned&&quiet&&state.lifeActivity!=='sleep')performLifeActivity('sleep');
+  else if(!state.lifePinned&&!quiet&&state.lifeActivity==='sleep')performLifeActivity('ledger');
   else {renderLife();persist();}
 }
 applyOfflineLifeDecay();
@@ -224,11 +186,16 @@ async function ask(message){
   try{const r=await fetch('/api/companion',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message,context:context()})});const d=await r.json();if(!r.ok)throw new Error(d.error||'SI request failed');if(pending)pending.textContent=d.reply||'No response returned.';playSound('chatReceive')}
   catch(e){if(pending)pending.textContent='SI is unavailable right now: '+e.message;playSound('error')}
 }
-async function loadMarket(){try{const r=await fetch('/api/market',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error();state.xrpPrice=Number(d.price);state.xrpChange24h=Number(d.change24h);renderSignal589();const livePrice=Number.isFinite(state.xrpPrice)?'$'+state.xrpPrice.toFixed(4):'Unavailable';const liveChange=Number.isFinite(state.xrpChange24h)?(state.xrpChange24h>=0?'+':'')+state.xrpChange24h.toFixed(2)+'% · 24h':'24h unavailable';setText('#xrpPrice',livePrice);setText('#xrpChange',liveChange);setText('#globalXrpPrice',livePrice);setText('#globalXrpChange',liveChange);if(state.marketMood&&Number.isFinite(state.xrpChange24h)&&Math.abs(state.xrpChange24h)>=5)mood(state.xrpChange24h>0?'Excited':'Watchful','XRP moved '+Math.abs(state.xrpChange24h).toFixed(2)+'% over 24 hours. Movement is not a prediction.',state.xrpChange24h>0?'energized':'alert')}catch{setText('#xrpPrice','Unavailable');setText('#xrpChange','Market feed offline');setText('#globalXrpPrice','Unavailable');setText('#globalXrpChange','Market feed offline');renderSignal589()}}
-async function loadUpdates(){const box=q('#updates');if(box)box.innerHTML='<p class="muted">Checking official Ripple and XRPL sources…</p>';try{const r=await fetch('/api/updates',{cache:'no-store'});const d=await r.json();if(!r.ok||!Array.isArray(d.items)||!d.items.length)throw new Error();box.innerHTML=d.items.slice(0,9).map(x=>'<div class="update"><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title)+'</a><small>'+esc(x.source)+' · '+esc(x.label||'CONFIRMED')+'</small></div>').join('')}catch{if(box)box.innerHTML='<p class="muted">Official update feed is temporarily unavailable.</p>'}}
+async function loadMarket(){try{const r=await fetch('/api/market',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error();const previousPrice=state.lastMarketPrice;state.xrpPrice=Number(d.price);state.xrpChange24h=Number(d.change24h);state.lastMarketPrice=state.xrpPrice;renderSignal589();
+if(Number.isFinite(previousPrice)&&Number.isFinite(state.xrpPrice)&&previousPrice!==state.xrpPrice){
+  const delta=(state.xrpPrice-previousPrice)/previousPrice*100;
+  setText('#foodSignal',(delta>=0?'+':'')+delta.toFixed(3)+'% tick');
+  if(!state.lifePinned)performLifeActivity('eat');
+}const livePrice=Number.isFinite(state.xrpPrice)?'$'+state.xrpPrice.toFixed(4):'Unavailable';const liveChange=Number.isFinite(state.xrpChange24h)?(state.xrpChange24h>=0?'+':'')+state.xrpChange24h.toFixed(2)+'% · 24h':'24h unavailable';setText('#xrpPrice',livePrice);setText('#xrpChange',liveChange);setText('#globalXrpPrice',livePrice);setText('#globalXrpChange',liveChange);if(state.marketMood&&Number.isFinite(state.xrpChange24h)&&Math.abs(state.xrpChange24h)>=5)mood(state.xrpChange24h>0?'Excited':'Watchful','XRP moved '+Math.abs(state.xrpChange24h).toFixed(2)+'% over 24 hours. Movement is not a prediction.',state.xrpChange24h>0?'energized':'alert')}catch{setText('#xrpPrice','Unavailable');setText('#xrpChange','Market feed offline');setText('#globalXrpPrice','Unavailable');setText('#globalXrpChange','Market feed offline');renderSignal589()}}
+async function loadUpdates(){const box=q('#updates');if(box)box.innerHTML='<p class="muted">Checking official Ripple and XRPL sources…</p>';try{const r=await fetch('/api/updates',{cache:'no-store'});const d=await r.json();if(!r.ok||!Array.isArray(d.items)||!d.items.length)throw new Error();const items=d.items.slice(0,12);box.innerHTML=items.map((x,i)=>'<article class="announcement-card"><div class="announcement-index">'+String(i+1).padStart(2,'0')+'</div><div><span class="announcement-source">'+esc(x.source)+' · '+esc(x.label||'CONFIRMED')+'</span><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title)+'</a><small>Official source ↗</small></div></article>').join('');setText('#announcementStatus','Live');setText('#announcementUpdated','Updated '+new Date().toLocaleTimeString());const newest=items[0]?.title||'';setText('#friendSignal',newest?'New signal':'Standing by');if(newest&&state.lastAnnouncementTitle&&newest!==state.lastAnnouncementTitle&&!state.lifePinned)performLifeActivity('socialize');state.lastAnnouncementTitle=newest;persist()}catch{if(box)box.innerHTML='<p class="muted">Official update feed is temporarily unavailable.</p>';setText('#announcementStatus','Unavailable');setText('#announcementUpdated','Retrying automatically')}}
 const liveTransactions=[];
 const seenLiveTx=new Set();
-let liveTxRenderTimer=0;
+let liveTxRenderTimer=0,lifeWaterTimer=0;
 function shortAccount(v){if(!v)return '—';const s=String(v);return s.length>18?s.slice(0,9)+'…'+s.slice(-6):s}
 function formatLedgerAmount(amount){
   if(amount==null)return '—';
@@ -259,7 +226,7 @@ function connectLedger(){clearTimeout(retry);try{ws=new WebSocket('wss://xrplclu
   ws.onopen=()=>{state.connected=true;renderSignal589();setText('#status','Live');const b=q('#liveBadge');if(b){b.className='status-pill live';b.innerHTML='<i></i><span>XRPL Live</span>'}mood('Connected','Live XRPL data is flowing.','calm');ws.send(JSON.stringify({id:'ledger',command:'subscribe',streams:['ledger','server','transactions']}));ws.send(JSON.stringify({id:'fee',command:'fee'}));if(state.account)subscribeAccount(state.account)};
   ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='ledgerClosed'){state.ledgerIndex=m.ledger_index;state.txCount=m.txn_count??0;state.baseFeeDrops=m.fee_base??state.baseFeeDrops;setText('#ledger',Number(m.ledger_index).toLocaleString());setText('#txCount',(m.txn_count??0)+' transactions');if(m.fee_base!=null)setText('#fee',m.fee_base);renderSignal589()}else if(m.type==='serverStatus'){setText('#serverState',m.server_status||'Connected')}else if(m.id==='fee'&&m.result){const drops=m.result?.drops?.base_fee;if(drops!=null){state.baseFeeDrops=Number(drops);setText('#fee',drops)}}else if(m.id==='xrpet-nfts'&&Array.isArray(m.result?.account_nfts)){
     renderNfts(m.result.account_nfts);
-  }else if(m.type==='transaction'){const normalized=normalizeLiveTransaction(m);if(normalized){liveTransactions.unshift(normalized);if(liveTransactions.length>25)liveTransactions.length=25;scheduleLiveTransactionRender()}const tx=m.transaction||m.tx_json||m.tx||{};if(state.account&&(tx.Account===state.account||tx.Destination===state.account)){if(state.ledgerSound)playSound('ledgerTx');window.XRPet3D?.celebrate?.();mood('Wallet activity','Validated activity detected on the watched account.','energized');addXp(3)}}};
+  }else if(m.type==='transaction'){const normalized=normalizeLiveTransaction(m);if(normalized){liveTransactions.unshift(normalized);if(liveTransactions.length>25)liveTransactions.length=25;scheduleLiveTransactionRender();state.lastLedgerTxAt=Date.now();setText('#waterSignal','Ledger #'+normalized.ledger);setText('#sleepSignal','XRPL active');if(!state.lifePinned&&!lifeWaterTimer){performLifeActivity('drink');lifeWaterTimer=setTimeout(()=>lifeWaterTimer=0,3500)}}const tx=m.transaction||m.tx_json||m.tx||{};if(state.account&&(tx.Account===state.account||tx.Destination===state.account)){if(state.ledgerSound)playSound('ledgerTx');window.XRPet3D?.celebrate?.();mood('Wallet activity','Validated activity detected on the watched account.','energized');addXp(3)}}};
   ws.onclose=()=>{state.connected=false;renderSignal589();setText('#status','Reconnecting');const b=q('#liveBadge');if(b){b.className='status-pill waiting';b.innerHTML='<i></i><span>Reconnecting</span>'}scheduleReconnect()};ws.onerror=()=>safe(()=>ws.close())
 }
 function scheduleReconnect(){clearTimeout(retry);retry=setTimeout(connectLedger,4000)}
@@ -676,87 +643,61 @@ if(launchGate){
 
 
 
-const floatEl=q('#floatingCompanion'),floatHandle=q('#floatingHandle');
-let floatPinned=state.floatingPinned,dragFloat=false,dragDX=0,dragDY=0,floatRAF=0;
-function clampFloat(){
-  if(!floatEl)return;
-  if(floatEl.classList.contains('studio-docked')){floatEl.style.left='';floatEl.style.top='';floatEl.style.right='';floatEl.style.bottom='';return}
-  const r=floatEl.getBoundingClientRect();
-  let x=state.floatX??(innerWidth-r.width-28), y=state.floatY??(innerHeight-r.height-22);
-  x=Math.max(0,Math.min(innerWidth-r.width,x));y=Math.max(0,Math.min(innerHeight-r.height,y));
-  state.floatX=x;state.floatY=y;
-  floatEl.style.left=x+'px';floatEl.style.top=y+'px';floatEl.style.right='auto';floatEl.style.bottom='auto';
+const floatEl=q('#floatingCompanion'),roamLayer=q('#rippletRoamLayer'),lifeAvatar=q('#lifeAvatar');
+let roamPinned=state.lifePinned===true,roamX=.72,roamY=.72,roamTimer=0;
+
+function syncRoamBounds(){
+  const shell=q('.main-shell');if(!shell||!roamLayer)return;
+  const r=shell.getBoundingClientRect();
+  roamLayer.style.left=Math.max(0,r.left)+'px';
+  roamLayer.style.top='0px';
+  roamLayer.style.width=Math.max(0,r.width)+'px';
+  roamLayer.style.height=innerHeight+'px';
 }
-function setPinned(v){
-  floatPinned=v;state.floatingPinned=v;persist();
-  if(floatEl?.classList.contains('studio-docked')){
-    setText('#toggleFloat','Studio');setText('#floatingModeLabel','Interactive studio · orbit, zoom, and configure');
-    return;
+function setRoamPosition(x,y,activity='explore'){
+  if(!lifeAvatar||!roamLayer)return;
+  const layer=roamLayer.getBoundingClientRect(),avatar=lifeAvatar.getBoundingClientRect();
+  const maxX=Math.max(0,layer.width-avatar.width-10),maxY=Math.max(0,layer.height-avatar.height-10);
+  const px=Math.max(8,Math.min(maxX,x)),py=Math.max(92,Math.min(maxY,y));
+  lifeAvatar.style.transform='translate3d('+px+'px,'+py+'px,0)';
+  lifeAvatar.dataset.activity=activity;
+  roamX=maxX?px/maxX:.5;roamY=maxY?py/maxY:.5;
+}
+function stationPosition(activity){
+  const station=q('[data-life-action="'+activity+'"]'),layer=roamLayer?.getBoundingClientRect();
+  if(!station||!layer)return null;
+  const r=station.getBoundingClientRect();
+  return {x:r.left-layer.left+r.width/2-85,y:r.bottom-layer.top+4};
+}
+function goRipplet(activity='explore'){
+  if(roamPinned&&activity!=='sit')return;
+  syncRoamBounds();
+  if(activity==='drink'||activity==='eat'||activity==='sleep'||activity==='socialize'){
+    const p=stationPosition(activity);if(p){setRoamPosition(p.x,p.y,activity);return}
   }
-  setText('#toggleFloat',v?'Unpin':'Pin');setText('#floatingModeLabel',v?'pinned · drag tag to move':'auto levitate · drag tag to place');
+  const layer=roamLayer?.getBoundingClientRect();if(!layer)return;
+  if(activity==='sit'){setRoamPosition(layer.width*.72,Math.max(150,layer.height*.68),'sit');return}
+  if(activity==='ledger'){setRoamPosition(layer.width*.72,Math.max(165,layer.height*.34),'ledger');return}
+  const x=70+Math.random()*Math.max(60,layer.width-300);
+  const y=190+Math.random()*Math.max(40,layer.height-430);
+  setRoamPosition(x,y,'walk');
 }
-function animateFloat(t){
-  if(floatEl&&!floatEl.classList.contains('studio-docked')&&!floatPinned&&!dragFloat){
-    const r=floatEl.getBoundingClientRect();
-    const maxX=Math.max(0,innerWidth-r.width),maxY=Math.max(0,innerHeight-r.height);
-    const x=maxX*(.5+.34*Math.sin(t/8500)+.10*Math.sin(t/3100));
-    const y=maxY*(.5+.28*Math.sin(t/6900+1.2)+.08*Math.sin(t/2300));
-    floatEl.style.left=Math.max(0,Math.min(maxX,x))+'px';
-    floatEl.style.top=Math.max(0,Math.min(maxY,y))+'px';
-    floatEl.style.right='auto';floatEl.style.bottom='auto';
-  }
-  floatRAF=requestAnimationFrame(animateFloat);
+function roamingStep(){
+  clearTimeout(roamTimer);
+  if(!roamPinned&&state.lifeActivity==='explore')goRipplet('explore');
+  roamTimer=setTimeout(roamingStep,7000+Math.random()*6000);
 }
-floatHandle?.addEventListener('pointerdown',e=>{
-  if(floatEl?.classList.contains('studio-docked'))return;
-  dragFloat=true;setPinned(true);const r=floatEl.getBoundingClientRect();dragDX=e.clientX-r.left;dragDY=e.clientY-r.top;floatHandle.setPointerCapture?.(e.pointerId);e.preventDefault();
-});
-floatHandle?.addEventListener('pointermove',e=>{
-  if(!dragFloat)return;const r=floatEl.getBoundingClientRect();
-  const x=Math.max(0,Math.min(innerWidth-r.width,e.clientX-dragDX)),y=Math.max(0,Math.min(innerHeight-r.height,e.clientY-dragDY));
-  state.floatX=x;state.floatY=y;floatEl.style.left=x+'px';floatEl.style.top=y+'px';floatEl.style.right='auto';floatEl.style.bottom='auto';
-});
-floatHandle?.addEventListener('pointerup',e=>{if(!dragFloat)return;dragFloat=false;floatHandle.releasePointerCapture?.(e.pointerId);persist()});
-qa('.floating-controls button').forEach(b=>b.addEventListener('pointerdown',e=>e.stopPropagation()));
-bind('#toggleFloat','click',()=>{if(floatEl?.classList.contains('studio-docked'))return;setPinned(!floatPinned)});
-bind('#centerFloat','click',()=>{if(floatEl?.classList.contains('studio-docked')){window.XRPet3D?.reset?.();return}setPinned(true);if(floatEl){const r=floatEl.getBoundingClientRect();state.floatX=Math.max(0,(innerWidth-r.width)/2);state.floatY=Math.max(0,(innerHeight-r.height)/2);clampFloat();persist()}});
-addEventListener('resize',()=>{if(floatEl?.classList.contains('studio-docked'))clampFloat();else if(floatPinned)clampFloat()});
-clampFloat();setPinned(floatPinned);requestAnimationFrame(animateFloat);applyNftCompanion();
-
-let controlsHideTimer=null;
-function revealFloatControls(){
-  if(!floatEl)return;
-  floatEl.classList.remove('controls-hidden');
-  clearTimeout(controlsHideTimer);
-  controlsHideTimer=setTimeout(()=>{if(!dragFloat&&!floatEl.matches(':hover')&&!floatEl.matches(':focus-within'))floatEl.classList.add('controls-hidden')},4800);
+function setRoamPinned(v){
+  roamPinned=!!v;state.lifePinned=roamPinned;state.lifeRoaming=!roamPinned;persist();
+  if(roamPinned){state.lifeActivity='sit';goRipplet('sit')}else{state.lifeActivity='explore';goRipplet('explore')}
+  renderLife();
 }
-floatEl?.addEventListener('pointerenter',revealFloatControls);
-floatEl?.addEventListener('pointerleave',()=>{
-  clearTimeout(controlsHideTimer);
-  controlsHideTimer=setTimeout(()=>{if(!dragFloat)floatEl.classList.add('controls-hidden')},2000);
-});
-floatEl?.addEventListener('focusin',revealFloatControls);
-floatEl?.addEventListener('focusout',()=>setTimeout(()=>{if(!floatEl.matches(':focus-within'))floatEl.classList.add('controls-hidden')},2200));
-revealFloatControls();
-
-
-
-qa('[data-life-action]').forEach(b=>b.addEventListener('click',()=>{
-  if(state.lifePinned)state.lifePinned=false;
-  state.lifeRoaming=true;
-  performLifeActivity(b.dataset.lifeAction,true);
-  playSound('pet');
-}));
-bind('#lifeRoamToggle','click',()=>{
-  state.lifePinned=false;
-  state.lifeRoaming=!state.lifeRoaming;
-  performLifeActivity(state.lifeRoaming?'explore':'ledger',true);
-});
-bind('#lifeSitStay','click',()=>{
-  state.lifePinned=!state.lifePinned;
-  state.lifeRoaming=!state.lifePinned;
-  performLifeActivity(state.lifePinned?'sit':'explore',true);
-});
+window.XRPetRoam={go:goRipplet,pin:setRoamPinned,sync:syncRoamBounds};
+addEventListener('resize',()=>{syncRoamBounds();goRipplet(state.lifePinned?'sit':state.lifeActivity)});
+addEventListener('scroll',syncRoamBounds,{passive:true});
+syncRoamBounds();setTimeout(()=>goRipplet(state.lifePinned?'sit':'explore'),300);roamingStep();applyNftCompanion();
+qa('[data-life-action]').forEach(b=>b.addEventListener('click',()=>{if(state.lifePinned)setRoamPinned(false);performLifeActivity(b.dataset.lifeAction,true);playSound('pet')}));
+bind('#lifeSitStay','click',()=>setRoamPinned(!state.lifePinned));
 setInterval(lifeTick,15000);
 dailyVisit();render();connectLedger();loadMarket();loadUpdates();integrationCheck();setInterval(loadMarket,60000);setInterval(loadUpdates,60000);setInterval(integrationCheck,60000);
 
@@ -769,7 +710,7 @@ if('serviceWorker' in navigator){
 function closeCustomizationPanels(){
   qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));
   document.body.classList.remove('customization-open','workspace-open');
-  const target=primaryView==='home'?'homeSection':primaryView==='live'?'xrplPanel':primaryView==='announcements'?'announcementsSection':'xrpHistorySection';
+  const target=primaryView==='home'?'homeSection':primaryView==='live'?'xrplPanel':primaryView==='announcements'?'announcementsSection':primaryView==='ripplet'?'companionSection':'xrpHistorySection';
   setTimeout(()=>scrollSectionTop(target),20);
 }
 qa('[data-customize-target]').forEach(b=>b.addEventListener('click',()=>{
@@ -795,13 +736,11 @@ let primaryView='home';
 function setPrimaryView(view='home'){
   primaryView=view;
   qa('[data-view-section]').forEach(section=>section.classList.toggle('view-active',section.dataset.viewSection===view));
-  const companion=q('[data-home-companion]');
-  if(companion)companion.classList.toggle('view-active',view==='home');
   qa('[data-primary-view]').forEach(b=>b.classList.toggle('active',b.dataset.primaryView===view));
   document.body.dataset.primaryView=view;
   qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));
   document.body.classList.remove('workspace-open','customization-open');
-  const target=view==='home'?'homeSection':view==='live'?'xrplPanel':view==='announcements'?'announcementsSection':'xrpHistorySection';
+  const target=view==='home'?'homeSection':view==='live'?'xrplPanel':view==='announcements'?'announcementsSection':view==='ripplet'?'companionSection':'xrpHistorySection';
   setTimeout(()=>scrollSectionTop(target),10);
 }
 qa('[data-primary-view]').forEach(b=>b.addEventListener('click',()=>setPrimaryView(b.dataset.primaryView)));
@@ -809,7 +748,6 @@ qa('[data-primary-view]').forEach(b=>b.addEventListener('click',()=>setPrimaryVi
 function openHistoryView(view='All'){
   primaryView='history';
   qa('[data-view-section]').forEach(section=>section.classList.toggle('view-active',section.dataset.viewSection==='history'));
-  q('[data-home-companion]')?.classList.remove('view-active');
   qa('[data-primary-view]').forEach(b=>b.classList.remove('active'));
   document.body.dataset.primaryView='history';
   const section=q('#xrpHistorySection');if(!section)return;
