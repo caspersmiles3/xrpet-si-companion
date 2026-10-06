@@ -730,6 +730,12 @@ contactShadow.receiveShadow=true;
 
 // state
 const BUILTIN_MODELS={
+  ripplet:{
+    url:'/models/Ripplet.glb',
+    credit:'Ripplet — XRPet canonical Ripple + XRP companion',
+    rotationY:0,targetHeight:3.15,
+    actions:{idle:['idle'],greet:['greet','wave'],happy:['happy'],celebrate:['celebrate'],alert:['alert'],sleep:['sleep'],wake:['wake'],focus:['focus'],scan:['scan'],orbit:['orbit']}
+  },
   nexus:{
     url:'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/RobotExpressive/RobotExpressive.glb',
     credit:'RobotExpressive — Tomás Laulhé / Don McCurdy, CC0 1.0',
@@ -1004,9 +1010,10 @@ function setAppearance(detail={}){
   configureEquipment(detail);
   applyRoom(detail.room||'nexus');
   clearTimeout(modelLoadTimer);
-  useProceduralModel('ripplet');
+  modelLoadTimer=setTimeout(()=>ensureBuiltInModel('ripplet'),80);
 }
 window.addEventListener('xrpet:appearance',e=>setAppearance(e.detail||{}));
+setAppearance({room:'nexus',cosmetic:'classic'});
 
 function setCameraPreset(name='front'){
   const presets={
