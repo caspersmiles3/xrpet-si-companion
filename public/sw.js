@@ -1,5 +1,5 @@
-const CACHE='xrpet-v5.5.31';
-const CORE=['/','/styles.css?v=5.5.31','/app.js?v=5.5.31','/ecosystem.js?v=5.5.31','/music-player.js?v=5.5.31','/timeline.js?v=5.5.31','/xrp-history.json','/ripplet2d.js?v=5.5.31','/ui-shell.js?v=5.5.31','/manifest.webmanifest','/xrpet-icon.svg','/xrpet-cursor.svg','/xrpet-pointer.svg','/games.js?v=5.5.31','/media/xrpet-launch-bg.mp4?v=5.5.31','/media/xrpet-side-panel.mp4?v=5.5.31','/media/xrpet-launch-side.mp4?v=5.5.31'];
+const CACHE='xrpet-v5.5.32';
+const CORE=['/','/styles.css?v=5.5.32','/app.js?v=5.5.32','/ecosystem.js?v=5.5.32','/music-player.js?v=5.5.32','/timeline.js?v=5.5.32','/xrp-history.json','/ripplet2d.js?v=5.5.32','/ui-shell.js?v=5.5.32','/manifest.webmanifest','/xrpet-icon.svg','/xrpet-cursor.svg','/xrpet-pointer.svg','/games.js?v=5.5.32','/media/xrpet-launch-bg.mp4?v=5.5.32','/media/xrpet-side-panel.mp4?v=5.5.32','/media/xrpet-launch-side.mp4?v=5.5.32'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE))));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))));
 self.addEventListener('fetch',e=>{
