@@ -2180,3 +2180,20 @@ body[data-primary-view="home"] .home-companion-layer .floating-companion{z-index
   .live-tx-card.clean-tx summary{grid-template-columns:1fr}
   .tx-route{grid-template-columns:auto minmax(0,1fr) 14px auto minmax(0,1fr)}
 }
+
+
+/* XRPet v4.8 — XRPet cursor + freer companion motion */
+@media (hover:hover) and (pointer:fine){
+  html,body,.app-shell,.main-shell{
+    cursor:url('/xrpet-cursor.svg') 12 12, auto;
+  }
+  button,a,summary,input,select,textarea,label,[role="button"],.live-tx-card summary,.ecosystem-station{
+    cursor:url('/xrpet-pointer.svg') 13 13, pointer!important;
+  }
+}
+.global-life-avatar[data-activity="walk"]{
+  animation:rippletWalkBob .38s ease-in-out infinite alternate;
+}
+.global-life-avatar[data-reaction]{
+  will-change:transform,filter;
+}
