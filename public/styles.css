@@ -7510,3 +7510,25 @@ body.sidebar-collapsed .sidebar-collapse-toggle{
     min-width:max-content!important;
   }
 }
+
+
+/* v5.5.25 — Ripplet reduced 75% from 40x32 to 10x8 */
+.ripplet-roam-layer .global-life-avatar{
+  width:10px!important;
+  height:8px!important;
+  opacity:1!important;
+  image-rendering:auto!important;
+  transform-origin:50% 100%!important;
+}
+@media(max-width:760px){
+  .ripplet-roam-layer .global-life-avatar{
+    width:10px!important;
+    height:8px!important;
+  }
+}
+@media(max-width:520px){
+  .ripplet-roam-layer .global-life-avatar{
+    width:10px!important;
+    height:8px!important;
+  }
+}
