@@ -86,10 +86,17 @@
     }catch{}
   }
   function setView(view='All'){
-    filter=view==='People'?'All':view;
+    const selected=['All','Origins','Ripple','XRP','XRPL','Legal','Market','Adoption','Acquisition','People'].includes(view)?view:'All';
+    filter=selected==='People'?'All':selected;
     query='';
+    const root=el('#xrpHistorySection');
+    if(root)root.dataset.historyMode=selected;
     const input=el('#xrpHistorySearch'); if(input)input.value='';
-    renderTimeline();
+    document.querySelectorAll('#xrpHistorySection .history-overview-only').forEach(x=>x.hidden=selected!=='All');
+    document.querySelectorAll('#xrpHistorySection .history-people-only').forEach(x=>x.hidden=selected!=='All'&&selected!=='People');
+    const timeline=el('#xrpTimeline');if(timeline)timeline.hidden=selected==='People';
+    if(selected==='People')renderPeople();
+    else renderTimeline();
   }
   window.XRPetHistory={setView};
   async function init(){
