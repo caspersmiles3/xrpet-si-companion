@@ -3625,3 +3625,87 @@ footer{padding-bottom:24px}
   .clean-xrp-mark,.clean-xrp-dot,.clean-xrp-arc,.orbit-ring,.orbit-node,.launch-activity i{animation:none!important}
   .clean-launch-content,.clean-launch-grid,.launch-live-orbit{transform:none!important}
 }
+
+
+/* Ripplet top docking station */
+.ripplet-dock{
+  position:fixed;
+  top:74px;
+  left:calc(50% + 118px);
+  transform:translateX(-50%);
+  z-index:57;
+  width:min(300px,calc(100vw - 340px));
+  min-width:220px;
+  height:74px;
+  display:grid;
+  grid-template-columns:86px 1fr auto;
+  align-items:center;
+  gap:10px;
+  padding:8px 10px;
+  border:1px solid rgba(103,228,255,.18);
+  border-radius:18px;
+  background:linear-gradient(180deg,rgba(8,19,27,.92),rgba(4,10,15,.86));
+  box-shadow:0 10px 30px rgba(0,0,0,.28),inset 0 0 24px rgba(59,215,255,.035);
+  backdrop-filter:blur(12px);
+  pointer-events:auto;
+}
+.ripplet-dock-platform{
+  position:relative;
+  height:46px;
+  border:1px solid rgba(102,235,255,.26);
+  border-radius:50%;
+  background:radial-gradient(circle at 50% 45%,rgba(111,239,255,.20),rgba(18,73,93,.11) 48%,rgba(2,8,12,.78) 72%);
+  box-shadow:0 0 20px rgba(75,222,255,.16),inset 0 0 18px rgba(90,220,255,.10);
+  display:grid;
+  place-items:center;
+}
+.ripplet-dock-platform::before,
+.ripplet-dock-platform::after{
+  content:"";
+  position:absolute;
+  inset:7px;
+  border-radius:50%;
+  border:1px solid rgba(109,236,255,.16);
+  animation:rippletDockOrbit 6s linear infinite;
+}
+.ripplet-dock-platform::after{
+  inset:13px;
+  animation-direction:reverse;
+  animation-duration:4.2s;
+}
+.ripplet-dock-platform b{font-size:.72rem;letter-spacing:.16em;color:#b9f8ff;text-shadow:0 0 12px #5fe8ff}
+.ripplet-dock-platform i{position:absolute;width:5px;height:5px;border-radius:50%;background:#96f4ff;box-shadow:0 0 10px #71efff}
+.ripplet-dock-platform i:first-child{left:11px;top:20px}
+.ripplet-dock-platform i:last-child{right:11px;bottom:18px}
+.ripplet-dock-copy{display:grid;gap:2px;min-width:0}
+.ripplet-dock-copy span{font-size:.58rem;letter-spacing:.16em;color:#6f8e99}
+.ripplet-dock-copy strong{font-size:.72rem;letter-spacing:.08em;color:#9cd9e5}
+.ripplet-dock.is-docked .ripplet-dock-copy strong{color:#c8fbff;text-shadow:0 0 10px rgba(92,232,255,.55)}
+.ripplet-dock-actions{display:flex;gap:6px}
+.ripplet-dock-actions button{
+  border:1px solid rgba(111,235,255,.16);
+  border-radius:9px;
+  background:#08141b;
+  color:#9fdfea;
+  padding:7px 9px;
+  font-size:.62rem;
+  cursor:pointer;
+}
+.ripplet-dock-actions button:hover{background:#0d202a;border-color:rgba(111,235,255,.34)}
+.ripplet-dock.is-docked{box-shadow:0 10px 30px rgba(0,0,0,.28),0 0 22px rgba(59,215,255,.11),inset 0 0 24px rgba(59,215,255,.05)}
+.ripplet-roam-layer .global-life-avatar[data-activity="dock"]{transition-duration:1.6s!important}
+.ripplet-roam-layer .global-life-avatar[data-reaction="happy"],
+.ripplet-roam-layer .global-life-avatar[data-reaction="excited"],
+.ripplet-roam-layer .global-life-avatar[data-reaction="victory"]{filter:drop-shadow(0 0 12px rgba(101,232,255,.22))!important}
+@keyframes rippletDockOrbit{to{transform:rotate(360deg)}}
+@media(max-width:980px){
+  .ripplet-dock{left:50%;top:68px;width:min(280px,70vw)}
+}
+@media(max-width:760px){
+  .ripplet-dock{top:62px;left:50%;width:calc(100vw - 28px);min-width:0;height:66px;grid-template-columns:68px 1fr auto}
+  .ripplet-dock-platform{height:40px}
+  .ripplet-dock-actions button{padding:6px 7px}
+}
+@media(prefers-reduced-motion:reduce){
+  .ripplet-dock-platform::before,.ripplet-dock-platform::after{animation:none}
+}
