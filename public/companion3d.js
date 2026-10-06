@@ -1414,7 +1414,11 @@ function renderFrame(){
     pet.scale.lerp(new THREE.Vector3(.82,.82,.82),.1);
   }
 
-  if(composer&&postFxReady)composer.render();else renderer.render(scene,camera);
+  if(externalKind==='ripplet'){
+    renderer.setClearColor(0x000000,0);
+    renderer.setClearAlpha(0);
+    renderer.render(scene,camera);
+  }else if(composer&&postFxReady)composer.render();else renderer.render(scene,camera);
 }
 let rafId=0,lastFrameTime=0,renderPaused=document.hidden;
 const frameInterval=1000/XRPetQuality.fps;
