@@ -11,11 +11,34 @@ const state={
   room:saved.room||'nexus',cosmetic:saved.cosmetic||'classic',memories:Array.isArray(saved.memories)?saved.memories:[],
   account:saved.account||null,walletProvider:saved.walletProvider||'manual',
   explainLevel:saved.explainLevel||'balanced',notifyLevel:saved.notifyLevel||'quiet',
-  truthMode:saved.truthMode!==false,marketMood:saved.marketMood!==false
+  truthMode:saved.truthMode!==false,marketMood:saved.marketMood!==false,
+  floatingPinned:saved.floatingPinned===true,floatX:Number.isFinite(saved.floatX)?saved.floatX:null,floatY:Number.isFinite(saved.floatY)?saved.floatY:null,
+  nftCompanion:saved.nftCompanion||null
 };
 const FORMS=[['Drop',0],['Ripple',50],['Wave',150],['Surge',350],['Nexus',700],['Titan',1200],['Legend',2000]];
 const ROOM_NAMES={nexus:'Neon Horizon',ocean:'Ripple Sanctuary',vault:'Ledger Vault',aurora:'Sky Garden',legend:'Orbital Station'};
 const COSMETIC_NAMES={classic:'Classic',aqua:'Aqua Core',midnight:'Midnight',pearl:'Pearl',solar:'Solar Flare'};
+function hexToUtf8(hex){try{return decodeURIComponent(hex.match(/.{1,2}/g).map(b=>'%'+b).join(''))}catch{return''}}
+function mediaUrl(uri){
+  if(!uri)return null;
+  if(uri.startsWith('ipfs://')) return 'https://ipfs.io/ipfs/'+uri.slice(7).replace(/^ipfs\//,'');
+  if(/^https:\/\//i.test(uri)) return uri;
+  return null;
+}
+async function resolveNftMedia(uri){
+  const direct=mediaUrl(uri);
+  if(!direct)return {uri,media:null,model:null};
+  if(/\.(png|jpe?g|webp|gif|svg)(\?.*)?$/i.test(direct))return {uri,media:direct,model:null};
+  if(/\.(glb|gltf)(\?.*)?$/i.test(direct))return {uri,media:null,model:direct};
+  try{
+    const r=await fetch(direct,{cache:'no-store'});
+    if(!r.ok)throw new Error();
+    const d=await r.json();
+    const img=mediaUrl(d.image||d.image_url||d.image_uri||'');
+    const anim=mediaUrl(d.animation_url||d.model||d.model_url||'');
+    return {uri,media:img,model:/\.(glb|gltf)(\?.*)?$/i.test(anim||'')?anim:null,name:d.name||null,description:d.description||null};
+  }catch{return {uri,media:null,model:null}}
+}
 function persist(){safe(()=>localStorage.setItem(STORE,JSON.stringify({...state,connected:undefined,ledgerIndex:undefined,txCount:undefined,baseFeeDrops:undefined,xrpPrice:undefined,xrpChange24h:undefined})))}
 function form(){return [...FORMS].reverse().find(x=>state.xp>=x[1])||FORMS[0]}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -58,12 +81,53 @@ let ws,retry,watchedSubscribed=null;
 function subscribeAccount(a){if(!a||!ws||ws.readyState!==1)return;if(watchedSubscribed&&watchedSubscribed!==a)ws.send(JSON.stringify({id:'unwatch',command:'unsubscribe',accounts:[watchedSubscribed]}));ws.send(JSON.stringify({id:'watch',command:'subscribe',accounts:[a]}));watchedSubscribed=a}
 function connectLedger(){clearTimeout(retry);try{ws=new WebSocket('wss://xrplcluster.com/')}catch{return scheduleReconnect()}
   ws.onopen=()=>{state.connected=true;setText('#status','Live');const b=q('#liveBadge');if(b){b.className='status-pill live';b.innerHTML='<i></i><span>XRPL Live</span>'}mood('Connected','Live XRPL data is flowing.','calm');ws.send(JSON.stringify({id:'ledger',command:'subscribe',streams:['ledger','server']}));ws.send(JSON.stringify({id:'fee',command:'fee'}));if(state.account)subscribeAccount(state.account)};
-  ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='ledgerClosed'){state.ledgerIndex=m.ledger_index;state.txCount=m.txn_count??0;state.baseFeeDrops=m.fee_base??state.baseFeeDrops;setText('#ledger',Number(m.ledger_index).toLocaleString());setText('#txCount',(m.txn_count??0)+' transactions');if(m.fee_base!=null)setText('#fee',m.fee_base)}else if(m.type==='serverStatus'){setText('#serverState',m.server_status||'Connected')}else if(m.id==='fee'&&m.result){const drops=m.result?.drops?.base_fee;if(drops!=null){state.baseFeeDrops=Number(drops);setText('#fee',drops)}}else if(m.type==='transaction'&&state.account){mood('Wallet activity','Validated activity detected on the watched account.','energized');addXp(3)}};
+  ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='ledgerClosed'){state.ledgerIndex=m.ledger_index;state.txCount=m.txn_count??0;state.baseFeeDrops=m.fee_base??state.baseFeeDrops;setText('#ledger',Number(m.ledger_index).toLocaleString());setText('#txCount',(m.txn_count??0)+' transactions');if(m.fee_base!=null)setText('#fee',m.fee_base)}else if(m.type==='serverStatus'){setText('#serverState',m.server_status||'Connected')}else if(m.id==='fee'&&m.result){const drops=m.result?.drops?.base_fee;if(drops!=null){state.baseFeeDrops=Number(drops);setText('#fee',drops)}}else if(m.id==='xrpet-nfts'&&Array.isArray(m.result?.account_nfts)){
+    renderNfts(m.result.account_nfts);
+  }else if(m.type==='transaction'&&state.account){mood('Wallet activity','Validated activity detected on the watched account.','energized');addXp(3)}};
   ws.onclose=()=>{state.connected=false;setText('#status','Reconnecting');const b=q('#liveBadge');if(b){b.className='status-pill waiting';b.innerHTML='<i></i><span>Reconnecting</span>'}scheduleReconnect()};ws.onerror=()=>safe(()=>ws.close())
 }
 function scheduleReconnect(){clearTimeout(retry);retry=setTimeout(connectLedger,4000)}
 async function loadConfig(){try{const r=await fetch('/api/config',{cache:'no-store'});return await r.json()}catch{return{}}}
 async function integrationCheck(){const box=q('#integrationStatus');if(!box)return;box.innerHTML='<div class="integration-item"><span>System</span><strong>Checking…</strong></div>';try{const [cfg,self]=await Promise.all([loadConfig(),fetch('/api/self-test',{cache:'no-store'}).then(r=>r.json())]);const rows=[['XRPL',state.connected?'LIVE':'CONNECTING'],['Xaman',cfg.xamanApiKey?'READY':'NOT CONFIGURED'],['Web Push',cfg.pushEnabled?'READY':'NOT CONFIGURED'],['Full SI',cfg.siProviderEnabled?'READY':'NOT CONFIGURED']];box.innerHTML=rows.map(([n,s])=>'<div class="integration-item"><span>'+n+'</span><strong class="'+(/LIVE|READY/.test(s)?'ok':'warn')+'">'+s+'</strong></div>').join('')}catch{box.innerHTML='<div class="integration-item"><span>System</span><strong class="warn">Check failed</strong></div>'}}
+async function requestNfts(){
+  const box=q('#nftCompanionList'),status=q('#nftStatus');
+  if(!state.account){if(status)status.textContent='Connect or watch an XRPL account first.';return}
+  if(!ws||ws.readyState!==1){if(status)status.textContent='XRPL connection is not ready yet.';return}
+  if(status)status.textContent='Loading NFTs from XRPL…';
+  if(box)box.innerHTML='';
+  ws.send(JSON.stringify({id:'xrpet-nfts',command:'account_nfts',account:state.account,ledger_index:'validated'}));
+}
+async function renderNfts(nfts){
+  const box=q('#nftCompanionList'),status=q('#nftStatus');
+  if(!box)return;
+  const items=nfts.slice(0,24);
+  if(status)status.textContent=items.length?items.length+' NFT'+(items.length===1?'':'s')+' found.':'No NFTs found on this account.';
+  box.innerHTML='';
+  for(const nft of items){
+    const uri=hexToUtf8(nft.URI||'');
+    const meta=await resolveNftMedia(uri);
+    const card=document.createElement('article');card.className='nft-card';
+    const preview=meta.media?'<img src="'+esc(meta.media)+'" alt="'+esc(meta.name||'XRPL NFT')+'" loading="lazy">':'<div class="nft-placeholder">NFT</div>';
+    card.innerHTML=preview+'<div><strong>'+esc(meta.name||('NFT #'+(nft.nft_serial??'')))+'</strong><small>'+esc(nft.Issuer||'XRPL')+'</small><span>'+esc(meta.model?'3D model detected':meta.media?'Image companion ready':'No preview media')+'</span></div><button type="button">Use as companion</button>';
+    card.querySelector('button').disabled=!meta.media;
+    card.querySelector('button').addEventListener('click',()=>{
+      if(!meta.media)return;
+      state.nftCompanion={id:nft.NFTokenID,name:meta.name||('NFT #'+(nft.nft_serial??'')),image:meta.media,model:meta.model||null};
+      persist();applyNftCompanion();mood('NFT companion','XRPL NFT companion equipped.','energized');
+    });
+    box.appendChild(card);
+  }
+}
+function applyNftCompanion(){
+  const wrap=q('#nftFloatingCompanion'),img=q('#nftFloatingImage'),canvas=q('#companion3d');
+  if(state.nftCompanion?.image){
+    if(img){img.src=state.nftCompanion.image;img.alt=state.nftCompanion.name||'XRPL NFT companion'}
+    wrap?.classList.remove('hidden');wrap?.setAttribute('aria-hidden','false');canvas?.classList.add('nft-hidden');
+    setText('#floatingPetName',state.nftCompanion.name||state.petName);
+  }else{
+    wrap?.classList.add('hidden');wrap?.setAttribute('aria-hidden','true');canvas?.classList.remove('nft-hidden');
+  }
+}
 async function connectXaman(){const status=q('#walletConnection');if(status)status.textContent='Loading Xaman…';try{const cfg=await loadConfig();if(!cfg.xamanApiKey)throw new Error('Xaman API key is not configured.');if(!window.Xumm){await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://xumm.app/assets/cdn/xumm.min.js';s.onload=resolve;s.onerror=()=>reject(new Error('Xaman SDK could not load'));document.head.appendChild(s)})}const x=new window.Xumm(cfg.xamanApiKey);if(status)status.textContent='Approve the connection in Xaman…';await x.authorize();let account=await x.user?.account;if(typeof account==='function')account=await account();if(!account)throw new Error('Xaman did not return an account.');state.account=account;state.walletProvider='Xaman';persist();subscribeAccount(account);render();if(status)status.textContent='Xaman connected: '+account.slice(0,8)+'…'+account.slice(-6)}catch(e){if(status)status.textContent='Xaman connection failed: '+e.message}}
 async function connectGem(){const status=q('#walletConnection');if(status)status.textContent='Checking GemWallet…';try{const api=await import('https://esm.sh/@gemwallet/api@3.7.0');const installed=await api.isInstalled();if(!installed?.result?.isInstalled)throw new Error('GemWallet extension is not installed.');const a=await api.getAddress();const account=a?.result?.address;if(!account)throw new Error('GemWallet did not share an address.');state.account=account;state.walletProvider='GemWallet';persist();subscribeAccount(account);render();if(status)status.textContent='GemWallet connected: '+account.slice(0,8)+'…'+account.slice(-6)}catch(e){if(status)status.textContent='GemWallet connection failed: '+e.message}}
 function bind(sel,event,fn){const el=q(sel);if(el)el.addEventListener(event,fn)}
@@ -80,7 +144,7 @@ qa('.room-choice').forEach(b=>b.addEventListener('click',()=>{if(b.disabled)retu
 qa('[data-scroll]').forEach(b=>b.addEventListener('click',()=>q('#'+b.dataset.scroll)?.scrollIntoView({behavior:'smooth',block:'center'})));
 bind('#explainLevel','change',e=>{state.explainLevel=e.target.value;persist()});bind('#notifyLevel','change',e=>{state.notifyLevel=e.target.value;persist()});bind('#truthToggle','change',e=>{state.truthMode=e.target.checked;persist()});bind('#marketMoodToggle','change',e=>{state.marketMood=e.target.checked;persist()});
 bind('#notifyButton','click',async()=>{if(!('Notification'in window)){alert('Browser notifications are not supported here.');return}const p=await Notification.requestPermission();if(p==='granted')new Notification('XRPet alerts enabled',{body:'Browser alerts are ready while XRPet is open.'});});
-bind('#refreshIntegrations','click',integrationCheck);
+bind('#refreshIntegrations','click',integrationCheck);bind('#loadNfts','click',requestNfts);
 
 bind('#globalSearchForm','submit',e=>{
   e.preventDefault();
@@ -105,4 +169,45 @@ qa('.side-link').forEach(b=>b.addEventListener('click',()=>{
 qa('.variant-dot').forEach(b=>b.addEventListener('click',()=>{state.cosmetic=b.dataset.cosmetic;persist();render();mood('Customized','Companion variant updated.','energized')}));
 window.addEventListener('xrpet:petInteract',()=>{mood('Responsive','Core pulse received. Drag me to rotate, click to react.','energized');setTimeout(()=>mood('Connected','Live XRPL data is flowing.','calm'),900)});
 window.addEventListener('xrpet:3d-ready',()=>render());
+
+const floatEl=q('#floatingCompanion'),floatHandle=q('#floatingHandle');
+let floatPinned=state.floatingPinned,dragFloat=false,dragDX=0,dragDY=0,floatRAF=0;
+function clampFloat(){
+  if(!floatEl)return;
+  const r=floatEl.getBoundingClientRect();
+  let x=state.floatX??(innerWidth-r.width-28), y=state.floatY??(innerHeight-r.height-22);
+  x=Math.max(0,Math.min(innerWidth-r.width,x));y=Math.max(0,Math.min(innerHeight-r.height,y));
+  state.floatX=x;state.floatY=y;
+  floatEl.style.left=x+'px';floatEl.style.top=y+'px';floatEl.style.right='auto';floatEl.style.bottom='auto';
+}
+function setPinned(v){
+  floatPinned=v;state.floatingPinned=v;persist();
+  setText('#toggleFloat',v?'Unpin':'Pin');setText('#floatingModeLabel',v?'pinned · drag tag to move':'auto levitate · drag tag to place');
+}
+function animateFloat(t){
+  if(floatEl&&!floatPinned&&!dragFloat){
+    const r=floatEl.getBoundingClientRect();
+    const maxX=Math.max(0,innerWidth-r.width),maxY=Math.max(0,innerHeight-r.height);
+    const x=maxX*(.5+.34*Math.sin(t/8500)+.10*Math.sin(t/3100));
+    const y=maxY*(.5+.28*Math.sin(t/6900+1.2)+.08*Math.sin(t/2300));
+    floatEl.style.left=Math.max(0,Math.min(maxX,x))+'px';
+    floatEl.style.top=Math.max(0,Math.min(maxY,y))+'px';
+    floatEl.style.right='auto';floatEl.style.bottom='auto';
+  }
+  floatRAF=requestAnimationFrame(animateFloat);
+}
+floatHandle?.addEventListener('pointerdown',e=>{
+  dragFloat=true;setPinned(true);const r=floatEl.getBoundingClientRect();dragDX=e.clientX-r.left;dragDY=e.clientY-r.top;floatHandle.setPointerCapture?.(e.pointerId);e.preventDefault();
+});
+floatHandle?.addEventListener('pointermove',e=>{
+  if(!dragFloat)return;const r=floatEl.getBoundingClientRect();
+  const x=Math.max(0,Math.min(innerWidth-r.width,e.clientX-dragDX)),y=Math.max(0,Math.min(innerHeight-r.height,e.clientY-dragDY));
+  state.floatX=x;state.floatY=y;floatEl.style.left=x+'px';floatEl.style.top=y+'px';floatEl.style.right='auto';floatEl.style.bottom='auto';
+});
+floatHandle?.addEventListener('pointerup',e=>{if(!dragFloat)return;dragFloat=false;floatHandle.releasePointerCapture?.(e.pointerId);persist()});
+bind('#toggleFloat','click',()=>setPinned(!floatPinned));
+bind('#centerFloat','click',()=>{setPinned(true);if(floatEl){const r=floatEl.getBoundingClientRect();state.floatX=Math.max(0,(innerWidth-r.width)/2);state.floatY=Math.max(0,(innerHeight-r.height)/2);clampFloat();persist()}});
+addEventListener('resize',()=>{if(floatPinned)clampFloat()});
+if(floatPinned)clampFloat();setPinned(floatPinned);requestAnimationFrame(animateFloat);applyNftCompanion();
+
 dailyVisit();render();connectLedger();loadMarket();loadUpdates();integrationCheck();setInterval(loadMarket,120000);setInterval(integrationCheck,60000);
