@@ -116,9 +116,9 @@ bindEquipment('[data-core-style]','coreStyle','Chest core');
 bindEquipment('[data-head-gear]','headGear','Head hardware');
 bindEquipment('[data-trail-style]','trailStyle','Signal trail');
 
-qa('.room-choice').forEach(b=>{const rank=FORMS.findIndex(x=>x[0]===name),need=b.dataset.room==='aurora'?2:b.dataset.room==='legend'?5:0;b.disabled=rank<need;const active=b.dataset.room===state.room;b.classList.toggle('active',active);const e=b.querySelector('em');if(e&&active)e.textContent='Active';else if(e)e.textContent=need?((b.dataset.room==='aurora')?'Wave+':'Titan+'):'Unlocked'}); qa('.cosmetic-choice').forEach(b=>{const active=b.dataset.cosmetic===state.cosmetic;b.classList.toggle('active',active);const e=b.querySelector('em');if(e)e.textContent=active?'Equipped':'Owned'});
+qa('.room-choice').forEach(b=>{const rank=FORMS.findIndex(x=>x[0]===name),need=0;b.disabled=rank<need;const active=b.dataset.room===state.room;b.classList.toggle('active',active);const e=b.querySelector('em');if(e&&active)e.textContent='Active';else if(e)e.textContent=need?((b.dataset.room==='aurora')?'Wave+':'Titan+'):'Unlocked'}); qa('.cosmetic-choice').forEach(b=>{const active=b.dataset.cosmetic===state.cosmetic;b.classList.toggle('active',active);const e=b.querySelector('em');if(e)e.textContent=active?'Equipped':'Owned'});
   document.body.classList.remove('room-nexus','room-ocean','room-vault','room-aurora','room-legend','room-genesis','room-city','room-quantum','room-desert','room-arctic');document.body.classList.add('room-'+state.room); const pet=q('#pet'); if(pet){pet.classList.remove('skin-classic','skin-aqua','skin-midnight','skin-pearl','skin-solar','skin-resonance');pet.classList.add('skin-'+state.cosmetic)}
-  setText('#unlocksChip',(['nexus','ocean','vault'].length+(FORMS.findIndex(x=>x[0]===name)>=2?1:0)+(FORMS.findIndex(x=>x[0]===name)>=5?1:0))+' unlocked');setText('#homeRoom',ROOM_NAMES[state.room]||state.room);setText('#homeCosmetic',COSMETIC_NAMES[state.cosmetic]||state.cosmetic);setText('#homeCompanionModel',COMPANION_NAMES[state.companionKind]||state.companionKind);setText('#homeCompanionGender','Official XRPet companion');setText('#companionModelChip','OFFICIAL // RIPPLET');
+  setText('#unlocksChip',Object.keys(ROOM_NAMES).length+' environments');setText('#homeRoom',ROOM_NAMES[state.room]||state.room);setText('#homeCosmetic',COSMETIC_NAMES[state.cosmetic]||state.cosmetic);setText('#homeCompanionModel',COMPANION_NAMES[state.companionKind]||state.companionKind);setText('#homeCompanionGender','Official XRPet companion');setText('#companionModelChip','OFFICIAL // RIPPLET');
   if(q('#explainLevel'))q('#explainLevel').value=state.explainLevel;if(q('#notifyLevel'))q('#notifyLevel').value=state.notifyLevel;
   if(q('#truthToggle'))q('#truthToggle').checked=state.truthMode;if(q('#marketMoodToggle'))q('#marketMoodToggle').checked=state.marketMood;
   if(q('#soundToggle'))q('#soundToggle').checked=state.soundEnabled;if(q('#soundVolume'))q('#soundVolume').value=state.soundVolume;
@@ -390,7 +390,12 @@ const AMBIENT_PROFILES={
   ocean:{freq:[43.65,65.4,130.8],gain:.018,filter:430},
   vault:{freq:[41.2,61.7,123.5],gain:.014,filter:360},
   aurora:{freq:[69.3,103.8,207.6],gain:.015,filter:650},
-  legend:{freq:[46.25,92.5,185],gain:.016,filter:470}
+  legend:{freq:[46.25,92.5,185],gain:.016,filter:470},
+  genesis:{freq:[58.27,116.54,233.08],gain:.014,filter:610},
+  city:{freq:[49,98,196],gain:.016,filter:540},
+  quantum:{freq:[73.42,146.83,293.66],gain:.013,filter:720},
+  desert:{freq:[55,110,220],gain:.015,filter:480},
+  arctic:{freq:[65.41,130.81,261.63],gain:.014,filter:690}
 };
 function stopAmbient(){
   for(const n of ambientNodes){try{n.stop?.()}catch{}try{n.disconnect?.()}catch{}}
