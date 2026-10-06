@@ -688,7 +688,7 @@ function setRoomAmbience(room=state.room){
     const osc=ctx.createOscillator(),g=ctx.createGain();
     osc.type=i===0?'sine':i===1?'triangle':'sine';
     osc.frequency.value=freq;osc.detune.value=i===1?4:i===2?-5:0;
-    g.gain.value=i===0?.62:i===1?.25:.13;
+    g.gain.value=i===0 ? .62 : i===1 ? .25 : .13;
     osc.connect(g);g.connect(ambientBus);osc.start();ambientNodes.push(osc,g);
   });
   ambientBus.gain.exponentialRampToValueAtTime(masterVolume(p.gain),ctx.currentTime+.9);
@@ -895,7 +895,7 @@ function spontaneousRippletReaction(){
   spontaneousReactionTimer=setTimeout(spontaneousRippletReaction,6500+Math.random()*9000);
 }
 function setRoamPinned(){
-  roamPinned=false;false=false;state.lifeRoaming=true;state.lifeActivity='explore';persist();renderLife();
+  roamPinned=false;state.lifePinned=false;state.lifeRoaming=true;state.lifeActivity='explore';persist();renderLife();
 }
 window.XRPetRoam={go:goRipplet,pin:()=>setRoamPinned(false),sync:syncRoamBounds};
 addEventListener('resize',()=>{syncRoamBounds();goRipplet(state.lifeActivity||'explore')});
