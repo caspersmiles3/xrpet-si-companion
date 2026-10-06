@@ -141,13 +141,32 @@ function dailyVisit(){
   }
 }
 
+let launchLedgerSeed=0;
+function updateLaunchLedgerCounter(value){ clearInterval(launchCounterTimer);
+  const el=document.getElementById('launchLedgerCounter');
+  if(!el)return;
+  const n=Number(value)||0;
+  launchLedgerSeed=n;
+  el.textContent=String(Math.max(0,n)).padStart(8,'0');
+}
+function revealLaunchRipplet(){
+  document.getElementById('launchGate')?.classList.add('ripplet-awake');
+}
+function pulseLaunchLedger(){
+  const el=document.getElementById('launchLedgerCounter');
+  if(!el||launchLedgerSeed)return;
+  const base=99900000+Math.floor(performance.now()/100);
+  el.textContent=String(base).slice(-8);
+}
+const launchCounterTimer=setInterval(pulseLaunchLedger,120);
+
 const XRPL_WS='wss://xrplcluster.com/';
 let ws,reconnectTimer,charge=0,lastLedgerNotification=0;
 function connect(){
   clearTimeout(reconnectTimer);
   ws=new WebSocket(XRPL_WS);
   ws.onopen=()=>{
-    state.connected=true;
+    state.connected=true; revealLaunchRipplet();
     $('#liveBadge').className='badge online'; $('#liveBadge').innerHTML='<span></span> XRPL LIVE';
     $('#status').textContent='Live';
     ws.send(JSON.stringify({id:'xrpet-ledger',command:'subscribe',streams:['ledger','server']}));
@@ -178,7 +197,7 @@ function personalityLine(kind){
 function handle(msg){
   if(msg.type==='ledgerClosed'||msg.type==='ledger'){
     const idx=msg.ledger_index||msg.ledger_index_max||msg.ledger_index_min;
-    if(idx){state.ledgerIndex=idx;$('#ledger').textContent=Number(idx).toLocaleString()}
+    if(idx){state.ledgerIndex=idx; updateLaunchLedgerCounter(idx);$('#ledger').textContent=Number(idx).toLocaleString()}
     if(msg.txn_count!=null){
       state.txCount=msg.txn_count; $('#txCount').textContent=`${msg.txn_count} transactions`;
       const mood=msg.txn_count>100?'Energized':msg.txn_count>40?'Curious':'Calm';
