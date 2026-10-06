@@ -979,5 +979,18 @@ app.listen(PORT, () => {
     xRead:Boolean(process.env.X_BEARER_TOKEN),
     xWrite:Boolean(process.env.X_USER_ACCESS_TOKEN)
   });
-  setTimeout(()=>getRuntimeHealth(true).catch(()=>{}),1200);
+  setTimeout(async()=>{
+    try{
+      const health=await getRuntimeHealth(true);
+      console.log('Runtime health:',JSON.stringify({
+        status:health.status,
+        xrpl:health.core?.xrpl?.state,
+        market:health.core?.market?.state,
+        ecosystem:health.core?.ecosystem?.state,
+        updates:health.core?.updates?.state
+      }));
+    }catch(e){
+      console.warn('Runtime health probe failed:',clean(e?.message||String(e)));
+    }
+  },1200);
 });
