@@ -43,6 +43,64 @@ renderer.domElement.setAttribute('aria-label','Interactive cinematic XRPet compa
 
 host.appendChild(renderer.domElement);
 
+let orbitControls=null;
+let composer=null;
+let ssaoPass=null;
+let bloomPass=null;
+let postFxReady=false;
+const cameraGoal=new THREE.Vector3(0,.15,8.4);
+const targetGoal=new THREE.Vector3(0,.2,0);
+
+// Smooth orbit controls. Failure falls back to the built-in model rotation.
+(async()=>{
+  try{
+    const mod=await import('https://esm.sh/three@0.169.0/examples/jsm/controls/OrbitControls.js?deps=three@0.169.0');
+    orbitControls=new mod.OrbitControls(camera,renderer.domElement);
+    orbitControls.enableDamping=true;
+    orbitControls.dampingFactor=.075;
+    orbitControls.enablePan=false;
+    orbitControls.enableZoom=true;
+    orbitControls.minDistance=5.2;
+    orbitControls.maxDistance=10.5;
+    orbitControls.minPolarAngle=Math.PI*.28;
+    orbitControls.maxPolarAngle=Math.PI*.72;
+    orbitControls.target.copy(targetGoal);
+    orbitControls.rotateSpeed=.62;
+    orbitControls.zoomSpeed=.75;
+  }catch(err){
+    console.warn('XRPet orbit controls unavailable',err);
+  }
+})();
+
+// Performance-gated post-processing: SSAO + restrained bloom.
+(async()=>{
+  if(XRPetQuality.lowPower)return;
+  try{
+    const [composerMod,renderMod,ssaoMod,bloomMod]=await Promise.all([
+      import('https://esm.sh/three@0.169.0/examples/jsm/postprocessing/EffectComposer.js?deps=three@0.169.0'),
+      import('https://esm.sh/three@0.169.0/examples/jsm/postprocessing/RenderPass.js?deps=three@0.169.0'),
+      import('https://esm.sh/three@0.169.0/examples/jsm/postprocessing/SSAOPass.js?deps=three@0.169.0'),
+      import('https://esm.sh/three@0.169.0/examples/jsm/postprocessing/UnrealBloomPass.js?deps=three@0.169.0')
+    ]);
+    composer=new composerMod.EffectComposer(renderer);
+    composer.addPass(new renderMod.RenderPass(scene,camera));
+    ssaoPass=new ssaoMod.SSAOPass(scene,camera,1,1);
+    ssaoPass.kernelRadius=7;
+    ssaoPass.minDistance=.004;
+    ssaoPass.maxDistance=.12;
+    composer.addPass(ssaoPass);
+    bloomPass=new bloomMod.UnrealBloomPass(new THREE.Vector2(1,1),.23,.42,.82);
+    bloomPass.threshold=.74;
+    bloomPass.strength=.28;
+    bloomPass.radius=.38;
+    composer.addPass(bloomPass);
+    postFxReady=true;
+  }catch(err){
+    console.warn('XRPet post FX unavailable; using direct renderer',err);
+    composer=null;ssaoPass=null;bloomPass=null;postFxReady=false;
+  }
+})();
+
 // Physically based reflection environment. Disabled in performance mode.
 (async()=>{
   if(!XRPetQuality.reflections)return;
@@ -622,6 +680,26 @@ const under=new THREE.PointLight(0x35ddff,10,5,2);under.position.set(0,-1.2,1.8)
 const faceFill=new THREE.PointLight(0xffffff,7.5,7,2);faceFill.position.set(0,1.8,3.8);scene.add(faceFill);
 const sideWarm=new THREE.PointLight(0x9ad7ff,5.5,7,2);sideWarm.position.set(3.4,-.2,-.8);scene.add(sideWarm);
 
+// Cinematic studio lighting.
+const studioKey=new THREE.DirectionalLight(0xffffff,3.6);
+studioKey.position.set(-4.5,6.2,5.2);
+studioKey.castShadow=XRPetQuality.shadows;
+studioKey.shadow.mapSize.set(XRPetQuality.lowPower?512:1024,XRPetQuality.lowPower?512:1024);
+studioKey.shadow.camera.near=.5;studioKey.shadow.camera.far=24;
+scene.add(studioKey);
+
+const studioRim=new THREE.DirectionalLight(0x6bdcff,2.1);
+studioRim.position.set(4.8,3.8,-5.6);scene.add(studioRim);
+
+const studioWarm=new THREE.DirectionalLight(0xd2aa6a,.85);
+studioWarm.position.set(-3,-1.8,-2.6);scene.add(studioWarm);
+
+const contactShadowMat=new THREE.ShadowMaterial({color:0x000000,opacity:XRPetQuality.lowPower?.18:.28});
+const contactShadow=add(new THREE.CircleGeometry(1.62,48),contactShadowMat,scene,'studioContactShadow');
+contactShadow.rotation.x=-Math.PI/2;
+contactShadow.position.set(0,-1.72,.1);
+contactShadow.receiveShadow=true;
+
 
 // state
 const BUILTIN_MODELS={
@@ -793,8 +871,10 @@ async function loadExternalModel(url,options={}){
       if(o.material){
         const mats=Array.isArray(o.material)?o.material:[o.material];
         mats.forEach(mat=>{
-          if('envMapIntensity'in mat)mat.envMapIntensity=1.15;
-          if('roughness'in mat)mat.roughness=Math.max(.2,Math.min(.78,mat.roughness));
+          if('envMapIntensity'in mat)mat.envMapIntensity=XRPetQuality.lowPower?.82:1.35;
+          if('roughness'in mat)mat.roughness=Math.max(.18,Math.min(.68,mat.roughness));
+          if('metalness'in mat)mat.metalness=Math.max(0,Math.min(.72,mat.metalness));
+          if('clearcoat'in mat&&externalKind==='nexus')mat.clearcoat=Math.max(mat.clearcoat||0,.45);
           mat.needsUpdate=true;
         });
       }
@@ -911,20 +991,34 @@ function setAppearance(detail={}){
 }
 window.addEventListener('xrpet:appearance',e=>setAppearance(e.detail||{}));
 
+function setCameraPreset(name='front'){
+  const presets={
+    front:[0,.18,7.7],
+    threeQuarter:[3.8,.45,6.7],
+    profile:[6.8,.3,.15]
+  };
+  const p=presets[name]||presets.front;
+  cameraGoal.set(p[0],p[1],p[2]);
+  targetGoal.set(0,.18,0);
+  if(orbitControls){orbitControls.target.copy(targetGoal)}
+  lastInteract=performance.now();
+}
+
 renderer.domElement.addEventListener('pointerdown',e=>{
+  if(orbitControls){lastInteract=performance.now();return}
   dragging=true;lastX=e.clientX;lastY=e.clientY;lastInteract=performance.now();renderer.domElement.setPointerCapture?.(e.pointerId);
 });
 renderer.domElement.addEventListener('pointermove',e=>{
   const r=renderer.domElement.getBoundingClientRect();
   pointerX=((e.clientX-r.left)/Math.max(1,r.width)-.5)*2;pointerY=((e.clientY-r.top)/Math.max(1,r.height)-.5)*2;
-  if(dragging){
+  if(dragging&&!orbitControls){
     targetRotY+=(e.clientX-lastX)*.012;targetRotX+=(e.clientY-lastY)*.006;
     targetRotX=Math.max(-.24,Math.min(.24,targetRotX));lastX=e.clientX;lastY=e.clientY;lastInteract=performance.now();
   }
 });
 renderer.domElement.addEventListener('pointerup',e=>{dragging=false;renderer.domElement.releasePointerCapture?.(e.pointerId)});
 renderer.domElement.addEventListener('pointercancel',()=>dragging=false);
-renderer.domElement.addEventListener('dblclick',()=>{targetRotX=0;targetRotY=0});
+renderer.domElement.addEventListener('dblclick',()=>{targetRotX=0;targetRotY=0;setCameraPreset('front')});
 renderer.domElement.addEventListener('click',()=>{
   performAction('happy');window.dispatchEvent(new CustomEvent('xrpet:petInteract'));
 });
@@ -939,7 +1033,8 @@ window.XRPet3D={
   wake(){performAction('wake')},
   loadModel:loadExternalModel,
   useProcedural:useProceduralModel,
-  reset(){targetRotX=0;targetRotY=0},
+  cameraPreset:setCameraPreset,
+  reset(){targetRotX=0;targetRotY=0;setCameraPreset('front')},
   visible(){return renderer.domElement.isConnected}
 };
 
@@ -955,7 +1050,10 @@ renderer.domElement.addEventListener('webglcontextrestored',()=>{
 
 function resize(){
   const r=host.getBoundingClientRect();const w=Math.max(1,r.width),h=Math.max(1,r.height);
-  renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
+  renderer.setSize(w,h,false);
+  if(composer)composer.setSize(w,h);
+  if(ssaoPass)ssaoPass.setSize?.(w,h);
+  camera.aspect=w/h;camera.updateProjectionMatrix();
 }
 new ResizeObserver(resize).observe(host);resize();
 
@@ -969,6 +1067,14 @@ function renderFrame(){
   const idle=performance.now()-lastInteract>1600;
   const beforeAction=action;const state=currentAction();
   if(beforeAction!=='idle'&&state==='idle')playExternalAction('idle');
+
+  if(orbitControls){
+    orbitControls.target.lerp(targetGoal,.08);
+    orbitControls.update();
+  }else{
+    camera.position.lerp(cameraGoal,.07);
+    camera.lookAt(targetGoal);
+  }
 
   if(externalMixer)externalMixer.update(dt);
   if(externalModel){
@@ -1074,6 +1180,8 @@ function renderFrame(){
   cosmeticGroups.resonance.rotation.y=orbiting?t*.8:0;
   orbGroup.rotation.y=t*(alerting?1.35:.7);orbit1.rotation.z=t*(celebrating?1.5:.62);orbit2.rotation.z=-t*(celebrating?1.7:.78);
   holoRing.rotation.z=t*(alerting?.34:.15);holoRing2.rotation.z=-t*(alerting?.45:.21);
+  contactShadow.scale.setScalar(1+Math.sin(t*.9)*.025+(celebrating?.08:0));
+  contactShadow.material.opacity=(XRPetQuality.lowPower?.16:.26)+(sleeping?.05:0);
 
   const targetEmissive=scanning?5.2:orbiting?4.6:focusing?3.8:alerting?4.2:celebrating?5.4:greeting?3.4:currentCosmetic==='resonance'?3.2:2.5;
   accentMat.emissiveIntensity+=(targetEmissive-accentMat.emissiveIntensity)*.12;
@@ -1084,7 +1192,7 @@ function renderFrame(){
     pet.scale.lerp(new THREE.Vector3(.82,.82,.82),.1);
   }
 
-  renderer.render(scene,camera);
+  if(composer&&postFxReady)composer.render();else renderer.render(scene,camera);
 }
 let rafId=0,lastFrameTime=0,renderPaused=document.hidden;
 const frameInterval=1000/XRPetQuality.fps;
