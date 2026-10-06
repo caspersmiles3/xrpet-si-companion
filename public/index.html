@@ -8,9 +8,38 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=2.8.0">
+  <link rel="stylesheet" href="/styles.css?v=2.9.0">
 </head>
-<body>
+<body class="launch-locked">
+<div id="launchGate" class="launch-gate" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
+  <div class="launch-space" aria-hidden="true">
+    <span class="launch-orbit orbit-a"></span>
+    <span class="launch-orbit orbit-b"></span>
+    <span class="launch-orbit orbit-c"></span>
+    <span class="ledger-node n1"></span><span class="ledger-node n2"></span><span class="ledger-node n3"></span>
+    <span class="ledger-node n4"></span><span class="ledger-node n5"></span><span class="ledger-node n6"></span>
+    <span class="ledger-link l1"></span><span class="ledger-link l2"></span><span class="ledger-link l3"></span>
+    <span class="ledger-link l4"></span><span class="ledger-link l5"></span><span class="ledger-link l6"></span>
+  </div>
+
+  <div class="launch-content">
+    <div class="launch-brand"><span class="launch-brand-mark">X</span><div><strong>XRPet</strong><small>SI COMPANION · XRP LEDGER</small></div></div>
+    <p class="launch-kicker">LEDGER GATE // GENESIS LINK</p>
+    <h1 id="launchTitle">Wake your companion.</h1>
+    <p id="launchStatus" class="launch-status" aria-live="polite">Press and hold the XRP core to synchronize.</p>
+
+    <button id="launchCore" class="launch-core" type="button" aria-label="Press and hold to open XRPet">
+      <span class="core-shell"><i class="core-x">X</i><b class="core-energy"></b></span>
+      <span class="core-ring ring-one"></span>
+      <span class="core-ring ring-two"></span>
+    </button>
+
+    <div class="launch-progress" aria-hidden="true"><span id="launchProgressBar"></span></div>
+    <div class="launch-readout"><strong id="launchPercent">0%</strong><span id="launchPhase">XRPL LINK STANDBY</span></div>
+    <p class="launch-instruction">PRESS + HOLD TO SYNC</p>
+    <button id="launchEnter" class="launch-enter" type="button" hidden>Enter XRPet</button>
+  </div>
+</div>
 <div class="ambient ambient-one"></div>
 <div class="ambient ambient-two"></div>
 
@@ -269,7 +298,7 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet SI Companion™ · Beta 2.8 · XRP Ledger companion · Not affiliated with or endorsed by Ripple · Not financial advice</footer>
+    <footer>XRPet SI Companion™ · Beta 2.9 · XRP Ledger companion · Not affiliated with or endorsed by Ripple · Not financial advice</footer>
   </main>
 </div>
 
@@ -291,7 +320,7 @@
   </div>
 </div>
 
-<script src="/app.js?v=2.8.0"></script>
-<script type="module" src="/companion3d.js?v=2.8.0"></script>
+<script src="/app.js?v=2.9.0"></script>
+<script type="module" src="/companion3d.js?v=2.9.0"></script>
 </body>
 </html>
