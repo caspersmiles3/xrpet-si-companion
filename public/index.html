@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=2.2.0">
+  <link rel="stylesheet" href="/styles.css?v=2.3.0">
 </head>
 <body>
 <div class="ambient ambient-one"></div>
@@ -91,22 +91,12 @@
             <div class="scene-grid"></div>
             <div class="city-light c1"></div><div class="city-light c2"></div><div class="city-light c3"></div>
             <div class="orbital-ring r1"></div><div class="orbital-ring r2"></div>
-            <button id="pet" class="pet-3d calm skin-classic" aria-label="XRPet companion">
-              <span class="orbit-orb"><i></i></span>
-              <span class="ear ear-l"></span><span class="ear ear-r"></span>
-              <span class="head-shell">
-                <i class="reflection"></i>
-                <i class="eye eye-l"><b></b></i>
-                <i class="eye eye-r"><b></b></i>
-                <span class="forehead-mark">X</span>
-                <span class="mouth"></span>
-              </span>
-              <span class="neck-ring"></span>
-              <span class="body-shell"><i class="body-light"></i><b class="core-mark">X</b></span>
-              <span class="shoulder pod-l"></span><span class="shoulder pod-r"></span>
-              <span class="leg leg-l"><i></i></span><span class="leg leg-r"><i></i></span>
-              <span class="hover-ring"></span>
-            </button>
+            <div id="companion3d" class="companion3d-host" role="application" aria-label="Interactive 3D XRPet companion">
+              <div class="companion3d-loading">
+                <span class="loading-orb"></span>
+                <small>INITIALIZING 3D COMPANION</small>
+              </div>
+            </div>
             <div class="pedestal"><span></span><b>X</b></div>
             <div class="pet-card">
               <div><span id="evolution" class="tier">DROP</span><h2 id="petName">NEXUS-589</h2></div>
@@ -220,9 +210,10 @@
 
     </section>
 
-    <footer>XRPet SI Companion™ · Beta 2.2 · XRP Ledger companion · Not affiliated with or endorsed by Ripple · Not financial advice</footer>
+    <footer>XRPet SI Companion™ · Beta 2.3 · XRP Ledger companion · Not affiliated with or endorsed by Ripple · Not financial advice</footer>
   </main>
 </div>
-<script src="/app.js?v=2.2.0"></script>
+<script src="/app.js?v=2.3.0"></script>
+<script type="module" src="/companion3d.js?v=2.3.0"></script>
 </body>
 </html>
