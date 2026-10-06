@@ -949,7 +949,7 @@ if(launchGate){
   let idleIndex=0;
   setTimeout(()=>{
     if(launchOpened)return;
-    setSimpleLaunchProgress(Math.max(launchProgress,92),'Ready when you are.');
+    setSimpleLaunchProgress(Math.max(launchProgress,92),'Waiting for your command.');
     updateLaunchActivity('Companion systems active');
     launchIdleTimer=setInterval(()=>{
       if(launchOpened)return;
