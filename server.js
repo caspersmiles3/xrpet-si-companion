@@ -153,76 +153,172 @@ async function getUpdates() {
   return unique;
 }
 
-async function getMarket() {
-  if (Date.now() - cache.market.at < MARKET_CACHE_MS && cache.market.data) return cache.market.data;
-  try {
-    const [spot, stats, book] = await Promise.all([
+
+const EXCHANGE_MARKETS = {
+  coinbase:{id:'coinbase',name:'Coinbase',pair:'XRP-USD',quote:'USD'},
+  kraken:{id:'kraken',name:'Kraken',pair:'XRP/USD',quote:'USD'},
+  bitstamp:{id:'bitstamp',name:'Bitstamp',pair:'XRP/USD',quote:'USD'},
+  bitfinex:{id:'bitfinex',name:'Bitfinex',pair:'XRP/USD',quote:'USD'},
+  binanceus:{id:'binanceus',name:'Binance.US',pair:'XRP/USDT',quote:'USDT'},
+  okx:{id:'okx',name:'OKX',pair:'XRP/USDT',quote:'USDT'},
+  bybit:{id:'bybit',name:'Bybit',pair:'XRP/USDT',quote:'USDT'},
+  kucoin:{id:'kucoin',name:'KuCoin',pair:'XRP/USDT',quote:'USDT'},
+  gateio:{id:'gateio',name:'Gate.io',pair:'XRP/USDT',quote:'USDT'},
+  mexc:{id:'mexc',name:'MEXC',pair:'XRP/USDT',quote:'USDT'}
+};
+const exchangeMarketCache = new Map();
+const exchangeHistoryCache = new Map();
+const n=v=>{const x=Number(v);return Number.isFinite(x)?x:null};
+const pctFrom=(last,open)=>Number.isFinite(last)&&Number.isFinite(open)&&open>0?((last-open)/open)*100:null;
+const rangePctFrom=(high,low)=>Number.isFinite(high)&&Number.isFinite(low)&&low>0?((high-low)/low)*100:null;
+function marketShape(exchange,{price,open24h,high24h,low24h,volume24hXrp,bestBid,bestAsk,change24h,volume24hUsd,source}={}){
+  const spread=Number.isFinite(bestBid)&&Number.isFinite(bestAsk)?bestAsk-bestBid:null;
+  const spreadBps=Number.isFinite(spread)&&Number.isFinite(price)&&price>0?(spread/price)*10000:null;
+  return {
+    exchange:exchange.id,exchangeName:exchange.name,pair:exchange.pair,quote:exchange.quote,
+    price,change24h:Number.isFinite(change24h)?change24h:pctFrom(price,open24h),
+    open24h,volume24hXrp,
+    volume24hUsd:Number.isFinite(volume24hUsd)?volume24hUsd:(Number.isFinite(volume24hXrp)&&Number.isFinite(price)?volume24hXrp*price:null),
+    high24h,low24h,range24hPct:rangePctFrom(high24h,low24h),
+    bestBid,bestAsk,spread,spreadBps,
+    source:source||exchange.name+' public market API',
+    generatedAt:new Date().toISOString()
+  };
+}
+async function getExchangeMarket(id='coinbase'){
+  const exchange=EXCHANGE_MARKETS[id]||EXCHANGE_MARKETS.coinbase;
+  const cached=exchangeMarketCache.get(exchange.id);
+  if(cached&&Date.now()-cached.at<MARKET_CACHE_MS)return cached.data;
+  let data;
+  if(exchange.id==='coinbase'){
+    const [spot,stats,book]=await Promise.all([
       fetchJson('https://api.coinbase.com/v2/prices/XRP-USD/spot'),
       fetchJson('https://api.exchange.coinbase.com/products/XRP-USD/stats'),
       fetchJson('https://api.exchange.coinbase.com/products/XRP-USD/book?level=1')
     ]);
-    const price = Number(spot?.data?.amount);
-    const open = Number(stats?.open);
-    const last = Number(stats?.last || price);
-    const high24h = Number(stats?.high);
-    const low24h = Number(stats?.low);
-    const volume24hXrp = Number(stats?.volume);
-    const bestBid = Number(book?.bids?.[0]?.[0]);
-    const bestAsk = Number(book?.asks?.[0]?.[0]);
-    const spread = Number.isFinite(bestBid) && Number.isFinite(bestAsk) ? bestAsk - bestBid : null;
-    const spreadBps = Number.isFinite(spread) && Number.isFinite(last) && last > 0 ? (spread / last) * 10000 : null;
-    const change24h = Number.isFinite(open) && open > 0 ? ((last - open) / open) * 100 : null;
-    const range24hPct = Number.isFinite(high24h) && Number.isFinite(low24h) && low24h > 0 ? ((high24h-low24h)/low24h)*100 : null;
-    const data = {
-      price:last,
-      change24h,
-      open24h:open,
-      volume24hXrp,
-      volume24hUsd:Number.isFinite(volume24hXrp)&&Number.isFinite(last)?volume24hXrp*last:null,
-      high24h,
-      low24h,
-      range24hPct,
-      bestBid,
-      bestAsk,
-      spread,
-      spreadBps,
-      source:'Coinbase public spot, stats, and level-1 order book',
-      generatedAt:new Date().toISOString()
-    };
-    cache.market = { at: Date.now(), data };
-    return data;
-  } catch {
-    const cg = await fetchJson('https://api.coingecko.com/api/v3/simple/price?ids=ripple&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_market_cap=true');
-    const data = {
-      price:Number(cg?.ripple?.usd),
-      change24h:Number(cg?.ripple?.usd_24h_change),
+    const price=n(stats?.last)||n(spot?.data?.amount),open24h=n(stats?.open),high24h=n(stats?.high),low24h=n(stats?.low),volume24hXrp=n(stats?.volume);
+    data=marketShape(exchange,{price,open24h,high24h,low24h,volume24hXrp,bestBid:n(book?.bids?.[0]?.[0]),bestAsk:n(book?.asks?.[0]?.[0]),source:'Coinbase public spot, stats, and level-1 order book'});
+  } else if(exchange.id==='kraken'){
+    const d=await fetchJson('https://api.kraken.com/0/public/Ticker?pair=XRPUSD');
+    const t=Object.values(d?.result||{})[0]||{};
+    const price=n(t?.c?.[0]),open24h=n(t?.o),high24h=n(t?.h?.[1]??t?.h?.[0]),low24h=n(t?.l?.[1]??t?.l?.[0]),volume24hXrp=n(t?.v?.[1]??t?.v?.[0]);
+    data=marketShape(exchange,{price,open24h,high24h,low24h,volume24hXrp,bestBid:n(t?.b?.[0]),bestAsk:n(t?.a?.[0]),source:'Kraken public ticker'});
+  } else if(exchange.id==='bitstamp'){
+    const t=await fetchJson('https://www.bitstamp.net/api/v2/ticker/xrpusd/');
+    data=marketShape(exchange,{price:n(t?.last),open24h:n(t?.open),high24h:n(t?.high),low24h:n(t?.low),volume24hXrp:n(t?.volume),bestBid:n(t?.bid),bestAsk:n(t?.ask),source:'Bitstamp public ticker'});
+  } else if(exchange.id==='bitfinex'){
+    const t=await fetchJson('https://api-pub.bitfinex.com/v2/ticker/tXRPUSD');
+    data=marketShape(exchange,{price:n(t?.[6]),open24h:Number.isFinite(n(t?.[6]))&&Number.isFinite(n(t?.[4]))?n(t?.[6])-n(t?.[4]):null,change24h:Number.isFinite(n(t?.[5]))?n(t?.[5])*100:null,high24h:n(t?.[8]),low24h:n(t?.[9]),volume24hXrp:n(t?.[7]),bestBid:n(t?.[0]),bestAsk:n(t?.[2]),source:'Bitfinex public ticker'});
+  } else if(exchange.id==='binanceus'){
+    const t=await fetchJson('https://api.binance.us/api/v3/ticker/24hr?symbol=XRPUSDT');
+    data=marketShape(exchange,{price:n(t?.lastPrice),open24h:n(t?.openPrice),change24h:n(t?.priceChangePercent),high24h:n(t?.highPrice),low24h:n(t?.lowPrice),volume24hXrp:n(t?.volume),volume24hUsd:n(t?.quoteVolume),bestBid:n(t?.bidPrice),bestAsk:n(t?.askPrice),source:'Binance.US public 24h ticker'});
+  } else if(exchange.id==='okx'){
+    const d=await fetchJson('https://www.okx.com/api/v5/market/ticker?instId=XRP-USDT'),t=d?.data?.[0]||{};
+    data=marketShape(exchange,{price:n(t?.last),open24h:n(t?.open24h),high24h:n(t?.high24h),low24h:n(t?.low24h),volume24hXrp:n(t?.vol24h),volume24hUsd:n(t?.volCcy24h),bestBid:n(t?.bidPx),bestAsk:n(t?.askPx),source:'OKX public ticker'});
+  } else if(exchange.id==='bybit'){
+    const d=await fetchJson('https://api.bybit.com/v5/market/tickers?category=spot&symbol=XRPUSDT'),t=d?.result?.list?.[0]||{};
+    data=marketShape(exchange,{price:n(t?.lastPrice),open24h:n(t?.prevPrice24h),change24h:Number.isFinite(n(t?.price24hPcnt))?n(t?.price24hPcnt)*100:null,high24h:n(t?.highPrice24h),low24h:n(t?.lowPrice24h),volume24hXrp:n(t?.volume24h),volume24hUsd:n(t?.turnover24h),bestBid:n(t?.bid1Price),bestAsk:n(t?.ask1Price),source:'Bybit public spot ticker'});
+  } else if(exchange.id==='kucoin'){
+    const d=await fetchJson('https://api.kucoin.com/api/v1/market/stats?symbol=XRP-USDT'),t=d?.data||{};
+    data=marketShape(exchange,{price:n(t?.last),open24h:n(t?.last)&&n(t?.changePrice)!=null?n(t.last)-n(t.changePrice):null,change24h:Number.isFinite(n(t?.changeRate))?n(t.changeRate)*100:null,high24h:n(t?.high),low24h:n(t?.low),volume24hXrp:n(t?.vol),volume24hUsd:n(t?.volValue),bestBid:n(t?.buy),bestAsk:n(t?.sell),source:'KuCoin public market stats'});
+  } else if(exchange.id==='gateio'){
+    const rows=await fetchJson('https://api.gateio.ws/api/v4/spot/tickers?currency_pair=XRP_USDT'),t=Array.isArray(rows)?rows[0]||{}:{};
+    const price=n(t?.last),change24h=n(t?.change_percentage);
+    const open24h=Number.isFinite(price)&&Number.isFinite(change24h)&&change24h!==-100?price/(1+change24h/100):null;
+    data=marketShape(exchange,{price,open24h,change24h,high24h:n(t?.high_24h),low24h:n(t?.low_24h),volume24hXrp:n(t?.base_volume),volume24hUsd:n(t?.quote_volume),bestBid:n(t?.highest_bid),bestAsk:n(t?.lowest_ask),source:'Gate.io public spot ticker'});
+  } else if(exchange.id==='mexc'){
+    const t=await fetchJson('https://api.mexc.com/api/v3/ticker/24hr?symbol=XRPUSDT');
+    data=marketShape(exchange,{price:n(t?.lastPrice),open24h:n(t?.openPrice),change24h:n(t?.priceChangePercent),high24h:n(t?.highPrice),low24h:n(t?.lowPrice),volume24hXrp:n(t?.volume),volume24hUsd:n(t?.quoteVolume),bestBid:n(t?.bidPrice),bestAsk:n(t?.askPrice),source:'MEXC public 24h ticker'});
+  }
+  if(!data||!Number.isFinite(data.price))throw new Error(exchange.name+' market data unavailable');
+  exchangeMarketCache.set(exchange.id,{at:Date.now(),data});
+  return data;
+}
+async function getCompositeMarket(){
+  const ids=Object.keys(EXCHANGE_MARKETS);
+  const settled=await Promise.allSettled(ids.map(id=>getExchangeMarket(id)));
+  const markets=settled.filter(x=>x.status==='fulfilled'&&Number.isFinite(x.value?.price)).map(x=>x.value);
+  if(!markets.length)throw new Error('No exchange feeds available');
+  const sorted=markets.map(x=>x.price).sort((a,b)=>a-b);
+  const median=sorted[Math.floor(sorted.length/2)];
+  const changes=markets.map(x=>x.change24h).filter(Number.isFinite).sort((a,b)=>a-b);
+  const change24h=changes.length?changes[Math.floor(changes.length/2)]:null;
+  const bids=markets.map(x=>x.bestBid).filter(Number.isFinite),asks=markets.map(x=>x.bestAsk).filter(Number.isFinite);
+  return {
+    exchange:'all',exchangeName:'All Exchanges',pair:'XRP/USD + XRP/USDT',quote:'MIXED',
+    price:median,change24h,open24h:null,high24h:Math.max(...markets.map(x=>x.high24h).filter(Number.isFinite),median),
+    low24h:Math.min(...markets.map(x=>x.low24h).filter(Number.isFinite),median),
+    volume24hXrp:markets.map(x=>x.volume24hXrp).filter(Number.isFinite).reduce((a,b)=>a+b,0),
+    volume24hUsd:markets.map(x=>x.volume24hUsd).filter(Number.isFinite).reduce((a,b)=>a+b,0),
+    bestBid:bids.length?Math.max(...bids):null,bestAsk:asks.length?Math.min(...asks):null,
+    spread:null,spreadBps:null,
+    source:'Composite median from '+markets.map(x=>x.exchangeName).join(', '),
+    venues:markets.map(x=>({id:x.exchange,name:x.exchangeName,price:x.price,change24h:x.change24h,pair:x.pair})),
+    generatedAt:new Date().toISOString()
+  };
+}
+async function getMarket(exchangeId='coinbase'){
+  try{
+    return exchangeId==='all'?await getCompositeMarket():await getExchangeMarket(exchangeId);
+  }catch(e){
+    if(exchangeId!=='coinbase')throw e;
+    const cg=await fetchJson('https://api.coingecko.com/api/v3/simple/price?ids=ripple&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_market_cap=true');
+    return {
+      exchange:'coingecko',exchangeName:'CoinGecko fallback',pair:'XRP/USD',quote:'USD',
+      price:Number(cg?.ripple?.usd),change24h:Number(cg?.ripple?.usd_24h_change),
       open24h:null,volume24hXrp:null,volume24hUsd:Number(cg?.ripple?.usd_24h_vol),
       high24h:null,low24h:null,range24hPct:null,bestBid:null,bestAsk:null,spread:null,spreadBps:null,
-      marketCapUsd:Number(cg?.ripple?.usd_market_cap),
-      source:'CoinGecko public market fallback',
-      generatedAt:new Date().toISOString()
+      marketCapUsd:Number(cg?.ripple?.usd_market_cap),source:'CoinGecko public market fallback',generatedAt:new Date().toISOString()
     };
-    cache.market = { at: Date.now(), data };
-    return data;
   }
 }
-async function getMarketHistory() {
-  if (Date.now() - cache.marketHistory.at < 60 * 1000 && cache.marketHistory.data.length) return cache.marketHistory.data;
-  const rows = await fetchJson('https://api.exchange.coinbase.com/products/XRP-USD/candles?granularity=300');
-  const points = (Array.isArray(rows) ? rows : [])
-    .map(row => ({
-      time: Number(row?.[0]) * 1000,
-      low: Number(row?.[1]),
-      high: Number(row?.[2]),
-      open: Number(row?.[3]),
-      close: Number(row?.[4]),
-      volume: Number(row?.[5])
-    }))
-    .filter(p => Number.isFinite(p.time) && Number.isFinite(p.close))
-    .sort((a,b)=>a.time-b.time)
-    .slice(-288);
-  cache.marketHistory = { at: Date.now(), data: points };
+async function getExchangeHistory(id='coinbase'){
+  const exchange=EXCHANGE_MARKETS[id]||EXCHANGE_MARKETS.coinbase;
+  const cached=exchangeHistoryCache.get(exchange.id);
+  if(cached&&Date.now()-cached.at<60*1000)return cached.data;
+  let rows=[],points=[];
+  if(exchange.id==='coinbase'){
+    rows=await fetchJson('https://api.exchange.coinbase.com/products/XRP-USD/candles?granularity=300');
+    points=(Array.isArray(rows)?rows:[]).map(r=>({time:n(r?.[0])*1000,low:n(r?.[1]),high:n(r?.[2]),open:n(r?.[3]),close:n(r?.[4]),volume:n(r?.[5])}));
+  } else if(exchange.id==='kraken'){
+    const d=await fetchJson('https://api.kraken.com/0/public/OHLC?pair=XRPUSD&interval=5');
+    rows=Object.values(d?.result||{}).find(v=>Array.isArray(v))||[];
+    points=rows.map(r=>({time:n(r?.[0])*1000,open:n(r?.[1]),high:n(r?.[2]),low:n(r?.[3]),close:n(r?.[4]),volume:n(r?.[6])}));
+  } else if(exchange.id==='bitstamp'){
+    const d=await fetchJson('https://www.bitstamp.net/api/v2/ohlc/xrpusd/?step=300&limit=288');
+    rows=d?.data?.ohlc||[];
+    points=rows.map(r=>({time:n(r?.timestamp)*1000,open:n(r?.open),high:n(r?.high),low:n(r?.low),close:n(r?.close),volume:n(r?.volume)}));
+  } else if(exchange.id==='bitfinex'){
+    rows=await fetchJson('https://api-pub.bitfinex.com/v2/candles/trade:5m:tXRPUSD/hist?limit=288&sort=1');
+    points=(Array.isArray(rows)?rows:[]).map(r=>({time:n(r?.[0]),open:n(r?.[1]),close:n(r?.[2]),high:n(r?.[3]),low:n(r?.[4]),volume:n(r?.[5])}));
+  } else if(exchange.id==='binanceus'||exchange.id==='mexc'){
+    const base=exchange.id==='binanceus'?'https://api.binance.us':'https://api.mexc.com';
+    rows=await fetchJson(base+'/api/v3/klines?symbol=XRPUSDT&interval=5m&limit=288');
+    points=(Array.isArray(rows)?rows:[]).map(r=>({time:n(r?.[0]),open:n(r?.[1]),high:n(r?.[2]),low:n(r?.[3]),close:n(r?.[4]),volume:n(r?.[5])}));
+  } else if(exchange.id==='okx'){
+    const d=await fetchJson('https://www.okx.com/api/v5/market/candles?instId=XRP-USDT&bar=5m&limit=288');
+    rows=d?.data||[];
+    points=rows.map(r=>({time:n(r?.[0]),open:n(r?.[1]),high:n(r?.[2]),low:n(r?.[3]),close:n(r?.[4]),volume:n(r?.[5])}));
+  } else if(exchange.id==='bybit'){
+    const d=await fetchJson('https://api.bybit.com/v5/market/kline?category=spot&symbol=XRPUSDT&interval=5&limit=288');
+    rows=d?.result?.list||[];
+    points=rows.map(r=>({time:n(r?.[0]),open:n(r?.[1]),high:n(r?.[2]),low:n(r?.[3]),close:n(r?.[4]),volume:n(r?.[5])}));
+  } else if(exchange.id==='kucoin'){
+    rows=await fetchJson('https://api.kucoin.com/api/v1/market/candles?type=5min&symbol=XRP-USDT');
+    rows=rows?.data||[];
+    points=rows.map(r=>({time:n(r?.[0])*1000,open:n(r?.[1]),close:n(r?.[2]),high:n(r?.[3]),low:n(r?.[4]),volume:n(r?.[5])}));
+  } else if(exchange.id==='gateio'){
+    rows=await fetchJson('https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair=XRP_USDT&interval=5m&limit=288');
+    points=(Array.isArray(rows)?rows:[]).map(r=>({time:n(r?.[0])*1000,close:n(r?.[2]),high:n(r?.[3]),low:n(r?.[4]),open:n(r?.[5]),volume:n(r?.[6]??r?.[1])}));
+  }
+  points=points.filter(p=>Number.isFinite(p.time)&&Number.isFinite(p.close)).sort((a,b)=>a.time-b.time).slice(-288);
+  if(!points.length)throw new Error(exchange.name+' chart unavailable');
+  exchangeHistoryCache.set(exchange.id,{at:Date.now(),data:points});
   return points;
+}
+async function getMarketHistory(exchangeId='coinbase'){
+  if(exchangeId==='all')return getExchangeHistory('coinbase');
+  return getExchangeHistory(exchangeId);
 }
 
 function fmtPct(n) {
@@ -488,17 +584,31 @@ app.get('/api/updates', async (_req, res) => {
   }
 });
 
-app.get('/api/market', async (_req, res) => {
-  try { res.json(await getMarket()); }
-  catch (e) { res.status(502).json({ error:'XRP market feed unavailable', detail:e.message }); }
+app.get('/api/exchanges', (_req,res)=>{
+  res.json({
+    items:[
+      {id:'all',name:'All Exchanges',pair:'Composite XRP/USD + XRP/USDT',mode:'composite'},
+      ...Object.values(EXCHANGE_MARKETS).map(x=>({...x,mode:x.id==='coinbase'?'websocket+rest':'live-rest'}))
+    ],
+    generatedAt:new Date().toISOString()
+  });
+});
+app.get('/api/market', async (req, res) => {
+  const exchange=clean(req.query.exchange||'coinbase').toLowerCase();
+  if(exchange!=='all'&&!EXCHANGE_MARKETS[exchange])return res.status(400).json({error:'Unsupported exchange'});
+  try { res.json(await getMarket(exchange)); }
+  catch (e) { res.status(502).json({ error:'XRP market feed unavailable', detail:e.message, exchange }); }
 });
 
-app.get('/api/market-history', async (_req, res) => {
+app.get('/api/market-history', async (req, res) => {
+  const exchange=clean(req.query.exchange||'coinbase').toLowerCase();
+  if(exchange!=='all'&&!EXCHANGE_MARKETS[exchange])return res.status(400).json({error:'Unsupported exchange'});
   try {
-    const points = await getMarketHistory();
-    res.json({ pair:'XRP-USD', granularitySeconds:300, points, source:'Coinbase public candles', generatedAt:new Date().toISOString() });
+    const points = await getMarketHistory(exchange);
+    const meta=exchange==='all'?{name:'All Exchanges',pair:'XRP/USD + XRP/USDT'}:EXCHANGE_MARKETS[exchange];
+    res.json({ exchange,exchangeName:meta.name,pair:meta.pair,granularitySeconds:300,points,source:(meta.name||'Exchange')+' public 5-minute candles',generatedAt:new Date().toISOString() });
   } catch (e) {
-    res.status(502).json({ error:'XRP market history unavailable', detail:e.message });
+    res.status(502).json({ error:'XRP market history unavailable', detail:e.message, exchange });
   }
 });
 
