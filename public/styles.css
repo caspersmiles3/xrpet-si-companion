@@ -2805,3 +2805,75 @@ body.launch-locked .xrpet-music-player{display:none!important}
 .ecosystem-x-item span{font-size:.52rem;color:#6eeaff}.ecosystem-x-item p{font-size:.59rem;color:#9aadb6;line-height:1.5}.ecosystem-x-item a{font-size:.52rem;color:#8feeff;text-decoration:none}
 @media(max-width:1000px){.ecosystem-token-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.ecosystem-hero{flex-direction:column;align-items:flex-start}.ecosystem-toolbar{grid-template-columns:1fr}.ecosystem-summary-grid{grid-template-columns:1fr}.ecosystem-token-grid{grid-template-columns:1fr}.ecosystem-lower-grid{grid-template-columns:1fr}.ecosystem-truth-note{grid-template-columns:1fr}}
+
+
+/* XRPet v5.1 — Ripplet 3.0 transparent high-detail presentation */
+#rippletRoamLayer,
+#rippletRoamLayer #lifeAvatar,
+#rippletRoamLayer #persistentCompanionLayer,
+#rippletRoamLayer #floatingCompanion,
+#rippletRoamLayer #companion3d,
+#rippletRoamLayer canvas{
+  background:none!important;
+  background-color:transparent!important;
+  background-image:none!important;
+  border:0!important;
+  outline:0!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+}
+#rippletRoamLayer:before,#rippletRoamLayer:after,
+#lifeAvatar:before,#lifeAvatar:after,
+#floatingCompanion:before,#floatingCompanion:after,
+#companion3d:before,#companion3d:after{
+  content:none!important;
+  display:none!important;
+}
+#rippletRoamLayer .floating-tag,
+#rippletRoamLayer .companion3d-loading{
+  display:none!important;
+}
+#rippletRoamLayer .global-life-avatar{
+  width:220px!important;
+  height:278px!important;
+  overflow:visible!important;
+  filter:drop-shadow(0 18px 18px rgba(0,0,0,.28)) drop-shadow(0 0 12px rgba(76,226,255,.08))!important;
+}
+#rippletRoamLayer .floating-companion,
+#rippletRoamLayer .companion3d-host,
+#rippletRoamLayer .companion3d-canvas{
+  width:100%!important;
+  height:100%!important;
+  inset:0!important;
+  overflow:visible!important;
+  border-radius:0!important;
+}
+#rippletRoamLayer .companion3d-canvas{
+  display:block!important;
+  opacity:1!important;
+  mix-blend-mode:normal!important;
+  isolation:isolate;
+}
+#rippletRoamLayer .persistent-companion-layer,
+#rippletRoamLayer .home-companion-layer{
+  overflow:visible!important;
+}
+.ripplet-page .ripplet-character-slot{
+  border-color:rgba(105,229,255,.16);
+  background:
+    radial-gradient(circle at 88% 16%,rgba(79,224,255,.08),transparent 26%),
+    linear-gradient(145deg,rgba(8,20,27,.88),rgba(4,11,16,.96));
+}
+.ripplet-page .ripplet-character-slot h3:after{
+  content:" · HIGH-DETAIL RUNTIME";
+  color:#72deef;
+  font-size:.52em;
+  letter-spacing:.08em;
+  font-weight:700;
+}
+@media(max-width:800px){
+  #rippletRoamLayer .global-life-avatar{width:175px!important;height:222px!important}
+}
+@media(max-width:520px){
+  #rippletRoamLayer .global-life-avatar{width:145px!important;height:185px!important}
+}
