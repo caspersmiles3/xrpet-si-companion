@@ -87,7 +87,7 @@ function renderSignal589(){
 
 function render(){
   const [name,min]=form(); const i=FORMS.findIndex(x=>x[0]===name); const next=FORMS[Math.min(i+1,FORMS.length-1)];
-  setText('#petName',state.petName);setText('#chatPetName',state.petName);setText('#topPetName',state.petName);setText('#floatingPetName',state.petName);setText('#evolution',name.toUpperCase());
+  setText('#petName',state.petName);setText('#chatPetName',state.petName);setText('#topPetName',state.petName);setText('#floatingPetName',state.nftCompanion?.name||state.petName);setText('#evolution',name.toUpperCase());
   const lvl=Math.floor(state.xp/100)+1; setText('#level','Lv. '+lvl);setText('#xpLabel',state.xp+' XP');setText('#topLevel','Level '+lvl);setText('#topXp',state.xp+' XP');
   const pct=name==='Legend'?100:Math.max(0,Math.min(100,(state.xp-min)/(next[1]-min)*100));
   if(q('#xpFill'))q('#xpFill').style.width=pct+'%';
@@ -239,6 +239,10 @@ qa('[data-scroll]').forEach(b=>b.addEventListener('click',()=>q('#'+b.dataset.sc
 bind('#explainLevel','change',e=>{state.explainLevel=e.target.value;persist()});bind('#notifyLevel','change',e=>{state.notifyLevel=e.target.value;persist()});bind('#truthToggle','change',e=>{state.truthMode=e.target.checked;persist();renderSignal589()});bind('#marketMoodToggle','change',e=>{state.marketMood=e.target.checked;persist()});
 bind('#notifyButton','click',async()=>{if(!('Notification'in window)){playSound('error');alert('Browser notifications are not supported here.');return}const p=await Notification.requestPermission();if(p==='granted')new Notification('XRPet alerts enabled',{body:'Browser alerts are ready while XRPet is open.'});});
 bind('#refreshIntegrations','click',integrationCheck);bind('#loadNfts','click',requestNfts);
+bind('#useNativeCompanion','click',()=>{
+  state.nftCompanion=null;persist();applyNftCompanion();render();playSound('companion');
+  mood('Native companion','Returned to the XRPet 3D companion roster.','calm');
+});
 
 bind('#globalSearchForm','submit',e=>{
   e.preventDefault();
@@ -581,3 +585,9 @@ revealFloatControls();
 
 
 dailyVisit();render();connectLedger();loadMarket();loadUpdates();integrationCheck();setInterval(loadMarket,120000);setInterval(integrationCheck,60000);
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/sw.js').catch(err=>console.warn('XRPet service worker registration failed',err));
+  },{once:true});
+}
