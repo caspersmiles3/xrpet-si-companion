@@ -1897,6 +1897,10 @@ setText('#learnBestScore',(Number(localStorage.getItem('xrpetLearnBest')||0))+'%
 
 
 function openHistoryView(view='All'){
+  if(window.XRPetShell?.showHistory){
+    window.XRPetShell.showHistory(view);
+    return;
+  }
   primaryView='history';
   qa('[data-view-section]').forEach(section=>{
     const active=section.dataset.viewSection==='history';
@@ -1929,7 +1933,7 @@ function openHistoryView(view='All'){
   q('#historyNavDetails')?.removeAttribute('open');
   setTimeout(()=>scrollSectionTop('xrpHistorySection'),10);
 }
-qa('[data-history-view]').forEach(b=>b.addEventListener('click',()=>openHistoryView(b.dataset.historyView)));
+if(!window.XRPetShell)qa('[data-history-view]').forEach(b=>b.addEventListener('click',()=>openHistoryView(b.dataset.historyView)));
 
 function setEcosystemSubview(view='directory'){
   setPrimaryView('ecosystem');
