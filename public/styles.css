@@ -4160,3 +4160,166 @@ footer{display:none!important}
 body[data-primary-view="games"] .top-command-deck{display:block!important}
 body[data-primary-view="games"] .top-command-deck .global-command-bar{display:grid!important}
 body[data-primary-view="games"] .top-command-deck .topbar{display:block!important}
+
+
+/* XRPet v5.5.7 — clean locked top rail, exchange interface, smaller rebuilt Ripplet */
+.main-shell{padding-top:8px!important}
+.top-command-deck{
+  position:relative!important;
+  top:auto!important;
+  flex:0 0 auto!important;
+  padding:7px!important;
+  margin:0 0 8px!important;
+}
+.command-primary-row{
+  display:grid;
+  grid-template-columns:minmax(260px,1.8fr) minmax(155px,.72fr) minmax(235px,1fr);
+  gap:7px;
+  align-items:stretch;
+}
+.command-search-box,
+.command-primary-box{
+  height:44px!important;
+  min-height:44px!important;
+  margin:0!important;
+  border-radius:9px!important;
+}
+.command-search-box{
+  width:100%!important;
+  max-width:none!important;
+  display:flex!important;
+  align-items:center!important;
+  padding:0 11px!important;
+  background:#060d12!important;
+  border:1px solid rgba(89,218,245,.16)!important;
+}
+.command-search-box input{padding:8px 0!important}
+.global-xrp-price-button.command-primary-box{
+  display:grid!important;
+  grid-template-columns:auto 1fr!important;
+  grid-template-rows:auto auto!important;
+  align-content:center!important;
+  column-gap:8px!important;
+  padding:5px 9px!important;
+}
+.global-xrp-price-button.command-primary-box span{grid-row:1/3;font-size:.47rem!important}
+.global-xrp-price-button.command-primary-box strong{font-size:.78rem!important;margin:0!important}
+.global-xrp-price-button.command-primary-box small{font-size:.45rem!important;margin:0!important}
+.top-command-deck .ripplet-dock.command-primary-box{
+  min-height:44px!important;height:44px!important;
+  grid-template-columns:38px minmax(0,1fr) auto!important;
+  gap:5px!important;padding:3px 6px!important;
+}
+.top-command-deck .ripplet-dock-platform{
+  width:34px!important;height:30px!important;transform:none!important
+}
+.top-command-deck .ripplet-dock-platform::before{inset:4px!important}
+.top-command-deck .ripplet-dock-platform::after{inset:8px!important}
+.top-command-deck .ripplet-dock-platform b{font-size:.48rem!important}
+.top-command-deck .ripplet-dock-copy span{font-size:.38rem!important}
+.top-command-deck .ripplet-dock-copy strong{font-size:.54rem!important}
+.top-command-deck .ripplet-dock-actions button{min-height:23px!important;padding:3px 5px!important;font-size:.43rem!important}
+
+.command-meta-strip{
+  margin-top:6px!important;
+  min-height:29px!important;
+  padding:3px 7px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:10px!important;
+  border-radius:8px!important;
+}
+.command-meta-strip .visitor-ticker{margin-right:auto}
+.command-meta-strip .status-pill{padding:4px 7px!important;font-size:.48rem!important}
+.command-meta-strip .mini-avatar{width:24px!important;height:24px!important;border-radius:7px!important;font-size:.62rem!important}
+.command-meta-strip .profile-chip{gap:5px!important}
+.command-meta-strip .profile-chip strong{font-size:.56rem!important}
+.command-meta-strip .profile-chip small{font-size:.45rem!important}
+
+.xrpl-inline-tools{display:flex;justify-content:flex-end;margin:-4px 0 9px}
+.xrpl-signal-friend{
+  display:flex;align-items:center;gap:8px;
+  min-height:36px;padding:6px 10px;
+  border:1px solid rgba(97,229,255,.16);
+  border-radius:9px;background:rgba(6,22,29,.76);color:#dffaff
+}
+.xrpl-signal-friend div{display:grid;text-align:left}
+.xrpl-signal-friend strong{font-size:.58rem}
+.xrpl-signal-friend small{font-size:.47rem;color:#718995;margin-top:2px}
+
+.exchanges-section{overflow-y:auto!important}
+.exchanges-heading{align-items:center}
+.exchange-selected-chip{
+  min-width:150px;padding:9px 11px;border:1px solid rgba(92,226,255,.15);
+  border-radius:10px;background:#071017
+}
+.exchange-selected-chip span,.exchange-selected-chip strong{display:block}
+.exchange-selected-chip span{font-size:.45rem;color:#607986;letter-spacing:.12em}
+.exchange-selected-chip strong{margin-top:4px;font-size:.69rem;color:#c7f8ff}
+.exchange-interface-grid{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px
+}
+.exchange-interface-grid button{
+  min-height:96px;display:grid;align-content:center;gap:4px;text-align:left;
+  padding:12px;border:1px solid rgba(98,222,248,.11);border-radius:12px;
+  background:linear-gradient(145deg,#08121a,#060b10);color:#dff9ff
+}
+.exchange-interface-grid button span{font-size:.43rem;letter-spacing:.12em;color:#61dff3}
+.exchange-interface-grid button strong{font-size:.76rem}
+.exchange-interface-grid button small{font-size:.52rem;color:#6f8792}
+.exchange-interface-grid button.active{
+  border-color:rgba(93,232,255,.38);
+  background:linear-gradient(145deg,rgba(13,45,57,.95),rgba(6,16,22,.98));
+  box-shadow:0 0 0 1px rgba(92,230,255,.08),0 0 20px rgba(55,218,245,.05)
+}
+.exchange-interface-note{
+  margin-top:12px;padding:10px 12px;border:1px solid rgba(98,222,248,.08);
+  border-radius:10px;color:#6e8792;font-size:.58rem;background:rgba(5,13,18,.54)
+}
+
+/* Sidebar player enlarged again so controls never collide. */
+.sidebar .xrpet-music-player{
+  min-height:190px!important;
+  height:190px!important;
+  padding:10px!important;
+  grid-template-columns:40px minmax(0,1fr) 30px 30px 30px!important;
+  grid-template-rows:42px 112px!important;
+  gap:8px!important;
+}
+.sidebar .xrpet-music-player .music-main{width:40px!important;height:40px!important}
+.sidebar .xrpet-music-player .music-meta{grid-column:2/6!important}
+.sidebar .xrpet-music-player .music-waveform{
+  grid-column:1/6!important;
+  width:100%!important;height:108px!important;min-height:108px!important;
+}
+.sidebar .xrpet-music-player #musicPrev,
+.sidebar .xrpet-music-player #musicNext,
+.sidebar .xrpet-music-player #musicShuffle{width:30px!important;height:30px!important}
+.sidebar .xrpet-music-player button{position:relative!important;inset:auto!important}
+
+/* Smaller Ripplet footprint; keep him embedded in the main viewport. */
+.ripplet-roam-layer .global-life-avatar{
+  width:118px!important;
+  height:146px!important;
+}
+@media(max-width:1000px){
+  .command-primary-row{grid-template-columns:minmax(220px,1.5fr) 145px minmax(210px,.95fr)}
+  .exchange-interface-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  .command-primary-row{grid-template-columns:1fr 1fr}
+  .command-search-box{grid-column:1/-1}
+  .top-command-deck .ripplet-dock.command-primary-box{min-width:0!important}
+  .command-meta-strip{justify-content:flex-start!important;flex-wrap:wrap}
+  .command-meta-strip .visitor-ticker{margin-right:0}
+  .exchange-interface-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sidebar .xrpet-music-player{min-height:172px!important;height:172px!important;grid-template-rows:40px 96px!important}
+  .sidebar .xrpet-music-player .music-waveform{height:92px!important;min-height:92px!important}
+  .ripplet-roam-layer .global-life-avatar{width:104px!important;height:132px!important}
+}
+@media(max-width:520px){
+  .command-primary-row{grid-template-columns:1fr}
+  .command-search-box{grid-column:auto}
+  .exchange-interface-grid{grid-template-columns:1fr}
+}
