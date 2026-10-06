@@ -5,7 +5,7 @@ if(!host) throw new Error('XRPet 3D host missing');
 
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(35,1,0.1,100);
-camera.position.set(0,0.55,6.2);
+camera.position.set(0,0.42,7.35);
 
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
@@ -41,7 +41,8 @@ const pedestalMat=new THREE.MeshPhysicalMaterial({color:0x0b151c,metalness:.88,r
 function mesh(geo,mat,parent=world){const m=new THREE.Mesh(geo,mat);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
 
 const pet=new THREE.Group();
-pet.position.y=.4;
+pet.position.y=.28;
+pet.scale.setScalar(.82);
 world.add(pet);
 
 const body=mesh(new THREE.SphereGeometry(.82,64,48),shellMat,pet);
@@ -157,13 +158,13 @@ function animate(){
   pet.rotation.y+=(targetRotY-pet.rotation.y)*.08;
   pet.rotation.x+=(targetRotX-pet.rotation.x)*.08;
   if(!dragging && performance.now()-lastInteract>1800) targetRotY=Math.sin(t*.35)*.18;
-  pet.position.y=.4+Math.sin(t*1.7)*.045+boost*.12;
+  pet.position.y=.28+Math.sin(t*1.7)*.035+boost*.08;
   pet.rotation.z=Math.sin(t*.8)*.018;
   orbGroup.rotation.y=t*.7;orbit1.rotation.z=t*.65;orbit2.rotation.z=-t*.8;
   baseRing.rotation.z=t*.16;innerRing.rotation.z=-t*.22;
   pupils.forEach((p,i)=>{const baseX=i===0?-.48:.48;p.position.x=baseX+pointerX*.045;p.position.y=.78-pointerY*.035});
   eyes.forEach((e,i)=>{e.scale.y=1-Math.max(0,Math.sin(t*.47+2.7))**36*.82});
-  if(boost>0){boost*=.9;pet.scale.setScalar(1+boost*.055);accentMat.emissiveIntensity=2.4+boost*4}else{pet.scale.lerp(new THREE.Vector3(1,1,1),.1);accentMat.emissiveIntensity+=(2.4-accentMat.emissiveIntensity)*.1}
+  if(boost>0){boost*=.9;pet.scale.setScalar(.82+boost*.04);accentMat.emissiveIntensity=2.4+boost*4}else{pet.scale.lerp(new THREE.Vector3(.82,.82,.82),.1);accentMat.emissiveIntensity+=(2.4-accentMat.emissiveIntensity)*.1}
   renderer.render(scene,camera);requestAnimationFrame(animate);
 }
 animate();
