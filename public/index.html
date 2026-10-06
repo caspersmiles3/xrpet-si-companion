@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=5.0.2">
+  <link rel="stylesheet" href="/styles.css?v=5.0.3">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate clean-launch" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
@@ -67,6 +67,7 @@
       </details>
       <button class="side-link" data-primary-view="announcements"><span>◌</span>Announcements</button>
       <button class="side-link" data-primary-view="ripplet"><span>✦</span>Ripplet</button>
+      <button class="side-link" data-primary-view="ecosystem"><span>◎</span>XRPL Ecosystem</button>
       <button class="side-link" data-primary-view="games"><span>◈</span>Games</button>
     </nav>
 
@@ -618,6 +619,73 @@
       </section>
     </section>
 
+
+    <section id="ecosystemSection" class="flow-section ecosystem-explorer primary-view-section" data-view-section="ecosystem">
+      <div class="ecosystem-hero">
+        <div>
+          <span class="eyebrow">XRPL ECOSYSTEM DIRECTORY</span>
+          <h1>Explore what is built on the XRP Ledger.</h1>
+          <p>Issued tokens, MPT assets, issuers, published project metadata, social links, live NFT activity, and creator information when projects choose to publish it.</p>
+        </div>
+        <div class="ecosystem-live-badges">
+          <span><i></i> XRPL LIVE</span>
+          <span id="ecosystemAssetCount">Loading assets…</span>
+          <span id="ecosystemNftCount">NFT total loading…</span>
+        </div>
+      </div>
+
+      <div class="ecosystem-truth-note">
+        <strong>PUBLIC DATA ONLY</strong>
+        <span>XRPet does not guess a creator's identity or physical location. Location, team names, websites, and social accounts appear only when they are publicly supplied by the project or metadata source.</span>
+      </div>
+
+      <div class="ecosystem-toolbar">
+        <form id="ecosystemSearchForm" class="ecosystem-search">
+          <input id="ecosystemSearch" type="search" placeholder="Search token, project, issuer or currency…" autocomplete="off">
+          <button type="submit">Search</button>
+        </form>
+        <select id="ecosystemSort" aria-label="Sort ecosystem assets">
+          <option value="holders">Most holders</option>
+          <option value="volume_24h">24h volume</option>
+          <option value="marketcap">Market cap</option>
+          <option value="exchanges_24h">24h exchanges</option>
+        </select>
+        <select id="ecosystemTrust" aria-label="Filter trust level">
+          <option value="0,1,2,3">All trust levels</option>
+          <option value="1,2,3">Identified / trusted</option>
+          <option value="2,3">Community trusted</option>
+          <option value="3">Highest trust</option>
+        </select>
+      </div>
+
+      <div class="ecosystem-summary-grid">
+        <article><span>ASSET DIRECTORY</span><strong id="ecosystemShowing">—</strong><small>IOU + MPT assets</small></article>
+        <article><span>DATA SOURCE</span><strong>XRPL + metadata</strong><small>On-chain state + self-published project data</small></article>
+        <article><span>X / SOCIAL</span><strong id="ecosystemSocialStatus">Metadata links</strong><small>Live X feed activates when an X API source is configured</small></article>
+      </div>
+
+      <div id="ecosystemTokenGrid" class="ecosystem-token-grid">
+        <p class="muted">Loading XRPL ecosystem assets…</p>
+      </div>
+
+      <div class="ecosystem-pager">
+        <button id="ecosystemPrev" type="button" class="secondary">← Previous</button>
+        <span id="ecosystemPage">Page 1</span>
+        <button id="ecosystemNext" type="button" class="secondary">Next →</button>
+      </div>
+
+      <div class="ecosystem-lower-grid">
+        <article class="ecosystem-live-panel">
+          <div class="section-heading"><div><span class="eyebrow">LIVE NFT ACTIVITY</span><h2>NFT events happening now</h2></div><span class="truth-label">XRPL STREAM</span></div>
+          <div id="ecosystemNftActivity" class="ecosystem-activity-list"><p class="muted">Waiting for NFT transactions…</p></div>
+        </article>
+        <article class="ecosystem-live-panel">
+          <div class="section-heading"><div><span class="eyebrow">X / COMMUNITY SIGNAL</span><h2>XRPL social updates</h2></div><span id="ecosystemXBadge" class="truth-label">OPTIONAL API</span></div>
+          <div id="ecosystemXFeed" class="ecosystem-x-feed"><p class="muted">Checking X integration…</p></div>
+        </article>
+      </div>
+    </section>
+
     <section id="announcementsSection" class="flow-section announcements-section primary-view-section announcements-clean" data-view-section="announcements">
       <div class="announcements-hero">
         <div><span class="eyebrow">OFFICIAL SIGNAL FEED</span><h1>Announcements</h1><p>Official Ripple and XRP Ledger updates in one clean feed. Checked continuously while XRPet is open.</p></div>
@@ -636,7 +704,7 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 5.0.2 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 5.0.3 · XRP Ledger companion</footer>
   </main>
 </div>
 
@@ -653,11 +721,12 @@
   <span class="music-volume-icon" aria-hidden="true">🔊</span><input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.75" aria-label="Music volume">
 </div>
 
-<script src="/music-player.js?v=5.0.2"></script>
-<script src="/games.js?v=5.0.2"></script>
-<script src="/app.js?v=5.0.2"></script>
-<script src="/timeline.js?v=5.0.2"></script>
-<script type="module" src="/companion3d.js?v=5.0.2"></script>
+<script src="/music-player.js?v=5.0.3"></script>
+<script src="/games.js?v=5.0.3"></script>
+<script src="/ecosystem.js?v=5.0.3"></script>
+<script src="/app.js?v=5.0.3"></script>
+<script src="/timeline.js?v=5.0.3"></script>
+<script type="module" src="/companion3d.js?v=5.0.3"></script>
 
 </body>
 </html>
