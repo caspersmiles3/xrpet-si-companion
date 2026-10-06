@@ -32,7 +32,12 @@ const state={
   lifeLastTick:Number(saved.lifeLastTick)||Date.now(),
   lastLedgerTxAt:Number(saved.lastLedgerTxAt)||0,
   lastAnnouncementTitle:saved.lastAnnouncementTitle||'',
-  lastMarketPrice:Number.isFinite(saved.lastMarketPrice)?saved.lastMarketPrice:null
+  lastAnnouncementAt:Number(saved.lastAnnouncementAt)||0,
+  lastMarketPrice:Number.isFinite(saved.lastMarketPrice)?saved.lastMarketPrice:null,
+  lastPriceTickPct:Number.isFinite(saved.lastPriceTickPct)?saved.lastPriceTickPct:0,
+  mindAction:saved.mindAction||'roam',
+  mindThought:saved.mindThought||'Watching the Ledger and deciding what to do next.',
+  mindMode:saved.mindMode||'local-autonomy'
 };
 const FORMS=[['Drop',0],['Ripple',50],['Wave',150],['Surge',350],['Nexus',700],['Titan',1200],['Legend',2000]];
 const ROOM_NAMES={nexus:'Neon Horizon',ocean:'Ripple Sanctuary',vault:'Ledger Vault',aurora:'Sky Garden',legend:'Orbital Station',genesis:'Genesis Chamber',city:'Settlement City',quantum:'Quantum Ledger Lab',desert:'Digital Oasis',arctic:'Arctic Node'};
@@ -160,7 +165,7 @@ function playLifeReaction(activity){
   setText('#lifeMode',choice.name);
   return choice;
 }
-function performLifeActivity(activity,manual=false){
+function performLifeActivity(activity,manual=false,moveToStation=manual){
   if(state.lifePinned&&activity!=='sit'&&!manual)return;
   const isLiveOverlay=!manual&&['drink','eat','sleep','socialize'].includes(activity);
   if(!isLiveOverlay)state.lifeActivity=activity;
@@ -172,9 +177,9 @@ function performLifeActivity(activity,manual=false){
   const lifeReaction=['drink','eat','sleep','socialize'].includes(activity)?playLifeReaction(activity):null;
   if(!lifeReaction)window.XRPet3D?.perform?.(reaction);
   // Automatic live reactions happen wherever Ripplet currently is. Manual station taps may guide him there.
-  if(manual)window.XRPetRoam?.go?.(activity);
+  if(moveToStation)window.XRPetRoam?.go?.(activity);
   clearTimeout(lifeReturnTimer);
-  if(manual&&!state.lifePinned&&['drink','eat','sleep','socialize'].includes(activity)){
+  if(moveToStation&&!state.lifePinned&&['drink','eat','sleep','socialize'].includes(activity)){
     lifeReturnTimer=setTimeout(()=>{if(!state.lifePinned){state.lifeActivity='explore';renderLife();persist()}},4200);
   }
   renderLife();persist();
@@ -264,10 +269,11 @@ async function registerVisitor(){
 async function loadMarket(){try{const r=await fetch('/api/market',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error();const previousPrice=state.lastMarketPrice;state.xrpPrice=Number(d.price);state.xrpChange24h=Number(d.change24h);state.lastMarketPrice=state.xrpPrice;renderSignal589();
 if(Number.isFinite(previousPrice)&&Number.isFinite(state.xrpPrice)&&previousPrice!==state.xrpPrice){
   const delta=(state.xrpPrice-previousPrice)/previousPrice*100;
+  state.lastPriceTickPct=delta;
   setText('#foodSignal',(delta>=0?'+':'')+delta.toFixed(3)+'% tick');
   if(!state.lifePinned)performLifeActivity('eat');
 }const livePrice=Number.isFinite(state.xrpPrice)?'$'+state.xrpPrice.toFixed(4):'Unavailable';const liveChange=Number.isFinite(state.xrpChange24h)?(state.xrpChange24h>=0?'+':'')+state.xrpChange24h.toFixed(2)+'% · 24h':'24h unavailable';setText('#xrpPrice',livePrice);setText('#xrpChange',liveChange);setText('#globalXrpPrice',livePrice);setText('#globalXrpChange',liveChange);if(state.marketMood&&Number.isFinite(state.xrpChange24h)&&Math.abs(state.xrpChange24h)>=5)mood(state.xrpChange24h>0?'Excited':'Watchful','XRP moved '+Math.abs(state.xrpChange24h).toFixed(2)+'% over 24 hours. Movement is not a prediction.',state.xrpChange24h>0?'energized':'alert')}catch{setText('#xrpPrice','Unavailable');setText('#xrpChange','Market feed offline');setText('#globalXrpPrice','Unavailable');setText('#globalXrpChange','Market feed offline');renderSignal589()}}
-async function loadUpdates(){const box=q('#updates');if(box)box.innerHTML='<p class="muted">Checking official Ripple and XRPL sources…</p>';try{const r=await fetch('/api/updates',{cache:'no-store'});const d=await r.json();if(!r.ok||!Array.isArray(d.items)||!d.items.length)throw new Error();const items=d.items.slice(0,12);box.innerHTML=items.map((x,i)=>'<article class="announcement-card"><div class="announcement-index">'+String(i+1).padStart(2,'0')+'</div><div><span class="announcement-source">'+esc(x.source)+' · '+esc(x.label||'CONFIRMED')+'</span><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title)+'</a><small>Official source ↗</small></div></article>').join('');setText('#announcementStatus','Live');setText('#announcementUpdated','Updated '+new Date().toLocaleTimeString());const newest=items[0]?.title||'';setText('#friendSignal',newest?'New signal':'Standing by');if(newest&&state.lastAnnouncementTitle&&newest!==state.lastAnnouncementTitle&&!state.lifePinned)performLifeActivity('socialize');state.lastAnnouncementTitle=newest;persist()}catch{if(box)box.innerHTML='<p class="muted">Official update feed is temporarily unavailable.</p>';setText('#announcementStatus','Unavailable');setText('#announcementUpdated','Retrying automatically')}}
+async function loadUpdates(){const box=q('#updates');if(box)box.innerHTML='<p class="muted">Checking official Ripple and XRPL sources…</p>';try{const r=await fetch('/api/updates',{cache:'no-store'});const d=await r.json();if(!r.ok||!Array.isArray(d.items)||!d.items.length)throw new Error();const items=d.items.slice(0,12);box.innerHTML=items.map((x,i)=>'<article class="announcement-card"><div class="announcement-index">'+String(i+1).padStart(2,'0')+'</div><div><span class="announcement-source">'+esc(x.source)+' · '+esc(x.label||'CONFIRMED')+'</span><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title)+'</a><small>Official source ↗</small></div></article>').join('');setText('#announcementStatus','Live');setText('#announcementUpdated','Updated '+new Date().toLocaleTimeString());const newest=items[0]?.title||'';setText('#friendSignal',newest?'New signal':'Standing by');if(newest&&state.lastAnnouncementTitle&&newest!==state.lastAnnouncementTitle&&!state.lifePinned){state.lastAnnouncementAt=Date.now();performLifeActivity('socialize')}state.lastAnnouncementTitle=newest;persist()}catch{if(box)box.innerHTML='<p class="muted">Official update feed is temporarily unavailable.</p>';setText('#announcementStatus','Unavailable');setText('#announcementUpdated','Retrying automatically')}}
 const liveTransactions=[];
 const seenLiveTx=new Set();
 let liveTxRenderTimer=0,lifeWaterTimer=0,lifeReturnTimer=0,lastQuietReactionAt=0,spontaneousReactionTimer=0;
