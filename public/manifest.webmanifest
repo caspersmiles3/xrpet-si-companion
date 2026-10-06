@@ -1,7 +1,7 @@
 {
   "name": "XRPet SI Companion",
   "short_name": "XRPet",
-  "description": "A living companion connected to the XRP Ledger.",
+  "description": "A living SI companion connected to Ripple, XRP, and the XRP Ledger.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#061018",
