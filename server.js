@@ -40,7 +40,7 @@ app.use(express.static('public',{
   etag:true,
   maxAge:'1h',
   setHeaders:(res,filePath)=>{
-    if(filePath.endsWith('app.js')||filePath.endsWith('sw.js')||filePath.endsWith('index.html')){
+    if(filePath.endsWith('app.js')||filePath.endsWith('bootstrap.js')||filePath.endsWith('sw.js')||filePath.endsWith('index.html')){
       res.setHeader('Cache-Control','no-cache, no-store, must-revalidate');
     }
   }
