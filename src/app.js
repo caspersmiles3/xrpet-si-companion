@@ -984,7 +984,7 @@ if(launchGate){
 }
 
 const floatEl=q('#floatingCompanion'),roamLayer=q('#rippletRoamLayer'),lifeAvatar=q('#lifeAvatar');
-let roamPinned=false,roamX=.72,roamY=.72,roamTimer=0;
+let roamPinned=false,roamDocked=false,roamX=.72,roamY=.72,roamTimer=0;
 
 function syncRoamBounds(){
   const shell=q('.main-shell');if(!shell||!roamLayer)return;
@@ -1010,6 +1010,45 @@ function stationPosition(activity){
   const r=station.getBoundingClientRect();
   return {x:r.left-layer.left+r.width/2-85,y:r.bottom-layer.top+4};
 }
+function dockPosition(){
+  const dock=q('#rippletDock'),layer=roamLayer?.getBoundingClientRect(),avatar=lifeAvatar?.getBoundingClientRect();
+  if(!dock||!layer)return null;
+  const r=dock.getBoundingClientRect();
+  const w=Math.max(150,avatar?.width||170);
+  return {
+    x:r.left-layer.left+r.width/2-w/2,
+    y:Math.max(10,r.top-layer.top+Math.max(8,(r.height-(avatar?.height||205))*.16))
+  };
+}
+function setDockStatus(text){
+  setText('#rippletDockStatus',text);
+  q('#rippletDock')?.classList.toggle('is-docked',text==='DOCKED');
+}
+function dockRipplet(){
+  roamDocked=true;
+  clearTimeout(roamTimer);
+  syncRoamBounds();
+  const target=dockPosition();
+  if(target){
+    window.XRPet3D?.motor?.('walk');
+    setRoamPosition(target.x,target.y,'walk');
+    setDockStatus('DOCKING');
+    setTimeout(()=>{
+      if(!roamDocked)return;
+      setDockStatus('DOCKED');
+      lifeAvatar && (lifeAvatar.dataset.activity='dock');
+      window.XRPet3D?.perform?.('salute');
+      setTimeout(()=>{if(roamDocked)window.XRPet3D?.perform?.('thinking')},2600);
+    },1750);
+  }
+}
+function undockRipplet(){
+  roamDocked=false;
+  setDockStatus('ROAMING');
+  window.XRPet3D?.perform?.('wave');
+  setTimeout(()=>{if(!roamDocked)goRipplet('explore')},650);
+  roamingStep();
+}
 function goRipplet(activity='explore'){
   syncRoamBounds();
   const layer=roamLayer?.getBoundingClientRect();if(!layer)return;
@@ -1017,6 +1056,7 @@ function goRipplet(activity='explore'){
   const currentX=avatar?avatar.left-layer.left:layer.width*.5;
   const currentY=avatar?avatar.top-layer.top:layer.height*.55;
   let target=null;
+  if(activity==='dock')target=dockPosition();
   if(activity==='drink'||activity==='eat'||activity==='sleep'||activity==='socialize')target=stationPosition(activity);
   if(activity==='ledger')target={x:layer.width*.72,y:Math.max(165,layer.height*.34)};
   if(!target){
@@ -1027,7 +1067,7 @@ function goRipplet(activity='explore'){
     };
   }
   const distance=Math.hypot(target.x-currentX,target.y-currentY);
-  const locomotion=distance>Math.max(360,layer.width*.34)?'run':'walk';
+  const locomotion=activity==='dock'?'walk':distance>Math.max(360,layer.width*.34)?'run':'walk';
   window.XRPet3D?.motor?.(locomotion);
   setRoamPosition(target.x,target.y,locomotion);
   if(['drink','eat','socialize'].includes(activity)){
@@ -1039,11 +1079,18 @@ function goRipplet(activity='explore'){
 }
 function roamingStep(){
   clearTimeout(roamTimer);
+  if(roamDocked){
+    const dockEmotes=['thinking','salute','wave','shrug','happy'];
+    const emote=dockEmotes[Math.floor(Math.random()*dockEmotes.length)];
+    window.XRPet3D?.perform?.(emote);
+    roamTimer=setTimeout(roamingStep,5200+Math.random()*4200);
+    return;
+  }
   goRipplet('explore');
-  roamTimer=setTimeout(roamingStep,4200+Math.random()*5200);
+  roamTimer=setTimeout(roamingStep,5200+Math.random()*4800);
 }
 function renderMind(){
-  const labels={roam:'Roaming',drink:'Water Fountain',eat:'Food Station',sleep:'Sleep Pod',socialize:'Signal Friend',scan:'Scanning XRPL',wave:'Waving',dance:'Dancing',focus:'Focused',run:'Running',jump:'Jumping',climb:'Climbing',reach:'Reaching',grab:'Grabbing',carry:'Carrying',crouch:'Crouching',turn:'Turning'};
+  const labels={roam:'Roaming',dock:'Docked',drink:'Water Fountain',eat:'Food Station',sleep:'Sleep Pod',socialize:'Signal Friend',scan:'Scanning XRPL',wave:'Waving',dance:'Dancing',focus:'Focused',run:'Running',jump:'Jumping',climb:'Climbing',reach:'Reaching',grab:'Grabbing',carry:'Carrying',crouch:'Crouching',turn:'Turning'};
   setText('#mindAction',labels[state.mindAction]||state.mindAction||'Roaming');
   setText('#mindThought',state.mindThought||'Watching the Ledger and deciding what to do next.');
   setText('#mindMode',state.mindMode==='external-si-autonomy'?'SI MIND':'LOCAL AUTONOMY');
@@ -1102,19 +1149,29 @@ async function runAutonomousMind(){
 function spontaneousRippletReaction(){
   clearTimeout(spontaneousReactionTimer);
   {
-    const options=['greet','happy','focus','scan','wave','dance','jump','crouch','turn','reach'];
+    const options=roamDocked
+      ? ['thinking','salute','wave','shrug','happy','surprised']
+      : ['greet','happy','focus','scan','wave','dance','cheer','laugh','shrug','confused','excited','point','salute','thinking','surprised','jump','turn','reach'];
     const pick=options[Math.floor(Math.random()*options.length)];
-    if(['jump','crouch','turn','reach'].includes(pick))window.XRPet3D?.motor?.(pick,{side:Math.random()<.5?'left':'right',turn:(Math.random()<.5?-1:1)*.35});else window.XRPet3D?.perform?.(pick);
-    if(Math.random()<.35)playSound(pick==='dance'?'dance':pick==='wave'?'wave':pick==='scan'?'ledgerTx':'pet',true);
+    if(['jump','turn','reach'].includes(pick))window.XRPet3D?.motor?.(pick,{side:Math.random()<.5?'left':'right',turn:(Math.random()<.5?-1:1)*.35});
+    else window.XRPet3D?.perform?.(pick);
+    if(lifeAvatar){
+      lifeAvatar.dataset.reaction=pick;
+      setTimeout(()=>{if(lifeAvatar?.dataset.reaction===pick)delete lifeAvatar.dataset.reaction},1800);
+    }
+    if(Math.random()<.28)playSound(pick==='dance'?'dance':pick==='wave'?'wave':pick==='scan'?'ledgerTx':'pet',true);
   }
-  spontaneousReactionTimer=setTimeout(spontaneousRippletReaction,6500+Math.random()*9000);
+  spontaneousReactionTimer=setTimeout(spontaneousRippletReaction,4200+Math.random()*5200);
 }
 function setRoamPinned(){
-  roamPinned=false;state.lifePinned=false;state.lifeRoaming=true;state.lifeActivity='explore';persist();renderLife();
+  roamPinned=false;roamDocked=false;setDockStatus('ROAMING');state.lifePinned=false;state.lifeRoaming=true;state.lifeActivity='explore';persist();renderLife();
 }
-window.XRPetRoam={go:goRipplet,pin:()=>setRoamPinned(false),sync:syncRoamBounds};
-addEventListener('resize',()=>{syncRoamBounds();goRipplet(state.lifeActivity||'explore')});
-q('.main-shell')?.addEventListener('scroll',()=>{syncRoamBounds()},{passive:true});
+window.XRPetRoam={go:goRipplet,pin:()=>setRoamPinned(false),dock:dockRipplet,undock:undockRipplet,sync:syncRoamBounds};
+q('#dockRipplet')?.addEventListener('click',dockRipplet);
+q('#undockRipplet')?.addEventListener('click',undockRipplet);
+q('#rippletDock')?.addEventListener('dblclick',()=>roamDocked?undockRipplet():dockRipplet());
+addEventListener('resize',()=>{syncRoamBounds();if(roamDocked){const p=dockPosition();if(p)setRoamPosition(p.x,p.y,'dock')}else goRipplet(state.lifeActivity||'explore')});
+q('.main-shell')?.addEventListener('scroll',()=>{syncRoamBounds();if(roamDocked){const p=dockPosition();if(p)setRoamPosition(p.x,p.y,'dock')}},{passive:true});
 syncRoamBounds();setTimeout(()=>goRipplet('explore'),300);roamingStep();spontaneousRippletReaction();applyNftCompanion();
 qa('[data-life-action]').forEach(b=>b.addEventListener('click',()=>performLifeActivity(b.dataset.lifeAction,true)));
 setInterval(lifeTick,15000);
