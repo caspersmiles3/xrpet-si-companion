@@ -8,35 +8,38 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=5.5.18">
+  <link rel="stylesheet" href="/styles.css?v=5.5.19">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate clean-launch" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
   <video id="launchBackgroundVideo" class="clean-launch-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
-    <source src="/media/xrpet-launch-bg.mp4?v=5.5.18" type="video/mp4">
+    <source src="/media/xrpet-launch-bg.mp4?v=5.5.19" type="video/mp4">
   </video>
   <div class="clean-launch-video-shade" aria-hidden="true"></div>
   <div class="clean-launch-grid" aria-hidden="true"></div>
   <div class="clean-launch-content">
-    <p class="clean-launch-kicker">XRPet // XRP LEDGER</p>
+    <div class="launch-corporate-mark" aria-hidden="true"><span></span><b>XRP</b><span></span></div>
+    <p class="clean-launch-kicker">XRP LEDGER // INTELLIGENT COMPANION INTERFACE</p>
     <h1 id="launchTitle">Ripplet is waking up.</h1>
     <p id="launchStatus" class="clean-launch-status" aria-live="polite">Connecting to XRPL live data…</p>
 
-    <div class="clean-launch-signal">
-      <span><i></i> XRPL MAINNET</span>
-      <strong id="launchLedgerCounter">LIVE</strong>
+    <div class="launch-telemetry-strip" aria-label="XRPL launch telemetry">
+      <div><span>NETWORK</span><strong><i></i> XRPL MAINNET</strong></div>
+      <div><span>LEDGER</span><strong id="launchLedgerCounter">LIVE</strong></div>
+      <div><span>SIGNAL</span><strong id="launchActivityPulse">001</strong></div>
     </div>
 
-    <div class="launch-activity" aria-live="polite">
-      <span><i></i><b id="launchActivityLabel">Listening for validated ledgers</b></span>
-      <small id="launchActivityPulse">signal 001</small>
-    </div>
+    <button id="launchLiveOrbit" class="launch-signal-core" type="button">
+      <span class="launch-signal-core-dot"></span>
+      <span><b>XRPL LIVE SIGNAL</b><small id="launchActivityLabel">Listening for validated ledgers</small></span>
+      <i>↗</i>
+    </button>
 
     <div class="clean-launch-progress" aria-hidden="true">
       <span id="launchProgressBar"></span>
     </div>
 
-    <button id="launchEnter" class="clean-launch-enter" type="button">Enter XRPet</button>
+    <button id="launchEnter" class="clean-launch-enter" type="button"><span>Enter XRPet</span><small>Open live interface</small></button>
     <small class="clean-launch-note">Ripple + XRP + XRPL live companion interface</small>
   </div>
 </div>
@@ -1013,7 +1016,7 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 5.5.18 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 5.5.19 · XRP Ledger companion</footer>
   </main>
 </div>
 
@@ -1050,14 +1053,14 @@
   },6000);
 })();
 </script>
-<script src="/launch-enhance.js?v=5.5.18"></script>
-<script src="/contact-directory.js?v=5.5.18"></script>
-<script src="/music-player.js?v=5.5.18"></script>
-<script src="/games.js?v=5.5.18"></script>
-<script src="/ecosystem.js?v=5.5.18"></script>
-<script src="/ripplet2d.js?v=5.5.18"></script>
-<script src="/app.js?v=5.5.18"></script>
-<script src="/timeline.js?v=5.5.18"></script>
+<script src="/launch-enhance.js?v=5.5.19"></script>
+<script src="/contact-directory.js?v=5.5.19"></script>
+<script src="/music-player.js?v=5.5.19"></script>
+<script src="/games.js?v=5.5.19"></script>
+<script src="/ecosystem.js?v=5.5.19"></script>
+<script src="/ripplet2d.js?v=5.5.19"></script>
+<script src="/app.js?v=5.5.19"></script>
+<script src="/timeline.js?v=5.5.19"></script>
 
 </body>
 </html>
