@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=4.3.0">
+  <link rel="stylesheet" href="/styles.css?v=4.4.0">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
@@ -114,6 +114,14 @@
   </aside>
 
   <main class="main-shell">
+    <div class="global-xrp-strip" aria-label="XRP price always visible">
+      <button type="button" data-primary-view="live" class="global-xrp-price-button">
+        <span>XRP / USD</span>
+        <strong id="globalXrpPrice">—</strong>
+        <small id="globalXrpChange">Loading</small>
+      </button>
+      <span class="global-xrp-live"><i></i> LIVE</span>
+    </div>
     <header class="topbar">
       <form id="globalSearchForm" class="global-search">
         <span>⌕</span>
@@ -239,17 +247,30 @@
       <p id="petSpeech" class="pet-speech command-transmission">TRANSMISSION // Connecting to live network data…</p>
     </section>
 
-<section id="xrplPanel" class="top-live panel primary-view-section" data-view-section="live">
-      <div class="panel-title">
-        <div><span class="live-dot"></span><strong>XRPL Live</strong></div>
+<section id="xrplPanel" class="top-live panel primary-view-section xrpl-live-expanded" data-view-section="live">
+      <div class="panel-title xrpl-live-title">
+        <div><span class="live-dot"></span><strong>XRPL Live</strong><small>Validated XRP Ledger mainnet telemetry and live public transactions</small></div>
         <div class="panel-title-actions"><button type="button" class="mini-button" data-primary-view="home">⌂ Home</button><span>Mainnet</span></div>
       </div>
-      <div class="top-metrics">
-        <article><span>XRP / USD</span><strong id="xrpPrice">—</strong><small id="xrpChange">Loading market</small></article>
+      <div class="top-metrics xrpl-live-metrics">
+        <article class="price-card"><span>XRP / USD</span><strong id="xrpPrice">—</strong><small id="xrpChange">Loading market</small></article>
         <article><span>Ledger Index</span><strong id="ledger">—</strong><small id="txCount">Waiting for close</small></article>
         <article><span>Base Fee</span><strong><b id="fee">—</b> drops</strong><small>Network reference</small></article>
         <article><span>XRPL Status</span><strong id="status">Connecting</strong><small id="serverState">Live network</small></article>
       </div>
+
+      <section class="live-transactions-panel">
+        <div class="live-transactions-head">
+          <div><span class="eyebrow">PUBLIC XRPL STREAM</span><h2>Live Transactions</h2><p>Validated public transaction data. Wallet seeds/private keys are never exposed or requested.</p></div>
+          <span id="liveTxRate" class="truth-label">WAITING</span>
+        </div>
+        <div class="transaction-column-head" aria-hidden="true">
+          <span>Type / Amount</span><span>From → To</span><span>Ledger / Sequence</span><span>Fee / Status</span>
+        </div>
+        <div id="liveTransactions" class="live-transactions-list">
+          <p class="muted">Connecting to the XRPL transaction stream…</p>
+        </div>
+      </section>
     </section>
 
 
@@ -266,43 +287,33 @@
     </div>
   </div>
 
-  <div id="xrpArchiveLive" class="top-metrics xrp-archive-live">
+  <div id="historySelectedHeader" class="history-selected-header" hidden>
+    <span class="eyebrow">SETTLEMENTS + HISTORY</span>
+    <h2 id="historySelectedTitle">Full Timeline</h2>
+    <p id="historySelectedDescription">Selected historical view.</p>
+  </div>
+
+  <div id="xrpArchiveLive" class="top-metrics xrp-archive-live history-overview-only">
     <article><span>LIVE XRP/USD</span><strong>—</strong><small>Loading</small></article>
     <article><span>MARKET DIRECTION</span><strong>—</strong><small>Live snapshot</small></article>
     <article><span>OFFICIAL FEED</span><strong>—</strong><small>Loading</small></article>
     <article><span>ARCHIVE</span><strong>—</strong><small>Loading</small></article>
   </div>
 
-  <div class="history-jump-panel">
-    <label for="historyJumpSelect">Explore the archive</label>
-    <select id="historyJumpSelect">
-      <option value="All">Overview + Full Timeline</option>
-      <option value="Origins">Origins / Genesis</option>
-      <option value="Ripple">Ripple Company</option>
-      <option value="XRP">XRP Asset</option>
-      <option value="XRPL">XRP Ledger</option>
-      <option value="Legal">Legal + Regulation</option>
-      <option value="Market">Market Cycles</option>
-      <option value="Adoption">Adoption + Partnerships</option>
-      <option value="Acquisition">Acquisitions</option>
-      <option value="People">People Involved</option>
-    </select>
-    <p>Choose a subject to open the archive from the beginning and show only that part of the Ripple/XRP story.</p>
-  </div>
-  <div class="history-toolbar">
+  <div class="history-toolbar history-overview-only">
     <input id="xrpHistorySearch" type="search" placeholder="Search XRP, Ripple, SEC, escrow, ODL, RLUSD, people…">
     <small id="xrpAutoTime">Live layer starting…</small>
   </div>
-  <div id="xrpFilters" class="xrp-filters" aria-label="Ripple and XRP timeline filters"></div>
+  <div id="xrpFilters" class="xrp-filters history-overview-only" aria-label="Ripple and XRP timeline filters"></div>
   <div id="xrpTimeline" class="xrp-timeline"><p class="muted">Loading Ripple/XRP history…</p></div>
 
-  <div class="section-heading people-heading">
+  <div class="section-heading people-heading history-people-only">
     <div><span class="eyebrow">WHO'S INVOLVED</span><h2>Key people in the XRP and Ripple story</h2></div>
     <span class="chip">historical context</span>
   </div>
-  <div id="xrpPeople" class="xrp-people"></div>
+  <div id="xrpPeople" class="xrp-people history-people-only"></div>
 
-  <div class="signal-disclosure">
+  <div class="signal-disclosure history-overview-only">
     <strong>TRUTH LAYER</strong>
     <p>XRPet keeps Ripple the company, XRP the digital asset, and XRPL the open-source network distinct. Market moves are descriptive, not predictions. Live articles are labeled as current official-source updates and historical milestones link back to primary sources.</p>
   </div>
@@ -524,12 +535,12 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 4.3.0 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 4.4.0 · XRP Ledger companion</footer>
   </main>
 </div>
 
-<script src="/app.js?v=4.3.0"></script>
-<script src="/timeline.js?v=4.3.0"></script>
-<script type="module" src="/companion3d.js?v=4.3.0"></script>
+<script src="/app.js?v=4.4.0"></script>
+<script src="/timeline.js?v=4.4.0"></script>
+<script type="module" src="/companion3d.js?v=4.4.0"></script>
 </body>
 </html>
