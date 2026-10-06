@@ -1809,7 +1809,10 @@ function setPrimaryView(view='home'){
     }catch{}
   });
 }
-qa('[data-primary-view]').forEach(b=>b.addEventListener('click',()=>setPrimaryView(b.dataset.primaryView)));
+qa('[data-primary-view]').forEach(b=>{
+  if(b.tagName==='SUMMARY')return;
+  b.addEventListener('click',()=>setPrimaryView(b.dataset.primaryView));
+});
 
 const XRP_LEARN_QUIZ=[
   {category:'XRP BASICS',q:'What is XRP?',a:['A share of Ripple stock','The native digital asset of the XRP Ledger','A proof-of-work mining reward','A private bank database'],correct:1,why:'XRP is the native digital asset of the XRP Ledger. It is not Ripple stock.'},
@@ -1947,8 +1950,7 @@ function setGameSubview(id='ledgerRush'){
 }
 qa('[data-game-nav]').forEach(btn=>btn.addEventListener('click',()=>setGameSubview(btn.dataset.gameNav)));
 
-q('#ecosystemNavDetails > summary')?.addEventListener('click',()=>setTimeout(()=>{if(primaryView!=='ecosystem')setPrimaryView('ecosystem')},0));
-q('#gamesNavDetails > summary')?.addEventListener('click',()=>setTimeout(()=>{if(primaryView!=='games')setPrimaryView('games')},0));
+// Sidebar summary navigation is handled by ui-shell.js so the native details menu can stay open.
 
 function setRippletSubview(view='overview'){
   setPrimaryView('ripplet');
@@ -1958,7 +1960,7 @@ function setRippletSubview(view='overview'){
   const section=q('#companionSection');if(section)section.scrollTop=0;
 }
 qa('[data-ripplet-view]').forEach(btn=>btn.addEventListener('click',()=>setRippletSubview(btn.dataset.rippletView)));
-q('#rippletNavDetails > summary')?.addEventListener('click',()=>setTimeout(()=>{if(primaryView!=='ripplet')setPrimaryView('ripplet')},0));
+// Ripplet summary navigation is handled by ui-shell.js so the dropdown remains usable.
 
 const dismissibleMenus=['historyNavDetails','exchangeNavDetails','rippletNavDetails','ecosystemNavDetails','gamesNavDetails','customizeDetails','settingsDetails'];
 document.addEventListener('pointerdown',e=>{
