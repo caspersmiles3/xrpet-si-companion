@@ -6585,3 +6585,40 @@ body[data-primary-view="games"] .top-command-deck .topbar{display:block!importan
     max-height:none!important;
   }
 }
+
+
+/* XRPet 5.5.21 — black letterbox sides behind contained launch video */
+.clean-launch{
+  position:fixed!important;
+  inset:0!important;
+  overflow:hidden!important;
+  background:#000!important;
+  isolation:isolate!important;
+}
+.clean-launch::before{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  z-index:0!important;
+  background:#000!important;
+  pointer-events:none!important;
+}
+.clean-launch-video{
+  position:absolute!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100vh!important;
+  object-fit:contain!important;
+  object-position:center center!important;
+  background:#000!important;
+  z-index:1!important;
+}
+.clean-launch-video-shade{
+  position:absolute!important;
+  inset:0!important;
+  z-index:2!important;
+  background:transparent!important;
+  pointer-events:none!important;
+}
+.clean-launch .clean-launch-grid{z-index:3!important}
+.clean-launch .clean-launch-content{position:relative!important;z-index:4!important}
