@@ -1037,6 +1037,9 @@ if(launchGate){
 
 const floatEl=q('#floatingCompanion'),roamLayer=q('#rippletRoamLayer'),lifeAvatar=q('#lifeAvatar');
 let roamPinned=false,roamDocked=false,roamX=.72,roamY=.72,roamTimer=0;
+let rippletPointer={x:0,y:0,active:false,movedAt:0};
+let rippletPointerTimer=0;
+let rippletLastPointerTarget=null;
 
 function syncRoamBounds(){
   const shell=q('.main-shell');if(!shell||!roamLayer)return;
@@ -1191,6 +1194,106 @@ function visibleInterfaceTargets(){
     return style.display!=='none'&&style.visibility!=='hidden'&&r.width>28&&r.height>12&&
       r.bottom>shell.top+18&&r.top<shell.bottom-18&&r.right>shell.left+12&&r.left<shell.right-12;
   });
+}
+function terrainRectLocal(target){
+  const shell=q('.main-shell'),rect=target?.__rect||target?.getBoundingClientRect?.();
+  if(!shell||!rect)return null;
+  const sr=shell.getBoundingClientRect();
+  return {
+    left:rect.left-sr.left+shell.scrollLeft,
+    right:rect.right-sr.left+shell.scrollLeft,
+    top:rect.top-sr.top+shell.scrollTop,
+    bottom:rect.bottom-sr.top+shell.scrollTop,
+    width:rect.width,
+    height:rect.height
+  };
+}
+function terrainDistanceToPointer(rect){
+  const dx=Math.max(rect.left-rippletPointer.x,0,rippletPointer.x-rect.right);
+  const dy=Math.max(rect.top-rippletPointer.y,0,rippletPointer.y-rect.bottom);
+  return Math.hypot(dx,dy);
+}
+function terrainNearPointer(){
+  const pool=[...visibleTextTerrain(),...visibleInterfaceTargets()];
+  return pool.map(target=>{
+    const rect=terrainRectLocal(target);
+    return rect?{target,rect,distance:terrainDistanceToPointer(rect)}:null;
+  }).filter(Boolean).sort((a,b)=>a.distance-b.distance).slice(0,10);
+}
+function pointerActionFor(hit){
+  const {rect,target}=hit;
+  const mx=rippletPointer.x,my=rippletPointer.y;
+  const edgeX=Math.min(Math.abs(mx-rect.left),Math.abs(mx-rect.right));
+  const nearTop=Math.abs(my-rect.top)<=8;
+  const nearBottom=Math.abs(my-rect.bottom)<=8;
+  const side=edgeX<=7;
+  const word=target?.__terrain==='word';
+
+  if(side)return {mode:'hang',action:'hang'};
+  if(my<rect.top-10)return {mode:'climb',action:'climb'};
+  if(nearTop)return {mode:'perch',action:Math.random()<.22?'sit':'stand'};
+  if(nearBottom)return {mode:'hop',action:'jump'};
+  if(word&&Math.random()<.34)return {mode:'hang',action:'hang'};
+  return {mode:'perch',action:'stand'};
+}
+function followRippletPointer(force=false){
+  if(roamDocked||!lifeAvatar||!roamLayer)return false;
+  if(!rippletPointer.active&&!force)return false;
+  const hits=terrainNearPointer();
+  if(!hits.length)return false;
+
+  const hit=hits[0],choice=pointerActionFor(hit);
+  const p=interfaceTargetPosition(hit.target,choice.mode);
+  if(!p)return false;
+
+  rippletLastPointerTarget=hit.target;
+  markInterfaceTarget(hit.target,true);
+
+  const avatar=lifeAvatar.getBoundingClientRect(),shell=q('.main-shell')?.getBoundingClientRect();
+  if(shell){
+    const currentCenter=(avatar.left-shell.left)+(avatar.width*.5)+q('.main-shell').scrollLeft;
+    const dir=rippletPointer.x<currentCenter?'left':'right';
+    window.XRPet2D?.face?.(dir);
+  }
+
+  if(choice.action==='hang'){
+    window.XRPet2D?.motor?.('hang');
+    setRoamPosition(p.x,p.y,'hang');
+    setText('#mindAction','Following cursor · hanging');
+  }else if(choice.action==='climb'){
+    window.XRPet2D?.motor?.('climb');
+    setRoamPosition(p.x,p.y,'climb');
+    setText('#mindAction','Following cursor · climbing');
+  }else if(choice.action==='jump'){
+    window.XRPet2D?.motor?.('jump');
+    setRoamPosition(p.x,p.y,'jump');
+    setText('#mindAction','Following cursor · jumping');
+  }else if(choice.action==='sit'){
+    window.XRPet2D?.motor?.('sit');
+    setRoamPosition(p.x,p.y,'walk');
+    setText('#mindAction','Following cursor · sitting');
+  }else{
+    window.XRPet2D?.motor?.('stand');
+    setRoamPosition(p.x,p.y,'walk');
+    setText('#mindAction','Following cursor · perched');
+  }
+  setText('#mindThought','I am following your mouse through the page terrain.');
+
+  clearTimeout(rippletPointerTimer);
+  rippletPointerTimer=setTimeout(()=>{
+    if(rippletLastPointerTarget===hit.target)markInterfaceTarget(hit.target,false);
+  },650);
+  return true;
+}
+function updateRippletPointer(e){
+  const shell=q('.main-shell');if(!shell)return;
+  const r=shell.getBoundingClientRect();
+  rippletPointer.x=e.clientX-r.left+shell.scrollLeft;
+  rippletPointer.y=e.clientY-r.top+shell.scrollTop;
+  rippletPointer.active=true;
+  rippletPointer.movedAt=Date.now();
+  clearTimeout(rippletPointerTimer);
+  rippletPointerTimer=setTimeout(()=>followRippletPointer(),34);
 }
 function interfaceTargetPosition(el,mode='perch'){
   const layer=roamLayer?.getBoundingClientRect(),avatar=lifeAvatar?.getBoundingClientRect(),r=el?.__rect||el?.getBoundingClientRect?.();
@@ -1362,6 +1465,11 @@ function roamingStep(){
     roamTimer=setTimeout(roamingStep,5200+Math.random()*4200);
     return;
   }
+  if(rippletPointer.active&&Date.now()-rippletPointer.movedAt<8000){
+    followRippletPointer(true);
+    roamTimer=setTimeout(roamingStep,320);
+    return;
+  }
   const roll=Math.random();
   if(roll<.93)playWithInterface();
   else goRipplet('explore');
@@ -1449,7 +1557,11 @@ q('#dockRipplet')?.addEventListener('click',dockRipplet);
 q('#undockRipplet')?.addEventListener('click',undockRipplet);
 q('#rippletDock')?.addEventListener('dblclick',()=>roamDocked?undockRipplet():dockRipplet());
 let roamScrollTimer=0;
-addEventListener('resize',()=>{syncRoamBounds();if(roamDocked){const p=dockPosition();if(p)setRoamPosition(p.x,p.y,'dock')}else playWithInterface(true)});
+const rippletShell=q('.main-shell');
+rippletShell?.addEventListener('pointermove',updateRippletPointer,{passive:true});
+rippletShell?.addEventListener('pointerenter',updateRippletPointer,{passive:true});
+rippletShell?.addEventListener('pointerleave',()=>{rippletPointer.active=false},{passive:true});
+addEventListener('resize',()=>{syncRoamBounds();if(roamDocked){const p=dockPosition();if(p)setRoamPosition(p.x,p.y,'dock')}else if(rippletPointer.active)followRippletPointer(true);else playWithInterface(true)});
 q('.main-shell')?.addEventListener('scroll',()=>{
   syncRoamBounds();
   if(roamDocked){
@@ -1457,7 +1569,7 @@ q('.main-shell')?.addEventListener('scroll',()=>{
     return;
   }
   clearTimeout(roamScrollTimer);
-  roamScrollTimer=setTimeout(()=>playWithInterface(true),260);
+  roamScrollTimer=setTimeout(()=>rippletPointer.active?followRippletPointer(true):playWithInterface(true),180);
 },{passive:true});
 syncRoamBounds();setTimeout(()=>goRipplet('explore'),300);roamingStep();spontaneousRippletReaction();applyNftCompanion();
 qa('[data-life-action]').forEach(b=>b.addEventListener('click',()=>performLifeActivity(b.dataset.lifeAction,true,false)));
@@ -1534,9 +1646,10 @@ function setPrimaryView(view='home'){
     scrollSectionTop(target);
     syncRoamBounds();
     if(!roamDocked)setTimeout(()=>{
-      playWithInterface(true);
+      if(rippletPointer.active)followRippletPointer(true);
+      else playWithInterface(true);
       lifeAvatar?.classList.remove('page-hop');
-    },220);
+    },180);
   },0);
 }
 qa('[data-primary-view]').forEach(b=>b.addEventListener('click',()=>setPrimaryView(b.dataset.primaryView)));
