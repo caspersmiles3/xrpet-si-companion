@@ -16,7 +16,8 @@
   "dependencies": {
     "cheerio": "^1.0.0",
     "express": "^5.1.0",
-    "web-push": "^3.6.7"
+    "web-push": "^3.6.7",
+    "three": "0.169.0"
   },
   "devDependencies": {
     "@capacitor/android": "^8.0.0",
