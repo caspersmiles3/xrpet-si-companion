@@ -15,13 +15,12 @@
     ['Synchronizing public network signals…', 'Checking XRPL mainnet telemetry'],
     ['Loading Ripple + XRP context…', 'Preparing the ecosystem directory'],
     ['Ripplet is standing by.', 'Move your pointer over the signal core'],
-    ['XRPet is ready when you are.', 'Press Enter XRPet whenever you want']
+    ['Ripplet is waiting for your command.', 'Press Enter XRPet whenever you want']
   ];
 
   let index = 0;
   let signal = 1;
   let progress = 18;
-  let idleTicks = 0;
 
   function renderState() {
     if (!gate.isConnected) return;
@@ -32,8 +31,6 @@
     progress = Math.min(94, progress + 7);
     if (bar) bar.style.width = progress + '%';
     index += 1;
-    idleTicks += 1;
-    if (counter && idleTicks > 1) counter.textContent = 'READY';
   }
 
   const timer = setInterval(renderState, 2400);
