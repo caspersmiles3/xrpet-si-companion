@@ -907,7 +907,7 @@ const BUILTIN_MODELS={
     actions:{
       idle:['Idle'],greet:['Greet','Wave'],happy:['Happy','Emote_Excited'],
       celebrate:['Celebrate','Emote_Cheer','Emote_Victory'],alert:['Alert'],
-      sleep:['Sleep'],wake:['Wake'],focus:['Focus'],scan:['Scan'],orbit:['Emote_Dance','LookAround'],
+      sleep:['Sleep'],wake:['Wake'],focus:['Focus'],scan:['Scan'],orbit:['LookAround','Idle'],
       walk:['Walk'],run:['Run'],wave:['Wave'],dance:['Emote_Dance'],
       cheer:['Emote_Cheer'],laugh:['Emote_Laugh'],shrug:['Emote_Shrug'],
       confused:['Emote_Confused'],sad:['Emote_Sad'],excited:['Emote_Excited'],
@@ -1109,7 +1109,8 @@ function applyRoom(room){
   renderer.toneMappingExposure=r[2];
 }
 function performAction(name='greet',options={}){
-  const allowed=new Set(['greet','celebrate','alert','sleep','wake','happy','focus','scan','orbit','walk','run','jump','climb','reach','grab','carry','crouch','turn','sip','gulp','splash','bite','taste','charge','curl','dream','snore','wave','highfive','dance','cheer','laugh','shrug','confused','sad','excited','point','salute','thinking','victory','surprised']);
+  const allowed=new Set(['idle','stand','sit','hang','greet','celebrate','alert','sleep','wake','happy','focus','scan','orbit','walk','run','jump','climb','reach','grab','carry','crouch','turn','sip','gulp','splash','bite','taste','charge','curl','dream','snore','wave','highfive','dance','cheer','laugh','shrug','confused','sad','excited','point','salute','thinking','victory','surprised']);
+  if(name==='dance'&&window.XRPetMusicPlaying!==true)name='idle';
   action=allowed.has(name)?name:'greet';
   actionStarted=performance.now();
   const expressive=new Set(['happy','cheer','laugh','shrug','confused','sad','excited','point','salute','thinking','victory','surprised']);
