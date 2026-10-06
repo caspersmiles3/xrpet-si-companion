@@ -368,11 +368,29 @@ $('#clearNotifications').onclick=()=>{state.notifications=[];persist();renderNot
 $('#connectGem').onclick=()=>connectGemWallet();
 $('#connectXaman').onclick=()=>connectXaman();
 $('#walletButton').onclick=()=>document.querySelector('#connectGem')?.scrollIntoView({behavior:'smooth',block:'center'});
-$('#notifyButton').onclick=async()=>{
-  if(!('Notification'in window)){notify('Notifications unavailable','This browser does not support system notifications.','warning');return}
-  const p=await Notification.requestPermission();
-  notify('Notification permission',p==='granted'?'System notifications are enabled.':'System notifications were not enabled.','settings');
-};
+function urlBase64ToUint8Array(base64String){
+  const padding='='.repeat((4-base64String.length%4)%4);
+  const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(base64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
+}
+async function enablePush(){
+  if(!('Notification'in window)||!('serviceWorker'in navigator)||!('PushManager'in window)){
+    notify('Push unavailable','This browser does not support Web Push.','warning');return false
+  }
+  const permission=await Notification.requestPermission();
+  if(permission!=='granted'){notify('Notifications disabled','Permission was not granted.','settings');return false}
+  try{
+    const keyRes=await fetch('/api/push/public-key'); const key=await keyRes.json();
+    if(!key.enabled){notify('Push not configured','Browser notifications work, but server push is not configured.','settings');return false}
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub) sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(key.publicKey)});
+    await fetch('/api/push/subscribe',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({subscription:sub})});
+    notify('Push enabled','XRPet can deliver selected signals while the app is closed.','settings');
+    return true;
+  }catch{notify('Push setup failed','Local notifications still work.','warning');return false}
+}
+$('#notifyButton').onclick=enablePush;
 $('#settingsButton').onclick=()=>$('#settingsPanel').classList.remove('hidden');
 $('#closeSettings').onclick=()=>$('#settingsPanel').classList.add('hidden');
 $('#explainLevel').value=state.explainLevel;
