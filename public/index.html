@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=2.7.0">
+  <link rel="stylesheet" href="/styles.css?v=2.8.0">
 </head>
 <body>
 <div class="ambient ambient-one"></div>
@@ -42,6 +42,11 @@
         </label>
         <label class="switch-row"><input id="truthToggle" type="checkbox"><span>Truth Mode</span></label>
         <label class="switch-row"><input id="marketMoodToggle" type="checkbox"><span>Market-reactive mood</span></label>
+        <label class="switch-row"><input id="soundToggle" type="checkbox"><span>XRPet sound effects</span></label>
+        <label>Sound volume
+          <input id="soundVolume" type="range" min="0" max="100" step="5" value="35" aria-label="Sound effects volume">
+        </label>
+        <button id="testSound" type="button" class="menu-action">Test XRP pulse sound</button>
         <button id="notifyButton" class="menu-action">Enable browser alerts</button>
       </div>
     </details>
@@ -264,7 +269,7 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet SI Companion™ · Beta 2.7 · XRP Ledger companion · Not affiliated with or endorsed by Ripple · Not financial advice</footer>
+    <footer>XRPet SI Companion™ · Beta 2.8 · XRP Ledger companion · Not affiliated with or endorsed by Ripple · Not financial advice</footer>
   </main>
 </div>
 
@@ -278,7 +283,7 @@
   </div>
   <div id="floatingHandle" class="floating-tag">
     <strong id="floatingPetName">NEXUS-589</strong>
-    <span id="floatingModeLabel">auto levitate · drag this tag to place</span>
+    <span id="floatingModeLabel">Move via this tag · Tap XRPet to show controls</span>
     <div class="floating-controls">
       <button id="toggleFloat" type="button">Pin</button>
       <button id="centerFloat" type="button">Center</button>
@@ -286,7 +291,7 @@
   </div>
 </div>
 
-<script src="/app.js?v=2.7.0"></script>
-<script type="module" src="/companion3d.js?v=2.7.0"></script>
+<script src="/app.js?v=2.8.0"></script>
+<script type="module" src="/companion3d.js?v=2.8.0"></script>
 </body>
 </html>
