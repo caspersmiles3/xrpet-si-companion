@@ -1407,3 +1407,43 @@ input,select,textarea{
   .studio-viewer-head{align-items:flex-start;flex-direction:column}
   .studio-status-row{justify-content:flex-start}
 }
+
+
+/* v3.7 Ripple + XRP living archive */
+.xrp-history-section{position:relative;overflow:hidden}
+.xrp-history-section:before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 85% 8%,rgba(57,220,255,.08),transparent 28%)}
+.history-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.xrp-archive-live{margin:18px 0 14px}
+.history-toolbar{display:flex;gap:14px;align-items:center;justify-content:space-between;margin:18px 0 12px}
+.history-toolbar input{width:min(620px,100%);padding:13px 15px;border:1px solid rgba(130,225,255,.2);border-radius:12px;background:rgba(3,10,16,.72);color:inherit;outline:none}
+.history-toolbar input:focus{border-color:rgba(95,229,255,.55);box-shadow:0 0 0 3px rgba(54,207,255,.08)}
+.history-toolbar small{opacity:.68;white-space:nowrap}
+.xrp-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.xrp-filters button{border:1px solid rgba(142,224,255,.16);background:rgba(9,20,29,.72);color:inherit;padding:8px 11px;border-radius:999px;cursor:pointer}
+.xrp-filters button.active{border-color:rgba(98,235,255,.58);box-shadow:0 0 22px rgba(31,212,255,.09)}
+.xrp-timeline{display:grid;gap:12px}
+.xrp-event{display:grid;grid-template-columns:76px 1fr;gap:14px;border:1px solid rgba(139,221,255,.13);background:linear-gradient(135deg,rgba(9,19,28,.84),rgba(5,12,18,.74));border-radius:16px;padding:14px}
+.xrp-event-rail{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:7px}
+.xrp-event-rail:after{content:"";position:absolute;top:25px;bottom:-27px;width:1px;background:rgba(119,211,239,.14)}
+.xrp-event:last-child .xrp-event-rail:after{display:none}
+.xrp-event-rail i{width:12px;height:12px;border-radius:50%;background:#8cecff;box-shadow:0 0 14px rgba(83,228,255,.5)}
+.xrp-event.down .xrp-event-rail i{background:#ff8b8b;box-shadow:0 0 14px rgba(255,99,99,.35)}
+.xrp-event.up .xrp-event-rail i{background:#8bffd0;box-shadow:0 0 14px rgba(91,255,186,.35)}
+.xrp-event.mixed .xrp-event-rail i{background:#ffd98c;box-shadow:0 0 14px rgba(255,207,89,.3)}
+.xrp-event-rail span{font-size:.76rem;letter-spacing:.08em;opacity:.7}
+.xrp-event-body h3{margin:6px 0 8px;font-size:1.02rem}
+.xrp-event-body p{margin:0 0 9px;opacity:.82;line-height:1.55}
+.xrp-event-body small{display:block;opacity:.62;margin-bottom:8px}
+.xrp-event-body a{font-size:.8rem;color:#9cecff;text-decoration:none}
+.xrp-event-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.72rem}
+.xrp-event-meta b,.xrp-event-meta em{font-style:normal;padding:4px 7px;border-radius:999px;border:1px solid rgba(116,223,255,.16)}
+.xrp-event-meta em{color:#95ffd0;border-color:rgba(90,255,183,.24)}
+.xrp-event-meta time{margin-left:auto;opacity:.55}
+.people-heading{margin-top:28px}
+.xrp-people{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:12px 0 18px}
+.xrp-person{border:1px solid rgba(142,224,255,.13);border-radius:15px;background:rgba(7,17,24,.72);padding:15px}
+.xrp-person strong{display:block}
+.xrp-person span{display:block;margin:5px 0 8px;font-size:.78rem;color:#9fefff}
+.xrp-person p{margin:0;opacity:.73;font-size:.86rem;line-height:1.5}
+@media(max-width:900px){.xrp-people{grid-template-columns:1fr 1fr}.history-toolbar{align-items:stretch;flex-direction:column}.history-toolbar small{white-space:normal}}
+@media(max-width:620px){.xrp-event{grid-template-columns:52px 1fr;padding:11px}.xrp-people{grid-template-columns:1fr}.xrp-event-meta time{width:100%;margin-left:0}}
