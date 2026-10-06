@@ -33,6 +33,7 @@ try{
 }
 renderer.setPixelRatio(XRPetQuality.pixelRatio);
 renderer.setClearColor(0x000000,0);
+renderer.setClearAlpha(0);
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure=1.18;
@@ -897,6 +898,11 @@ async function loadExternalModel(url,options={}){
   externalModel.userData.xrpetActionMap=options.actions||{};
 
   externalModel.traverse(o=>{
+    const n=(o.name||'').toLowerCase();
+    if(externalKind==='ripplet' && /(studio|floor|ground|background|backdrop|plane|camera|light)/.test(n)){
+      o.visible=false;
+      return;
+    }
     if(o.isMesh){
       o.castShadow=true;o.receiveShadow=true;
       if(o.material){
@@ -925,7 +931,11 @@ async function loadExternalModel(url,options={}){
   externalModel.userData.xrpetBaseRotX=externalModel.rotation.x;
   root.add(externalModel);
 
-  pet.visible=false;holo.visible=true;externalPresentation.visible=true;
+  pet.visible=false;
+  const bareRipplet=externalKind==='ripplet';
+  holo.visible=!bareRipplet;
+  externalPresentation.visible=!bareRipplet;
+  contactShadow.visible=!bareRipplet;
   externalMixer=gltf.animations?.length?new THREE.AnimationMixer(externalModel):null;
   if(externalMixer){
     for(const clip of gltf.animations)externalActions[clip.name]=externalMixer.clipAction(clip);
