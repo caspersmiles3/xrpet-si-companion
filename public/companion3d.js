@@ -278,6 +278,7 @@ const under=new THREE.PointLight(0x35ddff,10,5,2);under.position.set(0,-1.2,1.8)
 // state
 let currentKind='nexus', currentGender='boy', currentCosmetic='classic';
 let targetRotY=0,targetRotX=0,dragging=false,lastX=0,lastY=0,pointerX=0,pointerY=0,boost=0,lastInteract=0;
+let action='idle',actionUntil=0,externalModel=null,externalMixer=null;
 const baseEarTransforms=ears.map(e=>({scale:e.scale.clone(),rot:e.rotation.clone()}));
 
 function resetBaseShape(){
@@ -287,8 +288,23 @@ function resetBaseShape(){
   shoulders.forEach(s=>s.visible=true);
   legs.forEach(l=>l.scale.set(1,1,1));
 }
+function applySurfaceProfile(kind){
+  const profiles={
+    nexus:{metalness:.72,roughness:.22,clearcoat:1,darkMetal:.82,darkRough:.18},
+    fox:{metalness:.28,roughness:.5,clearcoat:.34,darkMetal:.24,darkRough:.55},
+    pup:{metalness:.24,roughness:.54,clearcoat:.3,darkMetal:.22,darkRough:.58},
+    cat:{metalness:.3,roughness:.46,clearcoat:.38,darkMetal:.28,darkRough:.5},
+    bird:{metalness:.38,roughness:.36,clearcoat:.48,darkMetal:.32,darkRough:.44},
+    turtle:{metalness:.34,roughness:.43,clearcoat:.42,darkMetal:.3,darkRough:.48}
+  };
+  const p=profiles[kind]||profiles.nexus;
+  shellMat.metalness=p.metalness;shellMat.roughness=p.roughness;shellMat.clearcoat=p.clearcoat;
+  shellDarkMat.metalness=p.darkMetal;shellDarkMat.roughness=p.darkRough;
+}
+
 function configureSpecies(kind){
   currentKind=species[kind]?kind:'nexus';
+  applySurfaceProfile(currentKind);
   Object.entries(species).forEach(([k,g])=>g.visible=k===currentKind);
   // nexus group has no extra geometry; it is still the base body
   resetBaseShape();
@@ -342,6 +358,49 @@ function applyRoom(room){
   };
   const r=rooms[room]||rooms.nexus;fill.color.setHex(r[0]);rim.color.setHex(r[1]);renderer.toneMappingExposure=r[2];
 }
+function performAction(name='greet'){
+  const allowed=new Set(['greet','celebrate','alert','sleep','wake','happy']);
+  action=allowed.has(name)?name:'greet';
+  actionUntil=performance.now()+(action==='sleep'?12000:action==='celebrate'?2600:action==='alert'?2200:1800);
+  lastInteract=performance.now();
+  if(action==='wake') actionUntil=performance.now()+700;
+  if(action==='happy'||action==='greet'||action==='celebrate')boost=1;
+}
+function currentAction(){
+  if(action!=='idle'&&performance.now()>actionUntil){action='idle'}
+  return action;
+}
+
+async function loadExternalModel(url){
+  if(!url)throw new Error('A GLB/GLTF URL is required.');
+  const mod=await import('https://esm.sh/three@0.169.0/examples/jsm/loaders/GLTFLoader.js?deps=three@0.169.0');
+  const loader=new mod.GLTFLoader();
+  const gltf=await new Promise((resolve,reject)=>loader.load(url,resolve,undefined,reject));
+  if(externalModel){
+    root.remove(externalModel);
+    externalModel.traverse(o=>{if(o.geometry)o.geometry.dispose?.()});
+  }
+  externalModel=gltf.scene;
+  externalModel.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+  const box=new THREE.Box3().setFromObject(externalModel);
+  const size=new THREE.Vector3(),center=new THREE.Vector3();box.getSize(size);box.getCenter(center);
+  const maxDim=Math.max(size.x,size.y,size.z)||1;
+  externalModel.scale.setScalar(3.3/maxDim);
+  externalModel.position.sub(center.multiplyScalar(3.3/maxDim));
+  externalModel.position.y+=.15;
+  root.add(externalModel);pet.visible=false;holo.visible=true;
+  externalMixer=gltf.animations?.length?new THREE.AnimationMixer(externalModel):null;
+  if(externalMixer){
+    const idleClip=gltf.animations.find(a=>/idle/i.test(a.name))||gltf.animations[0];
+    externalMixer.clipAction(idleClip).play();
+  }
+  return {animations:(gltf.animations||[]).map(a=>a.name)};
+}
+function useProceduralModel(){
+  if(externalModel){root.remove(externalModel);externalModel=null;externalMixer=null}
+  pet.visible=true;
+}
+
 function setAppearance(detail={}){
   configureSpecies(detail.companionKind||currentKind);
   configureGender(detail.companionGender||currentGender);
@@ -365,12 +424,19 @@ renderer.domElement.addEventListener('pointerup',e=>{dragging=false;renderer.dom
 renderer.domElement.addEventListener('pointercancel',()=>dragging=false);
 renderer.domElement.addEventListener('dblclick',()=>{targetRotX=0;targetRotY=0});
 renderer.domElement.addEventListener('click',()=>{
-  boost=1;lastInteract=performance.now();window.dispatchEvent(new CustomEvent('xrpet:petInteract'));
+  performAction('happy');window.dispatchEvent(new CustomEvent('xrpet:petInteract'));
 });
 
 window.XRPet3D={
   setAppearance,
-  react(){boost=1},
+  react(type='happy'){performAction(type)},
+  perform:performAction,
+  celebrate(){performAction('celebrate')},
+  alert(){performAction('alert')},
+  sleep(){performAction('sleep')},
+  wake(){performAction('wake')},
+  loadModel:loadExternalModel,
+  useProcedural:useProceduralModel,
   reset(){targetRotX=0;targetRotY=0},
   visible(){return renderer.domElement.isConnected}
 };
@@ -386,40 +452,85 @@ window.dispatchEvent(new CustomEvent('xrpet:3d-ready'));
 
 const clock=new THREE.Clock();
 function animate(){
-  const t=clock.getElapsedTime();
+  const dt=Math.min(.05,clock.getDelta());
+  const t=clock.elapsedTime;
   const idle=performance.now()-lastInteract>1600;
+  const state=currentAction();
 
-  if(!dragging&&idle) targetRotY=Math.sin(t*.28)*.15;
+  if(externalMixer)externalMixer.update(dt);
+
+  if(!dragging&&idle&&state!=='alert'&&state!=='sleep') targetRotY=Math.sin(t*.28)*.15;
   pet.rotation.y+=(targetRotY-pet.rotation.y)*.07;
   pet.rotation.x+=(targetRotX-pet.rotation.x)*.07;
 
-  // breathing / levitation
-  pet.position.y=.1+Math.sin(t*1.25)*.035+boost*.075;
-  chestPanel.position.y=-.3+Math.sin(t*1.65)*.008;
-  head.rotation.z=Math.sin(t*.48)*.012;
+  const sleeping=state==='sleep';
+  const celebrating=state==='celebrate';
+  const alerting=state==='alert';
+  const greeting=state==='greet'||state==='happy';
 
-  // eye tracking
+  // levitation and body life
+  let lift=.1+Math.sin(t*(sleeping?.72:1.25))*(sleeping?.018:.035);
+  if(celebrating)lift+=Math.abs(Math.sin(t*8))*0.14;
+  if(greeting)lift+=Math.abs(Math.sin(t*5))*0.045;
+  pet.position.y=lift+boost*.06;
+  chestPanel.position.y=-.3+Math.sin(t*(sleeping?.8:1.65))*(sleeping?.004:.009);
+
+  // head follows the pointer and has small natural micro-movements
+  const headFollowX=sleeping?.13:pointerY*.055;
+  const headFollowY=sleeping?0:pointerX*.085;
+  head.rotation.x+=(headFollowX-head.rotation.x)*.065;
+  head.rotation.y+=(headFollowY-head.rotation.y)*.065;
+  head.rotation.z+=( (sleeping?.08:Math.sin(t*.48)*.012) - head.rotation.z)*.07;
+  if(greeting)head.rotation.z+=Math.sin(t*4)*.018;
+
+  // eye tracking + pupil response
   pupils.forEach((p,i)=>{
-    const bx=i===0?-.42:.42;p.position.x=bx+pointerX*.04;p.position.y=1.11-pointerY*.032;
+    const bx=i===0?-.42:.42;
+    p.position.x=bx+(sleeping?0:pointerX*.043);
+    p.position.y=1.11-(sleeping?0:pointerY*.034);
+    const ps=alerting?1.12:sleeping?.82:1;
+    p.scale.set(.74*ps,1*ps,.4);
   });
-  const blink=Math.max(0,Math.sin(t*.43+2.45))**42;
-  lids.forEach(l=>l.scale.y=.16+blink*.72);
 
-  // species behaviors
-  foxTailPivot.rotation.z=Math.sin(t*1.25)*.16;
-  catTailPivot.rotation.z=Math.sin(t*.92)*.12;
-  birdWings.forEach((w,i)=>w.rotation.z=Math.sin(t*2.2+i*Math.PI)*.12);
+  const naturalBlink=Math.max(0,Math.sin(t*.43+2.45))**42;
+  const lidClose=sleeping?.96:naturalBlink*.72;
+  lids.forEach(l=>l.scale.y=.16+lidClose);
+
+  // expressive mouth/core
+  mouth.scale.x=greeting?1.28:alerting?.9:sleeping?.82:1;
+  mouth.scale.y=greeting?1.14:1;
+  coreRing.rotation.z=celebrating?t*2.1:Math.sin(t*.5)*.02;
+  coreBall.scale.setScalar((currentCosmetic==='solar'?1.45:1)*(alerting?1.18:celebrating?1.24:1));
+
+  // ears / species micro-motion
+  ears.forEach((e,i)=>{
+    if(!e.visible)return;
+    const flick=Math.sin(t*(currentKind==='fox'?1.8:1.15)+i*1.7)*.025;
+    e.rotation.x=-.12+(alerting?-.08:sleeping?.05:flick);
+  });
+  foxTailPivot.rotation.z=Math.sin(t*(celebrating?3.4:1.25))*(celebrating?.32:.16);
+  catTailPivot.rotation.z=Math.sin(t*(alerting?1.8:.92))*(alerting?.2:.12);
+  species.pup.rotation.z=greeting?Math.sin(t*5)*.028:Math.sin(t*.7)*.006;
+  birdWings.forEach((w,i)=>{
+    const amp=celebrating?.38:alerting?.22:.12;
+    const speed=celebrating?7:alerting?4.3:2.2;
+    w.rotation.z=Math.sin(t*speed+i*Math.PI)*amp;
+  });
   turtleShell.rotation.y=Math.sin(t*.34)*.018;
+  species.turtle.rotation.x=sleeping?.035:Math.sin(t*.52)*.006;
 
-  // cosmetic motion
-  halo1.rotation.z=t*.3;halo2.rotation.z=-t*.42;
-  orbGroup.rotation.y=t*.7;orbit1.rotation.z=t*.62;orbit2.rotation.z=-t*.78;
-  holoRing.rotation.z=t*.15;holoRing2.rotation.z=-t*.21;
+  // cosmetic / XRP energy motion
+  halo1.rotation.z=t*(celebrating?.75:.3);halo2.rotation.z=-t*(celebrating?.95:.42);
+  orbGroup.rotation.y=t*(alerting?1.35:.7);orbit1.rotation.z=t*(celebrating?1.5:.62);orbit2.rotation.z=-t*(celebrating?1.7:.78);
+  holoRing.rotation.z=t*(alerting?.34:.15);holoRing2.rotation.z=-t*(alerting?.45:.21);
+
+  const targetEmissive=alerting?4.2:celebrating?5.4:greeting?3.4:2.5;
+  accentMat.emissiveIntensity+=(targetEmissive-accentMat.emissiveIntensity)*.12;
 
   if(boost>0){
-    boost*=.89;pet.scale.setScalar(.82+boost*.045);accentMat.emissiveIntensity=2.5+boost*4;
+    boost*=.89;pet.scale.setScalar(.82+boost*.04);
   }else{
-    pet.scale.lerp(new THREE.Vector3(.82,.82,.82),.1);accentMat.emissiveIntensity+=(2.5-accentMat.emissiveIntensity)*.1;
+    pet.scale.lerp(new THREE.Vector3(.82,.82,.82),.1);
   }
 
   renderer.render(scene,camera);
