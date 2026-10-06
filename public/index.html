@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=5.5.1">
+  <link rel="stylesheet" href="/styles.css?v=5.5.2">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate clean-launch" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
@@ -27,6 +27,20 @@
     <div class="clean-launch-signal">
       <span><i></i> XRPL MAINNET</span>
       <strong id="launchLedgerCounter">LIVE</strong>
+    </div>
+
+    <div class="launch-live-orbit" id="launchLiveOrbit" aria-hidden="true">
+      <span class="orbit-ring ring-a"></span>
+      <span class="orbit-ring ring-b"></span>
+      <span class="orbit-node node-a"></span>
+      <span class="orbit-node node-b"></span>
+      <span class="orbit-node node-c"></span>
+      <b class="orbit-core">589</b>
+    </div>
+
+    <div class="launch-activity" aria-live="polite">
+      <span><i></i><b id="launchActivityLabel">Listening for validated ledgers</b></span>
+      <small id="launchActivityPulse">signal 001</small>
     </div>
 
     <div class="clean-launch-progress" aria-hidden="true">
@@ -684,6 +698,63 @@
         <span>XRPet does not guess a creator's identity or physical location. Location, team names, websites, and social accounts appear only when they are publicly supplied by the project or metadata source.</span>
       </div>
 
+      <section class="ecosystem-contact-hub" aria-labelledby="ecosystemContactTitle">
+        <div class="section-heading">
+          <div><span class="eyebrow">OFFICIAL CONTACTS + PARTNERSHIPS</span><h2 id="ecosystemContactTitle">How to reach Ripple and the XRPL ecosystem</h2></div>
+          <span class="truth-label">PUBLIC CHANNELS</span>
+        </div>
+        <p class="ecosystem-contact-note">XRPet lists public organizational contact routes only. It does not publish private employee phone numbers or personal addresses. Ripple and the XRP Ledger are separate: XRPL is a decentralized public network, while Ripple is a company that contributes to and builds products using XRPL.</p>
+
+        <div class="ecosystem-contact-grid">
+          <article class="contact-card">
+            <span class="contact-type">RIPPLE LABS INC.</span>
+            <h3>Ripple corporate contact</h3>
+            <p><strong>Mailing / privacy office:</strong><br>600 Battery Street<br>San Francisco, CA 94111, USA</p>
+            <p><strong>Privacy:</strong> <a href="mailto:privacy@ripple.com">privacy@ripple.com</a></p>
+            <p class="muted">Ripple's official general contact page does not publish a general corporate phone number. Use the official Sales, Press, or Partnership routes instead.</p>
+            <div class="contact-actions">
+              <a href="https://ripple.com/contact/" target="_blank" rel="noopener">Ripple Contact ↗</a>
+              <a href="https://ripple.com/contact/" target="_blank" rel="noopener">Partnership Team ↗</a>
+            </div>
+          </article>
+
+          <article class="contact-card">
+            <span class="contact-type">XRP LEDGER FOUNDATION</span>
+            <h3>XRPL Foundation</h3>
+            <p><strong>Registered office:</strong><br>60 Avenue François 1er<br>75008 Paris, France</p>
+            <p><strong>Email:</strong> <a href="mailto:info@xrpl.foundation">info@xrpl.foundation</a></p>
+            <p class="muted">XRPL itself has no central corporate office or phone number. The Foundation is an independent nonprofit supporting the decentralized network.</p>
+            <div class="contact-actions">
+              <a href="https://xrpl.foundation/" target="_blank" rel="noopener">XRPL Foundation ↗</a>
+              <a href="https://xrpl.org/" target="_blank" rel="noopener">XRPL.org ↗</a>
+            </div>
+          </article>
+
+          <article class="contact-card">
+            <span class="contact-type">RIPPLE TREASURY</span>
+            <h3>Published business phone lines</h3>
+            <p><strong>North America:</strong> <a href="tel:+18478473706">+1 847 847 3706</a><br><strong>Support:</strong> <a href="tel:+18478473730">+1 847 847 3730</a></p>
+            <p><strong>London sales:</strong> <a href="tel:+442037874843">+44 20 3787 4843</a><br><strong>London support:</strong> <a href="tel:+442037874844">+44 20 3787 4844</a></p>
+            <p><strong>Sydney:</strong> <a href="tel:+61292626969">+61 2 9262 6969</a></p>
+            <p><strong>Email:</strong> <a href="mailto:treasury-sales@ripple.com">treasury-sales@ripple.com</a></p>
+            <small>These are Ripple Treasury business-unit contacts, not personal employee numbers.</small>
+          </article>
+        </div>
+
+        <div class="partnership-strip">
+          <div class="partnership-head"><span>RECENT / ACTIVE OFFICIAL PARTNERSHIP SIGNALS</span><small>Source: Ripple press releases · 2026</small></div>
+          <div class="partnership-grid">
+            <a href="https://ripple.com/ripple-press/csdbr-and-ripple-use-the-xrpl-blockchain-to-expand-brazils-financial-market-infrastructure/" target="_blank" rel="noopener"><strong>CSD BR</strong><span>Brazil financial-market infrastructure + XRPL</span></a>
+            <a href="https://ripple.com/ripple-press/aviva-investors-seeks-to-tokenise-products-on-the-xrp-ledger-in-collaboration-with-ripple/" target="_blank" rel="noopener"><strong>Aviva Investors</strong><span>Tokenized fund structures on XRPL</span></a>
+            <a href="https://ripple.com/ripple-press/ripple-and-bitso-expand-partnership/" target="_blank" rel="noopener"><strong>Bitso</strong><span>MXNB + enterprise settlement on XRPL</span></a>
+            <a href="https://ripple.com/ripple-press/ripple-partners-with-kbank-to-deploy-scalable-digital-asset-wallet-infrastructure-through-ripple-custody/" target="_blank" rel="noopener"><strong>Kbank</strong><span>Institutional custody infrastructure</span></a>
+            <a href="https://ripple.com/press-releases/" target="_blank" rel="noopener"><strong>Jeonbuk Bank</strong><span>Cross-border payments partnership</span></a>
+            <a href="https://ripple.com/press-releases/" target="_blank" rel="noopener"><strong>SBI Group</strong><span>RLUSD launch in Japan</span></a>
+            <a href="https://ripple.com/ripple-press/ripple-strengthens-digital-capital-markets-infrastructure-with-investments-in-zilo-and-licuido/" target="_blank" rel="noopener"><strong>ZILO + Licuido</strong><span>Transfer agency, issuance + collateral mobility</span></a>
+          </div>
+        </div>
+      </section>
+
       <div class="ecosystem-toolbar">
         <form id="ecosystemSearchForm" class="ecosystem-search">
           <input id="ecosystemSearch" type="search" placeholder="Search token, project, issuer or currency…" autocomplete="off">
@@ -755,7 +826,7 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 5.5.1 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 5.5.2 · XRP Ledger companion</footer>
   </main>
 </div>
 
@@ -803,12 +874,12 @@
   },6000);
 })();
 </script>
-<script src="/music-player.js?v=5.5.1"></script>
-<script src="/games.js?v=5.5.1"></script>
-<script src="/ecosystem.js?v=5.5.1"></script>
-<script src="/app.js?v=5.5.1"></script>
-<script src="/timeline.js?v=5.5.1"></script>
-<script type="module" src="/companion3d.js?v=5.5.1"></script>
+<script src="/music-player.js?v=5.5.2"></script>
+<script src="/games.js?v=5.5.2"></script>
+<script src="/ecosystem.js?v=5.5.2"></script>
+<script src="/app.js?v=5.5.2"></script>
+<script src="/timeline.js?v=5.5.2"></script>
+<script type="module" src="/companion3d.js?v=5.5.2"></script>
 
 </body>
 </html>
