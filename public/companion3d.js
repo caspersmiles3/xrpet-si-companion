@@ -141,6 +141,8 @@ function setAppearance(detail={}){
 }
 window.addEventListener('xrpet:appearance',e=>setAppearance(e.detail||{}));
 window.XRPet3D={setAppearance,react(){boost=1},reset(){targetRotX=0;targetRotY=0}};
+host.querySelector('.companion3d-loading')?.remove();
+window.dispatchEvent(new CustomEvent('xrpet:3d-ready'));
 
 function resize(){
   const r=host.getBoundingClientRect();
