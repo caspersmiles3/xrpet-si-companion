@@ -9464,3 +9464,100 @@ body:not(.workspace-open) .main-shell>.primary-view-section:not(.view-active){
 #launchGate .clean-launch-note{
   color:#8db5bf!important;
 }
+
+
+/* XRPet v5.5.45 — Ripplet tiny crypto scavenger */
+.ripplet-crypto-coin{
+  position:absolute;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  pointer-events:none;
+  z-index:18;
+  box-sizing:border-box;
+  border:1px solid rgba(197,242,255,.38);
+  background:
+    radial-gradient(circle at 35% 30%,rgba(255,255,255,.72),rgba(116,221,241,.38) 24%,rgba(16,48,62,.94) 68%,rgba(3,10,14,.98));
+  box-shadow:0 0 5px rgba(99,225,255,.16);
+  opacity:.78;
+  transform:translateZ(0);
+  animation:rippletCoinIdle 2.8s ease-in-out infinite alternate;
+}
+.ripplet-crypto-coin::after{
+  content:attr(data-symbol);
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  font-size:3.1px;
+  line-height:1;
+  font-weight:900;
+  letter-spacing:-.02em;
+  color:#dffaff;
+  text-shadow:0 0 2px rgba(255,255,255,.32);
+}
+.ripplet-crypto-coin[data-symbol="BTC"]{
+  border-color:rgba(222,191,121,.42);
+  background:radial-gradient(circle at 35% 30%,rgba(255,248,222,.78),rgba(185,139,69,.48) 28%,rgba(54,38,17,.96) 72%);
+}
+.ripplet-crypto-coin[data-symbol="ETH"]{
+  border-color:rgba(185,196,239,.42);
+  background:radial-gradient(circle at 35% 30%,rgba(241,244,255,.78),rgba(117,132,187,.44) 28%,rgba(31,36,58,.96) 72%);
+}
+.ripplet-crypto-coin[data-symbol="SOL"]{
+  border-color:rgba(156,225,211,.38);
+}
+.ripplet-crypto-coin.is-targeted{
+  opacity:.96;
+  box-shadow:0 0 7px rgba(112,235,255,.42);
+}
+.ripplet-roam-layer .global-life-avatar>.ripplet-crypto-coin.is-carried{
+  left:34px!important;
+  top:43px!important;
+  width:8px!important;
+  height:8px!important;
+  z-index:40!important;
+  opacity:1!important;
+  animation:rippletCoinCarry .36s ease-in-out infinite alternate!important;
+  box-shadow:0 0 6px rgba(121,235,255,.34)!important;
+}
+.ripplet-roam-layer .global-life-avatar>.ripplet-crypto-coin.is-carried::after{
+  font-size:2.5px!important;
+}
+.ripplet-dock-platform .dock-crypto-token{
+  position:absolute;
+  width:7px;
+  height:7px;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  border:1px solid rgba(190,242,255,.34);
+  background:radial-gradient(circle at 35% 30%,rgba(244,253,255,.82),rgba(93,212,234,.34) 34%,rgba(8,29,39,.96) 76%);
+  box-shadow:0 0 5px rgba(88,225,255,.18);
+  pointer-events:none;
+  z-index:4;
+}
+.ripplet-dock-platform .dock-crypto-token::after{
+  content:attr(data-symbol);
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  font-size:2px;
+  font-weight:900;
+  color:#e9fdff;
+}
+@keyframes rippletCoinIdle{
+  from{transform:translateY(0) rotate(-3deg);opacity:.68}
+  to{transform:translateY(-1px) rotate(3deg);opacity:.86}
+}
+@keyframes rippletCoinCarry{
+  from{transform:translateY(0) rotate(-8deg)}
+  to{transform:translateY(-1px) rotate(8deg)}
+}
+@media(max-width:600px){
+  .ripplet-crypto-coin{width:9px;height:9px}
+  .ripplet-crypto-coin::after{font-size:2.7px}
+}
+@media(prefers-reduced-motion:reduce){
+  .ripplet-crypto-coin{animation:none!important}
+}
