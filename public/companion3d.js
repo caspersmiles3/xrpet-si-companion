@@ -284,7 +284,7 @@ for(const [x,s] of [[-.72,-1],[.72,1]]){
 }
 
 // shoulders / arms
-const shoulders=[];
+const shoulders=[],forearms=[];
 for(const [x,s] of [[-.89,-1],[.89,1]]){
   const shoulder=tag(add(new THREE.SphereGeometry(.34,36,24),shellMat,pet,'shoulder'),'shoulder');
   shoulder.scale.set(.76,.94,.7);shoulder.position.set(x,-.15,.02);shoulders.push(shoulder);
@@ -292,18 +292,18 @@ for(const [x,s] of [[-.89,-1],[.89,1]]){
   ring.position.set(x,-.15,.27);ring.rotation.x=Math.PI/2;
 
   const fore=tag(add(new THREE.CapsuleGeometry(.16,.42,8,20),shellDarkMat,pet,'forearm'),'forearm');
-  fore.position.set(x*1.02,-.67,.13);fore.rotation.z=s*.09;
+  fore.position.set(x*1.02,-.67,.13);fore.rotation.z=s*.09;forearms.push(fore);
 }
 
 // legs
-const legs=[];
+const legs=[],feet=[];
 for(const [x,s] of [[-.37,-1],[.37,1]]){
   const thigh=tag(add(new THREE.CapsuleGeometry(.2,.45,8,22),shellMat,pet,'leg'),'leg');
   thigh.position.set(x,-1.18,.02);thigh.rotation.z=s*.04;legs.push(thigh);
   const ankle=add(new THREE.TorusGeometry(.16,.03,12,32),accentMat,pet,'ankleLight');
   ankle.position.set(x,-1.49,.14);ankle.rotation.x=Math.PI/2;
   const foot=tag(add(new THREE.SphereGeometry(.25,30,20),shellDarkMat,pet,'foot'),'foot');
-  foot.scale.set(1.18,.38,1.35);foot.position.set(x,-1.6,.23);
+  foot.scale.set(1.18,.38,1.35);foot.position.set(x,-1.6,.23);feet.push(foot);
 }
 
 // core
@@ -816,8 +816,8 @@ function configureSpecies(){
   muzzle.visible=false;
   nose.visible=false;
   ears.forEach(e=>e.visible=false);
-  legs.forEach(e=>e.visible=false);
-  pet.traverse(o=>{ if(o.name==='foot')o.visible=false; });
+  legs.forEach((e,i)=>{e.visible=true;e.scale.set(.58,.54,.58);e.position.set(i===0?-.28:.28,-1.08,.02)});
+  feet.forEach((o,i)=>{o.visible=true;o.scale.set(.72,.28,.9);o.position.set(i===0?-.29:.29,-1.42,.2)});
   shoulders.forEach((o,i)=>{o.scale.set(.62,.72,.52);o.position.set(i===0?-.72:.72,-.18,.08)});
 }
 function configureGender(){
@@ -861,12 +861,12 @@ function applyRoom(room){
   renderer.toneMappingExposure=r[2];
 }
 function performAction(name='greet'){
-  const allowed=new Set(['greet','celebrate','alert','sleep','wake','happy','focus','scan','orbit']);
+  const allowed=new Set(['greet','celebrate','alert','sleep','wake','happy','focus','scan','orbit','sip','gulp','splash','bite','taste','charge','curl','dream','snore','wave','highfive','dance']);
   action=allowed.has(name)?name:'greet';
-  actionUntil=performance.now()+(action==='sleep'?12000:action==='orbit'?5200:action==='scan'?3200:action==='focus'?4200:action==='celebrate'?2600:action==='alert'?2200:1800);
+  actionUntil=performance.now()+(['sleep','curl','dream','snore'].includes(action)?9000:action==='orbit'||action==='dance'?5200:action==='scan'||action==='gulp'||action==='taste'?3200:action==='focus'||action==='charge'?4200:action==='celebrate'||action==='splash'||action==='highfive'?2800:action==='alert'?2200:2200);
   lastInteract=performance.now();
   if(action==='wake')actionUntil=performance.now()+700;
-  if(action==='happy'||action==='greet'||action==='celebrate')boost=1;
+  if(['happy','greet','celebrate','splash','bite','charge','wave','highfive','dance','sip','gulp','taste'].includes(action))boost=1;
   playExternalAction(action);
 }
 function currentAction(){
@@ -1124,7 +1124,11 @@ function renderFrame(){
   const focusing=state==='focus';
   const scanning=state==='scan';
   const orbiting=state==='orbit';
-  const greeting=state==='greet'||state==='happy';
+  const greeting=state==='greet'||state==='happy'||state==='wave';
+  const sipping=state==='sip',gulping=state==='gulp',splashing=state==='splash';
+  const biting=state==='bite',tasting=state==='taste',charging=state==='charge';
+  const curling=state==='curl',dreaming=state==='dream',snoring=state==='snore';
+  const highfiving=state==='highfive',dancing=state==='dance';
 
   // levitation and body life
   let lift=.1+Math.sin(t*(sleeping?.72:1.25))*(sleeping?.018:.035);
@@ -1141,6 +1145,13 @@ function renderFrame(){
   head.rotation.y+=(headFollowY-head.rotation.y)*.065;
   head.rotation.z+=( (sleeping?.08:Math.sin(t*.48)*.012) - head.rotation.z)*.07;
   if(greeting)head.rotation.z+=Math.sin(t*4)*.018;
+  if(sipping)head.rotation.x+=.18+Math.sin(t*3)*.025;
+  if(gulping)head.rotation.x+=.24+Math.sin(t*6)*.04;
+  if(splashing)head.rotation.z+=Math.sin(t*8)*.055;
+  if(tasting)head.rotation.y+=Math.sin(t*3.4)*.08;
+  if(curling||dreaming||snoring)head.rotation.z+=.10;
+  if(highfiving)head.rotation.z+=Math.sin(t*5)*.035;
+  if(dancing)head.rotation.z+=Math.sin(t*7)*.06;
 
   // eye tracking + pupil response
   pupils.forEach((p,i)=>{
@@ -1152,14 +1163,60 @@ function renderFrame(){
   });
 
   const naturalBlink=Math.max(0,Math.sin(t*.43+2.45))**42;
-  const lidClose=sleeping?.96:naturalBlink*.72;
+  const expressiveBlink=sipping?Math.max(0,Math.sin(t*5))*.35:gulping?Math.max(0,Math.sin(t*8))*.48:tasting?Math.max(0,Math.sin(t*4.5))*.28:highfiving?Math.max(0,Math.sin(t*6))*.25:dancing?Math.max(0,Math.sin(t*7))*.2:0;
+  const lidClose=(sleeping||curling||dreaming||snoring)?.96:Math.max(naturalBlink*.72,expressiveBlink);
   lids.forEach(l=>l.scale.y=.16+lidClose);
 
   // expressive mouth/core
   mouth.scale.x=greeting?1.28:alerting?.9:sleeping?.82:1;
   mouth.scale.y=greeting?1.14:1;
   coreRing.rotation.z=celebrating?t*2.1:Math.sin(t*.5)*.02;
-  coreBall.scale.setScalar((currentCosmetic==='solar'?1.45:1)*(alerting?1.18:celebrating?1.24:1));
+  coreBall.scale.setScalar((currentCosmetic==='solar'?1.45:1)*(alerting?1.18:celebrating?1.24:charging?1.38:splashing?1.2:1));
+
+  // expressive Ripplet arms / hands / legs / feet
+  shoulders.forEach((sh,i)=>{
+    const side=i===0?-1:1;
+    let rz=0,rx=0;
+    if(sipping){rz=side*(i===0?.52:.26);rx=-.12}
+    if(gulping){rz=side*.62;rx=-.18+Math.sin(t*5+i)*.08}
+    if(splashing){rz=side*(.55+Math.sin(t*9+i)*.22)}
+    if(biting){rz=side*.42;rx=-.2}
+    if(tasting){rz=side*(i===0?.35:.15)+Math.sin(t*3+i)*.05}
+    if(charging){rz=side*.68;rx=-.25}
+    if(highfiving){rz=side*(i===0?.9:.28);rx=-.25}
+    if(dancing){rz=side*(.45+Math.sin(t*7+i*Math.PI)*.32)}
+    sh.rotation.z+=(rz-sh.rotation.z)*.18;sh.rotation.x+=(rx-sh.rotation.x)*.18;
+  });
+  forearms.forEach((fore,i)=>{
+    const side=i===0?-1:1;
+    let rz=side*.09,rx=0;
+    if(sipping)rz=side*(i===0?.72:.28);
+    if(gulping){rz=side*.84;rx=.18+Math.sin(t*6+i)*.08}
+    if(splashing)rz=side*(.8+Math.sin(t*10+i)*.28);
+    if(biting)rz=side*.58;
+    if(tasting)rz=side*(i===0?.46:.18);
+    if(charging)rz=side*.92;
+    if(highfiving)rz=side*(i===0?1.08:.32);
+    if(dancing)rz=side*(.55+Math.sin(t*8+i*Math.PI)*.4);
+    fore.rotation.z+=(rz-fore.rotation.z)*.2;fore.rotation.x+=(rx-fore.rotation.x)*.18;
+  });
+  legs.forEach((leg,i)=>{
+    const side=i===0?-1:1;let rz=side*.04,rx=0;
+    if(splashing){rz=side*(.15+Math.sin(t*8+i*Math.PI)*.16);rx=Math.sin(t*8+i*Math.PI)*.12}
+    if(charging){rz=side*.15;rx=-.08}
+    if(curling||dreaming||snoring){rz=side*.28;rx=.22}
+    if(dancing){rz=side*(.18+Math.sin(t*7+i*Math.PI)*.22);rx=Math.sin(t*7+i*Math.PI)*.16}
+    leg.rotation.z+=(rz-leg.rotation.z)*.18;leg.rotation.x+=(rx-leg.rotation.x)*.18;
+  });
+  feet.forEach((foot,i)=>{
+    let ry=0,rx=0;
+    if(sipping)rx=Math.sin(t*4+i)*.05;
+    if(gulping)rx=Math.sin(t*6+i)*.08;
+    if(biting)ry=Math.sin(t*4+i)*.08;
+    if(curling||dreaming||snoring){rx=.18;ry=(i===0?-1:1)*.12}
+    if(dancing){rx=Math.sin(t*8+i*Math.PI)*.22;ry=Math.sin(t*5+i)*.12}
+    foot.rotation.x+=(rx-foot.rotation.x)*.2;foot.rotation.y+=(ry-foot.rotation.y)*.2;
+  });
 
   // ears / species micro-motion
   ears.forEach((e,i)=>{
@@ -1205,7 +1262,7 @@ function renderFrame(){
   contactShadow.scale.setScalar(1+Math.sin(t*.9)*.025+(celebrating?.08:0));
   contactShadow.material.opacity=(XRPetQuality.lowPower?.16:.26)+(sleeping?.05:0);
 
-  const targetEmissive=scanning?5.2:orbiting?4.6:focusing?3.8:alerting?4.2:celebrating?5.4:greeting?3.4:currentCosmetic==='resonance'?3.2:2.5;
+  const targetEmissive=scanning||gulping||tasting?5.2:orbiting||dancing?4.6:focusing||charging?4.2:alerting?4.2:celebrating||splashing||highfiving?5.4:greeting||sipping||biting?3.6:currentCosmetic==='resonance'?3.2:2.5;
   accentMat.emissiveIntensity+=(targetEmissive-accentMat.emissiveIntensity)*.12;
 
   if(boost>0){

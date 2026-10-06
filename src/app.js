@@ -122,24 +122,24 @@ function renderLife(){
 }
 const LIFE_REACTIONS={
   drink:[
-    {name:'Cool Sip',steps:[['greet',0],['happy',850]],variant:'a'},
-    {name:'Ledger Gulp',steps:[['scan',0],['happy',1100]],variant:'b'},
-    {name:'Flow Burst',steps:[['focus',0],['celebrate',950]],variant:'c'}
+    {name:'Cool Sip',actions:[['sip',0],['wave',900]],sounds:[['sip',0],['wave',850]],variant:'a'},
+    {name:'Ledger Gulp',actions:[['gulp',0],['happy',1150]],sounds:[['gulp',0],['pet',1100]],variant:'b'},
+    {name:'Flow Splash',actions:[['splash',0],['celebrate',1050]],sounds:[['splash',0],['celebrate',1050]],variant:'c'}
   ],
   eat:[
-    {name:'Core Bite',steps:[['happy',0],['celebrate',800]],variant:'a'},
-    {name:'Market Taste',steps:[['focus',0],['greet',1050]],variant:'b'},
-    {name:'Energy Charge',steps:[['scan',0],['happy',900]],variant:'c'}
+    {name:'Core Bite',actions:[['bite',0],['happy',850]],sounds:[['bite',0],['pet',850]],variant:'a'},
+    {name:'Market Taste',actions:[['taste',0],['greet',1050]],sounds:[['taste',0],['greet',1000]],variant:'b'},
+    {name:'Energy Charge',actions:[['charge',0],['celebrate',1200]],sounds:[['charge',0],['success',1200]],variant:'c'}
   ],
   sleep:[
-    {name:'Power Down',steps:[['focus',0],['sleep',800]],variant:'a'},
-    {name:'Quiet Curl',steps:[['greet',0],['sleep',700]],variant:'b'},
-    {name:'Deep Rest',steps:[['sleep',0]],variant:'c'}
+    {name:'Quiet Curl',actions:[['curl',0],['sleep',850]],sounds:[['curl',0]],variant:'a'},
+    {name:'Ledger Dream',actions:[['dream',0],['sleep',950]],sounds:[['dream',0]],variant:'b'},
+    {name:'Deep Snore',actions:[['snore',0]],sounds:[['snore',0],['snore',1200]],variant:'c'}
   ],
   socialize:[
-    {name:'Signal Hello',steps:[['greet',0],['celebrate',900]],variant:'a'},
-    {name:'Friend Scan',steps:[['scan',0],['greet',1000]],variant:'b'},
-    {name:'Signal Dance',steps:[['happy',0],['orbit',950]],variant:'c'}
+    {name:'Signal Wave',actions:[['wave',0],['greet',950]],sounds:[['wave',0],['greet',900]],variant:'a'},
+    {name:'Signal High-Five',actions:[['highfive',0],['celebrate',1100]],sounds:[['highfive',0],['celebrate',1100]],variant:'b'},
+    {name:'Signal Dance',actions:[['dance',0],['orbit',1200]],sounds:[['dance',0],['success',1200]],variant:'c'}
   ]
 };
 const lastLifeReaction={};
@@ -155,7 +155,8 @@ function playLifeReaction(activity){
   lifeReactionTimers.forEach(clearTimeout);lifeReactionTimers=[];
   const avatar=q('#lifeAvatar');
   if(avatar){avatar.dataset.reaction=choice.variant;avatar.dataset.reactionName=choice.name}
-  choice.steps.forEach(([actionName,delay])=>lifeReactionTimers.push(setTimeout(()=>window.XRPet3D?.perform?.(actionName),delay)));
+  choice.actions.forEach(([actionName,delay])=>lifeReactionTimers.push(setTimeout(()=>window.XRPet3D?.perform?.(actionName),delay)));
+  (choice.sounds||[]).forEach(([soundName,delay])=>lifeReactionTimers.push(setTimeout(()=>playSound(soundName,true),delay)));
   setText('#lifeMode',choice.name);
   return choice;
 }
@@ -507,7 +508,19 @@ const SOUND_PROFILES={
   model:{tones:[[190,380,0,.17,'sine'],[380,760,.13,.2,'triangle']],gain:.08},
   launch:{tones:[[180,360,0,.18,'sine'],[540,820,.1,.22,'triangle']],gain:.1,noise:.025},
   launchStage:{tones:[[260,520,0,.1,'sine'],[760,1040,.07,.14,'sine']],gain:.075},
-  open:{tones:[[310,620,0,.16,'triangle'],[620,930,.1,.22,'sine'],[930,1240,.22,.22,'sine']],gain:.115,noise:.02}
+  open:{tones:[[310,620,0,.16,'triangle'],[620,930,.1,.22,'sine'],[930,1240,.22,.22,'sine']],gain:.115,noise:.02},
+  sip:{tones:[[980,1180,0,.06,'sine'],[760,910,.08,.08,'sine']],gain:.085},
+  gulp:{tones:[[720,520,0,.08,'triangle'],[520,760,.1,.1,'sine'],[920,1120,.2,.09,'sine']],gain:.095},
+  splash:{tones:[[820,1200,0,.08,'sine'],[520,860,.07,.14,'triangle']],gain:.105,noise:.04},
+  bite:{tones:[[420,620,0,.055,'square'],[760,980,.08,.09,'sine']],gain:.08},
+  taste:{tones:[[650,810,0,.07,'sine'],[900,760,.08,.11,'triangle']],gain:.075},
+  charge:{tones:[[260,520,0,.12,'sine'],[620,980,.1,.18,'triangle'],[980,1320,.2,.14,'sine']],gain:.11},
+  curl:{tones:[[300,240,0,.18,'sine'],[210,170,.12,.24,'sine']],gain:.06},
+  dream:{tones:[[540,660,0,.18,'sine'],[710,590,.2,.22,'sine']],gain:.055},
+  snore:{tones:[[180,150,0,.28,'sine'],[140,115,.24,.32,'sine']],gain:.055},
+  wave:{tones:[[520,690,0,.07,'sine'],[760,920,.08,.1,'sine']],gain:.08},
+  highfive:{tones:[[480,820,0,.08,'triangle'],[900,1260,.09,.13,'sine']],gain:.11,noise:.02},
+  dance:{tones:[[360,520,0,.08,'triangle'],[620,820,.08,.09,'triangle'],[900,1180,.16,.12,'sine']],gain:.1}
 };
 
 function ensureAudio(){
@@ -785,7 +798,7 @@ window.XRPetRoam={go:goRipplet,pin:setRoamPinned,sync:syncRoamBounds};
 addEventListener('resize',()=>{syncRoamBounds();goRipplet(state.lifePinned?'sit':state.lifeActivity)});
 addEventListener('scroll',syncRoamBounds,{passive:true});
 syncRoamBounds();setTimeout(()=>goRipplet(state.lifePinned?'sit':'explore'),300);roamingStep();applyNftCompanion();
-qa('[data-life-action]').forEach(b=>b.addEventListener('click',()=>{if(state.lifePinned)setRoamPinned(false);performLifeActivity(b.dataset.lifeAction,true);playSound('pet')}));
+qa('[data-life-action]').forEach(b=>b.addEventListener('click',()=>{if(state.lifePinned)setRoamPinned(false);performLifeActivity(b.dataset.lifeAction,true)}));
 bind('#lifeSitStay','click',()=>setRoamPinned(!state.lifePinned));
 setInterval(lifeTick,15000);
 dailyVisit();render();registerVisitor();connectLedger();loadMarket();loadUpdates();integrationCheck();setInterval(loadMarket,60000);setInterval(loadUpdates,60000);setInterval(integrationCheck,60000);

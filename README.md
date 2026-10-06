@@ -1,4 +1,4 @@
-# XRPet SI Companion™ — v4.6.0
+# XRPet SI Companion™ — v4.7.0
 
 **Don't watch the Ledger. Live with it.**
 
@@ -8,7 +8,7 @@ XRPet is a lightweight, installable companion built around Ripple, XRP and the X
 
 Render service: https://xrpet-si-companion.onrender.com
 
-## v4.6 capabilities
+## v4.7 capabilities
 
 - Live XRPL ledger + fee signals
 - XRP/USD market snapshot with public-data fallback
@@ -162,3 +162,15 @@ The live 3D Ripplet layer is mounted inside the habitat instead of roaming over 
 - Home has been simplified around the core XRPet purpose, network state, Ripplet state, visitor count, and four direct actions.
 - XRPL Live has a cleaner hero, flatter telemetry cards, and simplified transaction summaries. Detailed public fields remain available by expanding a transaction.
 - Added a live visitor ticker in the top bar and Home. A browser receives a local visitor ID; the server counts that browser once during the current running server process. Open clients poll the counter and animate when it changes.
+
+
+## v4.7 expressive Ripplet reactions
+
+- Ripplet's live ecosystem reactions now use explicit physical animations rather than only generic body bobbing.
+- Added expressive arm/forearm, head, eye/lid, leg, foot, body and core motion for Water, Food, Sleep and Signal Friend events.
+- Ripplet's previously hidden procedural legs and feet are now visible in a small stylized form so kicks, curls and dance motions can be seen.
+- Water reactions: **Cool Sip**, **Ledger Gulp**, **Flow Splash**.
+- Food reactions: **Core Bite**, **Market Taste**, **Energy Charge**.
+- Sleep reactions: **Quiet Curl**, **Ledger Dream**, **Deep Snore**.
+- Signal Friend reactions: **Signal Wave**, **Signal High-Five**, **Signal Dance**.
+- Each reaction variant has its own synthesized sound sequence. XRPet still avoids immediately repeating the same reaction variant for the same activity.
