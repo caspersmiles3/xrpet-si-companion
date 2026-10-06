@@ -1949,21 +1949,7 @@ function setRippletSubview(view='overview'){
 qa('[data-ripplet-view]').forEach(btn=>btn.addEventListener('click',()=>setRippletSubview(btn.dataset.rippletView)));
 // Ripplet summary navigation is handled by ui-shell.js so the dropdown remains usable.
 
-const dismissibleMenus=['historyNavDetails','exchangeNavDetails','rippletNavDetails','ecosystemNavDetails','gamesNavDetails','customizeDetails','settingsDetails'];
-document.addEventListener('pointerdown',e=>{
-  dismissibleMenus.forEach(id=>{
-    const menu=q('#'+id);
-    if(menu?.open&&!menu.contains(e.target))menu.removeAttribute('open');
-  });
-},{capture:true});
-document.addEventListener('focusin',e=>{
-  dismissibleMenus.forEach(id=>{
-    const menu=q('#'+id);
-    if(menu?.open&&!menu.contains(e.target))menu.removeAttribute('open');
-  });
-});
-
-
+// Sidebar flyout closing is handled explicitly by ui-shell.js after a selection.
 q('#customizeDetails')?.addEventListener('toggle',e=>{
   if(e.target.open) q('#settingsDetails')?.removeAttribute('open');
 });
