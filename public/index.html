@@ -707,6 +707,12 @@
         </article>
         <article class="ecosystem-live-panel">
           <div class="section-heading"><div><span class="eyebrow">X / COMMUNITY SIGNAL</span><h2>XRPL social updates</h2></div><span id="ecosystemXBadge" class="truth-label">OPTIONAL API</span></div>
+          <form id="xPostForm" class="x-post-composer">
+            <div class="x-post-head"><span>POST FROM XRPET</span><b id="xWriteStatus">Checking X write access…</b></div>
+            <textarea id="xPostText" maxlength="280" placeholder="Write an XRPL/XRP update to post on X…"></textarea>
+            <div class="x-post-actions"><small><span id="xPostCount">0</span>/280</small><button id="xPostButton" type="submit">Post to X</button></div>
+            <p id="xPostResult" class="muted">X user write access must be configured on the server.</p>
+          </form>
           <div id="ecosystemXFeed" class="ecosystem-x-feed"><p class="muted">Checking X integration…</p></div>
         </article>
       </div>
@@ -741,6 +747,7 @@
     <span>XRPet Soundtrack</span>
     <strong id="musicTrackName">Ready</strong>
   </div>
+  <canvas id="musicWaveform" class="music-waveform" width="220" height="42" aria-label="Live soundtrack waveform"></canvas>
   <button id="musicPrev" type="button" aria-label="Previous track">‹</button>
   <button id="musicNext" type="button" aria-label="Next track">›</button>
   <button id="musicShuffle" type="button" aria-label="Toggle shuffle">⤨</button>
