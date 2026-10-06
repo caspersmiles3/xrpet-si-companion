@@ -2302,3 +2302,31 @@ body.music-playing .music-main{box-shadow:0 0 22px rgba(72,227,255,.25)}
   .xrpet-music-player{left:8px;bottom:8px;grid-template-columns:36px minmax(110px,1fr) 28px 28px;padding:7px;max-width:calc(100vw - 16px)}
   #musicPrev,#musicShuffle,#musicVolume{display:none}
 }
+
+/* XRPet v4.10.2 compact draggable soundtrack */
+.xrpet-music-player{
+  grid-template-columns:20px 30px minmax(105px,160px) 24px 24px 24px 64px!important;
+  gap:5px!important;
+  padding:6px 7px!important;
+  border-radius:11px!important;
+  max-width:430px!important;
+  touch-action:none;
+}
+.music-drag{
+  width:20px!important;height:28px!important;
+  border:0!important;background:transparent!important;
+  color:#5f7d89!important;cursor:move!important;
+  padding:0!important;font-size:.72rem!important;
+}
+.xrpet-music-player .music-main{width:30px!important;height:30px!important;font-size:.72rem!important}
+.xrpet-music-player button:not(.music-main):not(.music-drag){width:24px!important;height:24px!important;font-size:.7rem!important;border-radius:7px!important}
+.music-meta span{font-size:.38rem!important}
+.music-meta strong{font-size:.56rem!important}
+#musicVolume{width:64px!important}
+@media(max-width:760px){
+  .xrpet-music-player{
+    grid-template-columns:20px 30px minmax(95px,1fr) 24px 24px!important;
+    max-width:290px!important;
+  }
+  #musicPrev,#musicShuffle,#musicVolume{display:none!important}
+}
