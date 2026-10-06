@@ -50,6 +50,7 @@ let bloomPass=null;
 let postFxReady=false;
 const cameraGoal=new THREE.Vector3(0,.15,8.4);
 const targetGoal=new THREE.Vector3(0,.2,0);
+let cameraTween=0;
 
 // Smooth orbit controls. Failure falls back to the built-in model rotation.
 (async()=>{
@@ -67,6 +68,7 @@ const targetGoal=new THREE.Vector3(0,.2,0);
     orbitControls.target.copy(targetGoal);
     orbitControls.rotateSpeed=.62;
     orbitControls.zoomSpeed=.75;
+    orbitControls.addEventListener('start',()=>{cameraTween=0;lastInteract=performance.now()});
   }catch(err){
     console.warn('XRPet orbit controls unavailable',err);
   }
@@ -1000,6 +1002,7 @@ function setCameraPreset(name='front'){
   const p=presets[name]||presets.front;
   cameraGoal.set(p[0],p[1],p[2]);
   targetGoal.set(0,.18,0);
+  cameraTween=1;
   if(orbitControls){orbitControls.target.copy(targetGoal)}
   lastInteract=performance.now();
 }
@@ -1068,11 +1071,14 @@ function renderFrame(){
   const beforeAction=action;const state=currentAction();
   if(beforeAction!=='idle'&&state==='idle')playExternalAction('idle');
 
+  if(cameraTween>.002){
+    camera.position.lerp(cameraGoal,.105);
+    if(orbitControls)orbitControls.target.lerp(targetGoal,.105);
+    cameraTween*=.86;
+  }
   if(orbitControls){
-    orbitControls.target.lerp(targetGoal,.08);
     orbitControls.update();
   }else{
-    camera.position.lerp(cameraGoal,.07);
     camera.lookAt(targetGoal);
   }
 
