@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "esbuild src/app.js --bundle --outfile=public/app.js --format=iife --target=es2020",
+    "build": "node scripts/build.mjs",
     "postinstall": "npm run build",
     "start": "node server.js",
     "dev": "npm run build && node --watch server.js",
@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "cheerio": "^1.0.0",
-    "esbuild": "^0.25.0",
     "express": "^5.1.0",
     "web-push": "^3.6.7"
   },
