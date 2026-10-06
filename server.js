@@ -218,7 +218,7 @@ document.getElementById('reset').addEventListener('click', async () => {
       const keys=await caches.keys();
       await Promise.all(keys.map(k=>caches.delete(k)));
     }
-    try{ localStorage.removeItem('xrpet-v1-state'); }catch{}
+    try{ localStorage.removeItem('xrpet-v1-state'); localStorage.removeItem('xrpet-v2-state'); }catch{}
     status.textContent='Done. Opening fresh XRPet…';
     setTimeout(()=>location.replace('/?fresh='+Date.now()),300);
   }catch(e){
@@ -410,8 +410,8 @@ app.get('/api/self-test', (_req, res) => {
 });
 
 app.get('/api/health', (_req, res) => res.json({
-  ok:true, product:'XRPet SI Companion', version:'3.4.0',
-  capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch','gemwallet','xaman-hook','web-push','capacitor-mobile','external-si-hook','interactive-webgl-companion'],
+  ok:true, product:'XRPet SI Companion', version:'3.5.0',
+  capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch','gemwallet','xaman-hook','web-push','capacitor-mobile','external-si-hook','interactive-webgl-companion','signal-589-community-layer','equipment-matrix','full-audio-engine','room-environments','rigged-glb-roster'],
   integrations:{ xaman:Boolean(process.env.XAMAN_API_KEY), push:Boolean(VAPID_PUBLIC_KEY&&VAPID_PRIVATE_KEY), si:Boolean(process.env.SI_PROVIDER_KEY) }
 }));
 
@@ -430,7 +430,7 @@ setInterval(async () => {
 }, 10 * 60 * 1000);
 
 app.listen(PORT, () => {
-  console.log(`XRPet SI Companion v3.4 running on http://localhost:${PORT}`);
+  console.log(`XRPet // Signal 589 v3.5 running on http://localhost:${PORT}`);
   console.log('Integration readiness:', {
     xaman:Boolean(process.env.XAMAN_API_KEY),
     push:Boolean(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY),
