@@ -410,14 +410,38 @@ const BUILTIN_MODELS={
   nexus:{
     url:'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/RobotExpressive/RobotExpressive.glb',
     credit:'RobotExpressive — Tomás Laulhé / Don McCurdy, CC0 1.0',
-    rotationY:Math.PI,
-    targetHeight:3.25
+    rotationY:Math.PI,targetHeight:3.25,
+    actions:{idle:['idle'],greet:['wave','yes'],happy:['thumbsup','yes'],celebrate:['dance'],alert:['running','walking','no'],sleep:['sitting'],wake:['standing','idle']}
   },
   fox:{
     url:'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/Fox/glTF-Binary/Fox.glb',
     credit:'Fox — PixelMannen / tomkranis / AsoboStudio / scurest, CC0 + CC BY 4.0',
-    rotationY:0,
-    targetHeight:3.0
+    rotationY:0,targetSpan:3.0,
+    actions:{idle:['survey'],greet:['survey'],happy:['survey'],celebrate:['run'],alert:['run','walk'],sleep:['survey'],wake:['survey']}
+  },
+  pup:{
+    url:'https://raw.githubusercontent.com/Lost-secuirty/lostsouls-game/b92e39c3e6e438339fd2954a329205181f1d4752/public/models/dog.glb',
+    credit:'Shiba Inu — Quaternius via Poly Pizza, CC0 1.0',
+    rotationY:0,targetSpan:2.8,
+    actions:{idle:['idle','standing'],greet:['idle','walk'],happy:['walk','idle'],celebrate:['run','walk'],alert:['run','walk'],sleep:['idle'],wake:['idle','walk']}
+  },
+  cat:{
+    url:'https://raw.githubusercontent.com/Lost-secuirty/lostsouls-game/b92e39c3e6e438339fd2954a329205181f1d4752/public/models/cat.glb',
+    credit:'Cat — Quaternius via Poly Pizza, CC0 1.0',
+    rotationY:0,targetSpan:2.7,
+    actions:{idle:['idle','standing'],greet:['idle','walk'],happy:['walk','idle'],celebrate:['run','walk'],alert:['run','walk'],sleep:['idle'],wake:['idle','walk']}
+  },
+  bird:{
+    url:'https://raw.githubusercontent.com/bob6664569/open-water/285b6ce32057c70191a7fe16c31d979fa383ac64/site/assets/animals/scarlet_macaw.glb',
+    credit:'Scarlet Macaw — Mateus Schwaab, CC BY 4.0',
+    rotationY:0,targetSpan:2.7,
+    actions:{idle:['fly'],greet:['fly'],happy:['fly'],celebrate:['fly'],alert:['fly'],sleep:['fly'],wake:['fly']}
+  },
+  turtle:{
+    url:'https://raw.githubusercontent.com/amarnotcool/ABYSS/468cd31632ebf7f7a466713a1dc483d02a965ca2/public/assets/models/turtle.glb',
+    credit:'Turtle — Poly by Google via Poly Pizza, CC BY',
+    rotationY:Math.PI/2,targetSpan:2.9,
+    actions:{idle:[],greet:[],happy:[],celebrate:[],alert:[],sleep:[],wake:[]}
   }
 };
 
@@ -540,6 +564,7 @@ async function loadExternalModel(url,options={}){
   externalActions={};externalActiveAction=null;
   externalModel=gltf.scene;
   externalKind=options.kind||null;
+  externalModel.userData.xrpetActionMap=options.actions||{};
 
   externalModel.traverse(o=>{
     if(o.isMesh){
@@ -557,11 +582,12 @@ async function loadExternalModel(url,options={}){
 
   const box=new THREE.Box3().setFromObject(externalModel);
   const size=new THREE.Vector3(),center=new THREE.Vector3();box.getSize(size);box.getCenter(center);
-  const height=Math.max(.001,size.y);
-  const targetHeight=options.targetHeight||3.1;
-  const scale=targetHeight/height;
+  const fitValue=options.targetSpan?Math.max(.001,size.x,size.y,size.z):Math.max(.001,size.y);
+  const targetValue=options.targetSpan||options.targetHeight||3.1;
+  const scale=targetValue/fitValue;
   externalModel.scale.setScalar(scale);
   externalModel.position.set(-center.x*scale,.08-center.y*scale,-center.z*scale);
+  externalModel.userData.xrpetBaseY=externalModel.position.y;
   externalModel.rotation.y=options.rotationY||0;
   root.add(externalModel);
 
@@ -569,7 +595,8 @@ async function loadExternalModel(url,options={}){
   externalMixer=gltf.animations?.length?new THREE.AnimationMixer(externalModel):null;
   if(externalMixer){
     for(const clip of gltf.animations)externalActions[clip.name]=externalMixer.clipAction(clip);
-    const first=findExternalAction(['idle','survey','standing','walk'])||Object.values(externalActions)[0];
+    const preferred=(options.actions?.idle?.length?options.actions.idle:['idle','survey','standing','walk','fly']);
+    const first=findExternalAction(preferred)||Object.values(externalActions)[0];
     if(first){first.reset().fadeIn(.15).play();externalActiveAction=first}
   }
   return {animations:(gltf.animations||[]).map(a=>a.name),credit:options.credit||''};
@@ -585,16 +612,18 @@ function findExternalAction(patterns=[]){
 }
 function playExternalAction(name){
   if(!externalMixer)return;
-  const map={
-    idle:['idle','survey','standing'],
-    greet:['wave','yes','idle','survey'],
-    happy:['thumbsup','yes','dance','survey'],
-    celebrate:['dance','run','yes','thumbsup'],
-    alert:['run','walk','no','survey'],
+  const fallback={
+    idle:['idle','survey','standing','fly'],
+    greet:['wave','yes','idle','survey','fly'],
+    happy:['thumbsup','yes','dance','survey','walk','fly'],
+    celebrate:['dance','run','yes','thumbsup','fly'],
+    alert:['run','walk','no','survey','fly'],
     sleep:['sitting','idle','survey'],
-    wake:['standing','idle','survey']
+    wake:['standing','idle','survey','fly']
   };
-  const next=findExternalAction(map[name]||map.idle);
+  const custom=externalModel?.userData?.xrpetActionMap||{};
+  const patterns=(custom[name]&&custom[name].length?custom[name]:fallback[name])||fallback.idle;
+  const next=findExternalAction(patterns);
   if(!next||next===externalActiveAction)return;
   next.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).fadeIn(.18).play();
   if(externalActiveAction)externalActiveAction.fadeOut(.18);
@@ -699,6 +728,13 @@ function animate(){
   if(beforeAction!=='idle'&&state==='idle')playExternalAction('idle');
 
   if(externalMixer)externalMixer.update(dt);
+  if(externalModel){
+    const extSleep=state==='sleep',extCelebrate=state==='celebrate',extAlert=state==='alert';
+    const baseY=externalModel.userData.xrpetBaseY??0;
+    externalModel.position.y=baseY+(extSleep?-.06:0)+Math.sin(t*(extSleep?.65:1.15))*(extSleep?.012:.026)+(extCelebrate?Math.abs(Math.sin(t*6))*.06:0);
+    externalModel.rotation.z=(extSleep?.045:Math.sin(t*.52)*.008)+(extCelebrate?Math.sin(t*5)*.018:0);
+    externalModel.rotation.x=extAlert?Math.sin(t*2.2)*.012:0;
+  }
 
   if(!dragging&&idle&&state!=='alert'&&state!=='sleep') targetRotY=Math.sin(t*.28)*.15;
   pet.rotation.y+=(targetRotY-pet.rotation.y)*.07;
