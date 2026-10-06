@@ -9368,3 +9368,38 @@ body:not(.workspace-open) .main-shell>.primary-view-section:not(.view-active){
   color:#9cb0b6!important;
   text-shadow:0 2px 12px rgba(0,0,0,.95)!important;
 }
+
+
+/* XRPet 5.5.40 — full-height portrait side columns + cleaner launch type */
+#launchGate .launch-side-video{
+  top:0!important;
+  bottom:0!important;
+  height:100vh!important;
+  width:max(0px,calc((100vw - 133.333vh)/2))!important;
+  max-height:none!important;
+  object-fit:cover!important;
+  object-position:center center!important;
+  background:#000!important;
+  filter:contrast(1.12) saturate(1.06) brightness(.9)!important;
+}
+#launchGate .launch-side-video-left{
+  left:0!important;
+  right:auto!important;
+  transform:none!important;
+}
+#launchGate .launch-side-video-right{
+  right:0!important;
+  left:auto!important;
+  transform:scaleX(-1)!important;
+}
+#launchGate #launchTitle{
+  font-size:clamp(1.95rem,4.3vw,3.45rem)!important;
+  line-height:1.02!important;
+}
+#launchGate #launchStatus{
+  font-size:.72rem!important;
+}
+#launchGate .launch-wordline{
+  font-size:.52rem!important;
+  gap:7px!important;
+}
