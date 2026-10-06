@@ -1065,8 +1065,8 @@ function dockPosition(){
   const dock=q('#rippletDock'),layer=roamLayer?.getBoundingClientRect(),avatar=lifeAvatar?.getBoundingClientRect();
   if(!dock||!layer)return null;
   const r=dock.getBoundingClientRect();
-  const w=Math.max(26,avatar?.width||30);
-  const h=Math.max(36,avatar?.height||42);
+  const w=Math.max(14,avatar?.width||15);
+  const h=Math.max(20,avatar?.height||21);
   return {
     x:r.left-layer.left+r.width/2-w/2,
     y:Math.max(6,r.top-layer.top+Math.max(4,(r.height-h)*.16))
@@ -1112,8 +1112,8 @@ function goRipplet(activity='explore'){
   if(activity==='socialize')target=null;
   if(activity==='ledger')target={x:layer.width*.72,y:Math.max(165,layer.height*.34)};
   if(!target){
-    const avatarH=Math.max(36,avatar?.height||42);
-    const avatarW=Math.max(26,avatar?.width||30);
+    const avatarH=Math.max(20,avatar?.height||21);
+    const avatarW=Math.max(14,avatar?.width||15);
     target={
       x:14+Math.random()*Math.max(40,layer.width-avatarW-28),
       y:12+Math.random()*Math.max(36,layer.height-avatarH-24)
@@ -1195,7 +1195,7 @@ function visibleInterfaceTargets(){
 function interfaceTargetPosition(el,mode='perch'){
   const layer=roamLayer?.getBoundingClientRect(),avatar=lifeAvatar?.getBoundingClientRect(),r=el?.__rect||el?.getBoundingClientRect?.();
   if(!layer||!r)return null;
-  const aw=Math.max(26,avatar?.width||30),ah=Math.max(36,avatar?.height||42);
+  const aw=Math.max(14,avatar?.width||15),ah=Math.max(20,avatar?.height||21);
   const localLeft=r.left-layer.left,localTop=r.top-layer.top;
   const centerX=localLeft+r.width*.5-aw*.5;
   const rightEdge=localLeft+r.width-aw*.78;
