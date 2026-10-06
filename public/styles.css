@@ -6925,3 +6925,139 @@ body.sidebar-collapsed .main-shell{
   visibility:visible!important;
   opacity:1!important;
 }
+
+
+/* v5.5.23 — authoritative shell recovery: cancel legacy fixed-rail rules */
+.app-frame{
+  display:grid!important;
+  grid-template-columns:210px minmax(0,1fr)!important;
+  width:100%!important;
+  max-width:100vw!important;
+  min-height:100dvh!important;
+  padding-left:0!important;
+  margin:0!important;
+  overflow:hidden!important;
+}
+.sidebar{
+  position:relative!important;
+  inset:auto!important;
+  top:auto!important;
+  right:auto!important;
+  bottom:auto!important;
+  left:auto!important;
+  width:210px!important;
+  min-width:210px!important;
+  max-width:210px!important;
+  height:100dvh!important;
+  min-height:100dvh!important;
+  max-height:100dvh!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  z-index:40!important;
+}
+.main-shell{
+  grid-column:2!important;
+  position:relative!important;
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  height:100dvh!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:8px 18px 30px!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+.top-command-deck{
+  display:grid!important;
+  position:sticky!important;
+  top:0!important;
+  z-index:90!important;
+}
+.main-shell>.primary-view-section{
+  width:100%!important;
+  max-width:100%!important;
+}
+.main-shell>.primary-view-section.view-active{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+
+/* Sidebar collapse now changes only the grid track, never pushes the main app off-screen. */
+body.sidebar-collapsed .app-frame{
+  grid-template-columns:46px minmax(0,1fr)!important;
+  padding-left:0!important;
+}
+body.sidebar-collapsed .sidebar{
+  position:relative!important;
+  inset:auto!important;
+  width:46px!important;
+  min-width:46px!important;
+  max-width:46px!important;
+  height:100dvh!important;
+  padding:0!important;
+  overflow:visible!important;
+}
+body.sidebar-collapsed .main-shell{
+  grid-column:2!important;
+  width:100%!important;
+  min-width:0!important;
+  padding-left:18px!important;
+  padding-right:18px!important;
+}
+.sidebar-collapse-toggle{
+  position:absolute!important;
+  left:auto!important;
+  right:-14px!important;
+  top:10px!important;
+}
+body.sidebar-collapsed .sidebar-collapse-toggle{
+  left:auto!important;
+  right:-14px!important;
+  top:10px!important;
+}
+
+/* Keep the player entirely inside the sidebar width. */
+.sidebar #xrpetMusicPlayer.music-player-clean{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  overflow:hidden!important;
+}
+.sidebar #xrpetMusicPlayer .music-transport{
+  max-width:100%!important;
+  overflow:hidden!important;
+}
+
+/* Mobile returns to a normal one-column document. */
+@media(max-width:760px){
+  .app-frame,
+  body.sidebar-collapsed .app-frame{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    padding-left:0!important;
+  }
+  .sidebar{
+    position:relative!important;
+    inset:auto!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+  }
+  .main-shell,
+  body.sidebar-collapsed .main-shell{
+    grid-column:auto!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:100dvh!important;
+    padding:8px 10px 26px!important;
+  }
+}
