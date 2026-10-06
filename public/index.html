@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=5.5.2">
+  <link rel="stylesheet" href="/styles.css?v=5.5.3">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate clean-launch" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
@@ -175,6 +175,17 @@
         </div>
       </div>
     </header>
+    <div id="rippletDock" class="ripplet-dock" aria-label="Ripplet companion dock">
+      <div class="ripplet-dock-platform" aria-hidden="true"><i></i><b>589</b><i></i></div>
+      <div class="ripplet-dock-copy">
+        <span>RIPPLET DOCK</span>
+        <strong id="rippletDockStatus">ROAMING</strong>
+      </div>
+      <div class="ripplet-dock-actions">
+        <button id="dockRipplet" type="button">Dock</button>
+        <button id="undockRipplet" type="button">Roam</button>
+      </div>
+    </div>
     <div id="rippletRoamLayer" class="ripplet-roam-layer" aria-hidden="false">
       <div id="lifeAvatar" class="life-avatar global-life-avatar" aria-label="Ripplet roaming through XRPet">
         <div id="persistentCompanionLayer" class="persistent-companion-layer home-companion-layer" data-home-companion aria-label="Ripplet companion">
@@ -875,14 +886,14 @@
   },6000);
 })();
 </script>
-<script src="/launch-enhance.js?v=5.5.3"></script>
+<script src="/launch-enhance.js?v=5.5.4"></script>
 <script src="/contact-directory.js?v=5.5.3"></script>
 <script src="/music-player.js?v=5.5.2"></script>
 <script src="/games.js?v=5.5.2"></script>
 <script src="/ecosystem.js?v=5.5.2"></script>
-<script src="/app.js?v=5.5.2"></script>
+<script src="/app.js?v=5.5.3"></script>
 <script src="/timeline.js?v=5.5.2"></script>
-<script type="module" src="/companion3d.js?v=5.5.2"></script>
+<script type="module" src="/companion3d.js?v=5.5.3"></script>
 
 </body>
 </html>
