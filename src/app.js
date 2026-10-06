@@ -983,6 +983,12 @@ if(launchBackgroundVideo){
   launchBackgroundVideo.playsInline=true;
   launchBackgroundVideo.play?.().catch(()=>{});
 }
+qa('.launch-side-video').forEach(video=>{
+  video.muted=true;
+  video.loop=true;
+  video.playsInline=true;
+  video.play?.().catch(()=>{});
+});
 let launchOpened=false,launchProgress=0,launchTimer=0,launchIdleTimer=0,launchPulse=1;
 
 const launchIdleMessages=[
