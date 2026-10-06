@@ -265,26 +265,72 @@ async function registerVisitor(){
 }
 
 let marketWs=null,marketRetry=0,marketLastTickAt=0,liveChartPoints=[];
-function applyLiveMarketTick(price,change24h=null){
-  const p=Number(price);
+function fmtMarketNumber(v,digits=4){
+  const n=Number(v);return Number.isFinite(n)?'$'+n.toFixed(digits):'—';
+}
+function fmtCompact(v,suffix=''){
+  const n=Number(v);if(!Number.isFinite(n))return '—';
+  if(Math.abs(n)>=1e9)return (n/1e9).toFixed(2)+'B'+suffix;
+  if(Math.abs(n)>=1e6)return (n/1e6).toFixed(2)+'M'+suffix;
+  if(Math.abs(n)>=1e3)return (n/1e3).toFixed(1)+'K'+suffix;
+  return n.toFixed(2)+suffix;
+}
+function updateMarketDetail(d={}){
+  const bid=Number(d.bestBid??d.best_bid),ask=Number(d.bestAsk??d.best_ask),price=Number(d.price);
+  const spread=Number.isFinite(bid)&&Number.isFinite(ask)?ask-bid:Number(d.spread);
+  const spreadBps=Number.isFinite(spread)&&Number.isFinite(price)&&price>0?(spread/price)*10000:Number(d.spreadBps);
+  setText('#marketBid',fmtMarketNumber(bid,5));
+  setText('#marketAsk',fmtMarketNumber(ask,5));
+  setText('#marketSpread',Number.isFinite(spread)?'$'+spread.toFixed(6):'—');
+  setText('#marketSpreadBps',Number.isFinite(spreadBps)?spreadBps.toFixed(2)+' bps':'— bps');
+  if(Number.isFinite(Number(d.open24h)))setText('#chartOpen',fmtMarketNumber(d.open24h));
+  if(Number.isFinite(Number(d.high24h)))setText('#chartHigh',fmtMarketNumber(d.high24h));
+  if(Number.isFinite(Number(d.low24h)))setText('#chartLow',fmtMarketNumber(d.low24h));
+  if(Number.isFinite(Number(d.volume24hXrp)))setText('#chartVolume',fmtCompact(d.volume24hXrp,' XRP'));
+  if(Number.isFinite(Number(d.volume24hUsd)))setText('#chartVolumeUsd','$'+fmtCompact(d.volume24hUsd));
+  if(Number.isFinite(Number(d.range24hPct)))setText('#chartRangePct',Number(d.range24hPct).toFixed(2)+'%');
+  if(d.source)setText('#marketSource',d.source);
+  if(d.generatedAt)setText('#marketLastTick',new Date(d.generatedAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'}));
+}
+function mergeLiveTickIntoChart(p){
+  if(!Number.isFinite(p)||p<=0)return;
+  const now=Date.now(),bucket=Math.floor(now/300000)*300000;
+  const last=liveChartPoints[liveChartPoints.length-1];
+  if(last&&Math.floor(Number(last.time)/300000)*300000===bucket){
+    last.close=p;last.high=Math.max(Number(last.high)||p,p);last.low=Math.min(Number(last.low)||p,p);last.time=now;
+  }else{
+    liveChartPoints.push({time:now,open:p,high:p,low:p,close:p,volume:0});
+  }
+  if(liveChartPoints.length>288)liveChartPoints=liveChartPoints.slice(-288);
+}
+function applyLiveMarketTick(ticker={}){
+  const p=Number(ticker.price);
   if(!Number.isFinite(p)||p<=0)return;
   const previousPrice=state.lastMarketPrice;
   state.xrpPrice=p;state.lastMarketPrice=p;
-  if(Number.isFinite(Number(change24h)))state.xrpChange24h=Number(change24h);
+  const change24h=Number(ticker.price_percent_chg_24_h);
+  if(Number.isFinite(change24h))state.xrpChange24h=change24h;
   if(Number.isFinite(previousPrice)&&previousPrice!==p){
     const delta=(p-previousPrice)/previousPrice*100;
     state.lastPriceTickPct=delta;
     setText('#foodSignal',(delta>=0?'+':'')+delta.toFixed(3)+'% tick');
   }
-  const livePrice='$'+p.toFixed(4);
+  const livePrice='$'+p.toFixed(5);
   const liveChange=Number.isFinite(state.xrpChange24h)?(state.xrpChange24h>=0?'+':'')+state.xrpChange24h.toFixed(2)+'% · 24h':'STREAMING';
   setText('#xrpPrice',livePrice);setText('#xrpChange',liveChange);
   setText('#globalXrpPrice',livePrice);setText('#globalXrpChange',liveChange);
-  setText('#chartRange','LIVE');
   marketLastTickAt=Date.now();
-  const now=Date.now();
-  liveChartPoints.push({time:now,open:p,high:p,low:p,close:p,volume:0});
-  if(liveChartPoints.length>240)liveChartPoints.shift();
+  const bid=Number(ticker.best_bid),ask=Number(ticker.best_ask);
+  const vol=Number(ticker.volume_24_h),hi=Number(ticker.high_24_h),lo=Number(ticker.low_24_h);
+  updateMarketDetail({
+    price:p,bestBid:bid,bestAsk:ask,
+    volume24hXrp:vol,volume24hUsd:Number.isFinite(vol)?vol*p:null,
+    high24h:hi,low24h:lo,
+    range24hPct:Number.isFinite(hi)&&Number.isFinite(lo)&&lo>0?((hi-lo)/lo)*100:null,
+    source:'Coinbase live ticker',
+    generatedAt:new Date().toISOString()
+  });
+  mergeLiveTickIntoChart(p);
   if(liveChartPoints.length>=2)renderMarketChart(liveChartPoints);
   renderSignal589();
 }
@@ -299,6 +345,7 @@ function connectMarketStream(){
     marketWs.send(JSON.stringify({type:'subscribe',product_ids:['XRP-USD'],channel:'ticker'}));
     marketWs.send(JSON.stringify({type:'subscribe',channel:'heartbeats'}));
     setText('#globalXrpChange','LIVE STREAM');
+    setText('#marketSource','Coinbase live ticker');
   };
   marketWs.onmessage=e=>{
     let m;try{m=JSON.parse(e.data)}catch{return}
@@ -306,20 +353,32 @@ function connectMarketStream(){
     for(const ev of m.events){
       for(const t of ev.tickers||[]){
         if(t.product_id!=='XRP-USD')continue;
-        applyLiveMarketTick(t.price,t.price_percent_chg_24_h);
+        applyLiveMarketTick(t);
       }
     }
   };
   marketWs.onclose=scheduleMarketReconnect;
   marketWs.onerror=()=>{try{marketWs.close()}catch{}};
 }
-async function loadMarket(){try{const r=await fetch('/api/market',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error();const previousPrice=state.lastMarketPrice;state.xrpPrice=Number(d.price);state.xrpChange24h=Number(d.change24h);state.lastMarketPrice=state.xrpPrice;renderSignal589();
-if(Number.isFinite(previousPrice)&&Number.isFinite(state.xrpPrice)&&previousPrice!==state.xrpPrice){
-  const delta=(state.xrpPrice-previousPrice)/previousPrice*100;
-  state.lastPriceTickPct=delta;
-  setText('#foodSignal',(delta>=0?'+':'')+delta.toFixed(3)+'% tick');
-  if(!false)performLifeActivity('eat');
-}const livePrice=Number.isFinite(state.xrpPrice)?'$'+state.xrpPrice.toFixed(4):'Unavailable';const liveChange=Number.isFinite(state.xrpChange24h)?(state.xrpChange24h>=0?'+':'')+state.xrpChange24h.toFixed(2)+'% · 24h':'24h unavailable';setText('#xrpPrice',livePrice);setText('#xrpChange',liveChange);setText('#globalXrpPrice',livePrice);setText('#globalXrpChange',liveChange);if(state.marketMood&&Number.isFinite(state.xrpChange24h)&&Math.abs(state.xrpChange24h)>=5)mood(state.xrpChange24h>0?'Excited':'Watchful','XRP moved '+Math.abs(state.xrpChange24h).toFixed(2)+'% over 24 hours. Movement is not a prediction.',state.xrpChange24h>0?'energized':'alert')}catch{setText('#xrpPrice','Unavailable');setText('#xrpChange','Market feed offline');setText('#globalXrpPrice','Unavailable');setText('#globalXrpChange','Market feed offline');renderSignal589()}}
+async function loadMarket(){
+  try{
+    const r=await fetch('/api/market',{cache:'no-store'}),d=await r.json();if(!r.ok)throw new Error();
+    const previousPrice=state.lastMarketPrice;
+    state.xrpPrice=Number(d.price);state.xrpChange24h=Number(d.change24h);state.lastMarketPrice=state.xrpPrice;
+    renderSignal589();updateMarketDetail(d);
+    if(Number.isFinite(previousPrice)&&Number.isFinite(state.xrpPrice)&&previousPrice!==state.xrpPrice){
+      const delta=(state.xrpPrice-previousPrice)/previousPrice*100;
+      state.lastPriceTickPct=delta;setText('#foodSignal',(delta>=0?'+':'')+delta.toFixed(3)+'% tick');
+      performLifeActivity('eat');
+    }
+    const livePrice=Number.isFinite(state.xrpPrice)?'$'+state.xrpPrice.toFixed(5):'Unavailable';
+    const liveChange=Number.isFinite(state.xrpChange24h)?(state.xrpChange24h>=0?'+':'')+state.xrpChange24h.toFixed(2)+'% · 24h':'24h unavailable';
+    setText('#xrpPrice',livePrice);setText('#xrpChange',liveChange);setText('#globalXrpPrice',livePrice);setText('#globalXrpChange',liveChange);
+    if(state.marketMood&&Number.isFinite(state.xrpChange24h)&&Math.abs(state.xrpChange24h)>=5)mood(state.xrpChange24h>0?'Excited':'Watchful','XRP moved '+Math.abs(state.xrpChange24h).toFixed(2)+'% over 24 hours. Movement is not a prediction.',state.xrpChange24h>0?'energized':'alert');
+  }catch{
+    setText('#xrpPrice','Unavailable');setText('#xrpChange','Market feed offline');setText('#globalXrpPrice','Unavailable');setText('#globalXrpChange','Market feed offline');setText('#marketSource','Market feed offline');renderSignal589();
+  }
+}
 function renderMarketChart(points=[]){
   const svg=q('#xrpMarketChart'),line=q('#marketLine'),area=q('#marketArea'),grid=q('#marketGrid');
   if(!svg||!line||!area||!grid||!points.length)return;
@@ -343,13 +402,13 @@ function renderMarketChart(points=[]){
   const volume=pts.reduce((n,p)=>n+(Number.isFinite(Number(p.volume))?Number(p.volume):0),0);
   setText('#chartVolume',volume>=1e6?(volume/1e6).toFixed(1)+'M XRP':volume>=1e3?(volume/1e3).toFixed(1)+'K XRP':Math.round(volume)+' XRP');
   const fmt=t=>new Date(t).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
-  setText('#chartStart',fmt(pts[0].time));setText('#chartEnd',fmt(pts[pts.length-1].time));setText('#chartRange','24 HOURS');
+  setText('#chartStart',fmt(pts[0].time));setText('#chartEnd',fmt(pts[pts.length-1].time));setText('#chartRange','24H · 5 MIN CANDLES');
 }
 async function loadMarketHistory(){
   try{
     const r=await fetch('/api/market-history',{cache:'no-store'}),d=await r.json();
     if(!r.ok||!Array.isArray(d.points))throw new Error();
-    liveChartPoints=(d.points||[]).slice(-120).map(p=>({...p,time:Number(p.time)}));
+    liveChartPoints=(d.points||[]).slice(-288).map(p=>({...p,time:Number(p.time)}));
     renderMarketChart(liveChartPoints);
   }catch{setText('#chartRange','MARKET CHART OFFLINE')}
 }
@@ -366,15 +425,18 @@ function formatLedgerAmount(amount){
 }
 function extractDeliveredAmount(m,tx){const meta=m.meta||m.metaData||{};return meta.delivered_amount??meta.DeliveredAmount??tx.DeliverMax??tx.Amount??null}
 function normalizeLiveTransaction(m){
+  if(m?.type!=='transaction'||m?.validated!==true)return null;
   const tx=m.transaction||m.tx_json||m.tx||{};
   if(!tx||typeof tx!=='object')return null;
   const hash=tx.hash||m.hash||m.transaction_hash||'';
+  const ledger=m.ledger_index??tx.ledger_index??null;
+  if(!hash||!Number.isFinite(Number(ledger)))return null;
   if(hash&&seenLiveTx.has(hash))return null;
   if(hash){seenLiveTx.add(hash);if(seenLiveTx.size>300){const first=seenLiveTx.values().next().value;seenLiveTx.delete(first)}}
   const meta=m.meta||m.metaData||{};
   const timestamp=Number.isFinite(Number(tx.date))?new Date((Number(tx.date)+946684800)*1000).toISOString():new Date().toISOString();
   const memos=Array.isArray(tx.Memos)?tx.Memos.map(x=>{const memo=x?.Memo||{};return {type:hexToUtf8(memo.MemoType||''),format:hexToUtf8(memo.MemoFormat||''),data:hexToUtf8(memo.MemoData||'')}}).filter(x=>x.type||x.format||x.data):[];
-  return {hash,type:tx.TransactionType||'Transaction',account:tx.Account||'',destination:tx.Destination||'',destinationTag:tx.DestinationTag,amount:formatLedgerAmount(extractDeliveredAmount(m,tx)),fee:tx.Fee!=null?(Number(tx.Fee)/1000000).toFixed(6)+' XRP':'—',sequence:tx.Sequence??'—',ledger:m.ledger_index??tx.ledger_index??state.ledgerIndex??'—',status:meta.TransactionResult||m.engine_result||(m.validated===false?'Pending':'Validated'),validated:m.validated!==false,flags:tx.Flags??0,ticket:tx.TicketSequence??null,timestamp,memos};
+  return {hash,type:tx.TransactionType||'Transaction',account:tx.Account||'',destination:tx.Destination||'',destinationTag:tx.DestinationTag,amount:formatLedgerAmount(extractDeliveredAmount(m,tx)),fee:tx.Fee!=null?(Number(tx.Fee)/1000000).toFixed(6)+' XRP':'—',sequence:tx.Sequence??'—',ledger,status:meta.TransactionResult||m.engine_result||(m.validated===false?'Pending':'Validated'),validated:m.validated!==false,flags:tx.Flags??0,ticket:tx.TicketSequence??null,timestamp,memos,source:activeXrplEndpoint,explorer:'https://livenet.xrpl.org/transactions/'+encodeURIComponent(hash)};
 }
 function scheduleLiveTransactionRender(){if(liveTxRenderTimer)return;liveTxRenderTimer=setTimeout(()=>{liveTxRenderTimer=0;renderLiveTransactions()},250)}
 function renderLiveTransactions(){
@@ -396,22 +458,69 @@ function renderLiveTransactions(){
       '<p><span>Timestamp</span><code>'+esc(new Date(x.timestamp).toLocaleString())+'</code></p>'+
       (x.ticket!=null?'<p><span>Ticket Sequence</span><code>'+esc(x.ticket)+'</code></p>':'')+
       '<p><span>Flags</span><code>'+esc(x.flags)+'</code></p>'+
-      '<p class="tx-hash"><span>Transaction Hash</span><code>'+esc(x.hash||'—')+'</code></p>'+
+      '<p class="tx-hash"><span>Transaction Hash</span><code>'+esc(x.hash||'—')+'</code><a class="tx-explorer-link" href="'+esc(x.explorer)+'" target="_blank" rel="noopener">Open on XRPL Explorer ↗</a></p>'+
+      '<p><span>Validation</span><code>Validated on XRPL Mainnet</code></p>'+
+      '<p><span>Live Source</span><code>'+esc(x.source||'XRPL mainnet WebSocket')+'</code></p>'+
       (x.memos?.length?'<p class="tx-memos"><span>Memos</span><code>'+esc(x.memos.map(m=>[m.type,m.format,m.data].filter(Boolean).join(' · ')).join(' | '))+'</code></p>':'')+
       '<p class="tx-safety-note"><span>Security</span><small>Public XRPL data only. Seeds and private keys are never part of this feed.</small></p>'+
     '</div></details>').join('');
   setText('#liveTxRate',liveTransactions.length+' RECENT');
 }
 let ws,retry,watchedSubscribed=null;
-function subscribeAccount(a){if(!a||!ws||ws.readyState!==1)return;if(watchedSubscribed&&watchedSubscribed!==a)ws.send(JSON.stringify({id:'unwatch',command:'unsubscribe',accounts:[watchedSubscribed]}));ws.send(JSON.stringify({id:'watch',command:'subscribe',accounts:[a]}));watchedSubscribed=a}
-function connectLedger(){clearTimeout(retry);try{ws=new WebSocket('wss://xrplcluster.com/')}catch{return scheduleReconnect()}
-  ws.onopen=()=>{state.connected=true;setSimpleLaunchProgress?.(96,'XRPL live connection established.');renderSignal589();setText('#status','Live');const b=q('#liveBadge');if(b){b.className='status-pill live';b.innerHTML='<i></i><span>XRPL Live</span>'}mood('Connected','Live XRPL data is flowing.','calm');ws.send(JSON.stringify({id:'ledger',command:'subscribe',streams:['ledger','server','transactions']}));ws.send(JSON.stringify({id:'fee',command:'fee'}));if(state.account)subscribeAccount(state.account)};
-  ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='ledgerClosed'){state.ledgerIndex=m.ledger_index;setText('#launchLedgerCounter',Number(m.ledger_index).toLocaleString());state.txCount=m.txn_count??0;state.baseFeeDrops=m.fee_base??state.baseFeeDrops;setText('#ledger',Number(m.ledger_index).toLocaleString());setText('#txCount',(m.txn_count??0)+' transactions');setText('#homeNetworkDetail','Ledger '+Number(m.ledger_index).toLocaleString()+' · '+(m.txn_count??0)+' transactions in latest close');if(m.fee_base!=null)setText('#fee',m.fee_base);renderSignal589()}else if(m.type==='serverStatus'){setText('#serverState',m.server_status||'Connected')}else if(m.id==='fee'&&m.result){const drops=m.result?.drops?.base_fee;if(drops!=null){state.baseFeeDrops=Number(drops);setText('#fee',drops)}}else if(m.id==='xrpet-nfts'&&Array.isArray(m.result?.account_nfts)){
-    renderNfts(m.result.account_nfts);
-  }else if(m.type==='transaction'){const normalized=normalizeLiveTransaction(m);if(normalized){window.dispatchEvent(new CustomEvent('xrpet:xrplTransaction',{detail:normalized}));liveTransactions.unshift(normalized);if(liveTransactions.length>25)liveTransactions.length=25;scheduleLiveTransactionRender();state.lastLedgerTxAt=Date.now();setText('#waterSignal','Ledger #'+normalized.ledger);setText('#sleepSignal','XRPL active');if(!false&&!lifeWaterTimer){performLifeActivity('drink');lifeWaterTimer=setTimeout(()=>lifeWaterTimer=0,3500)}}const tx=m.transaction||m.tx_json||m.tx||{};if(state.account&&(tx.Account===state.account||tx.Destination===state.account)){if(state.ledgerSound)playSound('ledgerTx');window.XRPet3D?.celebrate?.();mood('Wallet activity','Validated activity detected on the watched account.','energized');addXp(3)}}};
-  ws.onclose=()=>{state.connected=false;renderSignal589();setText('#status','Reconnecting');const b=q('#liveBadge');if(b){b.className='status-pill waiting';b.innerHTML='<i></i><span>Reconnecting</span>'}scheduleReconnect()};ws.onerror=()=>safe(()=>ws.close())
+const XRPL_ENDPOINTS=['wss://s2.ripple.com/','wss://xrplcluster.com/'];
+let xrplEndpointIndex=0,activeXrplEndpoint=XRPL_ENDPOINTS[0];
+function xrplSourceLabel(url){return url.includes('s2.ripple.com')?'Ripple public XRPL node':'XRPLCluster public mainnet node'}
+function subscribeAccount(a){
+  if(!a||!ws||ws.readyState!==1)return;
+  if(watchedSubscribed&&watchedSubscribed!==a)ws.send(JSON.stringify({id:'unwatch',command:'unsubscribe',accounts:[watchedSubscribed]}));
+  ws.send(JSON.stringify({id:'watch',command:'subscribe',accounts:[a]}));watchedSubscribed=a;
 }
-function scheduleReconnect(){clearTimeout(retry);retry=setTimeout(connectLedger,4000)}
+function connectLedger(){
+  clearTimeout(retry);
+  activeXrplEndpoint=XRPL_ENDPOINTS[xrplEndpointIndex%XRPL_ENDPOINTS.length];
+  setText('#txStreamSource','CONNECTING · '+xrplSourceLabel(activeXrplEndpoint));
+  try{ws=new WebSocket(activeXrplEndpoint)}catch{return scheduleReconnect(true)}
+  ws.onopen=()=>{
+    state.connected=true;setSimpleLaunchProgress?.(96,'XRPL live connection established.');renderSignal589();setText('#status','Live');
+    setText('#serverState',xrplSourceLabel(activeXrplEndpoint));setText('#txStreamSource','LIVE · '+xrplSourceLabel(activeXrplEndpoint));
+    const b=q('#liveBadge');if(b){b.className='status-pill live';b.innerHTML='<i></i><span>XRPL Live</span>'}
+    mood('Connected','Validated XRPL mainnet data is flowing.','calm');
+    ws.send(JSON.stringify({id:'ledger',command:'subscribe',streams:['ledger','server','transactions']}));
+    ws.send(JSON.stringify({id:'fee',command:'fee'}));if(state.account)subscribeAccount(state.account);
+  };
+  ws.onmessage=e=>{
+    let m;try{m=JSON.parse(e.data)}catch{return}
+    if(m.type==='ledgerClosed'){
+      state.ledgerIndex=m.ledger_index;setText('#launchLedgerCounter',Number(m.ledger_index).toLocaleString());state.txCount=m.txn_count??0;state.baseFeeDrops=m.fee_base??state.baseFeeDrops;
+      setText('#ledger',Number(m.ledger_index).toLocaleString());setText('#txCount',(m.txn_count??0)+' transactions');setText('#homeNetworkDetail','Ledger '+Number(m.ledger_index).toLocaleString()+' · '+(m.txn_count??0)+' transactions in latest close');
+      if(m.fee_base!=null)setText('#fee',m.fee_base);renderSignal589();
+    }else if(m.type==='serverStatus'){
+      setText('#serverState',m.server_status||xrplSourceLabel(activeXrplEndpoint));
+    }else if(m.id==='fee'&&m.result){
+      const drops=m.result?.drops?.base_fee;if(drops!=null){state.baseFeeDrops=Number(drops);setText('#fee',drops)}
+    }else if(m.id==='xrpet-nfts'&&Array.isArray(m.result?.account_nfts)){
+      renderNfts(m.result.account_nfts);
+    }else if(m.type==='transaction'){
+      const normalized=normalizeLiveTransaction(m);
+      if(normalized){
+        window.dispatchEvent(new CustomEvent('xrpet:xrplTransaction',{detail:normalized}));
+        liveTransactions.unshift(normalized);if(liveTransactions.length>40)liveTransactions.length=40;scheduleLiveTransactionRender();
+        state.lastLedgerTxAt=Date.now();setText('#waterSignal','Ledger #'+normalized.ledger);setText('#sleepSignal','XRPL active');
+        if(!lifeWaterTimer){performLifeActivity('drink');lifeWaterTimer=setTimeout(()=>lifeWaterTimer=0,3500)}
+      }
+      const tx=m.transaction||m.tx_json||m.tx||{};
+      if(m.validated===true&&state.account&&(tx.Account===state.account||tx.Destination===state.account)){
+        if(state.ledgerSound)playSound('ledgerTx');window.XRPet3D?.celebrate?.();mood('Wallet activity','Validated activity detected on the watched XRPL account.','energized');addXp(3)
+      }
+    }
+  };
+  ws.onclose=()=>{state.connected=false;renderSignal589();setText('#status','Reconnecting');setText('#txStreamSource','RECONNECTING');const b=q('#liveBadge');if(b){b.className='status-pill waiting';b.innerHTML='<i></i><span>Reconnecting</span>'}scheduleReconnect(true)};
+  ws.onerror=()=>safe(()=>ws.close());
+}
+function scheduleReconnect(rotate=false){
+  clearTimeout(retry);if(rotate)xrplEndpointIndex=(xrplEndpointIndex+1)%XRPL_ENDPOINTS.length;
+  retry=setTimeout(connectLedger,2500);
+}
 async function loadConfig(){try{const r=await fetch('/api/config',{cache:'no-store'});return await r.json()}catch{return{}}}
 async function integrationCheck(){const box=q('#integrationStatus');if(!box)return;box.innerHTML='<div class="integration-item"><span>System</span><strong>Checking…</strong></div>';try{const [cfg,self]=await Promise.all([loadConfig(),fetch('/api/self-test',{cache:'no-store'}).then(r=>r.json())]);const rows=[['XRPL',state.connected?'LIVE':'CONNECTING'],['Xaman',cfg.xamanApiKey?'READY':'NOT CONFIGURED'],['Web Push',cfg.pushEnabled?'READY':'NOT CONFIGURED'],['Full SI',cfg.siProviderEnabled?'READY':'NOT CONFIGURED']];box.innerHTML=rows.map(([n,s])=>'<div class="integration-item"><span>'+n+'</span><strong class="'+(/LIVE|READY/.test(s)?'ok':'warn')+'">'+s+'</strong></div>').join('')}catch{box.innerHTML='<div class="integration-item"><span>System</span><strong class="warn">Check failed</strong></div>'}}
 async function requestNfts(){
