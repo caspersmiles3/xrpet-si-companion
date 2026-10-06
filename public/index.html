@@ -8,12 +8,12 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=5.5.25">
+  <link rel="stylesheet" href="/styles.css?v=5.5.26">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate clean-launch" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
   <video id="launchBackgroundVideo" class="clean-launch-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
-    <source src="/media/xrpet-launch-bg.mp4?v=5.5.25" type="video/mp4">
+    <source src="/media/xrpet-launch-bg.mp4?v=5.5.26" type="video/mp4">
   </video>
   <div class="launch-pillar launch-pillar-left" aria-hidden="true"></div>
   <div class="launch-pillar launch-pillar-right" aria-hidden="true"></div>
@@ -127,31 +127,6 @@
       </details>
     </nav>
 
-    <div id="xrpetMusicPlayer" class="xrpet-music-player music-player-clean" aria-label="XRPet soundtrack">
-      <audio id="xrpetAudio" preload="metadata"></audio>
-
-      <div class="music-now-playing">
-        <div class="music-now-copy">
-          <span>NOW PLAYING</span>
-          <strong id="musicTrackName">Ready</strong>
-        </div>
-        <button id="musicToggle" class="music-main" type="button" aria-label="Play soundtrack" title="Play">▶</button>
-      </div>
-
-      <canvas id="musicWaveform" class="music-waveform" width="220" height="42" aria-label="Live soundtrack waveform"></canvas>
-
-      <div class="music-transport" aria-label="Music controls">
-        <button id="musicPrev" type="button" aria-label="Previous track" title="Previous">‹</button>
-        <button id="musicNext" type="button" aria-label="Next track" title="Next">›</button>
-        <button id="musicShuffle" type="button" aria-label="Toggle shuffle" title="Shuffle">⤨</button>
-      </div>
-
-      <div class="music-volume-row">
-        <span class="music-volume-icon" aria-hidden="true">VOL</span>
-        <input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.75" aria-label="Music volume">
-      </div>
-    </div>
-
     <details class="settings-wrap customize-wrap" id="customizeDetails">
       <summary class="settings-trigger customize-trigger"><span>✦</span><b>Companion & Tools</b><i>⌄</i></summary>
       <div class="settings-menu customize-menu">
@@ -209,6 +184,31 @@
           <strong id="globalXrpPrice">—</strong>
           <small id="globalXrpChange">Loading</small>
         </button>
+        <div id="xrpetMusicPlayer" class="xrpet-music-player music-player-clean top-music-player" aria-label="XRPet soundtrack">
+          <audio id="xrpetAudio" preload="metadata"></audio>
+
+          <div class="music-now-playing">
+            <div class="music-now-copy">
+              <span>NOW PLAYING</span>
+              <strong id="musicTrackName">Ready</strong>
+            </div>
+            <button id="musicToggle" class="music-main" type="button" aria-label="Play soundtrack" title="Play">▶</button>
+          </div>
+
+          <canvas id="musicWaveform" class="music-waveform" width="220" height="42" aria-label="Live soundtrack waveform"></canvas>
+
+          <div class="music-transport" aria-label="Music controls">
+            <button id="musicPrev" type="button" aria-label="Previous track" title="Previous">‹</button>
+            <button id="musicNext" type="button" aria-label="Next track" title="Next">›</button>
+            <button id="musicShuffle" type="button" aria-label="Toggle shuffle" title="Shuffle">⤨</button>
+          </div>
+
+          <div class="music-volume-row">
+            <span class="music-volume-icon" aria-hidden="true">VOL</span>
+            <input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.75" aria-label="Music volume">
+          </div>
+        </div>
+
         <button type="button" data-primary-view="live" class="top-xrpl-live">
           <i aria-hidden="true"></i>
           <span>XRPL LIVE</span>
@@ -1058,14 +1058,14 @@
   },6000);
 })();
 </script>
-<script src="/launch-enhance.js?v=5.5.25"></script>
-<script src="/contact-directory.js?v=5.5.25"></script>
-<script src="/music-player.js?v=5.5.25"></script>
-<script src="/games.js?v=5.5.25"></script>
-<script src="/ecosystem.js?v=5.5.25"></script>
-<script src="/ripplet2d.js?v=5.5.25"></script>
-<script src="/app.js?v=5.5.25"></script>
-<script src="/timeline.js?v=5.5.25"></script>
+<script src="/launch-enhance.js?v=5.5.26"></script>
+<script src="/contact-directory.js?v=5.5.26"></script>
+<script src="/music-player.js?v=5.5.26"></script>
+<script src="/games.js?v=5.5.26"></script>
+<script src="/ecosystem.js?v=5.5.26"></script>
+<script src="/ripplet2d.js?v=5.5.26"></script>
+<script src="/app.js?v=5.5.26"></script>
+<script src="/timeline.js?v=5.5.26"></script>
 
 </body>
 </html>
