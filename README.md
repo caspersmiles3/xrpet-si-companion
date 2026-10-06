@@ -1,4 +1,4 @@
-# XRPet SI Companion™ — v5.2.0
+# XRPet SI Companion™ — v5.2.1
 
 **Don't watch the Ledger. Live with it.**
 
@@ -252,3 +252,14 @@ Mini-game events feed back into Ripplet's animation/sound system and award small
 - The application shell now uses the full available viewport width and enforces min-width/overflow guards on every primary page.
 - Removed the competing sticky behavior from the older top status bar; only the command bar remains sticky where the viewport is wide enough.
 - Medium and mobile layouts automatically switch sticky elements to normal flow and reflow market/transaction panels to avoid covering click targets.
+
+
+## v5.2.1 locked navigation rail
+
+- The left XRPet navigation rail is now fixed to the viewport and remains visible while the main application scrolls.
+- Removed the narrow-screen behavior that converted the rail into a horizontal scrolling navigation strip.
+- The sidebar itself no longer requires vertical scrolling in normal use; navigation rows, brand spacing, and lower controls were compacted.
+- Companion & Tools now opens as a compact upward/right-side popover instead of expanding the rail.
+- Settings now opens as a smaller upward/right-side popover with tighter controls and labels.
+- Settlements + History also opens outside the rail so its ten history destinations do not increase sidebar height.
+- Narrow application widths keep a smaller fixed left rail rather than moving navigation above the content.
