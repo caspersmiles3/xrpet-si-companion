@@ -9403,3 +9403,47 @@ body:not(.workspace-open) .main-shell>.primary-view-section:not(.view-active){
   font-size:.52rem!important;
   gap:7px!important;
 }
+
+
+/* XRPet 5.5.41 — high-contrast XRP launch typography */
+#launchGate #launchTitle{
+  color:#64e9ff!important;
+  -webkit-text-stroke:.35px rgba(0,20,28,.9)!important;
+  text-shadow:
+    0 2px 3px rgba(0,0,0,.95),
+    0 0 10px rgba(0,0,0,.85),
+    0 0 18px rgba(46,211,239,.22)!important;
+}
+#launchGate .clean-launch-kicker{
+  color:#38cde8!important;
+  text-shadow:0 2px 10px rgba(0,0,0,.95)!important;
+}
+#launchGate #launchStatus{
+  color:#f0c66f!important;
+  text-shadow:
+    0 2px 4px rgba(0,0,0,.95),
+    0 0 10px rgba(0,0,0,.75)!important;
+}
+#launchGate .launch-word-action,
+#launchGate .launch-word-stat{
+  color:#65dff3!important;
+}
+#launchGate .launch-word-stat strong{
+  color:#f1c977!important;
+}
+#launchGate .launch-word-separator{
+  color:#6ceaff!important;
+}
+#launchGate .launch-word-action small{
+  color:#9bc7d0!important;
+}
+#launchGate .launch-enter-text{
+  color:#67e9ff!important;
+  border-bottom-color:rgba(103,233,255,.72)!important;
+}
+#launchGate .launch-enter-text small{
+  color:#efc66f!important;
+}
+#launchGate .clean-launch-note{
+  color:#8db5bf!important;
+}
