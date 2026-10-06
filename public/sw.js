@@ -1,4 +1,4 @@
-const CACHE='xrpet-v5.5.18';
+const CACHE='xrpet-v5.5.17';
 const CORE=['/','/styles.css?v=5.5.18','/app.js?v=5.5.18','/ecosystem.js?v=5.5.18','/music-player.js?v=5.5.18','/timeline.js?v=5.5.18','/xrp-history.json','/ripplet2d.js?v=5.5.18','/manifest.webmanifest','/xrpet-icon.svg','/xrpet-cursor.svg','/xrpet-pointer.svg','/games.js?v=5.5.18','/media/xrpet-launch-bg.mp4?v=5.5.18'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE))));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))));
