@@ -144,6 +144,7 @@
 
   function setState(state='idle', opts={}) {
     if (!el) return;
+    if(state==='dance'&&window.XRPetMusicPlaying!==true)state='stand';
     clearTimeout(resetTimer);
     el.dataset.state = state;
     if (opts.side) el.dataset.side = opts.side;
