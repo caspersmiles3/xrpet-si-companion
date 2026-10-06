@@ -1634,7 +1634,11 @@ function playExternalAction(name){
     thinking:['Emote_Thinking'], victory:['Emote_Victory'], surprised:['Emote_Surprised']
   };
   const custom=externalModel?.userData?.xrpetActionMap||{};
-  const patterns=(custom[name]&&custom[name].length?custom[name]:fallback[name])||fallback.idle;
+  let patterns=(custom[name]&&custom[name].length?custom[name]:fallback[name])||fallback.idle;
+  if(window.XRPetMusicPlaying!==true&&name!=='dance'){
+    patterns=patterns.filter(pattern=>!/dance/i.test(String(pattern)));
+    if(!patterns.length)patterns=fallback.idle;
+  }
   const next=findExternalAction(patterns);
   if(!next||next===externalActiveAction)return;
   const expressionOverlay=new Set(['happy','excited','thinking','shrug','confused','sad','point','salute','surprised','focus','scan','alert','cheer','laugh','victory','celebrate']);
