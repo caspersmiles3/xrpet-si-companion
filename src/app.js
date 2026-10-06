@@ -1129,7 +1129,7 @@ function dockRipplet(){
   const target=dockPosition();
   if(target){
     window.XRPet3D?.motor?.('walk');
-    setRoamPosition(target.x,target.y,'walk');
+    routeRippletTo(target.x,target.y,'dock',q('#rippletDock'));
     setDockStatus('DOCKING');
     setTimeout(()=>{
       if(!roamDocked)return;
@@ -1149,7 +1149,7 @@ function undockRipplet(){
 }
 function goRipplet(activity='explore'){
   syncRoamBounds();
-  const layer=roamLayer?.getBoundingClientRect();if(!layer)return;
+  const layer=roamLayer?.getBoundingClientRect();if(!layer)return false;
   const avatar=lifeAvatar?.getBoundingClientRect();
   const currentX=avatar?avatar.left-layer.left:layer.width*.5;
   const currentY=avatar?avatar.top-layer.top:layer.height*.55;
@@ -1160,18 +1160,21 @@ function goRipplet(activity='explore'){
   if(!target){
     const avatarH=Math.max(72,avatar?.height||72);
     const avatarW=Math.max(52,avatar?.width||52);
-    target={
-      x:14+Math.random()*Math.max(40,layer.width-avatarW-28),
-      y:12+Math.random()*Math.max(36,layer.height-avatarH-24)
-    };
+    for(let tries=0;tries<18&&!target;tries++){
+      const candidate={
+        x:14+Math.random()*Math.max(40,layer.width-avatarW-28),
+        y:12+Math.random()*Math.max(36,layer.height-avatarH-24)
+      };
+      target=findNearestClearPosition(candidate.x,candidate.y);
+    }
   }
+  if(!target)return false;
   const distance=Math.hypot(target.x-currentX,target.y-currentY);
   const locomotion=activity==='dock'?'walk':distance>Math.max(180,layer.width*.24)?'run':'walk';
   window.XRPet3D?.motor?.(locomotion);
-  setRoamPosition(target.x,target.y,locomotion);
-  if(activity==='socialize'){
-    window.XRPet3D?.perform?.('wave');
-  }
+  const moved=routeRippletTo(target.x,target.y,locomotion);
+  if(activity==='socialize'&&moved)window.XRPet3D?.perform?.('wave');
+  return moved;
 }
 const RIPPLET_PLAY_PROPS=[
   {kind:'orb',label:'XRP orb',glyph:'X'},
@@ -1182,61 +1185,136 @@ const RIPPLET_PLAY_PROPS=[
 let heldPlayProp=null,playPropDropTimer=0,lastInterfacePlayAt=0;
 
 function visibleTextTerrain(){
-  const shell=q('.main-shell')?.getBoundingClientRect();
-  const active=q('.primary-view-section.view-active');
-  if(!shell||!active)return[];
-  const walker=document.createTreeWalker(active,NodeFilter.SHOW_TEXT,{
+  const shellEl=q('.main-shell'),shell=shellEl?.getBoundingClientRect();
+  if(!shellEl||!shell)return[];
+  const walker=document.createTreeWalker(shellEl,NodeFilter.SHOW_TEXT,{
     acceptNode(node){
       const parent=node.parentElement;
       const text=(node.nodeValue||'').trim();
-      if(!parent||text.length<2)return NodeFilter.FILTER_REJECT;
-      if(parent.closest('script,style,textarea,input,select,option,.muted[hidden]'))return NodeFilter.FILTER_REJECT;
+      if(!parent||text.length<1)return NodeFilter.FILTER_REJECT;
+      if(parent.closest('#rippletRoamLayer,#lifeAvatar,#rippletDock,script,style,textarea,input,select,option,[hidden]'))return NodeFilter.FILTER_REJECT;
       const cs=getComputedStyle(parent);
       if(cs.display==='none'||cs.visibility==='hidden'||Number(cs.opacity)===0)return NodeFilter.FILTER_REJECT;
       return NodeFilter.FILTER_ACCEPT;
     }
   });
-  const terrain=[];
-  while(walker.nextNode()&&terrain.length<90){
+  const terrain=[],seen=new Set();
+  const addRect=(rect,kind,label='')=>{
+    if(!rect||rect.width<1.5||rect.height<3)return;
+    if(rect.bottom<shell.top+4||rect.top>shell.bottom-4||rect.right<shell.left+4||rect.left>shell.right-4)return;
+    const key=[kind,Math.round(rect.left),Math.round(rect.top),Math.round(rect.width),Math.round(rect.height)].join(':');
+    if(seen.has(key))return;
+    seen.add(key);
+    terrain.push({
+      __terrain:kind,
+      __rect:rect,
+      tagName:kind==='sentence'?'TEXTLINE':'TEXTWORD',
+      label
+    });
+  };
+  while(walker.nextNode()&&terrain.length<240){
     const node=walker.currentNode,text=node.nodeValue||'';
-    const re=/\S+/g;let m,count=0;
-    while((m=re.exec(text))&&terrain.length<90){
-      if(count++%2===1)continue;
+    try{
+      const lineRange=document.createRange();
+      lineRange.selectNodeContents(node);
+      for(const rect of [...lineRange.getClientRects()]){
+        if(terrain.length>=240)break;
+        addRect(rect,'sentence',text.trim().slice(0,80));
+      }
+    }catch{}
+    const re=/\S+/g;let m;
+    while((m=re.exec(text))&&terrain.length<240){
       try{
         const range=document.createRange();
         range.setStart(node,m.index);
         range.setEnd(node,m.index+m[0].length);
-        const r=range.getBoundingClientRect();
-        if(r.width<5||r.height<6)continue;
-        if(r.bottom<shell.top+54||r.top>shell.bottom-8||r.right<shell.left+8||r.left>shell.right-8)continue;
-        terrain.push({__terrain:'word',__rect:r,tagName:'TEXTWORD',label:m[0],classList:null});
+        addRect(range.getBoundingClientRect(),'word',m[0]);
       }catch{}
     }
   }
   return terrain;
 }
+function visibleLineTerrain(){
+  const shellEl=q('.main-shell'),shell=shellEl?.getBoundingClientRect();
+  if(!shellEl||!shell)return[];
+  const terrain=[],seen=new Set();
+  const add=(el,r)=>{
+    if(!r||r.width<1||r.height<1)return;
+    if(r.bottom<shell.top+2||r.top>shell.bottom-2||r.right<shell.left+2||r.left>shell.right-2)return;
+    const horizontal=r.width>=18&&r.height<=8;
+    const vertical=r.height>=18&&r.width<=8;
+    if(!horizontal&&!vertical)return;
+    const rect={
+      left:r.left,top:r.top,right:r.right,bottom:r.bottom,
+      width:Math.max(2,r.width),height:Math.max(2,r.height)
+    };
+    if(horizontal&&r.height<2){rect.bottom=rect.top+2;rect.height=2}
+    if(vertical&&r.width<2){rect.right=rect.left+2;rect.width=2}
+    const key=[Math.round(rect.left),Math.round(rect.top),Math.round(rect.width),Math.round(rect.height)].join(':');
+    if(seen.has(key))return;
+    seen.add(key);
+    terrain.push({__terrain:'line',__rect:rect,tagName:'UILINE',label:el?.getAttribute?.('aria-label')||'interface line'});
+  };
+  const explicit=[...shellEl.querySelectorAll('hr,[role="separator"],.divider,.separator,.rule,.line,.panel-line,.section-line')];
+  explicit.forEach(el=>{
+    const cs=getComputedStyle(el),r=el.getBoundingClientRect();
+    if(cs.display!=='none'&&cs.visibility!=='hidden'&&Number(cs.opacity)!==0)add(el,r);
+  });
+  for(const el of shellEl.querySelectorAll('.primary-view-section.view-active *,.sidebar *,#topCommandDeck *')){
+    if(terrain.length>=120)break;
+    if(el.closest('#rippletRoamLayer,#lifeAvatar,#rippletDock'))continue;
+    const cs=getComputedStyle(el),r=el.getBoundingClientRect();
+    if(cs.display==='none'||cs.visibility==='hidden'||Number(cs.opacity)===0)continue;
+    if((r.height<=5&&r.width>=18)||(r.width<=5&&r.height>=18))add(el,r);
+  }
+  return terrain;
+}
 function visibleInterfaceTargets(){
-  const layer=roamLayer?.getBoundingClientRect(),shell=q('.main-shell')?.getBoundingClientRect();
-  if(!layer||!shell)return[];
+  const layer=roamLayer?.getBoundingClientRect(),shellEl=q('.main-shell'),shell=shellEl?.getBoundingClientRect();
+  if(!layer||!shellEl||!shell)return[];
   const selectors=[
-    '.primary-view-section.view-active h1',
-    '.primary-view-section.view-active h2',
-    '.primary-view-section.view-active h3',
-    '.primary-view-section.view-active p',
-    '.primary-view-section.view-active .eyebrow',
     '.primary-view-section.view-active button',
+    '.primary-view-section.view-active input',
+    '.primary-view-section.view-active textarea',
+    '.primary-view-section.view-active select',
     '.primary-view-section.view-active .detail-card',
     '.primary-view-section.view-active .contact-card',
     '.primary-view-section.view-active .ecosystem-token-card',
     '.primary-view-section.view-active article',
-    '.primary-view-section.view-active .game-panel.active'
+    '.primary-view-section.view-active .game-panel.active',
+    '.primary-view-section.view-active .card',
+    '.primary-view-section.view-active .panel',
+    '.primary-view-section.view-active .message-box',
+    '.primary-view-section.view-active .notice',
+    '.primary-view-section.view-active .alert',
+    'dialog',
+    '[role="dialog"]',
+    '.modal',
+    '.dialog',
+    '.popover',
+    '.sidebar button',
+    '.sidebar a'
   ];
-  return qa(selectors.join(',')).filter(el=>{
-    if(el.closest('.sidebar')||el.closest('#rippletDock')||el.closest('#topCommandDeck'))return false;
+  const candidates=[...new Set([...shellEl.querySelectorAll(selectors.join(','))])];
+  for(const el of shellEl.querySelectorAll('.primary-view-section.view-active *')){
+    if(candidates.length>=180)break;
+    if(el.closest('#rippletRoamLayer,#lifeAvatar,#rippletDock,#topCommandDeck'))continue;
     const r=el.getBoundingClientRect(),style=getComputedStyle(el);
-    return style.display!=='none'&&style.visibility!=='hidden'&&r.width>28&&r.height>12&&
-      r.bottom>shell.top+18&&r.top<shell.bottom-18&&r.right>shell.left+12&&r.left<shell.right-12;
-  });
+    if(style.display==='none'||style.visibility==='hidden'||Number(style.opacity)===0||r.width<18||r.height<10)continue;
+    const border=
+      parseFloat(style.borderTopWidth||0)+parseFloat(style.borderRightWidth||0)+
+      parseFloat(style.borderBottomWidth||0)+parseFloat(style.borderLeftWidth||0);
+    const tag=el.tagName;
+    const semanticBox=['BUTTON','INPUT','TEXTAREA','SELECT','FIELDSET','DIALOG'].includes(tag)||el.getAttribute('role')==='dialog';
+    const namedBox=/(^|[-_])(card|panel|dialog|modal|box|tile|button|input|notice|alert)([-_]|$)/i.test(String(el.className||''));
+    if((border>=1.5||semanticBox||namedBox)&&r.width<shell.width*.97&&r.height<shell.height*.94)candidates.push(el);
+  }
+  return [...new Set(candidates)].filter(el=>{
+    if(el.closest('#rippletRoamLayer,#lifeAvatar,#rippletDock,#topCommandDeck'))return false;
+    const r=el.getBoundingClientRect(),style=getComputedStyle(el);
+    return style.display!=='none'&&style.visibility!=='hidden'&&Number(style.opacity)!==0&&r.width>18&&r.height>10&&
+      r.bottom>shell.top+4&&r.top<shell.bottom-4&&r.right>shell.left+4&&r.left<shell.right-4;
+  }).slice(0,180);
 }
 function terrainRectLocal(target){
   const shell=q('.main-shell'),rect=target?.__rect||target?.getBoundingClientRect?.();
@@ -1257,7 +1335,7 @@ function terrainDistanceToPointer(rect){
   return Math.hypot(dx,dy);
 }
 function terrainNearPointer(){
-  const pool=[...visibleTextTerrain(),...visibleInterfaceTargets()];
+  const pool=[...visibleTextTerrain(),...visibleLineTerrain(),...visibleInterfaceTargets()];
   return pool.map(target=>{
     const rect=terrainRectLocal(target);
     return rect?{target,rect,distance:terrainDistanceToPointer(rect)}:null;
@@ -1270,13 +1348,23 @@ function pointerActionFor(hit){
   const nearTop=Math.abs(my-rect.top)<=8;
   const nearBottom=Math.abs(my-rect.bottom)<=8;
   const side=edgeX<=7;
-  const word=target?.__terrain==='word';
+  const terrainKind=target?.__terrain||'box';
+  const textual=terrainKind==='word'||terrainKind==='sentence'||terrainKind==='letter';
+  const line=terrainKind==='line';
 
-  if(side)return {mode:'hang',action:'hang'};
-  if(my<rect.top-10)return {mode:'climb',action:'climb'};
-  if(nearTop)return {mode:'perch',action:Math.random()<.22?'sit':'stand'};
+  // Boxes are solid. Ripplet may only get on top by jumping when the top is within its jump limit.
+  if(terrainKind==='box'){
+    const hop=interfaceTargetPosition(target,'hop');
+    if(hop&&canJumpOntoTarget(target,hop))return {mode:'hop',action:'jump'};
+    return {mode:'side',action:'stand'};
+  }
+
+  // Words, letters, sentence lines, and separator lines behave like climbable platform terrain.
+  if(side&&(textual||line))return {mode:'hang',action:'hang'};
+  if(my<rect.top-10&&(textual||line))return {mode:'climb',action:'climb'};
+  if(nearTop||line)return {mode:'perch',action:Math.random()<.18?'sit':'stand'};
   if(nearBottom)return {mode:'hop',action:'jump'};
-  if(word&&Math.random()<.34)return {mode:'hang',action:'hang'};
+  if(textual&&Math.random()<.30)return {mode:'hang',action:'hang'};
   return {mode:'perch',action:'stand'};
 }
 function followRippletPointer(force=false){
@@ -1349,53 +1437,155 @@ function avatarRectAt(x,y){
 function visibleCollisionRects(ignoreTarget=null){
   const shell=q('.main-shell'),sr=shell?.getBoundingClientRect();
   if(!shell||!sr)return[];
-  const rects=[];
-  for(const target of [...visibleTextTerrain(),...visibleInterfaceTargets()]){
+  const rects=[],seen=new Set();
+  const targets=[...visibleTextTerrain(),...visibleLineTerrain(),...visibleInterfaceTargets()];
+  for(const target of targets){
     if(target===ignoreTarget)continue;
     const r=target?.__rect||target?.getBoundingClientRect?.();
     if(!r)continue;
-    rects.push({
+    const local={
       left:r.left-sr.left+shell.scrollLeft,
       right:r.right-sr.left+shell.scrollLeft,
       top:r.top-sr.top+shell.scrollTop,
-      bottom:r.bottom-sr.top+shell.scrollTop
-    });
+      bottom:r.bottom-sr.top+shell.scrollTop,
+      kind:target?.__terrain||'box',
+      target
+    };
+    const key=[local.kind,Math.round(local.left),Math.round(local.top),Math.round(local.right),Math.round(local.bottom)].join(':');
+    if(seen.has(key))continue;
+    seen.add(key);rects.push(local);
   }
   return rects;
 }
 function surfacePositionIsClear(x,y,ignoreTarget=null){
   const a=avatarRectAt(x,y);
-  return !visibleCollisionRects(ignoreTarget).some(r=>rectsOverlap(a,r,0));
+  return !visibleCollisionRects(ignoreTarget).some(r=>rectsOverlap(a,r,1));
+}
+function pathIsClear(a,b,ignoreTarget=null){
+  const distance=Math.hypot(b.x-a.x,b.y-a.y);
+  const steps=Math.max(1,Math.ceil(distance/12));
+  for(let i=1;i<=steps;i++){
+    const t=i/steps;
+    const x=a.x+(b.x-a.x)*t,y=a.y+(b.y-a.y)*t;
+    const allowTarget=i===steps?ignoreTarget:null;
+    if(!surfacePositionIsClear(x,y,allowTarget))return false;
+  }
+  return true;
+}
+function findNearestClearPosition(x,y,ignoreTarget=null){
+  const shell=q('.main-shell'),avatar=lifeAvatar?.getBoundingClientRect();
+  if(!shell)return null;
+  const aw=Math.max(52,avatar?.width||52),ah=Math.max(72,avatar?.height||72);
+  const maxX=Math.max(4,shell.scrollWidth-aw-4),maxY=Math.max(4,shell.scrollHeight-ah-4);
+  const clampPoint=(px,py)=>({x:Math.max(4,Math.min(maxX,px)),y:Math.max(4,Math.min(maxY,py))});
+  let p=clampPoint(x,y);
+  if(surfacePositionIsClear(p.x,p.y,ignoreTarget))return p;
+  const dirs=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]];
+  for(let radius=18;radius<=240;radius+=18){
+    for(const [dx,dy] of dirs){
+      p=clampPoint(x+dx*radius,y+dy*radius);
+      if(surfacePositionIsClear(p.x,p.y,ignoreTarget))return p;
+    }
+  }
+  return null;
+}
+function findClearRoute(start,end,ignoreTarget=null){
+  const shell=q('.main-shell'),avatar=lifeAvatar?.getBoundingClientRect();
+  if(!shell)return null;
+  const aw=Math.max(52,avatar?.width||52),ah=Math.max(72,avatar?.height||72);
+  const maxX=Math.max(4,shell.scrollWidth-aw-4),maxY=Math.max(4,shell.scrollHeight-ah-4);
+  const clampPoint=p=>({x:Math.max(4,Math.min(maxX,p.x)),y:Math.max(4,Math.min(maxY,p.y))});
+  const candidates=[
+    [end],
+    [{x:start.x,y:end.y},end],
+    [{x:end.x,y:start.y},end],
+    [{x:4,y:start.y},{x:4,y:end.y},end],
+    [{x:maxX,y:start.y},{x:maxX,y:end.y},end],
+    [{x:start.x,y:4},{x:end.x,y:4},end],
+    [{x:start.x,y:maxY},{x:end.x,y:maxY},end]
+  ];
+  const blockers=visibleCollisionRects().sort((a,b)=>{
+    const ac=Math.hypot((a.left+a.right)*.5-start.x,(a.top+a.bottom)*.5-start.y);
+    const bc=Math.hypot((b.left+b.right)*.5-start.x,(b.top+b.bottom)*.5-start.y);
+    return ac-bc;
+  }).slice(0,18);
+  for(const r of blockers){
+    const top=Math.max(4,r.top-ah-5),bottom=Math.min(maxY,r.bottom+5);
+    const left=Math.max(4,r.left-aw-5),right=Math.min(maxX,r.right+5);
+    candidates.push(
+      [{x:start.x,y:top},{x:end.x,y:top},end],
+      [{x:start.x,y:bottom},{x:end.x,y:bottom},end],
+      [{x:left,y:start.y},{x:left,y:end.y},end],
+      [{x:right,y:start.y},{x:right,y:end.y},end]
+    );
+  }
+  let best=null,bestDistance=Infinity;
+  for(const raw of candidates){
+    const route=raw.map(clampPoint);
+    let from=start,total=0,ok=true;
+    for(let i=0;i<route.length;i++){
+      const to=route[i],final=i===route.length-1;
+      if(!pathIsClear(from,to,final?ignoreTarget:null)){ok=false;break}
+      total+=Math.hypot(to.x-from.x,to.y-from.y);from=to;
+    }
+    if(ok&&total<bestDistance){best=route;bestDistance=total}
+  }
+  return best;
+}
+function rippletMaxJumpHeight(){
+  const avatar=lifeAvatar?.getBoundingClientRect();
+  return Math.round(Math.max(44,Math.min(86,(avatar?.height||72)*.68)));
+}
+function targetTerrainKind(target){
+  return target?.__terrain||'box';
+}
+function canJumpOntoTarget(target,position=null){
+  if(targetTerrainKind(target)!=='box')return true;
+  const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar?.getBoundingClientRect();
+  if(!shell||!sr||!ar)return false;
+  const p=position||interfaceTargetPosition(target,'hop');
+  if(!p)return false;
+  const currentY=ar.top-sr.top+shell.scrollTop;
+  const rise=Math.max(0,currentY-p.y);
+  return rise<=rippletMaxJumpHeight();
 }
 function routeRippletTo(x,y,activity='walk',ignoreTarget=null){
-  if(!lifeAvatar||!roamLayer)return;
+  if(!lifeAvatar||!roamLayer)return false;
   const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar.getBoundingClientRect();
-  if(!shell||!sr){setRoamPosition(x,y,activity);return}
+  if(!shell||!sr){setRoamPosition(x,y,activity);return true}
   const current={
     x:ar.left-sr.left+shell.scrollLeft,
     y:ar.top-sr.top+shell.scrollTop
   };
-  const distance=Math.hypot(x-current.x,y-current.y);
-
-  if(distance<20||activity==='climb'||activity==='hang'){
-    setRoamPosition(x,y,activity);
-    return;
+  let end={x,y};
+  if(!surfacePositionIsClear(end.x,end.y,ignoreTarget)){
+    const adjusted=findNearestClearPosition(end.x,end.y,ignoreTarget);
+    if(!adjusted)return false;
+    end=adjusted;
   }
+  const route=findClearRoute(current,end,ignoreTarget);
+  if(!route)return false;
 
-  // Route through open air above the current and destination surfaces instead of through page content.
-  const clearanceY=Math.max(4,Math.min(current.y,y)-18);
-  window.XRPet2D?.motor?.('jump');
-  setRoamPosition(current.x,clearanceY,'jump');
-  setTimeout(()=>{
-    if(roamDocked)return;
-    setRoamPosition(x,clearanceY,'run');
+  let delay=0,from=current;
+  route.forEach((point,index)=>{
+    const final=index===route.length-1;
+    const segment=Math.hypot(point.x-from.x,point.y-from.y);
+    const finalActivity=activity==='sit'?'walk':activity==='stand'?'walk':activity;
+    const stepActivity=final?finalActivity:(segment>120?'run':'walk');
+    const stepDelay=stepActivity==='run'?760:stepActivity==='jump'?620:stepActivity==='climb'||stepActivity==='hang'?1020:1180;
     setTimeout(()=>{
-      if(roamDocked)return;
-      setRoamPosition(x,y,activity==='sit'?'walk':activity);
-      if(activity==='sit')window.XRPet2D?.motor?.('sit');
-      else if(activity==='stand')window.XRPet2D?.motor?.('stand');
-    },220);
-  },180);
+      if(roamDocked&&activity!=='dock')return;
+      window.XRPet2D?.motor?.(final?(activity==='stand'?'stand':activity==='sit'?'sit':activity):stepActivity);
+      setRoamPosition(point.x,point.y,stepActivity);
+      if(final){
+        if(activity==='sit')window.XRPet2D?.motor?.('sit');
+        else if(activity==='stand')window.XRPet2D?.motor?.('stand');
+      }
+    },delay);
+    delay+=stepDelay;
+    from=point;
+  });
+  return true;
 }
 function interfaceTargetPosition(el,mode='perch'){
   const shell=q('.main-shell'),avatar=lifeAvatar?.getBoundingClientRect(),r=el?.__rect||el?.getBoundingClientRect?.();
@@ -1406,38 +1596,55 @@ function interfaceTargetPosition(el,mode='perch'){
   const localTop=r.top-sr.top+shell.scrollTop;
   const localRight=r.right-sr.left+shell.scrollLeft;
   const localBottom=r.bottom-sr.top+shell.scrollTop;
+  const terrainKind=el?.__terrain||'box';
 
-  // Stand/sit/perch strictly above the element: never inside its text/box rectangle.
+  // Stand/perch on the upper surface of words, sentence lines, UI lines, and boxes.
   if(mode==='perch'){
-    const x=Math.max(4,Math.min(shell.scrollWidth-aw-4,localLeft+r.width*.5-aw*.5));
+    const desired=terrainKind==='line'&&rippletPointer.active
+      ? rippletPointer.x-aw*.5
+      : localLeft+r.width*.5-aw*.5;
+    const x=Math.max(4,Math.min(shell.scrollWidth-aw-4,desired));
     const y=Math.max(4,localTop-ah-1);
     return {x,y};
   }
 
-  // Jump destination is also a top surface.
+  // Jumps land on top, never inside the target.
   if(mode==='hop'){
-    const x=Math.max(4,Math.min(shell.scrollWidth-aw-4,localRight-aw));
+    const desired=terrainKind==='line'&&rippletPointer.active
+      ? rippletPointer.x-aw*.5
+      : localLeft+r.width*.5-aw*.5;
+    const x=Math.max(4,Math.min(shell.scrollWidth-aw-4,desired));
     const y=Math.max(4,localTop-ah-2);
     return {x,y};
   }
 
-  // Climb alongside an outside edge.
+  // Climbing is for textual/line terrain and stays outside the edge.
   if(mode==='climb'){
     const useLeft=rippletPointer.x<(localLeft+r.width*.5);
-    const x=useLeft?Math.max(4,localLeft-aw-1):Math.min(shell.scrollWidth-aw-4,localRight+1);
+    const x=useLeft?Math.max(4,localLeft-aw-2):Math.min(shell.scrollWidth-aw-4,localRight+2);
     const y=Math.max(4,Math.min(shell.scrollHeight-ah-4,localTop+r.height*.45-ah*.5));
     return {x,y};
   }
 
-  // Hang outside the nearest edge with only the hands visually meeting the surface.
+  // Hanging touches an outside edge without crossing through the surface.
   if(mode==='hang'){
     const useLeft=rippletPointer.x<(localLeft+r.width*.5);
-    const x=useLeft?Math.max(4,localLeft-aw+1):Math.min(shell.scrollWidth-aw-4,localRight-1);
+    const x=useLeft?Math.max(4,localLeft-aw):Math.min(shell.scrollWidth-aw-4,localRight);
     const y=Math.max(4,Math.min(shell.scrollHeight-ah-4,localTop+Math.min(r.height*.35,8)));
     return {x,y};
   }
 
-  const x=Math.max(4,localLeft-aw-1);
+  // For boxes that are too tall to jump, stop beside them instead of clipping through them.
+  if(mode==='side'){
+    const center=localLeft+r.width*.5;
+    const current=rippletPointer.active?rippletPointer.x:center;
+    const useLeft=current<center;
+    const x=useLeft?Math.max(4,localLeft-aw-3):Math.min(shell.scrollWidth-aw-4,localRight+3);
+    const y=Math.max(4,Math.min(shell.scrollHeight-ah-4,localBottom-ah));
+    return {x,y};
+  }
+
+  const x=Math.max(4,localLeft-aw-2);
   const y=Math.max(4,localTop-ah-1);
   return {x,y};
 }
@@ -1477,31 +1684,32 @@ function playWithInterface(force=false){
   if(!force&&Date.now()-lastInterfacePlayAt<1900)return false;
 
   const words=visibleTextTerrain();
+  const lines=visibleLineTerrain();
   const elements=visibleInterfaceTargets();
-  if(!words.length&&!elements.length)return false;
+  if(!words.length&&!lines.length&&!elements.length)return false;
   lastInterfacePlayAt=Date.now();
 
-  const preferWord=words.length&&(Math.random()<.76||!elements.length);
-  const target=preferWord
-    ? words[Math.floor(Math.random()*words.length)]
+  const terrain=[...words,...lines];
+  const preferTerrain=terrain.length&&(Math.random()<.78||!elements.length);
+  const target=preferTerrain
+    ? terrain[Math.floor(Math.random()*terrain.length)]
     : elements[Math.floor(Math.random()*elements.length)];
   if(!target)return false;
 
-  const heading=!target.__terrain&&/^H[1-3]$/.test(target.tagName);
-  const card=!target.__terrain&&Boolean(target.matches?.('article,.detail-card,.contact-card,.ecosystem-token-card,.game-panel,button'));
+  const terrainKind=target?.__terrain||'box';
+  const textual=terrainKind==='word'||terrainKind==='sentence'||terrainKind==='letter'||terrainKind==='line';
   const roll=Math.random();
-
   let mode='perch',action='walk';
-  if(target.__terrain){
-    if(roll<.24){mode='hang';action='hang'}
-    else if(roll<.70){mode='hop';action='jump'}
+
+  if(textual){
+    if(roll<.20){mode='hang';action='hang'}
+    else if(roll<.52){mode='climb';action='climb'}
+    else if(roll<.76){mode='hop';action='jump'}
     else{mode='perch';action='walk'}
-  }else if((heading||card)&&roll<.30){
-    mode='hang';action='hang';
-  }else if((heading||card)&&roll<.62){
-    mode='climb';action='climb';
-  }else if(roll<.78){
-    mode='hop';action='jump';
+  }else{
+    const hop=interfaceTargetPosition(target,'hop');
+    if(roll<.58&&hop&&canJumpOntoTarget(target,hop)){mode='hop';action='jump'}
+    else{mode='side';action='walk'}
   }
 
   const p=interfaceTargetPosition(target,mode);if(!p)return false;
@@ -1509,30 +1717,40 @@ function playWithInterface(force=false){
 
   if(action==='hang'){
     window.XRPet3D?.motor?.('hang');
-    routeRippletTo(p.x,p.y,'hang',target);
-    setText('#mindAction',target.__terrain?'Hanging from letters':'Hanging from a box');
-    setText('#mindThought','I grabbed the edge and I am hanging on.');
+    if(!routeRippletTo(p.x,p.y,'hang',target)){markInterfaceTarget(target,false);return false}
+    setText('#mindAction',terrainKind==='line'?'Hanging from a line':'Hanging from letters');
+    setText('#mindThought','I grabbed the edge without crossing through it.');
     setTimeout(()=>{
       if(roamDocked)return;
-      window.XRPet3D?.motor?.('climb');
       const up=interfaceTargetPosition(target,'perch');
-      if(up)setRoamPosition(up.x,up.y,'climb');
-    },850);
+      if(up){
+        window.XRPet3D?.motor?.('climb');
+        routeRippletTo(up.x,up.y,'climb',target);
+      }
+    },1050);
   }else if(action==='jump'){
+    if(terrainKind==='box'&&!canJumpOntoTarget(target,p)){
+      markInterfaceTarget(target,false);
+      return false;
+    }
     window.XRPet3D?.motor?.('jump');
-    routeRippletTo(p.x,p.y,'jump',target);
-    setText('#mindAction','Jumping between letters');
-    setText('#mindThought','I am using the words as little platforms.');
+    if(!routeRippletTo(p.x,p.y,'jump',target)){markInterfaceTarget(target,false);return false}
+    setText('#mindAction',terrainKind==='box'?'Jumping onto a box':'Jumping onto page terrain');
+    setText('#mindThought',terrainKind==='box'
+      ? 'That surface is inside my jump-height limit.'
+      : 'I am using the words and lines as little platforms.');
   }else if(action==='climb'){
     window.XRPet3D?.motor?.('climb');
-    routeRippletTo(p.x,p.y,'climb',target);
-    setText('#mindAction','Climbing the interface');
-    setText('#mindThought','I grabbed the edge and climbed onto it.');
+    if(!routeRippletTo(p.x,p.y,'climb',target)){markInterfaceTarget(target,false);return false}
+    setText('#mindAction',terrainKind==='line'?'Climbing a line':'Climbing letters and words');
+    setText('#mindThought','I am climbing along the outside edge instead of passing through it.');
   }else{
     window.XRPet3D?.motor?.('walk');
-    routeRippletTo(p.x,p.y,'stand',target);
-    setText('#mindAction',target.__terrain?'Walking on words':'Exploring the page');
-    setText('#mindThought',target.__terrain?'I found another word to stand on.':'I am moving through this page on my own.');
+    if(!routeRippletTo(p.x,p.y,'stand',target)){markInterfaceTarget(target,false);return false}
+    setText('#mindAction',terrainKind==='box'?'Stopped beside a box':terrainKind==='line'?'Standing on a line':'Walking on words');
+    setText('#mindThought',terrainKind==='box'
+      ? 'That box is too high to jump, so I am going around it.'
+      : 'The page itself is solid terrain now.');
   }
 
   setTimeout(()=>{
@@ -1541,7 +1759,7 @@ function playWithInterface(force=false){
       const emotes=['wave','thinking','happy','salute'];
       window.XRPet3D?.perform?.(emotes[Math.floor(Math.random()*emotes.length)]);
     }
-  },1450);
+  },1750);
 
   return true;
 }
