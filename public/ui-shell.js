@@ -8,6 +8,15 @@
     live:'xrplPanel',
     exchanges:'exchangesSection',
     history:'xrpHistorySection',
+    'history-origins':'historyOriginsSection',
+    'history-ripple':'historyRippleSection',
+    'history-xrp':'historyXrpSection',
+    'history-xrpl':'historyXrplSection',
+    'history-legal':'historyLegalSection',
+    'history-market':'historyMarketSection',
+    'history-adoption':'historyAdoptionSection',
+    'history-acquisition':'historyAcquisitionSection',
+    'history-people':'historyPeopleSection',
     learn:'learnSection',
     announcements:'announcementsSection',
     ripplet:'companionSection',
@@ -26,6 +35,18 @@
     Adoption:['Adoption + Partnerships','Payments, integrations, institutional use and ecosystem adoption milestones.'],
     Acquisition:['Acquisitions','Ripple acquisitions and infrastructure expansion.'],
     People:['People Involved','Key people who shaped the XRP Ledger, Ripple and the XRP ecosystem.']
+  };
+  const HISTORY_VIEW_TARGETS={
+    All:'history',
+    Origins:'history-origins',
+    Ripple:'history-ripple',
+    XRP:'history-xrp',
+    XRPL:'history-xrpl',
+    Legal:'history-legal',
+    Market:'history-market',
+    Adoption:'history-adoption',
+    Acquisition:'history-acquisition',
+    People:'history-people'
   };
 
   let historyArchiveCache=null;
@@ -49,8 +70,8 @@
     };
     return map[category]||'This event is part of the Ripple, XRP, and XRP Ledger historical record.';
   }
-  function renderHistoryEvents(rows){
-    const box=q('#xrpTimeline');if(!box)return;
+  function renderHistoryEvents(rows,container=q('#xrpTimeline')){
+    const box=container;if(!box)return;
     box.innerHTML=rows.length?rows.map(x=>'<article class="xrp-event '+(x.sentiment==='up'||x.sentiment==='positive'?'up':x.sentiment==='down'?'down':x.sentiment==='mixed'?'mixed':'neutral')+'">'+
       '<div class="xrp-event-rail"><i></i><span>'+esc(x.year||'')+'</span></div>'+
       '<div class="xrp-event-body">'+
@@ -67,24 +88,24 @@
     '</article>').join(''):'<div class="history-empty-state"><strong>No entries found for this section.</strong><p>The archive loaded correctly, but this category currently has no matching milestones.</p></div>';
   }
   async function renderHistoryView(view='All'){
-    const timeline=q('#xrpTimeline');
-    const people=q('#xrpPeople');
-    if(timeline)timeline.innerHTML='<p class="muted">Loading '+esc((HISTORY_META[view]||HISTORY_META.All)[0])+'…</p>';
+    const targetView=HISTORY_VIEW_TARGETS[view]||'history';
+    const section=q('#'+VIEW_TARGETS[targetView]);
+    const content=section?.querySelector('[data-history-page-content]')||q('#xrpTimeline');
+    if(content)content.innerHTML='<p class="muted">Loading '+esc((HISTORY_META[view]||HISTORY_META.All)[0])+'…</p>';
     try{
       const archive=await getHistoryArchive();
       if(view==='People'){
-        if(people){
-          people.innerHTML=(archive.people||[]).map(p=>'<article class="xrp-person"><strong>'+esc(p.name)+'</strong><span>'+esc(p.role)+'</span><p>'+esc(p.involvement)+'</p></article>').join('');
+        if(content){
+          content.innerHTML=(archive.people||[]).map(p=>'<article class="xrp-person"><strong>'+esc(p.name)+'</strong><span>'+esc(p.role)+'</span><p>'+esc(p.involvement)+'</p></article>').join('')||'<div class="history-empty-state"><strong>No people entries found.</strong></div>';
         }
-        if(timeline)timeline.innerHTML='';
         return;
       }
       const rows=(archive.events||[])
         .filter(x=>view==='All'||x.category===view)
         .sort((a,b)=>String(b.date).localeCompare(String(a.date)));
-      renderHistoryEvents(rows);
+      renderHistoryEvents(rows,content);
     }catch(err){
-      if(timeline)timeline.innerHTML='<div class="history-empty-state"><strong>History archive could not load.</strong><p>XRPet will retry when you select this section again.</p></div>';
+      if(content)content.innerHTML='<div class="history-empty-state"><strong>History archive could not load.</strong><p>XRPet will retry when you open this page again.</p></div>';
     }
   }
 
@@ -143,26 +164,20 @@
 
   function showHistory(view='All'){
     const selected=HISTORY_META[view]?view:'All';
-    showView('history');
-    const section=q('#xrpHistorySection');
-    if(section)section.dataset.historyMode=selected;
-    const meta=HISTORY_META[selected];
-    const header=q('#historySelectedHeader');
-    if(header)header.hidden=selected==='All';
-    if(q('#historySelectedTitle'))q('#historySelectedTitle').textContent=meta[0];
-    if(q('#historySelectedDescription'))q('#historySelectedDescription').textContent=meta[1];
+    const destination=HISTORY_VIEW_TARGETS[selected]||'history';
+    showView(destination);
 
-    // Explicitly control Overview/People visibility so no old CSS state can blank the page.
-    qa('#xrpHistorySection .history-overview-only').forEach(el=>{el.hidden=selected!=='All'});
-    qa('#xrpHistorySection .history-people-only').forEach(el=>{el.hidden=selected!=='All'&&selected!=='People'});
-    const timeline=q('#xrpTimeline');
-    if(timeline)timeline.hidden=selected==='People';
-
+    // Keep Settlements + History visually selected while a dedicated history page is open.
+    q('#historyNavDetails > summary')?.classList.add('active');
     window.XRPetHistoryPending=selected;
-    renderHistoryView(selected);
 
-    // Keep timeline.js synchronized if it is present, but it is no longer required.
-    try{window.XRPetHistory?.setView?.(selected)}catch{}
+    if(selected==='All'){
+      const section=q('#xrpHistorySection');
+      if(section)section.dataset.historyMode='All';
+      try{window.XRPetHistory?.setView?.('All')}catch{}
+    }
+
+    renderHistoryView(selected);
   }
 
   function showLearn(name='xrp'){
