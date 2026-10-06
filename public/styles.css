@@ -8571,3 +8571,77 @@ body:not(.workspace-open) .main-shell>.primary-view-section.view-active:not([hid
 body:not(.workspace-open) .main-shell>.primary-view-section:not(.view-active){
   display:none!important;
 }
+
+
+/* v5.5.31 — settings interaction + reliable subview visibility */
+#xrpetSidebar .settings-menu,
+#xrpetSidebar .settings-menu *,
+#xrpetSidebar .settings-menu label,
+#xrpetSidebar .settings-menu select,
+#xrpetSidebar .settings-menu input,
+#xrpetSidebar .settings-menu button{
+  pointer-events:auto!important;
+}
+#xrpetSidebar .settings-menu select{
+  position:relative!important;
+  z-index:4!important;
+  width:100%!important;
+  min-height:34px!important;
+  height:34px!important;
+  padding:5px 8px!important;
+  color:#e8f8fc!important;
+  background:#071017!important;
+  border:1px solid #274653!important;
+  border-radius:7px!important;
+  appearance:auto!important;
+  -webkit-appearance:menulist!important;
+  touch-action:manipulation!important;
+  user-select:auto!important;
+  cursor:pointer!important;
+}
+#xrpetSidebar .settings-menu option{
+  color:#e8f8fc!important;
+  background:#071017!important;
+}
+#xrpetSidebar #settingsDetails[open],
+#xrpetSidebar #customizeDetails[open],
+#xrpetSidebar .nav-dropdown[open]{
+  z-index:1200!important;
+}
+#xrpetSidebar #settingsDetails[open] .settings-menu,
+#xrpetSidebar #customizeDetails[open] .settings-menu,
+#xrpetSidebar .nav-dropdown[open] .nav-dropdown-menu{
+  visibility:visible!important;
+  opacity:1!important;
+  pointer-events:auto!important;
+}
+
+/* Subviews are controlled explicitly by ui-shell.js. */
+[data-learn-panel],
+[data-ecosystem-panel],
+[data-game-panel],
+[data-ripplet-panel]{
+  display:none!important;
+}
+[data-learn-panel].active:not([hidden]),
+[data-ecosystem-panel].active:not([hidden]),
+[data-game-panel].active:not([hidden]),
+[data-ripplet-panel].active:not([hidden]){
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+
+/* Exchanges and Ripplet are now direct pages, not sidebar dropdowns. */
+#xrpetSidebar>.side-nav>button[data-primary-view="exchanges"],
+#xrpetSidebar>.side-nav>button[data-primary-view="ripplet"]{
+  display:flex!important;
+  align-items:center!important;
+}
+
+/* Keep all current top-bar design untouched while ensuring controls remain interactive. */
+.top-command-deck,
+.top-command-deck button,
+.top-command-deck input{
+  pointer-events:auto!important;
+}
