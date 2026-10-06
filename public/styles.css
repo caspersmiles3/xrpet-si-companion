@@ -8988,3 +8988,24 @@ body:not(.workspace-open) .main-shell>.primary-view-section:not(.view-active){
     transform:translateX(-50%)!important;
   }
 }
+
+
+/* v5.5.35 — Atari-era Ripplet scale */
+.ripplet-roam-layer .global-life-avatar{
+  width:6px!important;
+  height:8px!important;
+  opacity:1!important;
+  transform-origin:50% 100%!important;
+}
+@media(max-width:760px){
+  .ripplet-roam-layer .global-life-avatar{
+    width:6px!important;
+    height:8px!important;
+  }
+}
+@media(max-width:520px){
+  .ripplet-roam-layer .global-life-avatar{
+    width:6px!important;
+    height:8px!important;
+  }
+}
