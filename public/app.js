@@ -416,7 +416,10 @@ function renderExchangeBoard(data={}){
 }
 async function loadExchangeBoard(){try{const r=await fetch('/api/exchange-board',{cache:'no-store'}),d=await r.json();if(!r.ok)throw new Error();renderExchangeBoard(d)}catch{setText('#globalXrpChange','COMPOSITE FEED OFFLINE')}}
 function bindExchangeMenu(){
-  qa('[data-exchange]').forEach(button=>button.addEventListener('click',()=>setExchange(button.dataset.exchange)));
+  qa('[data-exchange]').forEach(button=>button.addEventListener('click',async()=>{
+    await setExchange(button.dataset.exchange);
+    setPrimaryView('exchanges');
+  }));
   renderExchangeSelection();
   clearInterval(exchangeBoardTimer);
   loadExchangeBoard();
@@ -1879,10 +1882,15 @@ setText('#learnBestScore',(Number(localStorage.getItem('xrpetLearnBest')||0))+'%
 
 function openHistoryView(view='All'){
   primaryView='history';
-  qa('[data-view-section]').forEach(section=>section.classList.toggle('view-active',section.dataset.viewSection==='history'));
+  qa('[data-view-section]').forEach(section=>{
+    const active=section.dataset.viewSection==='history';
+    section.classList.toggle('view-active',active);
+    section.hidden=!active;
+  });
   qa('[data-primary-view]').forEach(b=>b.classList.remove('active'));
   document.body.dataset.primaryView='history';
   const section=q('#xrpHistorySection');if(!section)return;
+  section.hidden=false;
   section.dataset.historyMode=view;
   const titles={
     All:['Overview + Full Timeline','The complete Ripple, XRP and XRP Ledger chronology.'],
