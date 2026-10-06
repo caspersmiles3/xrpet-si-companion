@@ -6190,3 +6190,97 @@ body[data-primary-view="games"] .top-command-deck .topbar{display:block!importan
     aspect-ratio:16 / 9!important;
   }
 }
+
+
+/* v5.5.17 — retro pixel platformer Ripplet */
+.ripplet2d-svg{
+  image-rendering:pixelated!important;
+  image-rendering:crisp-edges!important;
+  shape-rendering:crispEdges!important;
+  filter:none!important;
+}
+.ripplet2d-svg defs filter,
+.ripplet2d .r2-eyes{
+  filter:none!important;
+}
+.ripplet2d .r2-head-shell,
+.ripplet2d .r2-torso,
+.ripplet2d .r2-neck,
+.ripplet2d .r2-limb,
+.ripplet2d .r2-hand rect,
+.ripplet2d .r2-foot rect,
+.ripplet2d .r2-joint{
+  fill:#b9c8ce!important;
+  stroke:#20343c!important;
+  stroke-width:1!important;
+}
+.ripplet2d .r2-face{
+  fill:#081218!important;
+  stroke:#2f8b9d!important;
+  stroke-width:1!important;
+}
+.ripplet2d .r2-chest{
+  fill:#0c1b21!important;
+  stroke:#35535d!important;
+  stroke-width:1!important;
+}
+.ripplet2d .r2-core-ring{
+  stroke:#54e9ff!important;
+  stroke-width:1.3!important;
+}
+.ripplet2d .r2-core-x{
+  stroke:#d9fbff!important;
+  stroke-width:1!important;
+}
+.ripplet2d .r2-eye{
+  fill:#69efff!important;
+}
+.ripplet2d .r2-mouth{
+  stroke:#6cc6d4!important;
+  stroke-width:1!important;
+}
+.ripplet2d .r2-cheek{display:none!important}
+.ripplet2d .r2-ear path:first-child{
+  fill:#b9c8ce!important;
+  stroke:#20343c!important;
+  stroke-width:1!important;
+}
+.ripplet2d .r2-ear-inner{
+  fill:#17343c!important;
+  stroke:#4bd8e9!important;
+  stroke-width:.7!important;
+}
+.ripplet2d[data-facing="left"] .ripplet2d-svg{
+  transform:scaleX(-1)!important;
+  transform-origin:50% 50%!important;
+}
+.ripplet2d[data-facing="right"] .ripplet2d-svg{
+  transform:scaleX(1)!important;
+}
+.ripplet2d[data-state="stand"] .r2-character{
+  animation:r2PixelStand 1.1s steps(2,end) infinite!important;
+}
+.ripplet2d[data-state="sit"] .r2-character{
+  transform:translateY(4px) scaleY(.84)!important;
+}
+.ripplet2d[data-state="sit"] .r2-leg-left{transform:rotate(35deg)!important}
+.ripplet2d[data-state="sit"] .r2-leg-right{transform:rotate(-35deg)!important}
+.ripplet2d[data-state="sit"] .r2-arm-motion-left{transform:rotate(10deg)!important}
+.ripplet2d[data-state="sit"] .r2-arm-motion-right{transform:rotate(-10deg)!important}
+@keyframes r2PixelStand{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-.8px)}
+}
+
+/* Pointer-follow should look like a page sprite, not a hovering overlay. */
+.ripplet-roam-layer{
+  z-index:5!important;
+}
+.ripplet-roam-layer .global-life-avatar{
+  image-rendering:pixelated!important;
+  image-rendering:crisp-edges!important;
+  transition-timing-function:steps(10,end)!important;
+}
+.ripplet-target-active{
+  outline-color:rgba(83,226,247,.06)!important;
+}
