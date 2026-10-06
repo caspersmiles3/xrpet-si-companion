@@ -1,4 +1,4 @@
-# XRPet SI Companion™ — v5.1.0
+# XRPet SI Companion™ — v5.1.1
 
 **Don't watch the Ledger. Live with it.**
 
@@ -230,3 +230,12 @@ Mini-game events feed back into Ripplet's animation/sound system and award small
 - Added final CSS isolation that forces every roaming companion wrapper and canvas to stay fully transparent with no borders, backgrounds, frames, pseudo-elements, or backdrop effects.
 - Ripplet 3.0 remains connected to autonomous behavior, XRP/XRPL live reactions, Water/Food/Sleep/Signal Friend choices, sounds, free roaming, Games, and local progression.
 - This release intentionally does **not** add or publish Google Play/Android distribution.
+
+
+## v5.1.1 startup hotfix
+
+- Fixed a JavaScript startup syntax error where `false=false` prevented the entire client bundle from parsing.
+- Corrected an ambiguous ambient-audio ternary for readability and parser safety.
+- Added an independent HTML loading-gate release handler so **Enter XRPet** no longer depends on the main application bundle.
+- Added a six-second failsafe that automatically releases the loading screen if another client script fails in the future.
+- Bumped all client asset query strings and the service-worker cache to v5.1.1 so browsers replace the broken cached bundle.
