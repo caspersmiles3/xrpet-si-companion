@@ -3249,3 +3249,46 @@ html,body{width:100%;max-width:100%;overflow-x:hidden}
   .settings-trigger{font-size:.48rem!important}
   .ledger-badge em{display:none!important}
 }
+
+
+/* XRPet v5.3 — physical motion controls */
+.physical-motion-card{overflow:hidden}
+.physical-motion-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:7px;
+  margin-top:12px
+}
+.physical-motion-grid button{
+  min-height:36px;
+  border:1px solid rgba(99,221,246,.16);
+  background:rgba(6,17,23,.72);
+  color:#a8efff;
+  border-radius:9px;
+  font-size:.62rem;
+  font-weight:800;
+  letter-spacing:.06em;
+  text-transform:uppercase
+}
+.physical-motion-grid button:hover{
+  border-color:rgba(105,231,255,.38);
+  background:rgba(10,33,42,.86)
+}
+.motion-note{
+  display:block;
+  margin-top:10px;
+  color:#667d88;
+  font-size:.56rem;
+  line-height:1.45
+}
+.ripplet-roam-layer .global-life-avatar[data-activity="run"]{
+  transition-timing-function:cubic-bezier(.22,.8,.18,1)!important;
+  animation:rippletRunBob .22s ease-in-out infinite alternate
+}
+.ripplet-roam-layer .global-life-avatar[data-activity="jump"]{
+  transition-timing-function:cubic-bezier(.2,.8,.2,1)!important
+}
+@keyframes rippletRunBob{from{margin-top:0}to{margin-top:-8px}}
+@media(max-width:620px){
+  .physical-motion-grid{grid-template-columns:1fr 1fr}
+}

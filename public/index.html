@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=5.2.1">
+  <link rel="stylesheet" href="/styles.css?v=5.3.0">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate clean-launch" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
@@ -468,6 +468,23 @@
           </div>
         </article>
 
+        <article class="detail-card physical-motion-card">
+          <div class="mission-head"><h3>Physical Motion</h3><span>motor cortex</span></div>
+          <p class="ripplet-description">Ripplet's autonomous mind can use the same full-body motor system. These controls let you test locomotion, balance, reaching and grip manually.</p>
+          <div class="physical-motion-grid" aria-label="Ripplet physical motion controls">
+            <button type="button" data-pet-action="walk">Walk</button>
+            <button type="button" data-pet-action="run">Run</button>
+            <button type="button" data-pet-action="jump">Jump</button>
+            <button type="button" data-pet-action="crouch">Crouch</button>
+            <button type="button" data-pet-action="turn">Turn</button>
+            <button type="button" data-pet-action="reach">Reach</button>
+            <button type="button" data-pet-action="grab">Grab</button>
+            <button type="button" data-pet-action="carry">Carry</button>
+            <button type="button" data-pet-action="climb">Climb</button>
+          </div>
+          <small class="motion-note">Motion is physically inspired procedural animation. A dedicated skinned GLB with IK/mocap clips can raise realism further later.</small>
+        </article>
+
         <article class="detail-card mission-card">
           <div class="mission-head"><h3>Daily Pulse</h3><span id="streakChip">0 day streak</span></div>
           <p id="missionText">Charge the core 7 times to complete today's mission.</p>
@@ -713,7 +730,7 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 5.2.1 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 5.3.0 · XRP Ledger companion</footer>
   </main>
 </div>
 
@@ -760,12 +777,12 @@
   },6000);
 })();
 </script>
-<script src="/music-player.js?v=5.2.1"></script>
-<script src="/games.js?v=5.2.1"></script>
-<script src="/ecosystem.js?v=5.2.1"></script>
-<script src="/app.js?v=5.2.1"></script>
-<script src="/timeline.js?v=5.2.1"></script>
-<script type="module" src="/companion3d.js?v=5.2.1"></script>
+<script src="/music-player.js?v=5.3.0"></script>
+<script src="/games.js?v=5.3.0"></script>
+<script src="/ecosystem.js?v=5.3.0"></script>
+<script src="/app.js?v=5.3.0"></script>
+<script src="/timeline.js?v=5.3.0"></script>
+<script type="module" src="/companion3d.js?v=5.3.0"></script>
 
 </body>
 </html>

@@ -601,6 +601,12 @@ qa('[data-pet-action]').forEach(b=>b.addEventListener('click',()=>{
   else if(action==='focus'){playSound('select');setText('#petMood','Focused');setText('#petSpeech','Distractions reduced. Companion focus lock engaged.')}
   else if(action==='scan'){playSound('ledgerTx');setText('#petMood','Scanning');setText('#petSpeech','Scanning current XRPL telemetry and watched-account signals.');loadMarket()}
   else if(action==='orbit'){playSound('cosmetic');setText('#petMood','Orbiting');setText('#petSpeech','Signal hardware released into orbital display mode.')}
+  else if(['walk','run','jump','climb','reach','grab','carry','crouch','turn'].includes(action)){
+    playSound(action==='jump'||action==='run'?'success':'select');
+    const labels={walk:'Walking',run:'Running',jump:'Jumping',climb:'Climbing',reach:'Reaching',grab:'Gripping',carry:'Carrying',crouch:'Crouching',turn:'Turning'};
+    setText('#petMood',labels[action]||'Moving');
+    setText('#petSpeech','Physical motor cortex: '+(labels[action]||action)+' with full-body balance and limb coordination.');
+  }
   else{playSound('pet');setText('#petMood','Linked');setText('#petSpeech','Companion link acknowledged.')}
 }));
 let pendingRoom=state.room;
@@ -910,6 +916,7 @@ function setRoamPosition(x,y,activity='explore'){
   const layer=roamLayer.getBoundingClientRect(),avatar=lifeAvatar.getBoundingClientRect();
   const maxX=Math.max(0,layer.width-avatar.width-10),maxY=Math.max(0,layer.height-avatar.height-10);
   const px=Math.max(8,Math.min(maxX,x)),py=Math.max(92,Math.min(maxY,y));
+  lifeAvatar.style.transitionDuration=activity==='run'?'1.35s':activity==='jump'?'1.05s':'2.8s';
   lifeAvatar.style.transform='translate3d('+px+'px,'+py+'px,0)';
   lifeAvatar.dataset.activity=activity;
   roamX=maxX?px/maxX:.5;roamY=maxY?py/maxY:.5;
@@ -922,15 +929,29 @@ function stationPosition(activity){
 }
 function goRipplet(activity='explore'){
   syncRoamBounds();
-  if(activity==='drink'||activity==='eat'||activity==='sleep'||activity==='socialize'){
-    const p=stationPosition(activity);if(p){setRoamPosition(p.x,p.y,activity);return}
-  }
   const layer=roamLayer?.getBoundingClientRect();if(!layer)return;
-  if(activity==='ledger'){setRoamPosition(layer.width*.72,Math.max(165,layer.height*.34),'ledger');return}
-  const x=70+Math.random()*Math.max(60,layer.width-300);
-  const y=190+Math.random()*Math.max(40,layer.height-430);
-  window.XRPet3D?.perform?.('walk');
-  setRoamPosition(x,y,'walk');
+  const avatar=lifeAvatar?.getBoundingClientRect();
+  const currentX=avatar?avatar.left-layer.left:layer.width*.5;
+  const currentY=avatar?avatar.top-layer.top:layer.height*.55;
+  let target=null;
+  if(activity==='drink'||activity==='eat'||activity==='sleep'||activity==='socialize')target=stationPosition(activity);
+  if(activity==='ledger')target={x:layer.width*.72,y:Math.max(165,layer.height*.34)};
+  if(!target){
+    target={
+      x:70+Math.random()*Math.max(60,layer.width-300),
+      y:190+Math.random()*Math.max(40,layer.height-430)
+    };
+  }
+  const distance=Math.hypot(target.x-currentX,target.y-currentY);
+  const locomotion=distance>Math.max(360,layer.width*.34)?'run':'walk';
+  window.XRPet3D?.motor?.(locomotion);
+  setRoamPosition(target.x,target.y,locomotion);
+  if(['drink','eat','socialize'].includes(activity)){
+    setTimeout(()=>{
+      window.XRPet3D?.motor?.('reach',{side:Math.random()<.5?'left':'right'});
+      setTimeout(()=>window.XRPet3D?.motor?.('grab',{side:Math.random()<.5?'left':'right'}),500);
+    },locomotion==='run'?1050:2200);
+  }
 }
 function roamingStep(){
   clearTimeout(roamTimer);
@@ -938,7 +959,7 @@ function roamingStep(){
   roamTimer=setTimeout(roamingStep,4200+Math.random()*5200);
 }
 function renderMind(){
-  const labels={roam:'Roaming',drink:'Water Fountain',eat:'Food Station',sleep:'Sleep Pod',socialize:'Signal Friend',scan:'Scanning XRPL',wave:'Waving',dance:'Dancing',focus:'Focused'};
+  const labels={roam:'Roaming',drink:'Water Fountain',eat:'Food Station',sleep:'Sleep Pod',socialize:'Signal Friend',scan:'Scanning XRPL',wave:'Waving',dance:'Dancing',focus:'Focused',run:'Running',jump:'Jumping',climb:'Climbing',reach:'Reaching',grab:'Grabbing',carry:'Carrying',crouch:'Crouching',turn:'Turning'};
   setText('#mindAction',labels[state.mindAction]||state.mindAction||'Roaming');
   setText('#mindThought',state.mindThought||'Watching the Ledger and deciding what to do next.');
   setText('#mindMode',state.mindMode==='external-si-autonomy'?'SI MIND':'LOCAL AUTONOMY');
@@ -968,8 +989,9 @@ function executeMindDecision(decision){
     performLifeActivity(action,false,Boolean(decision.visitStation));
   }else if(action==='roam'){
     state.lifeActivity='explore';window.XRPetRoam?.go?.('explore');
-  }else if(['scan','wave','dance','focus'].includes(action)){
-    window.XRPet3D?.perform?.(action);
+  }else if(['scan','wave','dance','focus','run','jump','climb','reach','grab','carry','crouch','turn'].includes(action)){
+    if(action==='run'){window.XRPetRoam?.go?.('explore')}
+    else window.XRPet3D?.motor?.(action,{side:Math.random()<.5?'left':'right',turn:(Math.random()<.5?-1:1)*.45});
     if(action==='wave')playSound('wave',true);
     if(action==='dance')playSound('dance',true);
     if(action==='scan')playSound('ledgerTx',true);
@@ -996,9 +1018,9 @@ async function runAutonomousMind(){
 function spontaneousRippletReaction(){
   clearTimeout(spontaneousReactionTimer);
   {
-    const options=['greet','happy','focus','scan','wave','dance'];
+    const options=['greet','happy','focus','scan','wave','dance','jump','crouch','turn','reach'];
     const pick=options[Math.floor(Math.random()*options.length)];
-    window.XRPet3D?.perform?.(pick);
+    if(['jump','crouch','turn','reach'].includes(pick))window.XRPet3D?.motor?.(pick,{side:Math.random()<.5?'left':'right',turn:(Math.random()<.5?-1:1)*.35});else window.XRPet3D?.perform?.(pick);
     if(Math.random()<.35)playSound(pick==='dance'?'dance':pick==='wave'?'wave':pick==='scan'?'ledgerTx':'pet',true);
   }
   spontaneousReactionTimer=setTimeout(spontaneousRippletReaction,6500+Math.random()*9000);
@@ -1024,7 +1046,7 @@ window.addEventListener('xrpet:gameEvent',e=>{
   }else if(d.type==='miss'){
     window.XRPet3D?.perform?.('alert');playSound('error',true);
   }else if(d.type==='complete'){
-    window.XRPet3D?.perform?.((d.score||0)>100?'celebrate':'greet');
+    window.XRPet3D?.perform?.((d.score||0)>100?'jump':'greet');
     playSound((d.score||0)>100?'success':'pet',true);
     addXp(Math.max(1,Math.min(10,Math.floor((Number(d.score)||0)/50)+1)));
   }else if(d.type==='start'){

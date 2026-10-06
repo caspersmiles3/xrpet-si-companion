@@ -405,7 +405,7 @@ for(const [x,s] of [[-.89,-1],[.89,1]]){
 
 
 // Ripplet 2.0: articulated upper arms, palms and finger pads for a less primitive silhouette.
-const upperArms=[],hands=[],fingerPads=[];
+const upperArms=[],hands=[],fingerPads=[],fingerDigits=[];
 for(const [x,sgn] of [[-.78,-1],[.78,1]]){
   const upper=tag(add(new THREE.CapsuleGeometry(.145,.38,12,32),shellMat,pet,'upperArm'),'upperArm');
   upper.position.set(x,-.48,.08);upper.rotation.z=sgn*.08;upper.scale.set(.92,1.08,.88);upperArms.push(upper);
@@ -425,7 +425,7 @@ for(const [x,sgn] of [[-.78,-1],[.78,1]]){
     const digit=tag(add(new THREE.CapsuleGeometry(.035,.13,6,14),shellDarkMat,pet,'fingerDigit'),'fingerDigit');
     digit.position.set(sgn*(.89+.055*n),-1.045-.025*n,.31+.012*n);
     digit.rotation.z=sgn*(.18+.03*n);
-    digit.rotation.x=-.18;
+    digit.rotation.x=-.18;fingerDigits.push(digit);
   }
 }
 
@@ -933,7 +933,18 @@ const BUILTIN_MODELS={
 
 let currentKind='ripplet', currentGender='neutral', currentCosmetic='classic';
 let targetRotY=0,targetRotX=0,dragging=false,lastX=0,lastY=0,pointerX=0,pointerY=0,globalClientX=innerWidth*.5,globalClientY=innerHeight*.5,gazeX=0,gazeY=0,boost=0,lastInteract=0;
-let action='idle',actionUntil=0,externalModel=null,externalMixer=null,externalKind=null,externalActions={},externalActiveAction=null,externalLoadToken=0,externalLoadingKind=null,externalLoadingPromise=null,externalParts={};
+let action='idle',actionUntil=0,actionStarted=0,externalModel=null,externalMixer=null,externalKind=null,externalActions={},externalActiveAction=null,externalLoadToken=0,externalLoadingKind=null,externalLoadingPromise=null,externalParts={};
+const motor={
+  mode:'idle', speed:0, targetSpeed:0, phase:0, verticalVelocity:0,
+  grounded:true, grip:0, reachSide:1, turn:0, carry:false
+};
+function motorDuration(name){
+  return ({run:4200,jump:1500,climb:5200,reach:2200,grab:2800,carry:5200,crouch:2600,turn:1800}[name]||2200);
+}
+function motorProgress(now=performance.now()){
+  if(actionUntil<=actionStarted)return 0;
+  return Math.max(0,Math.min(1,(now-actionStarted)/(actionUntil-actionStarted)));
+}
 const baseEarTransforms=ears.map(e=>({scale:e.scale.clone(),rot:e.rotation.clone()}));
 
 function resetBaseShape(){
@@ -1027,10 +1038,16 @@ function applyRoom(room){
   faceFill.intensity=room==='vault'?6.2:room==='legend'?8.2:7.5;
   renderer.toneMappingExposure=r[2];
 }
-function performAction(name='greet'){
-  const allowed=new Set(['greet','celebrate','alert','sleep','wake','happy','focus','scan','orbit','walk','sip','gulp','splash','bite','taste','charge','curl','dream','snore','wave','highfive','dance']);
+function performAction(name='greet',options={}){
+  const allowed=new Set(['greet','celebrate','alert','sleep','wake','happy','focus','scan','orbit','walk','run','jump','climb','reach','grab','carry','crouch','turn','sip','gulp','splash','bite','taste','charge','curl','dream','snore','wave','highfive','dance']);
   action=allowed.has(name)?name:'greet';
-  actionUntil=performance.now()+(['sleep','curl','dream','snore'].includes(action)?9000:action==='walk'?5000:action==='orbit'||action==='dance'?5200:action==='scan'||action==='gulp'||action==='taste'?3200:action==='focus'||action==='charge'?4200:action==='celebrate'||action==='splash'||action==='highfive'?2800:action==='alert'?2200:2200);
+  actionStarted=performance.now();
+  actionUntil=actionStarted+(['sleep','curl','dream','snore'].includes(action)?9000:action==='walk'?5000:action==='orbit'||action==='dance'?5200:action==='scan'||action==='gulp'||action==='taste'?3200:action==='focus'||action==='charge'?4200:action==='celebrate'||action==='splash'||action==='highfive'?2800:action==='alert'?2200:motorDuration(action));
+  motor.mode=action;
+  motor.reachSide=options.side==='left'?-1:1;
+  motor.turn=Number(options.turn)||0;
+  motor.carry=action==='carry';
+  motor.grip=(action==='grab'||action==='carry')?1:0;
   lastInteract=performance.now();
   if(action==='wake')actionUntil=performance.now()+700;
   if(['happy','greet','celebrate','splash','bite','charge','wave','highfive','dance','sip','gulp','taste'].includes(action))boost=1;
@@ -1145,6 +1162,46 @@ function animateExternalRipplet(t,state){
     poseExternalPart('Forearm_R',{rot:[.15,0,-.12]},.14);
     poseExternalPart('EnergyEye_L',{scale:[1,.08,1]},.28);
     poseExternalPart('EnergyEye_R',{scale:[1,.08,1]},.28);
+  }else if(state==='run'){
+    const run=Math.sin(t*10.5);
+    poseExternalPart('UpperArm_L',{rot:[run*.62,0,0]},.34);
+    poseExternalPart('UpperArm_R',{rot:[-run*.62,0,0]},.34);
+    poseExternalPart('Thigh_L',{rot:[-run*.62,0,0]},.36);
+    poseExternalPart('Thigh_R',{rot:[run*.62,0,0]},.36);
+    poseExternalPart('Shin_L',{rot:[Math.max(0,run)*.52,0,0]},.34);
+    poseExternalPart('Shin_R',{rot:[Math.max(0,-run)*.52,0,0]},.34);
+    poseExternalPart('Ripplet_Torso',{rot:[-.12,0,-run*.025],pos:[0,Math.abs(run)*.04,0]},.28);
+  }else if(state==='jump'){
+    const p=motorProgress(),air=Math.sin(Math.PI*p);
+    poseExternalPart('Thigh_L',{rot:[-.30+air*.38,0,0]},.34);
+    poseExternalPart('Thigh_R',{rot:[-.30+air*.38,0,0]},.34);
+    poseExternalPart('Shin_L',{rot:[.34+air*.25,0,0]},.34);
+    poseExternalPart('Shin_R',{rot:[.34+air*.25,0,0]},.34);
+    poseExternalPart('UpperArm_L',{rot:[-.55+air*.8,0,.18]},.32);
+    poseExternalPart('UpperArm_R',{rot:[-.55+air*.8,0,-.18]},.32);
+  }else if(state==='climb'){
+    const climb=Math.sin(t*7.8);
+    poseExternalPart('UpperArm_L',{rot:[-.9+climb*.35,0,.35]},.34);
+    poseExternalPart('UpperArm_R',{rot:[-.9-climb*.35,0,-.35]},.34);
+    poseExternalPart('Thigh_L',{rot:[.38-climb*.26,0,.12]},.32);
+    poseExternalPart('Thigh_R',{rot:[.38+climb*.26,0,-.12]},.32);
+    poseExternalPart('Ripplet_Torso',{rot:[-.16,0,0]},.28);
+  }else if(state==='reach'||state==='grab'||state==='carry'){
+    const side=motor.reachSide>0?'R':'L',other=side==='R'?'L':'R';
+    poseExternalPart('UpperArm_'+side,{rot:[-.72,0,side==='R'?-.36:.36]},.34);
+    poseExternalPart('Forearm_'+side,{rot:[-.42,0,side==='R'?-.18:.18],pos:[0,.08,.08]},.34);
+    poseExternalPart('Hand_'+side,{rot:[-.18,0,0],pos:[0,.12,.14]},.36);
+    if(state==='carry'){
+      poseExternalPart('UpperArm_'+other,{rot:[-.38,0,side==='R'?.18:-.18]},.28);
+      poseExternalPart('Forearm_'+other,{rot:[-.45,0,side==='R'?.16:-.16]},.28);
+    }
+  }else if(state==='crouch'){
+    poseExternalPart('Thigh_L',{rot:[.52,0,.08]},.34);poseExternalPart('Thigh_R',{rot:[.52,0,-.08]},.34);
+    poseExternalPart('Shin_L',{rot:[-.62,0,0]},.34);poseExternalPart('Shin_R',{rot:[-.62,0,0]},.34);
+    poseExternalPart('Ripplet_Torso',{rot:[.08,0,0],pos:[0,-.12,0]},.32);
+  }else if(state==='turn'){
+    poseExternalPart('Ripplet_Torso',{rot:[0,motor.turn||Math.sin(t*2)*.4,0]},.28);
+    poseExternalPart('Ripplet_Head',{rot:[0,(motor.turn||.35)*1.3,0]},.30);
   }else if(state==='walk'){
     poseExternalPart('UpperArm_L',{rot:[walk*.34,0,0]},.30);
     poseExternalPart('UpperArm_R',{rot:[-walk*.34,0,0]},.30);
@@ -1243,7 +1300,8 @@ function playExternalAction(name){
     wake:['standing','idle','survey','fly'],
     focus:['idle','survey','standing'],
     scan:['survey','walk','fly','idle'],
-    orbit:['dance','run','walk','fly','survey']
+    orbit:['dance','run','walk','fly','survey'],
+    run:['run','walk'],jump:['jump','run','walk'],climb:['climb','run','walk'],reach:['reach','wave','idle'],grab:['grab','reach','idle'],carry:['carry','walk','idle'],crouch:['crouch','sitting','idle'],turn:['turn','walk','idle']
   };
   const custom=externalModel?.userData?.xrpetActionMap||{};
   const patterns=(custom[name]&&custom[name].length?custom[name]:fallback[name])||fallback.idle;
@@ -1346,6 +1404,8 @@ window.XRPet3D={
   setAppearance,
   react(type='happy'){performAction(type)},
   perform:performAction,
+  motor(action,options={}){performAction(action,options)},
+  locomotion(mode='walk'){performAction(mode)},
   celebrate(){performAction('celebrate')},
   alert(){performAction('alert')},
   sleep(){performAction('sleep')},
@@ -1402,9 +1462,9 @@ function renderFrame(){
   if(externalMixer)externalMixer.update(dt);
   animateExternalRipplet(t,state);
   if(externalModel){
-    const extSleep=state==='sleep',extCelebrate=state==='celebrate',extAlert=state==='alert',extFocus=state==='focus',extScan=state==='scan',extOrbit=state==='orbit';
+    const extSleep=state==='sleep',extCelebrate=state==='celebrate',extAlert=state==='alert',extFocus=state==='focus',extScan=state==='scan',extOrbit=state==='orbit',extRun=state==='run',extJump=state==='jump',extClimb=state==='climb',extCrouch=state==='crouch';
     const baseY=externalModel.userData.xrpetBaseY??0;
-    externalModel.position.y=baseY+(extSleep?-.06:0)+Math.sin(t*(extSleep?.65:1.15))*(extSleep?.012:.026)+(extCelebrate?Math.abs(Math.sin(t*6))*.06:0);
+    externalModel.position.y=baseY+(extSleep?-.06:0)+(extCrouch?-.10:0)+Math.sin(t*(extSleep?.65:extRun?2.1:1.15))*(extSleep?.012:extRun?.04:.026)+(extCelebrate?Math.abs(Math.sin(t*6))*.06:0)+(extJump?Math.sin(Math.PI*motorProgress())*.36:0)+(extClimb?Math.sin(t*7.8)*.025:0);
     externalModel.rotation.z=(extSleep?.045:Math.sin(t*.52)*.008)+(extCelebrate?Math.sin(t*5)*.018:0)+(extScan?Math.sin(t*4)*.012:0);
     externalModel.rotation.x=extAlert?Math.sin(t*2.2)*.012:extFocus?-.025:0;
     if(extOrbit)externalModel.rotation.y=(externalModel.userData.xrpetBaseRotY??0)+t*.75;
@@ -1431,6 +1491,9 @@ function renderFrame(){
   const biting=state==='bite',tasting=state==='taste',charging=state==='charge';
   const curling=state==='curl',dreaming=state==='dream',snoring=state==='snore';
   const highfiving=state==='highfive',dancing=state==='dance',walking=state==='walk';
+  const running=state==='run',jumping=state==='jump',climbing=state==='climb';
+  const reaching=state==='reach',grabbing=state==='grab',carrying=state==='carry',crouching=state==='crouch',turning=state==='turn';
+  const locomoting=walking||running||climbing;
 
   // levitation and body life
   let lift=.1+Math.sin(t*(sleeping?.72:1.25))*(sleeping?.018:.035);
@@ -1438,7 +1501,25 @@ function renderFrame(){
   if(orbiting)lift+=.07+Math.sin(t*2.4)*.04;
   if(greeting)lift+=Math.abs(Math.sin(t*5))*0.045;
   if(walking)lift+=Math.abs(Math.sin(t*7))*.035;
+  if(running)lift+=Math.abs(Math.sin(t*10.5))*.07;
+  if(climbing)lift+=Math.sin(t*7.8)*.035;
+  if(jumping){
+    const jp=motorProgress();
+    lift+=Math.sin(Math.PI*jp)*.46-Math.max(0,(jp-.84)/.16)*.06;
+  }
+  if(crouching)lift-=.12;
   pet.position.y=lift+boost*.06;
+  const balancePhase=Math.sin(t*(running?10.5:walking?7:climbing?7.8:1));
+  if(locomoting){
+    pelvis.rotation.y+=(balancePhase*(running?.09:.045)-pelvis.rotation.y)*.12;
+    torso.rotation.z+=(balancePhase*(running?.045:.022)-torso.rotation.z)*.1;
+  }
+  if(jumping){
+    const jp=motorProgress();
+    torso.rotation.x+=(-.12+Math.sin(Math.PI*jp)*.18);
+  }
+  if(crouching)torso.rotation.x+=.08;
+  if(turning)torso.rotation.y+=( (motor.turn||.45)-torso.rotation.y)*.12;
   chestPanel.position.y=-.3+Math.sin(t*(sleeping?.8:1.65))*(sleeping?.004:.009);
 
   // Ripplet 2.0 gaze: track the mouse across the entire XRPet interface, not only the canvas.
@@ -1516,6 +1597,11 @@ function renderFrame(){
     if(charging){rz=side*.68;rx=-.25}
     if(highfiving){rz=side*(i===0?.9:.28);rx=-.25}
     if(walking){rz=side*Math.sin(t*7+i*Math.PI)*.22;rx=Math.sin(t*7+i*Math.PI)*.08}
+    if(running){rz=side*Math.sin(t*10.5+i*Math.PI)*.42;rx=Math.sin(t*10.5+i*Math.PI)*.18}
+    if(jumping){const jp=motorProgress();rz=side*(-.25+Math.sin(Math.PI*jp)*.8);rx=-.12}
+    if(climbing){rz=side*(.72+Math.sin(t*7.8+i*Math.PI)*.28);rx=-.25}
+    if(reaching||grabbing||carrying){const active=(motor.reachSide>0?1:0)===i; if(active){rz=side*.68;rx=-.35}}
+    if(crouching){rz=side*.12;rx=.08}
     if(dancing){rz=side*(.45+Math.sin(t*7+i*Math.PI)*.32)}
     sh.rotation.z+=(rz-sh.rotation.z)*.18;sh.rotation.x+=(rx-sh.rotation.x)*.18;
   });
@@ -1541,6 +1627,10 @@ function renderFrame(){
   upperArms.forEach((arm,i)=>{
     const side=i===0?-1:1;let rz=side*.04,rx=0;
     if(walking){rz=side*Math.sin(t*7+i*Math.PI)*.16;rx=Math.sin(t*7+i*Math.PI)*.09}
+    if(running){rz=side*Math.sin(t*10.5+i*Math.PI)*.36;rx=Math.sin(t*10.5+i*Math.PI)*.2}
+    if(jumping){const jp=motorProgress();rz=side*(-.22+Math.sin(Math.PI*jp)*.65);rx=-.18}
+    if(climbing){rz=side*(.55+Math.sin(t*7.8+i*Math.PI)*.35);rx=-.3}
+    if(reaching||grabbing||carrying){const active=(motor.reachSide>0?1:0)===i;if(active){rz=side*.52;rx=-.42}}
     if(sipping||biting){rz=side*(i===0?.36:.12);rx=-.1}
     if(gulping||charging){rz=side*.45;rx=-.16}
     if(highfiving){rz=side*(i===0?.64:.14);rx=-.19}
@@ -1554,6 +1644,9 @@ function renderFrame(){
     if(splashing){rz=side*Math.sin(t*9+i*Math.PI)*.35}
     if(highfiving){rz=side*(i===0?.58:.1);rx=-.2}
     if(dancing){rz=side*Math.sin(t*8+i*Math.PI)*.28;rx=Math.sin(t*6+i)*.1}
+    if(running){rz=side*Math.sin(t*10.5+i*Math.PI)*.18;rx=Math.sin(t*10.5+i*Math.PI)*.12}
+    if(climbing){rz=side*Math.sin(t*7.8+i*Math.PI)*.22;rx=-.25}
+    if(reaching||grabbing||carrying){const active=(motor.reachSide>0?1:0)===i;if(active){rx=-.32;rz=side*.12}}
     hand.rotation.z+=(rz-hand.rotation.z)*.2;hand.rotation.x+=(rx-hand.rotation.x)*.2;
   });
   forearms.forEach((fore,i)=>{
@@ -1567,6 +1660,10 @@ function renderFrame(){
     if(charging)rz=side*.92;
     if(highfiving)rz=side*(i===0?1.08:.32);
     if(walking){rz=side*(.09+Math.sin(t*7+i*Math.PI)*.28);rx=Math.sin(t*7+i*Math.PI)*.10}
+    if(running){rz=side*(.12+Math.sin(t*10.5+i*Math.PI)*.44);rx=Math.sin(t*10.5+i*Math.PI)*.22}
+    if(jumping){const jp=motorProgress();rz=side*(-.08+Math.sin(Math.PI*jp)*.55);rx=-.2}
+    if(climbing){rz=side*(.76+Math.sin(t*7.8+i*Math.PI)*.32);rx=-.34}
+    if(reaching||grabbing||carrying){const active=(motor.reachSide>0?1:0)===i;if(active){rz=side*.82;rx=-.4}}
     if(dancing)rz=side*(.55+Math.sin(t*8+i*Math.PI)*.4);
     fore.rotation.z+=(rz-fore.rotation.z)*.2;fore.rotation.x+=(rx-fore.rotation.x)*.18;
   });
@@ -1576,6 +1673,10 @@ function renderFrame(){
     if(charging){rz=side*.15;rx=-.08}
     if(curling||dreaming||snoring){rz=side*.28;rx=.22}
     if(walking){rz=side*(.04+Math.sin(t*7+i*Math.PI)*.18);rx=Math.sin(t*7+i*Math.PI)*.28}
+    if(running){const ph=Math.sin(t*10.5+i*Math.PI);rz=side*(.04+ph*.2);rx=ph*.52}
+    if(jumping){const jp=motorProgress();rz=side*.08;rx=.30-Math.sin(Math.PI*jp)*.22}
+    if(climbing){const ph=Math.sin(t*7.8+i*Math.PI);rz=side*(.18+ph*.12);rx=.30+ph*.26}
+    if(crouching){rz=side*.18;rx=.45}
     if(dancing){rz=side*(.18+Math.sin(t*7+i*Math.PI)*.22);rx=Math.sin(t*7+i*Math.PI)*.16}
     leg.rotation.z+=(rz-leg.rotation.z)*.18;leg.rotation.x+=(rx-leg.rotation.x)*.18;
   });
@@ -1586,8 +1687,22 @@ function renderFrame(){
     if(biting)ry=Math.sin(t*4+i)*.08;
     if(curling||dreaming||snoring){rx=.18;ry=(i===0?-1:1)*.12}
     if(walking){rx=Math.sin(t*7+i*Math.PI)*.18;ry=Math.sin(t*7+i*Math.PI)*.06}
+    if(running){const ph=Math.sin(t*10.5+i*Math.PI);rx=ph*.32;ry=ph*.08}
+    if(jumping){const jp=motorProgress();rx=-.18+Math.sin(Math.PI*jp)*.32}
+    if(climbing){rx=.22+Math.sin(t*7.8+i*Math.PI)*.16;ry=(i===0?-1:1)*.08}
+    if(crouching){rx=.24}
     if(dancing){rx=Math.sin(t*8+i*Math.PI)*.22;ry=Math.sin(t*5+i)*.12}
     foot.rotation.x+=(rx-foot.rotation.x)*.2;foot.rotation.y+=(ry-foot.rotation.y)*.2;
+  });
+
+  fingerDigits.forEach((digit,i)=>{
+    const handIndex=Math.floor(i/3);
+    const active=(motor.reachSide>0?1:0)===handIndex;
+    let curl=-.18;
+    if((grabbing||carrying)&&active)curl=.55;
+    else if(reaching&&active)curl=.12;
+    else if(climbing)curl=.28+Math.sin(t*7.8+i*.35)*.08;
+    digit.rotation.x+=(curl-digit.rotation.x)*.22;
   });
 
   // ears / species micro-motion
