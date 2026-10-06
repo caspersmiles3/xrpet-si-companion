@@ -451,8 +451,39 @@ const XRPetSoundtrack=[
 ];
 (function initXRPetMusic(){
   const audio=$('#xrpetAudio'),toggle=$('#musicToggle'),name=$('#musicTrackName');
-  const prev=$('#musicPrev'),next=$('#musicNext'),shuffleBtn=$('#musicShuffle'),volume=$('#musicVolume');
+  const prev=$('#musicPrev'),next=$('#musicNext'),shuffleBtn=$('#musicShuffle'),volume=$('#musicVolume'),drag=$('#musicDrag'),player=$('#xrpetMusicPlayer');
   if(!audio||!toggle)return;
+  if(player&&drag){
+    let moving=false,dx=0,dy=0;
+    const savedPos=JSON.parse(localStorage.getItem('xrpet-music-pos')||'null');
+    if(savedPos&&Number.isFinite(savedPos.left)&&Number.isFinite(savedPos.top)){
+      player.style.left=Math.max(4,Math.min(window.innerWidth-player.offsetWidth-4,savedPos.left))+'px';
+      player.style.top=Math.max(4,Math.min(window.innerHeight-player.offsetHeight-4,savedPos.top))+'px';
+      player.style.right='auto';player.style.bottom='auto';
+    }
+    drag.addEventListener('pointerdown',e=>{
+      moving=true;
+      const r=player.getBoundingClientRect();
+      dx=e.clientX-r.left;dy=e.clientY-r.top;
+      drag.setPointerCapture?.(e.pointerId);
+      e.preventDefault();
+    });
+    drag.addEventListener('pointermove',e=>{
+      if(!moving)return;
+      const left=Math.max(4,Math.min(window.innerWidth-player.offsetWidth-4,e.clientX-dx));
+      const top=Math.max(4,Math.min(window.innerHeight-player.offsetHeight-4,e.clientY-dy));
+      player.style.left=left+'px';player.style.top=top+'px';
+      player.style.right='auto';player.style.bottom='auto';
+    });
+    const stopMove=()=>{
+      if(!moving)return;
+      moving=false;
+      const r=player.getBoundingClientRect();
+      localStorage.setItem('xrpet-music-pos',JSON.stringify({left:r.left,top:r.top}));
+    };
+    drag.addEventListener('pointerup',stopMove);
+    drag.addEventListener('pointercancel',stopMove);
+  }
   let saved={index:0,volume:.45,shuffle:false};
   try{saved={...saved,...JSON.parse(localStorage.getItem('xrpet-music')||'{}')}}catch{}
   let index=Math.max(0,Math.min(XRPetSoundtrack.length-1,Number(saved.index)||0));
