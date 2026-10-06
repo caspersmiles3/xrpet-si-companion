@@ -6622,3 +6622,234 @@ body[data-primary-view="games"] .top-command-deck .topbar{display:block!importan
 }
 .clean-launch .clean-launch-grid{z-index:3!important}
 .clean-launch .clean-launch-content{position:relative!important;z-index:4!important}
+
+
+/* v5.5.21 — separated sticky top rail + collapsible sidebar + contained music player */
+:root{
+  --sidebar-open:210px;
+  --sidebar-closed:46px;
+  --command-rail-height:74px;
+}
+
+/* Keep the command rail locked but reserve its own layout space. */
+.main-shell{
+  position:relative!important;
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:8px 18px 30px!important;
+}
+.top-command-deck{
+  position:sticky!important;
+  top:0!important;
+  z-index:90!important;
+  width:100%!important;
+  margin:0 0 12px!important;
+  padding:8px 0!important;
+  background:#05080c!important;
+}
+.main-shell>.primary-view-section.view-active,
+.main-shell>[data-customization-panel].is-open{
+  position:relative!important;
+  scroll-margin-top:calc(var(--command-rail-height) + 14px)!important;
+  margin-top:0!important;
+}
+#homeSection,
+#xrplPanel,
+#exchangesSection,
+#xrpHistorySection,
+#learnSection,
+#announcementsSection,
+#companionSection,
+#ecosystemSection,
+#gamesSection{
+  scroll-margin-top:calc(var(--command-rail-height) + 14px)!important;
+}
+
+/* Entire left column becomes one collapsible tab. */
+.app-frame{
+  grid-template-columns:var(--sidebar-open) minmax(0,1fr)!important;
+  transition:grid-template-columns .22s ease!important;
+}
+.sidebar{
+  position:sticky!important;
+  top:0!important;
+  height:100dvh!important;
+  max-height:100dvh!important;
+  min-width:0!important;
+  padding:16px 12px 14px!important;
+  overflow-y:auto!important;
+  overflow-x:visible!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:8px!important;
+  border-right:1px solid #101b24!important;
+  background:linear-gradient(180deg,#060a0e,#05080b)!important;
+  z-index:100!important;
+  scrollbar-width:thin;
+}
+.sidebar::-webkit-scrollbar{width:6px}
+.sidebar::-webkit-scrollbar-thumb{background:#18333f;border-radius:99px}
+.sidebar-collapse-toggle{
+  position:fixed!important;
+  left:calc(var(--sidebar-open) - 14px)!important;
+  top:18px!important;
+  z-index:130!important;
+  display:grid!important;
+  place-items:center!important;
+  width:28px!important;
+  height:36px!important;
+  margin:0!important;
+  padding:0!important;
+  border:1px solid #245164!important;
+  border-radius:9px!important;
+  background:#07151c!important;
+  color:#9deeff!important;
+  box-shadow:0 6px 20px rgba(0,0,0,.3)!important;
+  transition:left .22s ease,background .18s ease!important;
+}
+.sidebar-collapse-toggle span{
+  font-size:1.15rem!important;
+  line-height:1!important;
+}
+.sidebar-collapse-toggle:hover{background:#0d2631!important}
+
+/* Navigation can scroll, but music/player controls remain visible and intact. */
+.sidebar .brand-lockup{flex:0 0 auto!important;padding:5px 7px 10px!important}
+.sidebar .side-nav{
+  flex:1 1 auto!important;
+  min-height:120px!important;
+  max-height:none!important;
+  overflow-y:auto!important;
+  overflow-x:visible!important;
+  padding-right:2px!important;
+}
+.sidebar #xrpetMusicPlayer.music-player-clean{
+  flex:0 0 auto!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  min-height:182px!important;
+  height:auto!important;
+  margin:4px 0!important;
+  padding:10px!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+}
+.sidebar #xrpetMusicPlayer .music-now-playing{
+  width:100%!important;
+  min-width:0!important;
+  grid-template-columns:minmax(0,1fr) 38px!important;
+  overflow:hidden!important;
+}
+.sidebar #xrpetMusicPlayer .music-now-playing .music-main{
+  position:static!important;
+  justify-self:end!important;
+  align-self:center!important;
+  transform:none!important;
+  margin:0!important;
+}
+.sidebar #xrpetMusicPlayer .music-waveform{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+}
+.sidebar #xrpetMusicPlayer .music-transport{
+  display:grid!important;
+  grid-template-columns:38px 38px 38px!important;
+  justify-content:center!important;
+  gap:10px!important;
+  width:100%!important;
+  min-width:0!important;
+  padding:0!important;
+  overflow:visible!important;
+}
+.sidebar #xrpetMusicPlayer .music-transport button{
+  display:grid!important;
+  place-items:center!important;
+  position:static!important;
+  transform:none!important;
+  margin:0!important;
+}
+.sidebar #xrpetMusicPlayer .music-volume-row{
+  width:100%!important;
+  min-width:0!important;
+  overflow:hidden!important;
+}
+.sidebar .settings-wrap,
+.sidebar .ledger-badge{
+  flex:0 0 auto!important;
+}
+
+/* Collapsed state: one slim tab only, main content takes the space. */
+body.sidebar-collapsed .app-frame{
+  grid-template-columns:var(--sidebar-closed) minmax(0,1fr)!important;
+}
+body.sidebar-collapsed .sidebar{
+  width:var(--sidebar-closed)!important;
+  min-width:var(--sidebar-closed)!important;
+  padding:0!important;
+  overflow:visible!important;
+  border-right:1px solid #17303c!important;
+}
+body.sidebar-collapsed .sidebar>*:not(.sidebar-collapse-toggle){
+  display:none!important;
+}
+body.sidebar-collapsed .sidebar-collapse-toggle{
+  left:12px!important;
+  top:18px!important;
+}
+body.sidebar-collapsed .main-shell{
+  padding-left:20px!important;
+  padding-right:20px!important;
+}
+
+/* Avoid any page title hiding beneath sticky rail on navigation. */
+@media(min-width:761px){
+  .main-shell>.primary-view-section.view-active{
+    padding-top:18px!important;
+  }
+}
+@media(max-width:760px){
+  :root{--sidebar-open:100%;--sidebar-closed:42px;--command-rail-height:116px}
+  .app-frame{
+    grid-template-columns:1fr!important;
+  }
+  .sidebar{
+    position:relative!important;
+    width:100%!important;
+    height:auto!important;
+    max-height:none!important;
+    padding:10px!important;
+  }
+  .sidebar-collapse-toggle{
+    position:absolute!important;
+    left:auto!important;
+    right:8px!important;
+    top:8px!important;
+  }
+  body.sidebar-collapsed .app-frame{
+    grid-template-columns:1fr!important;
+  }
+  body.sidebar-collapsed .sidebar{
+    position:fixed!important;
+    left:0!important;
+    top:0!important;
+    width:42px!important;
+    height:48px!important;
+    min-width:42px!important;
+    z-index:140!important;
+    background:#071118!important;
+    border:1px solid #17303c!important;
+    border-radius:0 0 10px 0!important;
+  }
+  body.sidebar-collapsed .sidebar-collapse-toggle{
+    position:absolute!important;
+    left:7px!important;
+    top:6px!important;
+  }
+  .main-shell{
+    padding:8px 10px 26px!important;
+  }
+}
