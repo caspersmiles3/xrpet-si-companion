@@ -277,3 +277,40 @@ body.room-ocean .floating-tag,body.room-vault .floating-tag,body.room-aurora .fl
 .turtle-preview:before{left:-9px}.turtle-preview:after{right:-9px;transform:none}
 @media(max-width:900px){.companion-roster{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.companion-roster{grid-template-columns:1fr}.gender-selector{grid-template-columns:1fr}}
+
+/* XRPet v2.8: graceful interaction, resilient renderer */
+.hidden{display:none!important}
+.floating-companion .floating-tag{
+  opacity:1;
+  visibility:visible;
+  transition:opacity .5s ease,transform .5s ease,visibility .5s ease;
+  touch-action:none;
+}
+.floating-companion.controls-hidden .floating-tag{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transform:translate(-50%,9px);
+}
+.floating-companion:hover .floating-tag,
+.floating-companion:focus-within .floating-tag{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transform:translate(-50%,0);
+}
+.companion3d-host{background:transparent!important;overflow:visible}
+.companion3d-canvas{background:transparent!important}
+.companion3d-failed{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  text-align:center;
+  color:#91dbe7;
+}
+.companion3d-failed img{width:68px;height:68px;filter:drop-shadow(0 0 18px #47eaff77)}
+.companion3d-failed small{max-width:160px;font-size:.56rem;line-height:1.4}
+.settings-menu input[type=range]{width:100%;accent-color:var(--cyan);cursor:pointer}
+.settings-menu .menu-action+ .menu-action{margin-top:6px}
