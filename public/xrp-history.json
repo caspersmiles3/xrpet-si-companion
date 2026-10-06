@@ -1,0 +1,393 @@
+{
+  "version": "1.0",
+  "updatedThrough": "2026-10-06",
+  "people": [
+    {
+      "name": "David Schwartz",
+      "role": "XRPL co-creator; long-time Ripple cryptographer",
+      "involvement": "Co-created the XRP Ledger with Jed McCaleb and Arthur Britto beginning in 2011; later served as Ripple's Chief Cryptographer/CTO and remains a central technical voice in the ecosystem."
+    },
+    {
+      "name": "Jed McCaleb",
+      "role": "XRPL co-creator; early Ripple co-founder/CTO",
+      "involvement": "Helped create XRPL and XRP, co-founded the company that became Ripple, left in 2013, and completed sales of his remaining XRP in 2022 under a settlement framework."
+    },
+    {
+      "name": "Arthur Britto",
+      "role": "XRPL co-creator; early Ripple advisor",
+      "involvement": "One of the three original XRPL architects and part of the founding group around the company that became Ripple."
+    },
+    {
+      "name": "Chris Larsen",
+      "role": "Ripple co-founder; Executive Chairman",
+      "involvement": "Joined the XRPL founders in 2012, co-founded the company, served as CEO, and became Executive Chairman."
+    },
+    {
+      "name": "Brad Garlinghouse",
+      "role": "Ripple CEO",
+      "involvement": "Leads Ripple through its payments expansion, SEC litigation era, acquisitions, institutional products and global regulatory strategy."
+    },
+    {
+      "name": "Monica Long",
+      "role": "Ripple President",
+      "involvement": "Long-time Ripple executive involved in product, payments, institutional infrastructure and company strategy."
+    }
+  ],
+  "events": [
+    {
+      "date": "2011-01-01",
+      "year": 2011,
+      "category": "Origins",
+      "sentiment": "foundation",
+      "title": "Work begins on a better payments-focused ledger",
+      "summary": "David Schwartz, Jed McCaleb and Arthur Britto begin designing a distributed ledger intended to avoid mining and improve payment speed, cost and sustainability.",
+      "people": [
+        "David Schwartz",
+        "Jed McCaleb",
+        "Arthur Britto"
+      ],
+      "source": "https://xrpl.org/about/history"
+    },
+    {
+      "date": "2012-06-01",
+      "year": 2012,
+      "category": "XRPL",
+      "sentiment": "foundation",
+      "title": "XRP Ledger launches",
+      "summary": "The XRP Ledger goes live with a fixed 100 billion XRP created at genesis. No additional XRP can be created by protocol rules.",
+      "people": [
+        "David Schwartz",
+        "Jed McCaleb",
+        "Arthur Britto"
+      ],
+      "source": "https://xrpl.org/about/history"
+    },
+    {
+      "date": "2012-09-01",
+      "year": 2012,
+      "category": "Ripple",
+      "sentiment": "foundation",
+      "title": "NewCoin is formed and later becomes Ripple",
+      "summary": "Jed McCaleb, Arthur Britto and Chris Larsen form NewCoin, quickly renamed OpenCoin and later Ripple. The XRPL founders gift 80 billion XRP to the company to support development and adoption.",
+      "people": [
+        "Jed McCaleb",
+        "Arthur Britto",
+        "Chris Larsen",
+        "David Schwartz"
+      ],
+      "source": "https://xrpl.org/about/history"
+    },
+    {
+      "date": "2013-06-01",
+      "year": 2013,
+      "category": "People",
+      "sentiment": "mixed",
+      "title": "Jed McCaleb leaves Ripple",
+      "summary": "McCaleb departs after strategic differences. His large personal XRP position later becomes the subject of structured sale agreements and long-running market attention.",
+      "people": [
+        "Jed McCaleb"
+      ],
+      "source": "https://ripple.com/insights/the-stand-is-finally-out-of-tacos/"
+    },
+    {
+      "date": "2017-05-16",
+      "year": 2017,
+      "category": "XRP",
+      "sentiment": "positive",
+      "title": "Ripple commits 55 billion XRP to escrow",
+      "summary": "Ripple announces a plan to place 55 billion XRP into cryptographically enforced on-ledger escrow to make future supply releases more predictable.",
+      "people": [
+        "Brad Garlinghouse"
+      ],
+      "source": "https://ripple.com/insights/ripple-to-place-55-billion-xrp-in-escrow-to-ensure-certainty-into-total-xrp-supply/"
+    },
+    {
+      "date": "2017-12-08",
+      "year": 2017,
+      "category": "XRP",
+      "sentiment": "positive",
+      "title": "55 billion XRP escrow lockup completed",
+      "summary": "Ripple completes the escrow program. Up to one billion XRP becomes eligible for release each month, with unused amounts generally returned to later escrow slots.",
+      "people": [
+        "David Schwartz"
+      ],
+      "source": "https://ripple.com/insights/explanation-ripples-xrp-escrow/"
+    },
+    {
+      "date": "2017-12-22",
+      "year": 2017,
+      "category": "Market",
+      "sentiment": "up",
+      "title": "XRP finishes 2017 after an extraordinary run",
+      "summary": "Ripple reported XRP had risen nearly 12,000% from December 2016 to December 2017, making 2017 one of the strongest expansion periods in XRP's history.",
+      "people": [],
+      "source": "https://ripple.com/insights/happy-5th-anniversary-xrp-ledger/"
+    },
+    {
+      "date": "2018-01-11",
+      "year": 2018,
+      "category": "Adoption",
+      "sentiment": "positive",
+      "title": "MoneyGram pilots XRP through xRapid",
+      "summary": "MoneyGram and Ripple announce a pilot using XRP in payment flows through xRapid, an early high-profile test of XRP for cross-border liquidity.",
+      "people": [],
+      "source": "https://ripple.com/ripple-press/ripple-and-moneygram-partner-to-modernize-payments/"
+    },
+    {
+      "date": "2018-01-31",
+      "year": 2018,
+      "category": "Market",
+      "sentiment": "down",
+      "title": "Post-2017 crypto reversal hits XRP",
+      "summary": "After the late-2017 surge and early-2018 peak, XRP enters a deep multi-year drawdown with the broader crypto market, showing the volatility that would define several future cycles.",
+      "people": [],
+      "source": "https://ripple.com/insights/q2-2018-xrp-markets-report/"
+    },
+    {
+      "date": "2018-10-02",
+      "year": 2018,
+      "category": "Ripple",
+      "sentiment": "positive",
+      "title": "xRapid becomes commercially available",
+      "summary": "Ripple announces xRapid production availability with customers including MercuryFX, Cuallix and Catalyst Corporate Federal Credit Union.",
+      "people": [],
+      "source": "https://ripple.com/ripple-press/ripple-highlights-record-year-xrapid-now-commercially-available/"
+    },
+    {
+      "date": "2019-10-01",
+      "year": 2019,
+      "category": "Ripple",
+      "sentiment": "positive",
+      "title": "xRapid evolves into On-Demand Liquidity",
+      "summary": "Ripple begins referring to xRapid as On-Demand Liquidity (ODL), keeping XRP at the center of the liquidity bridge used for selected cross-border payment corridors.",
+      "people": [],
+      "source": "https://ripple.com/insights/q3-2019-markets-report/"
+    },
+    {
+      "date": "2020-12-22",
+      "year": 2020,
+      "category": "Legal",
+      "sentiment": "down",
+      "title": "SEC sues Ripple, Brad Garlinghouse and Chris Larsen",
+      "summary": "The U.S. SEC files suit alleging unregistered securities offerings involving XRP. The case becomes the most consequential legal overhang in XRP's history and contributes to exchange restrictions and sharp market stress.",
+      "people": [
+        "Brad Garlinghouse",
+        "Chris Larsen"
+      ],
+      "source": "https://www.sec.gov/newsroom/speeches-statements/crenshaw-statement-ripple-050825"
+    },
+    {
+      "date": "2022-07-19",
+      "year": 2022,
+      "category": "People",
+      "sentiment": "neutral",
+      "title": "Jed McCaleb finishes selling his remaining XRP",
+      "summary": "Ripple marks the end of McCaleb's long-running XRP distributions from the 'tacostand' wallet under previously agreed sale constraints.",
+      "people": [
+        "Jed McCaleb"
+      ],
+      "source": "https://ripple.com/insights/the-stand-is-finally-out-of-tacos/"
+    },
+    {
+      "date": "2022-10-31",
+      "year": 2022,
+      "category": "XRPL",
+      "sentiment": "positive",
+      "title": "Native NFT functionality arrives on XRPL",
+      "summary": "The XLS-20 amendment era adds native NFT capabilities to the XRP Ledger, expanding XRPL beyond payments into tokenized collectibles and digital assets.",
+      "people": [],
+      "source": "https://xrpl.org/blog/2022/rippled-1.9.0"
+    },
+    {
+      "date": "2023-05-17",
+      "year": 2023,
+      "category": "Acquisition",
+      "sentiment": "positive",
+      "title": "Ripple acquires Metaco for $250 million",
+      "summary": "Ripple expands into institutional custody and tokenization infrastructure by acquiring Swiss digital-asset custody company Metaco.",
+      "people": [
+        "Brad Garlinghouse"
+      ],
+      "source": "https://ripple.com/ripple-press/leading-enterprise-crypto-company-ripple-acquires-custody-provider-metaco-for-250m/"
+    },
+    {
+      "date": "2023-07-13",
+      "year": 2023,
+      "category": "Legal",
+      "sentiment": "up",
+      "title": "Major court ruling distinguishes XRP transaction types",
+      "summary": "The federal court's summary-judgment ruling finds Ripple's institutional XRP sales were unregistered securities offerings while certain other XRP sales did not constitute investment contracts, creating a major legal distinction and triggering a sharp market reaction.",
+      "people": [
+        "Brad Garlinghouse",
+        "Chris Larsen"
+      ],
+      "source": "https://www.sec.gov/newsroom/speeches-statements/crenshaw-statement-ripple-050825"
+    },
+    {
+      "date": "2024-02-08",
+      "year": 2024,
+      "category": "XRPL",
+      "sentiment": "positive",
+      "title": "Clawback amendment activates",
+      "summary": "XRPL enables Clawback functionality, adding a compliance-oriented control for certain issued assets.",
+      "people": [],
+      "source": "https://xrpl.org/blog/2024/get-ready-for-amm"
+    },
+    {
+      "date": "2024-03-22",
+      "year": 2024,
+      "category": "XRPL",
+      "sentiment": "positive",
+      "title": "XRPL AMM functionality reaches Mainnet",
+      "summary": "The Automated Market Maker amendment is enabled, adding protocol-level AMM functionality and broadening XRPL decentralized-finance capabilities.",
+      "people": [
+        "David Schwartz"
+      ],
+      "source": "https://xrpl.org/blog/2024/get-ready-for-amm"
+    },
+    {
+      "date": "2024-06-11",
+      "year": 2024,
+      "category": "Acquisition",
+      "sentiment": "positive",
+      "title": "Ripple completes Standard Custody acquisition",
+      "summary": "Ripple expands its regulated custody footprint and U.S. licensing capabilities through Standard Custody & Trust Company.",
+      "people": [],
+      "source": "https://ripple.com/ripple-press/ripple-announces-acquisition-of-standard-custody-and-trust-company-expands/"
+    },
+    {
+      "date": "2024-08-07",
+      "year": 2024,
+      "category": "Legal",
+      "sentiment": "mixed",
+      "title": "Final judgment entered in SEC v. Ripple",
+      "summary": "The district court enters final judgment including a civil penalty and injunction tied to institutional sales, while both sides later pursue appeals.",
+      "people": [
+        "Brad Garlinghouse",
+        "Chris Larsen"
+      ],
+      "source": "https://www.sec.gov/newsroom/speeches-statements/crenshaw-statement-ripple-050825"
+    },
+    {
+      "date": "2024-12-17",
+      "year": 2024,
+      "category": "Ripple",
+      "sentiment": "positive",
+      "title": "Ripple USD (RLUSD) launches globally",
+      "summary": "Ripple launches its U.S.-dollar stablecoin RLUSD, broadening the company's institutional settlement stack alongside XRP and XRPL.",
+      "people": [],
+      "source": "https://ripple.com/ripple-press/raising-the-standard-for-stablecoins-ripple-usd-launches-globally/"
+    },
+    {
+      "date": "2025-02-04",
+      "year": 2025,
+      "category": "XRPL",
+      "sentiment": "down",
+      "title": "XRPL experiences a temporary validation halt",
+      "summary": "The network experiences an approximately 64-minute halt in ledger validation before recovering, an important operational incident in an otherwise long-running uptime history.",
+      "people": [],
+      "source": "https://www.sec.gov/Archives/edgar/data/1683471/000089418926013814/ck0001683471-20260429.htm"
+    },
+    {
+      "date": "2025-03-19",
+      "year": 2025,
+      "category": "Legal",
+      "sentiment": "up",
+      "title": "Ripple says SEC will drop its appeal",
+      "summary": "Ripple announces that the SEC intends to drop its appeal, marking a major turning point after more than four years of litigation.",
+      "people": [
+        "Brad Garlinghouse"
+      ],
+      "source": "https://ripple.com/insights/ripple-ceo-brad-garlinghouse-on-xrp-victory/"
+    },
+    {
+      "date": "2025-04-08",
+      "year": 2025,
+      "category": "Acquisition",
+      "sentiment": "positive",
+      "title": "Ripple agrees to acquire Hidden Road for $1.25 billion",
+      "summary": "Ripple moves into global prime brokerage. The deal is designed to connect payments, custody, stablecoin infrastructure and institutional market access, with planned XRPL usage in post-trade workflows.",
+      "people": [
+        "Brad Garlinghouse"
+      ],
+      "source": "https://ripple.com/ripple-press/ripple-acquires-prime-broker-hidden-road/"
+    },
+    {
+      "date": "2025-08-01",
+      "year": 2025,
+      "category": "Legal",
+      "sentiment": "positive",
+      "title": "SEC and Ripple litigation winds down",
+      "summary": "The parties move to dismiss their appeals, leaving the 2024 final judgment framework in place and ending the central appellate fight.",
+      "people": [
+        "Brad Garlinghouse",
+        "Chris Larsen"
+      ],
+      "source": "https://www.sec.gov/Archives/edgar/data/2039505/000199937125016081/canaryxrp-s1a_102425.htm"
+    },
+    {
+      "date": "2025-10-16",
+      "year": 2025,
+      "category": "Acquisition",
+      "sentiment": "positive",
+      "title": "Ripple announces $1 billion GTreasury acquisition",
+      "summary": "Ripple expands into corporate treasury management, linking traditional enterprise treasury workflows with digital asset settlement and liquidity infrastructure.",
+      "people": [
+        "Brad Garlinghouse"
+      ],
+      "source": "https://treasury.ripple.com/news/ripple-acquires-gtreasury"
+    },
+    {
+      "date": "2025-10-24",
+      "year": 2025,
+      "category": "Acquisition",
+      "sentiment": "positive",
+      "title": "Hidden Road acquisition closes; Ripple Prime launches",
+      "summary": "Hidden Road becomes Ripple Prime, giving Ripple a global multi-asset prime-brokerage business alongside payments, custody and stablecoin products.",
+      "people": [
+        "Brad Garlinghouse"
+      ],
+      "source": "https://ripple.com/insights/ripple-closes-hidden-road-acquisition/"
+    },
+    {
+      "date": "2026-02-26",
+      "year": 2026,
+      "category": "XRPL",
+      "sentiment": "positive",
+      "title": "XRPL ecosystem support model expands",
+      "summary": "Ripple describes a more distributed builder-support model after more than $550 million had already been deployed across the XRP Ledger ecosystem.",
+      "people": [],
+      "source": "https://ripple.com/insights/supporting-innovation-on-the-xrp-ledger/"
+    },
+    {
+      "date": "2026-06-09",
+      "year": 2026,
+      "category": "Adoption",
+      "sentiment": "positive",
+      "title": "Ripple and Bitso expand stablecoin settlement on XRPL",
+      "summary": "Bitso's MXNB is integrated with XRPL-based payment infrastructure alongside RLUSD for enterprise settlement across the U.S.–Mexico corridor.",
+      "people": [],
+      "source": "https://ripple.com/ripple-press/ripple-and-bitso-expand-partnership/"
+    },
+    {
+      "date": "2026-06-30",
+      "year": 2026,
+      "category": "XRP",
+      "sentiment": "neutral",
+      "title": "Ripple reports updated XRP holdings and escrow totals",
+      "summary": "Ripple reports 37.656 billion XRP held, 62.330 billion distributed, and 32.6 billion XRP still in escrow as of June 30, 2026.",
+      "people": [],
+      "source": "https://ripple.com/xrp/"
+    },
+    {
+      "date": "2026-09-29",
+      "year": 2026,
+      "category": "Adoption",
+      "sentiment": "positive",
+      "title": "CSD BR begins using XRPL in Brazilian market infrastructure",
+      "summary": "CSD BR starts using XRPL as an additional recording and audit layer for tokenized financial assets, beginning with BTG Pactual investment-fund shares.",
+      "people": [],
+      "source": "https://ripple.com/ripple-press/csdbr-and-ripple-use-the-xrpl-blockchain-to-expand-brazils-financial-market-infrastructure/"
+    }
+  ]
+}

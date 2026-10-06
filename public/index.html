@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=3.6.0">
+  <link rel="stylesheet" href="/styles.css?v=3.7.0">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
@@ -58,6 +58,7 @@
       <button class="side-link" data-scroll="cosmeticsSection"><span>✦</span>Cosmetics</button>
       <button class="side-link" data-scroll="walletPanel"><span>▣</span>Wallet</button>
       <button class="side-link" data-scroll="xrplPanel"><span>▥</span>XRPL Live</button>
+      <button class="side-link" data-scroll="xrpHistorySection"><span>↯</span>XRP History</button>
       <button class="side-link" data-scroll="chatPanel"><span>◌</span>Chat</button>
     </nav>
 
@@ -167,6 +168,45 @@
       </div>
     </section>
 
+
+<section id="xrpHistorySection" class="flow-section xrp-history-section">
+  <div class="section-heading">
+    <div>
+      <span class="eyebrow">RIPPLE + XRP // LIVING ARCHIVE</span>
+      <h2>The full story—origins, cycles, people, products, regulation and adoption.</h2>
+      <p class="section-subcopy">A chronological intelligence layer from the creation of the XRP Ledger to today's live Ripple and XRPL developments. Historical facts remain anchored to primary sources; current items refresh automatically.</p>
+    </div>
+    <div class="history-actions">
+      <span class="truth-label">AUTO-UPDATING</span>
+      <button id="xrpRefreshHistory" class="mini-button" type="button">Refresh now</button>
+    </div>
+  </div>
+
+  <div id="xrpArchiveLive" class="top-metrics xrp-archive-live">
+    <article><span>LIVE XRP/USD</span><strong>—</strong><small>Loading</small></article>
+    <article><span>MARKET DIRECTION</span><strong>—</strong><small>Live snapshot</small></article>
+    <article><span>OFFICIAL FEED</span><strong>—</strong><small>Loading</small></article>
+    <article><span>ARCHIVE</span><strong>—</strong><small>Loading</small></article>
+  </div>
+
+  <div class="history-toolbar">
+    <input id="xrpHistorySearch" type="search" placeholder="Search XRP, Ripple, SEC, escrow, ODL, RLUSD, people…">
+    <small id="xrpAutoTime">Live layer starting…</small>
+  </div>
+  <div id="xrpFilters" class="xrp-filters" aria-label="Ripple and XRP timeline filters"></div>
+  <div id="xrpTimeline" class="xrp-timeline"><p class="muted">Loading Ripple/XRP history…</p></div>
+
+  <div class="section-heading people-heading">
+    <div><span class="eyebrow">WHO'S INVOLVED</span><h2>Key people in the XRP and Ripple story</h2></div>
+    <span class="chip">historical context</span>
+  </div>
+  <div id="xrpPeople" class="xrp-people"></div>
+
+  <div class="signal-disclosure">
+    <strong>TRUTH LAYER</strong>
+    <p>XRPet keeps Ripple the company, XRP the digital asset, and XRPL the open-source network distinct. Market moves are descriptive, not predictions. Live articles are labeled as current official-source updates and historical milestones link back to primary sources.</p>
+  </div>
+</section>
 
 <section id="signal589Section" class="flow-section signal589-section">
   <div class="section-heading signal-heading">
@@ -501,11 +541,12 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 3.6.0 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 3.7.0 · XRP Ledger companion</footer>
   </main>
 </div>
 
-<script src="/app.js?v=3.6.0"></script>
-<script type="module" src="/companion3d.js?v=3.6.0"></script>
+<script src="/app.js?v=3.7.0"></script>
+<script src="/timeline.js?v=3.7.0"></script>
+<script type="module" src="/companion3d.js?v=3.7.0"></script>
 </body>
 </html>
