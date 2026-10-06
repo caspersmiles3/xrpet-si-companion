@@ -14,6 +14,8 @@ const state={
   truthMode:saved.truthMode!==false,marketMood:saved.marketMood!==false
 };
 const FORMS=[['Drop',0],['Ripple',50],['Wave',150],['Surge',350],['Nexus',700],['Titan',1200],['Legend',2000]];
+const ROOM_NAMES={nexus:'Neon Horizon',ocean:'Ripple Sanctuary',vault:'Ledger Vault',aurora:'Sky Garden',legend:'Orbital Station'};
+const COSMETIC_NAMES={classic:'Classic',aqua:'Aqua Core',midnight:'Midnight',pearl:'Pearl',solar:'Solar Flare'};
 function persist(){safe(()=>localStorage.setItem(STORE,JSON.stringify({...state,connected:undefined,ledgerIndex:undefined,txCount:undefined,baseFeeDrops:undefined,xrpPrice:undefined,xrpChange24h:undefined})))}
 function form(){return [...FORMS].reverse().find(x=>state.xp>=x[1])||FORMS[0]}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -21,8 +23,8 @@ function setText(sel,text){const el=q(sel);if(el)el.textContent=text}
 function mood(label,speech,cls='calm'){setText('#petMood',label);setText('#petSpeech',speech);window.XRPet3D?.react?.();window.dispatchEvent(new CustomEvent('xrpet:appearance',{detail:{room:state.room,cosmetic:state.cosmetic,mood:cls}}))}
 function render(){
   const [name,min]=form(); const i=FORMS.findIndex(x=>x[0]===name); const next=FORMS[Math.min(i+1,FORMS.length-1)];
-  setText('#petName',state.petName);setText('#chatPetName',state.petName);setText('#topPetName',state.petName);setText('#stripPetName',state.petName);setText('#evolution',name.toUpperCase());
-  const lvl=Math.floor(state.xp/100)+1; setText('#level','Lv. '+lvl);setText('#xpLabel',state.xp+' XP');setText('#topLevel','Level '+lvl);setText('#topXp',state.xp+' XP');setText('#stripLevel','Level '+lvl);
+  setText('#petName',state.petName);setText('#chatPetName',state.petName);setText('#topPetName',state.petName);setText('#floatingPetName',state.petName);setText('#evolution',name.toUpperCase());
+  const lvl=Math.floor(state.xp/100)+1; setText('#level','Lv. '+lvl);setText('#xpLabel',state.xp+' XP');setText('#topLevel','Level '+lvl);setText('#topXp',state.xp+' XP');
   const pct=name==='Legend'?100:Math.max(0,Math.min(100,(state.xp-min)/(next[1]-min)*100));
   if(q('#xpFill'))q('#xpFill').style.width=pct+'%';
   if(q('#profileName'))q('#profileName').value=state.petName;
@@ -32,9 +34,9 @@ function render(){
   if(q('#account'))q('#account').value=state.account||'';
   setText('#walletProvider',state.walletProvider==='manual'?'Manual':state.walletProvider);
   setText('#walletState',state.account?'Watching '+state.account.slice(0,8)+'…'+state.account.slice(-6)+' for validated activity.':'No public account is being watched.');
-  qa('.room-choice').forEach(b=>{const rank=FORMS.findIndex(x=>x[0]===name),need=b.dataset.room==='aurora'?2:b.dataset.room==='legend'?5:0;b.disabled=rank<need;b.classList.toggle('active',b.dataset.room===state.room)}); qa('.cosmetic-choice').forEach(b=>{const active=b.dataset.cosmetic===state.cosmetic;b.classList.toggle('active',active);const s=b.querySelector('small');if(s)s.textContent=active?'Equipped':'Owned'}); qa('.variant-dot').forEach(b=>b.classList.toggle('active',b.dataset.cosmetic===state.cosmetic));
+  qa('.room-choice').forEach(b=>{const rank=FORMS.findIndex(x=>x[0]===name),need=b.dataset.room==='aurora'?2:b.dataset.room==='legend'?5:0;b.disabled=rank<need;const active=b.dataset.room===state.room;b.classList.toggle('active',active);const e=b.querySelector('em');if(e&&active)e.textContent='Active';else if(e)e.textContent=need?((b.dataset.room==='aurora')?'Wave+':'Titan+'):'Unlocked'}); qa('.cosmetic-choice').forEach(b=>{const active=b.dataset.cosmetic===state.cosmetic;b.classList.toggle('active',active);const e=b.querySelector('em');if(e)e.textContent=active?'Equipped':'Owned'});
   document.body.classList.remove('room-nexus','room-ocean','room-vault','room-aurora','room-legend');document.body.classList.add('room-'+state.room); const pet=q('#pet'); if(pet){pet.classList.remove('skin-classic','skin-aqua','skin-midnight','skin-pearl','skin-solar');pet.classList.add('skin-'+state.cosmetic)}
-  setText('#unlocksChip',(['nexus','ocean','vault'].length+(FORMS.findIndex(x=>x[0]===name)>=2?1:0)+(FORMS.findIndex(x=>x[0]===name)>=5?1:0))+' unlocked');
+  setText('#unlocksChip',(['nexus','ocean','vault'].length+(FORMS.findIndex(x=>x[0]===name)>=2?1:0)+(FORMS.findIndex(x=>x[0]===name)>=5?1:0))+' unlocked');setText('#homeRoom',ROOM_NAMES[state.room]||state.room);setText('#homeCosmetic',COSMETIC_NAMES[state.cosmetic]||state.cosmetic);
   if(q('#explainLevel'))q('#explainLevel').value=state.explainLevel;if(q('#notifyLevel'))q('#notifyLevel').value=state.notifyLevel;
   if(q('#truthToggle'))q('#truthToggle').checked=state.truthMode;if(q('#marketMoodToggle'))q('#marketMoodToggle').checked=state.marketMood;
   window.dispatchEvent(new CustomEvent('xrpet:appearance',{detail:{room:state.room,cosmetic:state.cosmetic,mood:state.networkMood||'calm'}}));
