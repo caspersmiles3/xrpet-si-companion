@@ -8770,3 +8770,221 @@ body:not(.workspace-open) .main-shell>.primary-view-section:not(.view-active){
   .history-dedicated-page{padding:10px!important}
   .history-dedicated-summary{grid-template-columns:1fr!important}
 }
+
+
+/* v5.5.34 — locked right-side workspace + unified announcement status rail */
+@media(min-width:761px){
+  html,
+  body{
+    height:100%!important;
+    min-height:100%!important;
+    overflow:hidden!important;
+  }
+
+  .app-frame{
+    height:100dvh!important;
+    min-height:100dvh!important;
+    max-height:100dvh!important;
+    overflow:hidden!important;
+  }
+
+  #xrpetSidebar{
+    height:100dvh!important;
+    min-height:100dvh!important;
+    max-height:100dvh!important;
+  }
+
+  .main-shell{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    gap:0!important;
+    width:100%!important;
+    height:100dvh!important;
+    min-height:0!important;
+    max-height:100dvh!important;
+    padding:8px 14px 10px!important;
+    overflow:hidden!important;
+  }
+
+  .top-command-deck{
+    position:relative!important;
+    top:auto!important;
+    flex:0 0 auto!important;
+    width:100%!important;
+    margin:0 0 10px!important;
+    z-index:90!important;
+  }
+
+  /* Every sidebar destination uses the exact same bounded workspace. */
+  .main-shell>.primary-view-section.view-active:not([hidden]),
+  .main-shell>[data-customization-panel].is-open{
+    flex:1 1 0!important;
+    width:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    height:0!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:18px!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    overscroll-behavior:contain!important;
+    scrollbar-gutter:stable!important;
+    border:1px solid #142a35!important;
+    border-radius:12px!important;
+    background:
+      radial-gradient(circle at 88% 8%,rgba(58,218,246,.035),transparent 26%),
+      linear-gradient(180deg,#071017,#050b10)!important;
+    box-shadow:
+      inset 0 1px 0 rgba(134,238,255,.025),
+      0 12px 35px rgba(0,0,0,.16)!important;
+  }
+
+  .main-shell>.primary-view-section.view-active:not([hidden])::-webkit-scrollbar,
+  .main-shell>[data-customization-panel].is-open::-webkit-scrollbar{
+    width:7px!important;
+  }
+  .main-shell>.primary-view-section.view-active:not([hidden])::-webkit-scrollbar-track,
+  .main-shell>[data-customization-panel].is-open::-webkit-scrollbar-track{
+    background:#050b0f!important;
+    border-radius:99px!important;
+  }
+  .main-shell>.primary-view-section.view-active:not([hidden])::-webkit-scrollbar-thumb,
+  .main-shell>[data-customization-panel].is-open::-webkit-scrollbar-thumb{
+    background:#173744!important;
+    border-radius:99px!important;
+    border:1px solid #244d5c!important;
+  }
+
+  /* Remove old per-page viewport heights so every page obeys the common workspace box. */
+  body[data-primary-view="games"] .main-shell{
+    height:100dvh!important;
+    padding:8px 14px 10px!important;
+    overflow:hidden!important;
+  }
+  .games-section.view-active,
+  body[data-primary-view="games"] .games-section.view-active,
+  body[data-primary-view="live"] #xrplPanel.view-active{
+    flex:1 1 0!important;
+    height:0!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+  }
+
+  .history-dedicated-page.view-active:not([hidden]){
+    flex:1 1 0!important;
+    height:0!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+  }
+
+  /* Keep nested feeds/lists natural; the page itself owns scrolling. */
+  body[data-primary-view="announcements"] .announcement-feed,
+  .ecosystem-activity-list,
+  .ecosystem-x-feed{
+    max-height:none!important;
+    overflow:visible!important;
+  }
+}
+
+/* Announcements status: one connected long rail, matching the approved concept. */
+.announcement-summary{
+  position:relative!important;
+  z-index:25!important;
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:0!important;
+  width:100%!important;
+  margin:0 0 12px!important;
+  overflow:hidden!important;
+  border:1px solid #17647c!important;
+  border-radius:14px!important;
+  background:
+    linear-gradient(90deg,rgba(7,19,27,.99),rgba(5,15,22,.99))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(101,230,255,.055),
+    0 0 0 1px rgba(39,203,239,.025),
+    0 8px 24px rgba(0,0,0,.16)!important;
+}
+.announcement-summary article{
+  position:relative!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  min-width:0!important;
+  min-height:88px!important;
+  margin:0!important;
+  padding:14px 20px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.announcement-summary article+article{
+  border-left:1px solid rgba(54,202,232,.22)!important;
+}
+.announcement-summary article+article:before{
+  content:""!important;
+  position:absolute!important;
+  left:-4px!important;
+  top:50%!important;
+  width:7px!important;
+  height:7px!important;
+  transform:translateY(-50%)!important;
+  border-radius:50%!important;
+  background:#25e0f7!important;
+  box-shadow:0 0 12px rgba(37,224,247,.8)!important;
+}
+.announcement-summary span,
+.announcement-summary small{
+  display:block!important;
+}
+.announcement-summary span{
+  margin:0 0 6px!important;
+  color:#7e9eaa!important;
+  font-size:.46rem!important;
+  font-weight:800!important;
+  letter-spacing:.16em!important;
+}
+.announcement-summary strong{
+  margin:0!important;
+  color:#f0fbff!important;
+  font-size:.94rem!important;
+  line-height:1.05!important;
+  letter-spacing:-.015em!important;
+}
+.announcement-summary #announcementStatus{
+  color:#38e6ee!important;
+}
+.announcement-summary small{
+  margin-top:6px!important;
+  color:#718c98!important;
+  font-size:.52rem!important;
+  line-height:1.2!important;
+}
+
+/* Keep roaming Ripplet visually behind the unified status rail and page chrome. */
+.announcements-section .announcements-hero,
+.announcements-section .announcement-summary,
+.announcements-section .announcement-feed{
+  position:relative!important;
+  z-index:20!important;
+}
+
+@media(max-width:760px){
+  .announcement-summary{
+    grid-template-columns:1fr!important;
+  }
+  .announcement-summary article+article{
+    border-left:0!important;
+    border-top:1px solid rgba(54,202,232,.18)!important;
+  }
+  .announcement-summary article+article:before{
+    left:50%!important;
+    top:-4px!important;
+    transform:translateX(-50%)!important;
+  }
+}
