@@ -1069,8 +1069,9 @@
         <form id="xPostForm" class="x-post-composer">
           <div class="x-post-head"><span>POST FROM XRPET</span><b id="xWriteStatus">Checking X write access…</b></div>
           <textarea id="xPostText" maxlength="280" placeholder="Write an XRPL/XRP update to post on X…"></textarea>
+          <input id="xPostKey" type="password" autocomplete="off" placeholder="XRPet admin post key">
           <div class="x-post-actions"><small><span id="xPostCount">0</span>/280</small><button id="xPostButton" type="submit">Post to X</button></div>
-          <p id="xPostResult" class="muted">X user write access must be configured on the server.</p>
+          <p id="xPostResult" class="muted">Posting is protected by an admin key. The public X feed remains read-only.</p>
         </form>
         <div id="ecosystemXFeed" class="ecosystem-x-feed"><p class="muted">Checking X integration…</p></div>
       </section>
@@ -1083,7 +1084,7 @@
       </div>
       <div class="announcement-summary">
         <article><span>FEED</span><strong>Ripple + XRPL</strong><small>Official sources only</small></article>
-        <article><span>UPDATE MODE</span><strong>Near-live</strong><small>Official-source check every 15 seconds</small></article>
+        <article><span>UPDATE MODE</span><strong>Near-live</strong><small>Official-source check every 60 seconds</small></article>
         <article><span>STATUS</span><strong id="announcementStatus">Checking</strong><small id="announcementUpdated">Waiting for feed</small></article>
       </div>
       <div id="updates" class="updates announcement-feed"><p class="muted">Loading official sources…</p></div>
