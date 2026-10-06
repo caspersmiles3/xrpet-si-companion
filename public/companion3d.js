@@ -509,6 +509,86 @@ ext589SlashA.position.set(0,.64,.9);ext589SlashA.rotation.z=.72;
 const ext589SlashB=add(new THREE.BoxGeometry(.72,.045,.06),accentMat,extRes,'ext589SlashB');
 ext589SlashB.position.copy(ext589SlashA.position);ext589SlashB.rotation.z=-.72;
 
+
+// Universal Equipment Matrix — independent of species and main cosmetic preset.
+const equipmentMatrixGroup=new THREE.Group();root.add(equipmentMatrixGroup);
+const eyeSignalMat=new THREE.MeshStandardMaterial({color:0x47e6ff,emissive:0x47e6ff,emissiveIntensity:3.4,metalness:.15,roughness:.18});
+
+const eyeSignalGroup=new THREE.Group();equipmentMatrixGroup.add(eyeSignalGroup);
+for(const x of [-.42,.42]){
+  const emitter=add(new THREE.OctahedronGeometry(.065,0),eyeSignalMat,eyeSignalGroup,'matrixEyeEmitter');
+  emitter.position.set(x,1.04,1.43);emitter.scale.set(1,.72,.55);
+}
+
+const matrixCoreGroups={standard:new THREE.Group(),ripple:new THREE.Group(),vault:new THREE.Group(),589:new THREE.Group()};
+Object.values(matrixCoreGroups).forEach(g=>equipmentMatrixGroup.add(g));
+for(const r of [-.72,.72]){
+  const bar=add(new THREE.BoxGeometry(.48,.05,.055),accentMat,matrixCoreGroups.standard,'matrixStandardX');
+  bar.position.set(0,-.02,1.24);bar.rotation.z=r;
+}
+const standardGem=add(new THREE.OctahedronGeometry(.115,0),glassMat,matrixCoreGroups.standard,'matrixStandardGem');
+standardGem.position.set(0,-.02,1.27);
+
+for(const [y,s] of [[.08,1],[-.12,-1]]){
+  const split=add(new THREE.BoxGeometry(.58,.05,.06),accentMat,matrixCoreGroups.ripple,'matrixRippleSplit');
+  split.position.set(s*.08,y,1.22);split.rotation.z=s*.22;
+}
+const rippleGem=add(new THREE.TetrahedronGeometry(.13,0),glassMat,matrixCoreGroups.ripple,'matrixRippleGem');
+rippleGem.position.set(0,-.02,1.28);rippleGem.rotation.z=.55;
+
+const vaultSeal=add(new THREE.CylinderGeometry(.2,.2,.055,6),shellDarkMat,matrixCoreGroups.vault,'matrixVaultSeal');
+vaultSeal.position.set(0,-.02,1.22);vaultSeal.rotation.x=Math.PI/2;vaultSeal.rotation.z=Math.PI/6;
+const vaultGem=add(new THREE.OctahedronGeometry(.105,0),accentMat,matrixCoreGroups.vault,'matrixVaultGem');
+vaultGem.position.set(0,-.02,1.28);
+
+const core589Gem=add(new THREE.OctahedronGeometry(.145,0),glassMat,matrixCoreGroups[589],'matrix589Gem');
+core589Gem.position.set(0,-.02,1.28);core589Gem.rotation.z=Math.PI/4;
+const core589Nodes=[];
+for(let i=0;i<9;i++){
+  const node=add(new THREE.OctahedronGeometry(i===4?.035:.025,0),accentMat,matrixCoreGroups[589],'matrix589CoreNode'+i);
+  const a=i/9*Math.PI*2;node.position.set(Math.cos(a)*.29,-.02+Math.sin(a)*.22,1.25);
+  core589Nodes.push(node);
+}
+
+const headGearGroups={none:new THREE.Group(),crest:new THREE.Group(),halo:new THREE.Group(),ridge:new THREE.Group()};
+Object.values(headGearGroups).forEach(g=>equipmentMatrixGroup.add(g));
+for(const [x,s] of [[-.18,-1],[0,0],[.18,1]]){
+  const fin=add(new THREE.ConeGeometry(.07,.42,4),shellMat,headGearGroups.crest,'matrixCrestFin');
+  fin.position.set(x,1.7,.28);fin.rotation.z=s*.2;
+}
+const matrixHalo=add(new THREE.TorusGeometry(.43,.022,8,12),accentMat,headGearGroups.halo,'matrixHalo');
+matrixHalo.position.set(0,1.72,.04);matrixHalo.rotation.x=1.08;
+for(let i=0;i<4;i++){
+  const ridge=add(new THREE.BoxGeometry(.1,.32,.07),shellDarkMat,headGearGroups.ridge,'matrixRidge'+i);
+  ridge.position.set((i-1.5)*.12,1.58+i*.035,.24);ridge.rotation.z=(i-1.5)*.08;
+}
+
+const trailGroups={none:new THREE.Group(),pulse:new THREE.Group(),nodes:new THREE.Group(),resonance:new THREE.Group()};
+Object.values(trailGroups).forEach(g=>equipmentMatrixGroup.add(g));
+const pulseTrailNodes=[],nodeTrailNodes=[],resTrailNodes=[];
+for(let i=0;i<6;i++){
+  const node=add(new THREE.OctahedronGeometry(.045-i*.004,0),accentMat,trailGroups.pulse,'pulseTrail'+i);
+  node.position.set(0,-.15-i*.09,-.65-i*.22);pulseTrailNodes.push(node);
+}
+for(let i=0;i<8;i++){
+  const node=add(new THREE.BoxGeometry(.055,.055,.055),accentMat,trailGroups.nodes,'nodeTrail'+i);
+  node.rotation.set(.4,.5,.4);node.position.set((i%2?1:-1)*(.11+i*.015),-.1-i*.07,-.65-i*.2);nodeTrailNodes.push(node);
+}
+for(let i=0;i<9;i++){
+  const mat=i%2?accentMat:new THREE.MeshStandardMaterial({color:0xc7a253,emissive:0xc7a253,emissiveIntensity:2.8,metalness:.2,roughness:.25});
+  const node=add(new THREE.OctahedronGeometry(i===4?.055:.035,0),mat,trailGroups.resonance,'resTrail'+i);
+  node.position.set(Math.sin(i*.9)*.16,-.08-i*.065,-.68-i*.19);resTrailNodes.push(node);
+}
+
+function configureEquipment(detail={}){
+  const eye=detail.eyeStyle||'cyan',core=detail.coreStyle||'standard',head=detail.headGear||'none',trail=detail.trailStyle||'none';
+  const eyeColors={cyan:0x47e6ff,white:0xf5fbff,violet:0x8d78ff,amber:0xd5a64f};
+  const ec=eyeColors[eye]??eyeColors.cyan;eyeSignalMat.color.setHex(ec);eyeSignalMat.emissive.setHex(ec);
+  Object.entries(matrixCoreGroups).forEach(([k,g])=>g.visible=k===core);
+  Object.entries(headGearGroups).forEach(([k,g])=>g.visible=k===head);
+  Object.entries(trailGroups).forEach(([k,g])=>g.visible=k===trail);
+}
+
 // lighting
 scene.add(new THREE.HemisphereLight(0xc9f6ff,0x061017,2.1));
 const key=new THREE.SpotLight(0xffffff,44,20,.5,.5,1.3);key.position.set(-4,5,5);key.castShadow=true;scene.add(key);key.target=pet;
@@ -792,6 +872,7 @@ function setAppearance(detail={}){
   configureSpecies(kind);
   configureGender(detail.companionGender||currentGender);
   configureCosmetic(detail.cosmetic||currentCosmetic);
+  configureEquipment(detail);
   applyRoom(detail.room||'nexus');
   if(BUILTIN_MODELS[kind]){
     window.dispatchEvent(new CustomEvent('xrpet:model-loading',{detail:{kind}}));
@@ -944,6 +1025,12 @@ function animate(){
     const pulse=.88+(Math.sin(t*(scanning?5.2:1.8)+i*.67)+1)*.12;
     n.scale.setScalar(pulse);
   });
+  matrixHalo.rotation.z=t*.24;
+  standardGem.rotation.y=t*.55;rippleGem.rotation.y=-t*.72;vaultGem.rotation.z=t*.18;core589Gem.rotation.y=t*(scanning?2.6:.72);
+  core589Nodes.forEach((n,i)=>n.scale.setScalar(.9+(Math.sin(t*2+i*.55)+1)*.09));
+  pulseTrailNodes.forEach((n,i)=>{n.position.y=-.15-i*.09+Math.sin(t*2.6+i*.5)*.025;n.scale.setScalar(.82+(Math.sin(t*3.2+i*.7)+1)*.12)});
+  nodeTrailNodes.forEach((n,i)=>{n.rotation.x=t*.4+i*.2;n.rotation.y=t*.55+i*.16});
+  resTrailNodes.forEach((n,i)=>{n.position.x=Math.sin(t*1.4+i*.8)*(.12+i*.008);n.scale.setScalar(.82+(Math.sin(t*2.2+i*.9)+1)*.12)});
   cosmeticGroups.resonance.rotation.y=orbiting?t*.8:0;
   orbGroup.rotation.y=t*(alerting?1.35:.7);orbit1.rotation.z=t*(celebrating?1.5:.62);orbit2.rotation.z=-t*(celebrating?1.7:.78);
   holoRing.rotation.z=t*(alerting?.34:.15);holoRing2.rotation.z=-t*(alerting?.45:.21);
