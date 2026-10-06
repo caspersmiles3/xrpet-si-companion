@@ -948,6 +948,13 @@ document.addEventListener('change',e=>{
 document.addEventListener('submit',e=>{if(e.target.matches('form'))playSound(e.target.id==='chatForm'?'chatSend':'success')});
 
 const launchGate=q('#launchGate'),launchEnter=q('#launchEnter'),launchBar=q('#launchProgressBar');
+const launchBackgroundVideo=q('#launchBackgroundVideo');
+if(launchBackgroundVideo){
+  launchBackgroundVideo.muted=true;
+  launchBackgroundVideo.loop=true;
+  launchBackgroundVideo.playsInline=true;
+  launchBackgroundVideo.play?.().catch(()=>{});
+}
 let launchOpened=false,launchProgress=0,launchTimer=0,launchIdleTimer=0,launchPulse=1;
 
 const launchIdleMessages=[
