@@ -36,7 +36,15 @@ app.use(express.json({ limit: '100kb' }));
 app.use('/api/',rateLimit(120,60*1000));
 app.use('/api/companion',rateLimit(30,60*1000));
 app.use('/api/push/subscribe',rateLimit(10,60*1000));
-app.use(express.static('public',{etag:true,maxAge:'1h'}));
+app.use(express.static('public',{
+  etag:true,
+  maxAge:'1h',
+  setHeaders:(res,filePath)=>{
+    if(filePath.endsWith('app.js')||filePath.endsWith('sw.js')||filePath.endsWith('index.html')){
+      res.setHeader('Cache-Control','no-cache, no-store, must-revalidate');
+    }
+  }
+}));
 
 const OFFICIAL_SOURCES = [
   { name: 'Ripple Insights', url: 'https://ripple.com/insights/', type: 'official' },
