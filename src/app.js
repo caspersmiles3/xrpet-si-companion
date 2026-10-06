@@ -1238,6 +1238,7 @@ function dockRipplet(){
       if(!roamDocked)return;
       setDockStatus('DOCKED');
       lifeAvatar && (lifeAvatar.dataset.activity='dock');
+      if(heldCryptoCoin)depositCryptoCoin();
       window.XRPet3D?.perform?.('salute');
       setTimeout(()=>{if(roamDocked)window.XRPet3D?.perform?.('thinking')},2600);
     },1750);
@@ -1285,13 +1286,7 @@ function goRipplet(activity='explore'){
   if(activity==='socialize'&&moved)window.XRPet3D?.perform?.('wave');
   return moved;
 }
-const RIPPLET_PLAY_PROPS=[
-  {kind:'orb',label:'XRP orb',glyph:'X'},
-  {kind:'cube',label:'ledger cube',glyph:'▣'},
-  {kind:'ring',label:'signal ring',glyph:'◇'},
-  {kind:'chip',label:'589 chip',glyph:'589'}
-];
-let heldPlayProp=null,playPropDropTimer=0,lastInterfacePlayAt=0;
+let lastInterfacePlayAt=0;
 
 function visibleTextTerrain(){
   const shellEl=q('.main-shell'),shell=shellEl?.getBoundingClientRect();
@@ -2388,7 +2383,19 @@ const rippletShell=q('.main-shell');
 rippletShell?.addEventListener('pointermove',updateRippletPointer,{passive:true});
 rippletShell?.addEventListener('pointerenter',updateRippletPointer,{passive:true});
 rippletShell?.addEventListener('pointerleave',()=>{rippletPointer.active=false},{passive:true});
-addEventListener('resize',()=>{syncRoamBounds();if(roamDocked){const p=dockPosition();if(p)setRoamPosition(p.x,p.y,'dock')}else if(rippletPointer.active)followRippletPointer(true);else playWithInterface(true)});
+addEventListener('resize',()=>{
+  syncRoamBounds();
+  ensureCryptoCoins(true);
+  if(roamDocked){
+    const p=dockPosition();if(p)setRoamPosition(p.x,p.y,'dock');
+  }else if(!heldCryptoCoin&&!pendingCryptoCoin){
+    keepRippletInsideActivePage();
+    if(!rippletRouteBusy()){
+      if(rippletPointer.active)followRippletPointer(true);
+      else playWithInterface(true);
+    }
+  }
+});
 q('.main-shell')?.addEventListener('scroll',()=>{
   syncRoamBounds();
   if(roamDocked){
