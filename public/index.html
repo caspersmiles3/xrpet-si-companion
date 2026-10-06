@@ -123,15 +123,17 @@
       <audio id="xrpetAudio" preload="metadata"></audio>
 
       <div class="music-now-playing">
-        <span>NOW PLAYING</span>
-        <strong id="musicTrackName">Ready</strong>
+        <div class="music-now-copy">
+          <span>NOW PLAYING</span>
+          <strong id="musicTrackName">Ready</strong>
+        </div>
+        <button id="musicToggle" class="music-main" type="button" aria-label="Play soundtrack" title="Play">▶</button>
       </div>
 
       <canvas id="musicWaveform" class="music-waveform" width="220" height="42" aria-label="Live soundtrack waveform"></canvas>
 
       <div class="music-transport" aria-label="Music controls">
         <button id="musicPrev" type="button" aria-label="Previous track" title="Previous">‹</button>
-        <button id="musicToggle" class="music-main" type="button" aria-label="Play soundtrack" title="Play">▶</button>
         <button id="musicNext" type="button" aria-label="Next track" title="Next">›</button>
         <button id="musicShuffle" type="button" aria-label="Toggle shuffle" title="Shuffle">⤨</button>
       </div>
