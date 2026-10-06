@@ -1,6 +1,6 @@
 {
   "name": "xrpet-si-companion",
-  "version": "5.5.13",
+  "version": "5.5.15",
   "private": true,
   "type": "module",
   "scripts": {
