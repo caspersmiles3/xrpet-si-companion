@@ -291,14 +291,14 @@ async function getCompositeMarket(){
 }
 async function getFallbackXrpMarket(){
   const cg=await fetchJsonWithTimeout('https://api.coingecko.com/api/v3/simple/price?ids=ripple&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_market_cap=true',{},8000);
-  const price=Number(cg?.ripple?.usd),change24h=Number(cg?.ripple?.usd_24h_change);
-  if(!Number.isFinite(price))throw new Error('Fallback XRP price unavailable');
+  const price=n(cg?.ripple?.usd),change24h=n(cg?.ripple?.usd_24h_change);
+  if(!Number.isFinite(price)||price<=0)throw new Error('Fallback XRP price unavailable');
   return {
     exchange:'fallback',exchangeName:'XRP market fallback',pair:'XRP/USD',quote:'USD',
     price,change24h:Number.isFinite(change24h)?change24h:null,
     open24h:null,volume24hXrp:null,volume24hUsd:Number(cg?.ripple?.usd_24h_vol),
     high24h:null,low24h:null,range24hPct:null,bestBid:null,bestAsk:null,spread:null,spreadBps:null,
-    marketCapUsd:Number(cg?.ripple?.usd_market_cap),
+    marketCapUsd:n(cg?.ripple?.usd_market_cap),
     source:'CoinGecko public XRP market fallback',
     generatedAt:new Date().toISOString()
   };
