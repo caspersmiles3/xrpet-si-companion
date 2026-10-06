@@ -636,7 +636,7 @@ floatEl?.addEventListener('focusout',()=>setTimeout(()=>{if(!floatEl.matches(':f
 revealFloatControls();
 
 
-dailyVisit();render();connectLedger();loadMarket();loadUpdates();integrationCheck();setInterval(loadMarket,120000);setInterval(integrationCheck,60000);
+dailyVisit();render();connectLedger();loadMarket();loadUpdates();integrationCheck();setInterval(loadMarket,60000);setInterval(loadUpdates,60000);setInterval(integrationCheck,60000);
 
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
