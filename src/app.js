@@ -273,6 +273,38 @@ if(Number.isFinite(previousPrice)&&Number.isFinite(state.xrpPrice)&&previousPric
   setText('#foodSignal',(delta>=0?'+':'')+delta.toFixed(3)+'% tick');
   if(!state.lifePinned)performLifeActivity('eat');
 }const livePrice=Number.isFinite(state.xrpPrice)?'$'+state.xrpPrice.toFixed(4):'Unavailable';const liveChange=Number.isFinite(state.xrpChange24h)?(state.xrpChange24h>=0?'+':'')+state.xrpChange24h.toFixed(2)+'% · 24h':'24h unavailable';setText('#xrpPrice',livePrice);setText('#xrpChange',liveChange);setText('#globalXrpPrice',livePrice);setText('#globalXrpChange',liveChange);if(state.marketMood&&Number.isFinite(state.xrpChange24h)&&Math.abs(state.xrpChange24h)>=5)mood(state.xrpChange24h>0?'Excited':'Watchful','XRP moved '+Math.abs(state.xrpChange24h).toFixed(2)+'% over 24 hours. Movement is not a prediction.',state.xrpChange24h>0?'energized':'alert')}catch{setText('#xrpPrice','Unavailable');setText('#xrpChange','Market feed offline');setText('#globalXrpPrice','Unavailable');setText('#globalXrpChange','Market feed offline');renderSignal589()}}
+function renderMarketChart(points=[]){
+  const svg=q('#xrpMarketChart'),line=q('#marketLine'),area=q('#marketArea'),grid=q('#marketGrid');
+  if(!svg||!line||!area||!grid||!points.length)return;
+  const pts=points.filter(p=>Number.isFinite(Number(p.close))&&Number.isFinite(Number(p.time)));
+  if(pts.length<2)return;
+  const closes=pts.map(p=>Number(p.close));
+  const highs=pts.map(p=>Number(p.high)).filter(Number.isFinite);
+  const lows=pts.map(p=>Number(p.low)).filter(Number.isFinite);
+  const min=Math.min(...lows,...closes),max=Math.max(...highs,...closes),span=Math.max(.000001,max-min);
+  const W=1000,H=320,padX=18,padY=18,plotW=W-padX*2,plotH=H-padY*2;
+  const coords=pts.map((p,i)=>[padX+(i/(pts.length-1))*plotW,padY+(1-(Number(p.close)-min)/span)*plotH]);
+  const d=coords.map(([x,y],i)=>(i?'L':'M')+x.toFixed(2)+' '+y.toFixed(2)).join(' ');
+  line.setAttribute('d',d);
+  area.setAttribute('d',d+' L '+coords[coords.length-1][0].toFixed(2)+' '+(H-padY)+' L '+coords[0][0].toFixed(2)+' '+(H-padY)+' Z');
+  grid.innerHTML='';
+  [.25,.5,.75].forEach(n=>{const el=document.createElementNS('http://www.w3.org/2000/svg','line');el.setAttribute('x1',padX);el.setAttribute('x2',W-padX);el.setAttribute('y1',padY+n*plotH);el.setAttribute('y2',padY+n*plotH);grid.appendChild(el)});
+  const first=closes[0],last=closes[closes.length-1],panel=q('.market-chart-panel');
+  if(panel)panel.dataset.direction=last>=first?'up':'down';
+  setText('#chartHigh','$'+Math.max(...highs,...closes).toFixed(4));
+  setText('#chartLow','$'+Math.min(...lows,...closes).toFixed(4));
+  const volume=pts.reduce((n,p)=>n+(Number.isFinite(Number(p.volume))?Number(p.volume):0),0);
+  setText('#chartVolume',volume>=1e6?(volume/1e6).toFixed(1)+'M XRP':volume>=1e3?(volume/1e3).toFixed(1)+'K XRP':Math.round(volume)+' XRP');
+  const fmt=t=>new Date(t).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+  setText('#chartStart',fmt(pts[0].time));setText('#chartEnd',fmt(pts[pts.length-1].time));setText('#chartRange','24 HOURS');
+}
+async function loadMarketHistory(){
+  try{
+    const r=await fetch('/api/market-history',{cache:'no-store'}),d=await r.json();
+    if(!r.ok||!Array.isArray(d.points))throw new Error();
+    renderMarketChart(d.points);
+  }catch{setText('#chartRange','MARKET CHART OFFLINE')}
+}
 async function loadUpdates(){const box=q('#updates');if(box)box.innerHTML='<p class="muted">Checking official Ripple and XRPL sources…</p>';try{const r=await fetch('/api/updates',{cache:'no-store'});const d=await r.json();if(!r.ok||!Array.isArray(d.items)||!d.items.length)throw new Error();const items=d.items.slice(0,12);box.innerHTML=items.map((x,i)=>'<article class="announcement-card"><div class="announcement-index">'+String(i+1).padStart(2,'0')+'</div><div><span class="announcement-source">'+esc(x.source)+' · '+esc(x.label||'CONFIRMED')+'</span><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title)+'</a><small>Official source ↗</small></div></article>').join('');setText('#announcementStatus','Live');setText('#announcementUpdated','Updated '+new Date().toLocaleTimeString());const newest=items[0]?.title||'';setText('#friendSignal',newest?'New signal':'Standing by');if(newest&&state.lastAnnouncementTitle&&newest!==state.lastAnnouncementTitle&&!state.lifePinned){state.lastAnnouncementAt=Date.now();performLifeActivity('socialize')}state.lastAnnouncementTitle=newest;persist()}catch{if(box)box.innerHTML='<p class="muted">Official update feed is temporarily unavailable.</p>';setText('#announcementStatus','Unavailable');setText('#announcementUpdated','Retrying automatically')}}
 const liveTransactions=[];
 const seenLiveTx=new Set();
