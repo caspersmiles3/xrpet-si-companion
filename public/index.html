@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=3.4.0">
+  <link rel="stylesheet" href="/styles.css?v=3.5.0">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
@@ -47,11 +47,12 @@
   <aside class="sidebar">
     <div class="brand-lockup">
       <div class="brand-orb"><span></span></div>
-      <div><strong>XRPet</strong><small>SI COMPANION</small></div>
+      <div><strong>XRPet</strong><small>SIGNAL 589 // XRPL</small></div>
     </div>
 
     <nav class="side-nav" aria-label="Primary navigation">
       <button class="side-link active" data-scroll="homeSection"><span>⌂</span>Home</button>
+      <button class="side-link" data-scroll="signal589Section"><span>589</span>Signal 589</button>
       <button class="side-link" data-scroll="companionSection"><span>◉</span>Companion</button>
       <button class="side-link" data-scroll="roomsSection"><span>◇</span>Rooms</button>
       <button class="side-link" data-scroll="cosmeticsSection"><span>✦</span>Cosmetics</button>
@@ -110,22 +111,44 @@
 
     
 
-    <section id="homeSection" class="flow-section home-section">
-      <div class="section-copy">
-        <span class="eyebrow">HOME</span>
-        <h1>More Than a Pet.<br><em>A Living Ledger Companion.</em></h1>
-        <p>XRPet brings XRP Ledger activity, grounded SI, wallet awareness, evolution, rooms, and customization into one living companion experience.</p>
-        <div class="hero-actions"><button id="catchup" class="primary">Catch Me Up</button><button id="dailyButton" class="secondary">Daily Briefing</button></div>
+    <section id="homeSection" class="flow-section home-section signal-command-home">
+      <div class="home-command-grid">
+        <div class="section-copy home-command-copy">
+          <div class="signal-kicker-row"><span class="eyebrow">XRPL COMPANION COMMAND</span><span class="verified-pill">MAINNET // LIVE</span></div>
+          <h1>Live with the Ledger.<br><em>Move with the Signal.</em></h1>
+          <p>XRPet combines live XRP Ledger awareness, an evolving companion, grounded SI, wallet observation, room environments, and community culture in one premium XRPL-native experience.</p>
+          <div class="hero-actions">
+            <button id="catchup" class="primary signal-primary">Catch Me Up</button>
+            <button id="dailyButton" class="secondary signal-secondary">Daily Signal</button>
+          </div>
+          <div class="home-signal-strip" aria-label="Signal status">
+            <span><i></i> VALIDATED LEDGER</span>
+            <span>TRUTH MODE READY</span>
+            <span>XRPL // 589</span>
+          </div>
+        </div>
+        <aside class="home-command-aside">
+          <span class="command-label">ACTIVE COMPANION</span>
+          <strong id="petName">NEXUS-589</strong>
+          <small id="petMood">Watching the Ledger</small>
+          <div class="command-rule"></div>
+          <dl>
+            <div><dt>Evolution</dt><dd id="evolution">DROP</dd></div>
+            <div><dt>Level</dt><dd id="level">Lv. 1</dd></div>
+            <div><dt>XP</dt><dd id="xpLabel">0 XP</dd></div>
+          </dl>
+        </aside>
       </div>
-      <div class="home-overview">
-        <article><small>Companion</small><strong id="petName">NEXUS-589</strong><span id="petMood">Watching the Ledger</span></article>
-        <article><small>Evolution</small><strong id="evolution">DROP</strong><span><span id="level">Lv. 1</span> · <span id="xpLabel">0 XP</span></span></article>
-        <article><small>Companion Model</small><strong id="homeCompanionModel">Nexus</strong><span id="homeCompanionGender">Boy companion</span></article>
-        <article><small>Current Room</small><strong id="homeRoom">Neon Horizon</strong><span>Application theme</span></article>
-        <article><small>Current Build</small><strong id="homeCosmetic">Classic Nexus</strong><span>3D cosmetic build</span></article>
+
+      <div class="home-overview signal-metric-grid">
+        <article><small>COMPANION MODEL</small><strong id="homeCompanionModel">Nexus</strong><span id="homeCompanionGender">Boy companion</span></article>
+        <article><small>ROOM ENVIRONMENT</small><strong id="homeRoom">Neon Horizon</strong><span>Full application theme</span></article>
+        <article><small>COMPANION BUILD</small><strong id="homeCosmetic">Classic Nexus</strong><span>XRPL equipment layer</span></article>
+        <article><small>COMMUNITY SIGNAL</small><strong id="homeSignal589">589 // STANDBY</strong><span id="homeSignalCaption">Community-lore layer</span></article>
+        <article><small>LEDGER HEALTH</small><strong id="homeLedgerHealth">CONNECTING</strong><span>Validated-network telemetry</span></article>
       </div>
       <div class="progress wide-progress"><span id="xpFill"></span></div>
-      <p id="petSpeech" class="pet-speech">Connecting to live network data…</p>
+      <p id="petSpeech" class="pet-speech command-transmission">TRANSMISSION // Connecting to live network data…</p>
     </section>
 
 <section id="xrplPanel" class="top-live panel">
@@ -140,6 +163,54 @@
         <article><span>XRPL Status</span><strong id="status">Connecting</strong><small id="serverState">Live network</small></article>
       </div>
     </section>
+
+
+<section id="signal589Section" class="flow-section signal589-section">
+  <div class="section-heading signal-heading">
+    <div>
+      <span class="eyebrow">SIGNAL 589 // COMMUNITY LAYER</span>
+      <h2>XRP culture, separated from verified XRPL facts.</h2>
+      <p class="section-subcopy">Signal 589 treats community theories, symbolism, memes, and long-running XRP lore as culture—not as protocol facts, guarantees, or price predictions.</p>
+    </div>
+    <span class="truth-label">COMMUNITY LORE</span>
+  </div>
+
+  <div class="signal589-grid">
+    <article class="signal589-core">
+      <div class="signal-number-stack" aria-hidden="true"><b>5</b><b>8</b><b>9</b></div>
+      <div>
+        <span class="command-label">SIGNAL CLASSIFICATION</span>
+        <h3 id="signal589State">STANDBY</h3>
+        <p id="signal589Message">Waiting for validated XRPL telemetry before interpreting the community signal.</p>
+      </div>
+      <button id="decode589" class="signal-decode" type="button">Decode Community Signal</button>
+    </article>
+
+    <article class="signal-module">
+      <span>LEDGER SIGNAL</span>
+      <strong id="signalLedger">WAITING</strong>
+      <small>Derived from validated ledger state.</small>
+    </article>
+    <article class="signal-module">
+      <span>COMMUNITY PULSE</span>
+      <strong id="communityPulse">QUIET</strong>
+      <small>Contextual companion interpretation—not a market forecast.</small>
+    </article>
+    <article class="signal-module">
+      <span>TRUTH LAYER</span>
+      <strong id="signalTruth">SEPARATED</strong>
+      <small>Confirmed facts stay distinct from speculation and lore.</small>
+    </article>
+  </div>
+
+  <div class="signal-disclosure">
+    <strong>589 DISCLOSURE</strong>
+    <p>“589” is used here as an XRP-community cultural motif and easter-egg system. XRPet does not treat community theories as confirmed Ripple or XRPL claims.</p>
+  </div>
+</section>
+
+
+
 
 <section id="chatPanel" class="top-chat panel">
       <div class="chat-head">
@@ -158,7 +229,7 @@
 
 <section id="companionSection" class="flow-section">
       <div class="section-heading">
-        <div><span class="eyebrow">COMPANION</span><h2>Build the personality, memory, and evolution</h2></div>
+        <div><span class="eyebrow">COMPANION // DIGITAL FAMILIAR</span><h2>Choose an XRPL-native identity—not a generic pet.</h2><p class="section-subcopy">Every companion uses a distinct silhouette, real-model path, XRP signal equipment, reactions, memory, and evolution.</p></div>
         <span id="personalityChip" class="chip">Guardian</span>
       </div>
 
@@ -175,22 +246,22 @@
 
         <div class="companion-roster">
           <button type="button" class="companion-choice active" data-companion="nexus">
-            <span class="companion-preview-icon nexus-preview"><i></i></span><strong>Nexus</strong><small>Rigged cinematic robot · animated GLB</small><b class="rigged-badge">RIGGED 3D</b>
+            <span class="companion-preview-icon nexus-preview"><i></i></span><strong>Nexus</strong><span class="companion-role">FLAGSHIP</span><small>Command guardian · structured intelligence · core-ledger authority</small><b class="rigged-badge">RIGGED 3D</b>
           </button>
           <button type="button" class="companion-choice" data-companion="fox">
-            <span class="companion-preview-icon fox-preview"><i></i></span><strong>Ripple Fox</strong><small>Rigged fox · real skeletal animation</small><b class="rigged-badge">RIGGED 3D</b>
+            <span class="companion-preview-icon fox-preview"><i></i></span><strong>Ripple Fox</strong><span class="companion-role">SCOUT</span><small>Fast signal scout · alert · curious · responsive</small><b class="rigged-badge">RIGGED 3D</b>
           </button>
           <button type="button" class="companion-choice" data-companion="pup">
-            <span class="companion-preview-icon pup-preview"><i></i></span><strong>Ledger Pup</strong><small>Real Shiba Inu GLB · animated when clips are available</small><b class="rigged-badge">REAL 3D</b>
+            <span class="companion-preview-icon pup-preview"><i></i></span><strong>Ledger Pup</strong><span class="companion-role">GUARDIAN</span><small>Loyal ledger protector · dependable · encouraging</small><b class="rigged-badge">REAL 3D</b>
           </button>
           <button type="button" class="companion-choice" data-companion="cat">
-            <span class="companion-preview-icon cat-preview"><i></i></span><strong>Vault Cat</strong><small>Real Cat GLB · animated when clips are available</small><b class="rigged-badge">REAL 3D</b>
+            <span class="companion-preview-icon cat-preview"><i></i></span><strong>Vault Cat</strong><span class="companion-role">VAULT</span><small>Silent watcher · precise · stealth-oriented</small><b class="rigged-badge">REAL 3D</b>
           </button>
           <button type="button" class="companion-choice" data-companion="bird">
-            <span class="companion-preview-icon bird-preview"><i></i></span><strong>Pulse Bird</strong><small>Skinned Scarlet Macaw GLB · Fly animation</small><b class="rigged-badge">RIGGED 3D</b>
+            <span class="companion-preview-icon bird-preview"><i></i></span><strong>Pulse Bird</strong><span class="companion-role">PULSE</span><small>Signal messenger · live-ledger awareness · airborne energy</small><b class="rigged-badge">RIGGED 3D</b>
           </button>
           <button type="button" class="companion-choice" data-companion="turtle">
-            <span class="companion-preview-icon turtle-preview"><i></i></span><strong>Wave Turtle</strong><small>Real Turtle GLB · XRPet motion layer</small><b class="rigged-badge">REAL 3D</b>
+            <span class="companion-preview-icon turtle-preview"><i></i></span><strong>Wave Turtle</strong><span class="companion-role">ANCHOR</span><small>Ancient-future guardian · stability · long-horizon temperament</small><b class="rigged-badge">REAL 3D</b>
           </button>
         </div>
         <div class="companion-reactions" aria-label="Companion reactions">
@@ -200,6 +271,9 @@
             <button type="button" data-pet-action="celebrate">Celebrate</button>
             <button type="button" data-pet-action="alert">Alert</button>
             <button type="button" data-pet-action="sleep">Rest</button>
+            <button type="button" data-pet-action="focus">Focus</button>
+            <button type="button" data-pet-action="scan">Scan XRPL</button>
+            <button type="button" data-pet-action="orbit">Orbit</button>
           </div>
         </div>
         <div class="model-runtime-status">
@@ -247,13 +321,13 @@
 
     <section id="roomsSection" class="flow-section">
       <div class="section-heading">
-        <div><span class="eyebrow">ROOM THEMES</span><h2>Change the atmosphere of the entire XRPet application</h2><p class="section-subcopy">Rooms are now full interface themes. The panels, background, glow, atmosphere, and companion lighting all change together.</p></div>
+        <div><span class="eyebrow">ROOM ENVIRONMENTS</span><h2>Transform the entire XRPet command environment</h2><p class="section-subcopy">Rooms are now full interface themes. The panels, background, glow, atmosphere, and companion lighting all change together.</p></div>
         <span id="unlocksChip" class="chip">3 unlocked</span>
       </div>
       <div class="room-showcase">
         <button data-room="nexus" class="room-choice detailed-room active">
           <span class="room-visual nexus-room-visual"><i></i></span>
-          <span class="room-copy"><strong>Neon Horizon</strong><small>Glass-black panels · cyan ledger glow · digital skyline · cool metallic ambience</small><b>APP THEME</b><em>Default</em></span>
+          <span class="room-copy"><strong>Neon Horizon</strong><small>Glass-black panels · cyan ledger glow · digital skyline · cool metallic ambience</small><b>ENVIRONMENT</b><em>Default</em></span>
         </button>
         <button data-room="ocean" class="room-choice detailed-room">
           <span class="room-visual ocean-room-visual"><i></i></span>
@@ -276,7 +350,7 @@
 
     <section id="cosmeticsSection" class="flow-section">
       <div class="section-heading">
-        <div><span class="eyebrow">COMPANION COSMETICS</span><h2>Change the companion’s actual build, silhouette, and equipment</h2><p class="section-subcopy">Cosmetics now alter physical features—not only color.</p></div>
+        <div><span class="eyebrow">COMPANION EQUIPMENT</span><h2>Build identity through hardware, cores, halos, armor, and signal trails.</h2><p class="section-subcopy">These are physical XRPL equipment layers—not simple recolors.</p></div>
         <span class="chip">3D materials</span>
       </div>
       <div class="cosmetics-showcase">
@@ -285,6 +359,7 @@
         <button class="cosmetic-choice cosmetic-card" data-cosmetic="midnight"><span class="cosmetic-model midnight"><i></i></span><strong>Ledger Guardian</strong><small>Heavy shoulder armor · shortened ears · protected core · graphite plating</small><b>GUARDIAN BUILD</b><em>Owned</em></button>
         <button class="cosmetic-choice cosmetic-card" data-cosmetic="pearl"><span class="cosmetic-model pearl"><i></i></span><strong>Oracle Halo</strong><small>Tall signal ears · triple halo system · floating crown node · pearl shell</small><b>ORACLE BUILD</b><em>Owned</em></button>
         <button class="cosmetic-choice cosmetic-card" data-cosmetic="solar"><span class="cosmetic-model solar"><i></i></span><strong>Solar Vanguard</strong><small>Angular fins · reinforced chest · larger core · amber reactor halo</small><b>VANGUARD BUILD</b><em>Owned</em></button>
+              <button class="cosmetic-choice cosmetic-card resonance-card" data-cosmetic="resonance"><span class="cosmetic-model resonance"><i></i></span><strong>589 Resonance</strong><small>Signal lattice · split-X core · five/eight/nine node sequence · community aura</small><b>RARE SIGNAL BUILD</b><em>Owned</em></button>
       </div>
     </section>
 
@@ -315,7 +390,7 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet SI Companion™ · Beta 3.4 · XRP Ledger companion · Rigged sample assets credited in-app · Not affiliated with or endorsed by Ripple · Not financial advice</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 3.5 · XRP Ledger companion</footer>
   </main>
 </div>
 
@@ -337,7 +412,7 @@
   </div>
 </div>
 
-<script src="/app.js?v=3.4.0"></script>
-<script type="module" src="/companion3d.js?v=3.4.0"></script>
+<script src="/app.js?v=3.5.0"></script>
+<script type="module" src="/companion3d.js?v=3.5.0"></script>
 </body>
 </html>
