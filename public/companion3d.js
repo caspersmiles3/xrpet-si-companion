@@ -838,6 +838,16 @@ function configureEquipment(detail={}){
   const eye=detail.eyeStyle||'cyan',core=detail.coreStyle||'standard',head=detail.headGear||'none',trail=detail.trailStyle||'none';
   const eyeColors={cyan:0x47e6ff,white:0xf5fbff,violet:0x8d78ff,amber:0xd5a64f};
   const ec=eyeColors[eye]??eyeColors.cyan;eyeSignalMat.color.setHex(ec);eyeSignalMat.emissive.setHex(ec);
+  const hideExtras=currentKind==='ripplet';
+  equipmentMatrixGroup.visible=!hideExtras;
+  if(hideExtras){
+    Object.values(matrixCoreGroups).forEach(g=>g.visible=false);
+    Object.values(headGearGroups).forEach(g=>g.visible=false);
+    Object.values(trailGroups).forEach(g=>g.visible=false);
+    eyeSignalGroup.visible=false;
+    return;
+  }
+  eyeSignalGroup.visible=true;
   Object.entries(matrixCoreGroups).forEach(([k,g])=>g.visible=k===core);
   Object.entries(headGearGroups).forEach(([k,g])=>g.visible=k===head);
   Object.entries(trailGroups).forEach(([k,g])=>g.visible=k===trail);
