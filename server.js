@@ -205,6 +205,17 @@ async function sendPush(title, body, data={}) {
   }
 }
 
+app.post('/api/xaman/webhook', express.json({type:'application/json', limit:'100kb'}), (req, res) => {
+  // Xaman callback receiver. No secrets are logged or returned.
+  const eventType = clean(req.body?.type || req.body?.event || req.body?.payload?.response?.txid || 'callback');
+  console.log('Xaman webhook received:', eventType);
+  res.status(200).json({ ok:true });
+});
+
+app.get('/xaman/callback', (_req, res) => {
+  res.type('html').send(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Xaman Connected</title><style>body{font-family:system-ui;background:#061018;color:#edf8ff;margin:0;display:grid;place-items:center;min-height:100vh}.card{max-width:520px;background:#0b1924;border:1px solid #17384a;border-radius:20px;padding:28px;text-align:center}a{color:#42e8ff}</style></head><body><div class="card"><h1>Xaman return complete</h1><p>You can return to XRPet and continue the wallet connection.</p><p><a href="/">Return to XRPet</a></p></div></body></html>`);
+});
+
 app.get('/api/updates', async (_req, res) => {
   try {
     const items = await getUpdates();
