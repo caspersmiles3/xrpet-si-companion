@@ -583,10 +583,7 @@ function deterministicCompanionDecision(context={}) {
   add('turn',.45,'I want to turn and look around the interface.');
   add('reach',.4,'I want to reach toward something nearby and inspect it.');
   add('climb',.12,'I want to practice a climbing motion.');
-  add('drink',Number(needs.water)<55?4:txRecent<10?2.2:.5,'I want to visit the water fountain and take in the ledger flow.',true);
-  add('eat',Number(needs.food)<55?3.5:priceMove>.02?2:.45,'I want to visit the food station and recharge from the market signal.',true);
-  add('sleep',Number(needs.rest)<45?4:txRecent>45?1.5:.35,'Things are quiet enough that I want to rest for a little while.',true);
-  add('socialize',Number(needs.social)<50?3.2:context.newAnnouncement?2.8:.4,'I want to check in with Signal Friend.',true);
+  add('socialize',Number(needs.social)<50?2.6:context.newAnnouncement?2.8:.4,'I want to check in with Signal Friend.',false);
   const total=choices.reduce((n,x)=>n+x.weight,0);
   let roll=Math.random()*total;
   let chosen=choices[0];
@@ -601,23 +598,23 @@ async function askExternalDecision(context={}) {
   const updates=await getUpdates().catch(()=>[]);
   const prompt=[
     'Choose ONE next autonomous behavior for Ripplet, an XRPet companion.',
-    'Allowed actions: roam, drink, eat, sleep, socialize, scan, wave, dance, focus, run, jump, climb, reach, grab, carry, crouch, turn.',
+    'Allowed actions: roam, socialize, scan, wave, dance, focus, run, jump, climb, reach, grab, carry, crouch, turn.',
     'Return strict JSON only with keys action, thought, visitStation.',
-    'visitStation may only be true for drink, eat, sleep, socialize.',
+    'visitStation must be false. Ripplet no longer has food, water, or sleep needs.',
     'Keep thought under 110 characters.',
-    'Use live state and needs; do not make financial predictions.'
+    'Use live XRPL state and social context; do not make financial predictions.'
   ].join(' ');
   const raw=await askExternalSI(prompt, {...context, autonomousDecision:true}, market, updates);
   if(!raw)return null;
   try{
     const text=raw.replace(/`{3}json|`{3}/gi,'').trim();
     const parsed=JSON.parse(text);
-    const allowed=new Set(['roam','drink','eat','sleep','socialize','scan','wave','dance','focus','run','jump','climb','reach','grab','carry','crouch','turn']);
+    const allowed=new Set(['roam','socialize','scan','wave','dance','focus','run','jump','climb','reach','grab','carry','crouch','turn']);
     if(!allowed.has(parsed.action))return null;
     return {
       action:parsed.action,
       thought:clean(parsed.thought||'I chose my next move.').slice(0,110),
-      visitStation:Boolean(parsed.visitStation)&&['drink','eat','sleep','socialize'].includes(parsed.action),
+      visitStation:false,
       mode:'external-si-autonomy'
     };
   }catch{return null}
