@@ -405,8 +405,8 @@ function renderLiveTransactions(){
 let ws,retry,watchedSubscribed=null;
 function subscribeAccount(a){if(!a||!ws||ws.readyState!==1)return;if(watchedSubscribed&&watchedSubscribed!==a)ws.send(JSON.stringify({id:'unwatch',command:'unsubscribe',accounts:[watchedSubscribed]}));ws.send(JSON.stringify({id:'watch',command:'subscribe',accounts:[a]}));watchedSubscribed=a}
 function connectLedger(){clearTimeout(retry);try{ws=new WebSocket('wss://xrplcluster.com/')}catch{return scheduleReconnect()}
-  ws.onopen=()=>{state.connected=true;renderSignal589();setText('#status','Live');const b=q('#liveBadge');if(b){b.className='status-pill live';b.innerHTML='<i></i><span>XRPL Live</span>'}mood('Connected','Live XRPL data is flowing.','calm');ws.send(JSON.stringify({id:'ledger',command:'subscribe',streams:['ledger','server','transactions']}));ws.send(JSON.stringify({id:'fee',command:'fee'}));if(state.account)subscribeAccount(state.account)};
-  ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='ledgerClosed'){state.ledgerIndex=m.ledger_index;state.txCount=m.txn_count??0;state.baseFeeDrops=m.fee_base??state.baseFeeDrops;setText('#ledger',Number(m.ledger_index).toLocaleString());setText('#txCount',(m.txn_count??0)+' transactions');setText('#homeNetworkDetail','Ledger '+Number(m.ledger_index).toLocaleString()+' · '+(m.txn_count??0)+' transactions in latest close');if(m.fee_base!=null)setText('#fee',m.fee_base);renderSignal589()}else if(m.type==='serverStatus'){setText('#serverState',m.server_status||'Connected')}else if(m.id==='fee'&&m.result){const drops=m.result?.drops?.base_fee;if(drops!=null){state.baseFeeDrops=Number(drops);setText('#fee',drops)}}else if(m.id==='xrpet-nfts'&&Array.isArray(m.result?.account_nfts)){
+  ws.onopen=()=>{state.connected=true;setSimpleLaunchProgress?.(96,'XRPL live connection established.');renderSignal589();setText('#status','Live');const b=q('#liveBadge');if(b){b.className='status-pill live';b.innerHTML='<i></i><span>XRPL Live</span>'}mood('Connected','Live XRPL data is flowing.','calm');ws.send(JSON.stringify({id:'ledger',command:'subscribe',streams:['ledger','server','transactions']}));ws.send(JSON.stringify({id:'fee',command:'fee'}));if(state.account)subscribeAccount(state.account)};
+  ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='ledgerClosed'){state.ledgerIndex=m.ledger_index;setText('#launchLedgerCounter',Number(m.ledger_index).toLocaleString());state.txCount=m.txn_count??0;state.baseFeeDrops=m.fee_base??state.baseFeeDrops;setText('#ledger',Number(m.ledger_index).toLocaleString());setText('#txCount',(m.txn_count??0)+' transactions');setText('#homeNetworkDetail','Ledger '+Number(m.ledger_index).toLocaleString()+' · '+(m.txn_count??0)+' transactions in latest close');if(m.fee_base!=null)setText('#fee',m.fee_base);renderSignal589()}else if(m.type==='serverStatus'){setText('#serverState',m.server_status||'Connected')}else if(m.id==='fee'&&m.result){const drops=m.result?.drops?.base_fee;if(drops!=null){state.baseFeeDrops=Number(drops);setText('#fee',drops)}}else if(m.id==='xrpet-nfts'&&Array.isArray(m.result?.account_nfts)){
     renderNfts(m.result.account_nfts);
   }else if(m.type==='transaction'){const normalized=normalizeLiveTransaction(m);if(normalized){liveTransactions.unshift(normalized);if(liveTransactions.length>25)liveTransactions.length=25;scheduleLiveTransactionRender();state.lastLedgerTxAt=Date.now();setText('#waterSignal','Ledger #'+normalized.ledger);setText('#sleepSignal','XRPL active');if(!false&&!lifeWaterTimer){performLifeActivity('drink');lifeWaterTimer=setTimeout(()=>lifeWaterTimer=0,3500)}}const tx=m.transaction||m.tx_json||m.tx||{};if(state.account&&(tx.Account===state.account||tx.Destination===state.account)){if(state.ledgerSound)playSound('ledgerTx');window.XRPet3D?.celebrate?.();mood('Wallet activity','Validated activity detected on the watched account.','energized');addXp(3)}}};
   ws.onclose=()=>{state.connected=false;renderSignal589();setText('#status','Reconnecting');const b=q('#liveBadge');if(b){b.className='status-pill waiting';b.innerHTML='<i></i><span>Reconnecting</span>'}scheduleReconnect()};ws.onerror=()=>safe(()=>ws.close())
@@ -745,97 +745,45 @@ document.addEventListener('change',e=>{
 });
 document.addEventListener('submit',e=>{if(e.target.matches('form'))playSound(e.target.id==='chatForm'?'chatSend':'success')});
 
-const launchGate=q('#launchGate'),launchCore=q('#launchCore'),launchEnter=q('#launchEnter');
-const launchBar=q('#launchProgressBar'),launchPercent=q('#launchPercent'),launchPhase=q('#launchPhase'),launchStatus=q('#launchStatus');
-let launchProgress=0,launchHolding=false,launchRAF=0,launchOpened=false,launchLast=0,launchSoundStage=-1;
+const launchGate=q('#launchGate'),launchEnter=q('#launchEnter'),launchBar=q('#launchProgressBar');
+let launchOpened=false,launchProgress=0,launchTimer=0;
 
-function setLaunchVisual(p){
-  launchProgress=Math.max(0,Math.min(1,p));
-  const soundStage=launchProgress>=1?4:launchProgress>=.7?3:launchProgress>=.42?2:launchProgress>=.18?1:0;
-  if(soundStage>launchSoundStage){launchSoundStage=soundStage;if(soundStage>0)playSound(soundStage===4?'open':'launchStage',true)}
-  launchGate?.style.setProperty('--sync',String(launchProgress));
-  if(launchBar)launchBar.style.width=Math.round(launchProgress*100)+'%';
-  setText('#launchPercent',Math.round(launchProgress*100)+'%');
-
-  launchGate?.classList.toggle('phase-1',launchProgress>=.18);
-  launchGate?.classList.toggle('phase-2',launchProgress>=.42);
-  launchGate?.classList.toggle('phase-3',launchProgress>=.7);
-
-  if(launchProgress<.18){
-    setText('#launchPhase','XRPL LINK STANDBY');
-    if(launchHolding)setText('#launchStatus','Establishing secure ledger link…');
-  }else if(launchProgress<.42){
-    setText('#launchPhase','NODE PATH VERIFIED');
-    setText('#launchStatus','XRPL path confirmed. Synchronizing ledger state…');
-  }else if(launchProgress<.7){
-    setText('#launchPhase','LEDGER SYNC');
-    setText('#launchStatus','Validated network signal acquired. Waking companion core…');
-  }else if(launchProgress<1){
-    setText('#launchPhase','COMPANION WAKE');
-    setText('#launchStatus','Companion identity and room state are coming online…');
-  }
+function setSimpleLaunchProgress(value,text){
+  launchProgress=Math.max(0,Math.min(100,Number(value)||0));
+  if(launchBar)launchBar.style.width=launchProgress+'%';
+  if(text)setText('#launchStatus',text);
 }
-
-function completeLaunch(fromFallback=false){
+function finishLaunch(){
   if(launchOpened)return;
-  launchOpened=true;launchHolding=false;cancelAnimationFrame(launchRAF);
-  setLaunchVisual(1);
-  launchGate?.classList.add('sync-complete');
-  setText('#launchPhase','XRPL LINK READY');
-  setText('#launchStatus',fromFallback?'Opening XRPet…':'Synchronization complete. Welcome to XRPet.');
-  try{if(state.soundEnabled)playSound('success',true)}catch{}
+  launchOpened=true;
+  clearInterval(launchTimer);
+  setSimpleLaunchProgress(100,'XRPet ready.');
+  launchGate?.classList.add('launch-complete');
+  document.body.classList.remove('launch-locked');
   setTimeout(()=>{
-    launchGate?.classList.add('launch-complete');
-    document.body.classList.remove('launch-locked');
-    setTimeout(()=>launchGate?.remove(),850);
+    launchGate?.remove();
     window.XRPet3D?.react?.();
-    window.dispatchEvent(new CustomEvent('xrpet:launch-complete'));setTimeout(()=>setRoomAmbience(state.room),120);
-  },560);
+    window.dispatchEvent(new CustomEvent('xrpet:launch-complete'));
+    setTimeout(()=>setRoomAmbience(state.room),120);
+  },420);
 }
-
-function launchTick(ts){
-  if(!launchHolding||launchOpened)return;
-  if(!launchLast)launchLast=ts;
-  const dt=Math.min(48,ts-launchLast);launchLast=ts;
-  const reduced=matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-  launchProgress+=dt/(reduced?650:1750);
-  setLaunchVisual(launchProgress);
-  if(launchProgress>=1){completeLaunch(false);return}
-  launchRAF=requestAnimationFrame(launchTick);
-}
-
-function beginLaunchHold(e){
-  if(launchOpened)return;
-  e?.preventDefault?.();
-  launchHolding=true;launchLast=0;
-  launchCore?.classList.add('is-holding');
-  try{if(state.soundEnabled)playSound('launch',true)}catch{}
-  cancelAnimationFrame(launchRAF);launchRAF=requestAnimationFrame(launchTick);
-}
-function endLaunchHold(){
-  if(launchOpened)return;
-  launchHolding=false;launchLast=0;launchCore?.classList.remove('is-holding');cancelAnimationFrame(launchRAF);
-  if(launchProgress<1){
-    setText('#launchStatus',launchProgress>.1?'Hold a little longer to complete the ledger sync.':'Press and hold the XRP core to synchronize.');
-  }
-}
-
-launchCore?.addEventListener('pointerdown',beginLaunchHold);
-launchCore?.addEventListener('pointerup',endLaunchHold);
-launchCore?.addEventListener('pointercancel',endLaunchHold);
-launchCore?.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')endLaunchHold()});
-launchCore?.addEventListener('keydown',e=>{if((e.key===' '||e.key==='Enter')&&!launchHolding)beginLaunchHold(e)});
-launchCore?.addEventListener('keyup',e=>{if(e.key===' '||e.key==='Enter')endLaunchHold()});
-launchEnter?.addEventListener('click',()=>completeLaunch(true));
-
 if(launchGate){
-  setLaunchVisual(0);
-  setTimeout(()=>{if(!launchOpened&&launchEnter){launchEnter.hidden=false;setText('#launchStatus','Hold the core to synchronize, or enter XRPet directly.')}},6500);
+  setSimpleLaunchProgress(18,'Connecting to XRPL live data…');
+  launchTimer=setInterval(()=>{
+    if(launchOpened)return;
+    if(launchProgress<88){
+      const next=Math.min(88,launchProgress+Math.max(3,Math.round((90-launchProgress)*.12)));
+      const text=next<42?'Connecting to XRPL live data…':next<70?'Synchronizing live signals…':'Waking Ripplet…';
+      setSimpleLaunchProgress(next,text);
+    }
+  },180);
+  launchEnter?.addEventListener('click',finishLaunch);
+  launchGate?.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();finishLaunch()}});
+  // Never trap the user on the loading screen if another service is slow.
+  setTimeout(()=>{if(!launchOpened)setSimpleLaunchProgress(Math.max(launchProgress,92),'Ready when you are.');},1800);
 }else{
   document.body.classList.remove('launch-locked');
 }
-
-
 
 const floatEl=q('#floatingCompanion'),roamLayer=q('#rippletRoamLayer'),lifeAvatar=q('#lifeAvatar');
 let roamPinned=false,roamX=.72,roamY=.72,roamTimer=0;
