@@ -130,6 +130,10 @@ function performLifeActivity(activity,manual=false){
   const reaction=activity==='sleep'?'sleep':activity==='ledger'?'scan':activity==='socialize'?'greet':activity==='drink'?'happy':activity==='eat'?'happy':'greet';
   window.XRPet3D?.perform?.(reaction);
   window.XRPetRoam?.go?.(activity);
+  clearTimeout(lifeReturnTimer);
+  if(!state.lifePinned&&['drink','eat','socialize'].includes(activity)){
+    lifeReturnTimer=setTimeout(()=>{if(!state.lifePinned){state.lifeActivity='explore';window.XRPetRoam?.go?.('explore');renderLife();persist()}},5200);
+  }
   renderLife();persist();
 }
 function lifeTick(){
@@ -195,7 +199,7 @@ if(Number.isFinite(previousPrice)&&Number.isFinite(state.xrpPrice)&&previousPric
 async function loadUpdates(){const box=q('#updates');if(box)box.innerHTML='<p class="muted">Checking official Ripple and XRPL sources…</p>';try{const r=await fetch('/api/updates',{cache:'no-store'});const d=await r.json();if(!r.ok||!Array.isArray(d.items)||!d.items.length)throw new Error();const items=d.items.slice(0,12);box.innerHTML=items.map((x,i)=>'<article class="announcement-card"><div class="announcement-index">'+String(i+1).padStart(2,'0')+'</div><div><span class="announcement-source">'+esc(x.source)+' · '+esc(x.label||'CONFIRMED')+'</span><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title)+'</a><small>Official source ↗</small></div></article>').join('');setText('#announcementStatus','Live');setText('#announcementUpdated','Updated '+new Date().toLocaleTimeString());const newest=items[0]?.title||'';setText('#friendSignal',newest?'New signal':'Standing by');if(newest&&state.lastAnnouncementTitle&&newest!==state.lastAnnouncementTitle&&!state.lifePinned)performLifeActivity('socialize');state.lastAnnouncementTitle=newest;persist()}catch{if(box)box.innerHTML='<p class="muted">Official update feed is temporarily unavailable.</p>';setText('#announcementStatus','Unavailable');setText('#announcementUpdated','Retrying automatically')}}
 const liveTransactions=[];
 const seenLiveTx=new Set();
-let liveTxRenderTimer=0,lifeWaterTimer=0;
+let liveTxRenderTimer=0,lifeWaterTimer=0,lifeReturnTimer=0;
 function shortAccount(v){if(!v)return '—';const s=String(v);return s.length>18?s.slice(0,9)+'…'+s.slice(-6):s}
 function formatLedgerAmount(amount){
   if(amount==null)return '—';
@@ -211,7 +215,9 @@ function normalizeLiveTransaction(m){
   if(hash&&seenLiveTx.has(hash))return null;
   if(hash){seenLiveTx.add(hash);if(seenLiveTx.size>300){const first=seenLiveTx.values().next().value;seenLiveTx.delete(first)}}
   const meta=m.meta||m.metaData||{};
-  return {hash,type:tx.TransactionType||'Transaction',account:tx.Account||'',destination:tx.Destination||'',destinationTag:tx.DestinationTag,amount:formatLedgerAmount(extractDeliveredAmount(m,tx)),fee:tx.Fee!=null?(Number(tx.Fee)/1000000).toFixed(6)+' XRP':'—',sequence:tx.Sequence??'—',ledger:m.ledger_index??tx.ledger_index??state.ledgerIndex??'—',status:meta.TransactionResult||m.engine_result||(m.validated===false?'Pending':'Validated'),validated:m.validated!==false,flags:tx.Flags??0,ticket:tx.TicketSequence??null};
+  const timestamp=Number.isFinite(Number(tx.date))?new Date((Number(tx.date)+946684800)*1000).toISOString():new Date().toISOString();
+  const memos=Array.isArray(tx.Memos)?tx.Memos.map(x=>{const memo=x?.Memo||{};return {type:hexToUtf8(memo.MemoType||''),format:hexToUtf8(memo.MemoFormat||''),data:hexToUtf8(memo.MemoData||'')}}).filter(x=>x.type||x.format||x.data):[];
+  return {hash,type:tx.TransactionType||'Transaction',account:tx.Account||'',destination:tx.Destination||'',destinationTag:tx.DestinationTag,amount:formatLedgerAmount(extractDeliveredAmount(m,tx)),fee:tx.Fee!=null?(Number(tx.Fee)/1000000).toFixed(6)+' XRP':'—',sequence:tx.Sequence??'—',ledger:m.ledger_index??tx.ledger_index??state.ledgerIndex??'—',status:meta.TransactionResult||m.engine_result||(m.validated===false?'Pending':'Validated'),validated:m.validated!==false,flags:tx.Flags??0,ticket:tx.TicketSequence??null,timestamp,memos};
 }
 function scheduleLiveTransactionRender(){if(liveTxRenderTimer)return;liveTxRenderTimer=setTimeout(()=>{liveTxRenderTimer=0;renderLiveTransactions()},250)}
 function renderLiveTransactions(){
