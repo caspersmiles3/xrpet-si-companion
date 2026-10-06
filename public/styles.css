@@ -7061,3 +7061,452 @@ body.sidebar-collapsed .sidebar-collapse-toggle{
     padding:8px 10px 26px!important;
   }
 }
+
+
+/* v5.5.24 — compact locked sidebar, clean collapse rail, compact music, 40x32 high-detail Ripplet */
+:root{
+  --xrpet-sidebar-open:204px;
+  --xrpet-sidebar-closed:48px;
+}
+
+/* Stable sidebar shell: everything fits without an inner navigation scrollbar. */
+.app-frame{
+  display:grid!important;
+  grid-template-columns:var(--xrpet-sidebar-open) minmax(0,1fr)!important;
+  padding-left:0!important;
+}
+.sidebar{
+  position:relative!important;
+  inset:auto!important;
+  width:var(--xrpet-sidebar-open)!important;
+  min-width:var(--xrpet-sidebar-open)!important;
+  max-width:var(--xrpet-sidebar-open)!important;
+  height:100dvh!important;
+  min-height:100dvh!important;
+  max-height:100dvh!important;
+  padding:8px 7px 8px!important;
+  gap:4px!important;
+  overflow:hidden!important;
+  display:flex!important;
+  flex-direction:column!important;
+  background:linear-gradient(180deg,#060a0e 0%,#04080b 100%)!important;
+  border-right:1px solid #14232c!important;
+}
+.sidebar::-webkit-scrollbar,
+.sidebar .side-nav::-webkit-scrollbar{display:none!important}
+.sidebar,
+.sidebar .side-nav{scrollbar-width:none!important}
+
+.sidebar .brand-lockup{
+  flex:0 0 40px!important;
+  min-height:40px!important;
+  height:40px!important;
+  padding:2px 6px 5px!important;
+  gap:8px!important;
+  overflow:hidden!important;
+}
+.sidebar .brand-orb{
+  width:27px!important;
+  height:27px!important;
+  min-width:27px!important;
+  border-radius:8px!important;
+}
+.sidebar .brand-lockup strong{font-size:.82rem!important}
+.sidebar .brand-lockup small{font-size:.40rem!important;letter-spacing:.10em!important}
+
+/* Clean locked nav: no internal scroll. Popout submenus remain outside the rail. */
+.sidebar .side-nav{
+  flex:0 0 auto!important;
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:2px!important;
+  width:100%!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:visible!important;
+  padding:0!important;
+  margin:0!important;
+}
+.sidebar .side-link{
+  width:100%!important;
+  height:27px!important;
+  min-height:27px!important;
+  padding:4px 7px!important;
+  gap:7px!important;
+  border-radius:5px!important;
+  font-size:.49rem!important;
+  line-height:1!important;
+  letter-spacing:.055em!important;
+}
+.sidebar .side-link span{
+  width:18px!important;
+  min-width:18px!important;
+  font-size:.52rem!important;
+}
+.sidebar .nav-parent-summary,
+.sidebar .history-summary{
+  grid-template-columns:18px minmax(0,1fr) 10px!important;
+}
+.sidebar .nav-parent-summary b,
+.sidebar .history-summary b{
+  font-size:.49rem!important;
+}
+.sidebar .nav-parent-summary i,
+.sidebar .history-summary i{
+  font-size:.44rem!important;
+}
+
+/* Submenus float beside the rail, so opening them never creates sidebar scrolling. */
+.sidebar .nav-dropdown-menu{
+  left:calc(100% + 7px)!important;
+  width:212px!important;
+  max-height:min(400px,calc(100dvh - 18px))!important;
+  overflow-y:auto!important;
+  padding:6px!important;
+}
+.sidebar .nav-dropdown-menu button{
+  min-height:27px!important;
+  padding:5px 7px!important;
+  font-size:.56rem!important;
+}
+
+/* Much smaller music player: every control visible at once. */
+.sidebar #xrpetMusicPlayer.music-player-clean{
+  flex:0 0 112px!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  height:112px!important;
+  min-height:112px!important;
+  max-height:112px!important;
+  margin:4px 0!important;
+  padding:6px!important;
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  grid-template-rows:28px 28px 25px 15px!important;
+  gap:4px!important;
+  border-radius:9px!important;
+  overflow:hidden!important;
+}
+.sidebar #xrpetMusicPlayer .music-now-playing{
+  grid-row:1!important;
+  min-height:28px!important;
+  height:28px!important;
+  grid-template-columns:minmax(0,1fr) 29px!important;
+  gap:5px!important;
+  padding:3px 4px 3px 6px!important;
+  border-radius:6px!important;
+}
+.sidebar #xrpetMusicPlayer .music-now-copy span{
+  font-size:.33rem!important;
+  letter-spacing:.09em!important;
+}
+.sidebar #xrpetMusicPlayer .music-now-copy strong{
+  margin-top:2px!important;
+  font-size:.48rem!important;
+  line-height:1!important;
+}
+.sidebar #xrpetMusicPlayer .music-now-playing .music-main{
+  width:27px!important;
+  height:22px!important;
+  min-width:27px!important;
+  min-height:22px!important;
+  max-width:27px!important;
+  max-height:22px!important;
+  border-radius:5px!important;
+  font-size:.68rem!important;
+}
+.sidebar #xrpetMusicPlayer .music-waveform{
+  grid-row:2!important;
+  width:100%!important;
+  height:28px!important;
+  min-height:28px!important;
+  max-height:28px!important;
+  margin:0!important;
+  border-radius:6px!important;
+}
+.sidebar #xrpetMusicPlayer .music-transport{
+  grid-row:3!important;
+  height:25px!important;
+  display:grid!important;
+  grid-template-columns:25px 25px 25px!important;
+  justify-content:center!important;
+  align-items:center!important;
+  gap:8px!important;
+  padding:0!important;
+  overflow:visible!important;
+}
+.sidebar #xrpetMusicPlayer .music-transport button{
+  width:25px!important;
+  height:23px!important;
+  min-width:25px!important;
+  min-height:23px!important;
+  max-width:25px!important;
+  max-height:23px!important;
+  padding:0!important;
+  border-radius:5px!important;
+  font-size:.68rem!important;
+}
+.sidebar #xrpetMusicPlayer .music-volume-row{
+  grid-row:4!important;
+  height:15px!important;
+  grid-template-columns:20px minmax(0,1fr)!important;
+  gap:4px!important;
+  padding:0 2px!important;
+}
+.sidebar #xrpetMusicPlayer .music-volume-icon{
+  font-size:.28rem!important;
+  letter-spacing:.06em!important;
+}
+.sidebar #xrpetMusicPlayer #musicVolume{
+  height:12px!important;
+  min-height:12px!important;
+  margin:0!important;
+}
+
+/* Compact bottom controls so Built for XRP Ledger remains visible without scrolling. */
+.sidebar .settings-wrap{
+  flex:0 0 29px!important;
+  height:29px!important;
+  min-height:29px!important;
+  margin-top:2px!important;
+}
+.sidebar .customize-wrap{margin-top:auto!important}
+.sidebar .settings-trigger{
+  height:29px!important;
+  min-height:29px!important;
+  padding:4px 6px!important;
+  grid-template-columns:17px minmax(0,1fr) 9px!important;
+  gap:5px!important;
+  border-radius:5px!important;
+  font-size:.48rem!important;
+}
+.sidebar .ledger-badge{
+  flex:0 0 43px!important;
+  min-height:43px!important;
+  height:43px!important;
+  margin:3px 0 0!important;
+  padding:5px 4px 0!important;
+  overflow:hidden!important;
+}
+.sidebar .ledger-x{
+  width:25px!important;
+  height:25px!important;
+}
+.sidebar .ledger-badge small{font-size:.34rem!important}
+.sidebar .ledger-badge strong{font-size:.52rem!important}
+.sidebar .ledger-badge em{font-size:.34rem!important}
+
+/* Professional collapse: compact icon rail instead of an empty broken strip. */
+.sidebar-collapse-toggle{
+  position:absolute!important;
+  top:52px!important;
+  right:-10px!important;
+  left:auto!important;
+  width:20px!important;
+  height:34px!important;
+  min-width:20px!important;
+  min-height:34px!important;
+  padding:0!important;
+  border:1px solid #244b5a!important;
+  border-left:0!important;
+  border-radius:0 7px 7px 0!important;
+  background:#071219!important;
+  color:#8feafb!important;
+  box-shadow:0 4px 12px rgba(0,0,0,.26)!important;
+}
+.sidebar-collapse-toggle span{
+  font-size:.78rem!important;
+  line-height:1!important;
+}
+
+body.sidebar-collapsed .app-frame{
+  grid-template-columns:var(--xrpet-sidebar-closed) minmax(0,1fr)!important;
+}
+body.sidebar-collapsed .sidebar{
+  width:var(--xrpet-sidebar-closed)!important;
+  min-width:var(--xrpet-sidebar-closed)!important;
+  max-width:var(--xrpet-sidebar-closed)!important;
+  padding:7px 5px!important;
+  overflow:visible!important;
+}
+body.sidebar-collapsed .sidebar>*:not(.sidebar-collapse-toggle){
+  display:none!important;
+}
+body.sidebar-collapsed .sidebar>.brand-lockup{
+  display:flex!important;
+  justify-content:center!important;
+  height:38px!important;
+  min-height:38px!important;
+  padding:2px 0!important;
+}
+body.sidebar-collapsed .sidebar>.brand-lockup>div:last-child{display:none!important}
+body.sidebar-collapsed .sidebar>.brand-lockup .brand-orb{
+  display:grid!important;
+  width:29px!important;
+  height:29px!important;
+  min-width:29px!important;
+}
+body.sidebar-collapsed .sidebar>.side-nav{
+  display:grid!important;
+  gap:4px!important;
+  margin-top:5px!important;
+}
+body.sidebar-collapsed .sidebar .side-link{
+  display:flex!important;
+  justify-content:center!important;
+  align-items:center!important;
+  width:36px!important;
+  height:32px!important;
+  min-height:32px!important;
+  margin:0 auto!important;
+  padding:0!important;
+  font-size:0!important;
+  border-radius:7px!important;
+}
+body.sidebar-collapsed .sidebar .side-link span{
+  display:block!important;
+  width:auto!important;
+  min-width:0!important;
+  font-size:.68rem!important;
+}
+body.sidebar-collapsed .sidebar .side-link b,
+body.sidebar-collapsed .sidebar .side-link i{
+  display:none!important;
+}
+body.sidebar-collapsed .sidebar>.settings-wrap{
+  display:block!important;
+  width:36px!important;
+  height:32px!important;
+  min-height:32px!important;
+  margin:4px auto 0!important;
+}
+body.sidebar-collapsed .sidebar .settings-trigger{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  place-items:center!important;
+  width:36px!important;
+  height:32px!important;
+  min-height:32px!important;
+  padding:0!important;
+  font-size:0!important;
+}
+body.sidebar-collapsed .sidebar .settings-trigger>span{
+  display:block!important;
+  font-size:.68rem!important;
+}
+body.sidebar-collapsed .sidebar .settings-trigger b,
+body.sidebar-collapsed .sidebar .settings-trigger i{display:none!important}
+body.sidebar-collapsed .sidebar>.ledger-badge{
+  display:flex!important;
+  margin-top:auto!important;
+  height:38px!important;
+  min-height:38px!important;
+  padding:4px 0!important;
+  justify-content:center!important;
+  border-top:1px solid #132630!important;
+}
+body.sidebar-collapsed .sidebar>.ledger-badge>div{display:none!important}
+body.sidebar-collapsed .sidebar>.ledger-badge .ledger-x{
+  display:grid!important;
+  width:27px!important;
+  height:27px!important;
+}
+body.sidebar-collapsed .sidebar>#xrpetMusicPlayer{display:none!important}
+body.sidebar-collapsed .sidebar-collapse-toggle{
+  top:52px!important;
+  right:-10px!important;
+}
+
+/* Exact requested companion footprint with high-detail metallic rendering. */
+.ripplet-roam-layer .global-life-avatar{
+  width:40px!important;
+  height:32px!important;
+  opacity:1!important;
+  image-rendering:auto!important;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.42))!important;
+}
+.ripplet2d-svg{
+  image-rendering:auto!important;
+  shape-rendering:geometricPrecision!important;
+  filter:none!important;
+}
+.ripplet2d .r2-head-shell,
+.ripplet2d .r2-torso,
+.ripplet2d .r2-neck,
+.ripplet2d .r2-limb,
+.ripplet2d .r2-hand rect,
+.ripplet2d .r2-foot rect,
+.ripplet2d .r2-joint{
+  fill:url(#r2-shell)!important;
+  stroke:#4e6670!important;
+  stroke-width:.55!important;
+}
+.ripplet2d .r2-face{
+  fill:url(#r2-dark)!important;
+  stroke:#65d6e8!important;
+  stroke-width:.5!important;
+}
+.ripplet2d .r2-chest{
+  fill:#0b1b22!important;
+  stroke:#59717a!important;
+  stroke-width:.45!important;
+}
+.ripplet2d .r2-eye{
+  fill:#78efff!important;
+  filter:drop-shadow(0 0 1px rgba(101,235,255,.8))!important;
+}
+.ripplet2d .r2-core-ring{
+  stroke:#62e8ff!important;
+  stroke-width:.8!important;
+}
+.ripplet2d .r2-core-x{
+  stroke:#ddfbff!important;
+  stroke-width:.65!important;
+}
+.ripplet2d .r2-ear path:first-child{
+  fill:url(#r2-shell)!important;
+  stroke:#4e6670!important;
+  stroke-width:.55!important;
+}
+.ripplet2d .r2-ear-inner{
+  fill:#12313a!important;
+  stroke:#59d8eb!important;
+  stroke-width:.4!important;
+}
+
+/* Very short screens get a second compact pass instead of introducing scrollbars. */
+@media(max-height:650px) and (min-width:761px){
+  .sidebar{padding-top:6px!important;padding-bottom:6px!important;gap:3px!important}
+  .sidebar .brand-lockup{height:34px!important;min-height:34px!important;flex-basis:34px!important}
+  .sidebar .side-link{height:24px!important;min-height:24px!important;font-size:.45rem!important}
+  .sidebar #xrpetMusicPlayer.music-player-clean{
+    height:102px!important;min-height:102px!important;max-height:102px!important;
+    grid-template-rows:25px 24px 23px 14px!important;
+  }
+  .sidebar #xrpetMusicPlayer .music-waveform{height:24px!important;min-height:24px!important;max-height:24px!important}
+  .sidebar .settings-wrap,.sidebar .settings-trigger{height:26px!important;min-height:26px!important}
+  .sidebar .ledger-badge{height:36px!important;min-height:36px!important;flex-basis:36px!important}
+}
+
+/* Small screens retain a normal document rather than squeezing the compact rail. */
+@media(max-width:760px){
+  .sidebar{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow:visible!important;
+  }
+  .sidebar .side-nav{
+    display:flex!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+  }
+  .sidebar .side-link{
+    width:auto!important;
+    min-width:max-content!important;
+  }
+}
