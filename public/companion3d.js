@@ -1180,7 +1180,7 @@ function useProceduralModel(kind=currentKind){
   if(externalModel){root.remove(externalModel);externalModel=null}
   externalMixer=null;externalKind=null;externalActions={};externalActiveAction=null;externalLoadingKind=null;externalLoadingPromise=null;
   pet.visible=true;externalPresentation.visible=false;
-  window.dispatchEvent(new CustomEvent('xrpet:model-ready',{detail:{kind,mode:'procedural',animations:[],credit:''}}));
+  window.dispatchEvent(new CustomEvent('xrpet:model-ready',{detail:{kind,mode:'ripplet-2.0-runtime',animations:[],credit:'XRPet Ripplet 2.0 runtime model'}}));
 }
 
 let modelLoadTimer=0;
@@ -1191,7 +1191,7 @@ function setAppearance(detail={}){
   configureEquipment(detail);
   applyRoom(detail.room||'nexus');
   clearTimeout(modelLoadTimer);
-  modelLoadTimer=setTimeout(()=>ensureBuiltInModel('ripplet'),80);
+  useProceduralModel('ripplet');
 }
 window.addEventListener('xrpet:appearance',e=>setAppearance(e.detail||{}));
 setAppearance({room:'nexus',cosmetic:'classic'});
