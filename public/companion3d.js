@@ -45,14 +45,14 @@ pet.position.y=.28;
 pet.scale.setScalar(.82);
 world.add(pet);
 
-const body=mesh(new THREE.SphereGeometry(.82,64,48),shellMat,pet);
+const body=mesh(new THREE.SphereGeometry(.82,64,48),shellMat,pet);body.userData.role='body';
 body.scale.set(.9,.83,.82); body.position.y=-.68;
-const chest=mesh(new THREE.SphereGeometry(.48,48,32),darkMat,pet);
+const chest=mesh(new THREE.SphereGeometry(.48,48,32),darkMat,pet);chest.userData.role='chest';
 chest.scale.set(1.15,.78,.65); chest.position.set(0,-.63,.58);
 
-const head=mesh(new THREE.SphereGeometry(1.18,72,56),shellMat,pet);
+const head=mesh(new THREE.SphereGeometry(1.18,72,56),shellMat,pet);head.userData.role='head';
 head.scale.set(1.05,.88,.95); head.position.y=.72;
-const face=mesh(new THREE.SphereGeometry(1.04,64,48),darkMat,pet);
+const face=mesh(new THREE.SphereGeometry(1.04,64,48),darkMat,pet);face.userData.role='face';
 face.scale.set(1.01,.72,.83); face.position.set(0,.61,.52);
 
 function ear(x,flip=1){
@@ -84,8 +84,8 @@ for(const x of [-.94,.94]){
   const ring=mesh(new THREE.TorusGeometry(.25,.045,16,48),accentMat,pet);ring.position.set(x,-.48,.29);ring.rotation.x=Math.PI/2;
 }
 for(const x of [-.45,.45]){
-  const leg=mesh(new THREE.SphereGeometry(.36,36,24),shellMat,pet);leg.scale.set(.78,.92,.8);leg.position.set(x,-1.3,.12);
-  const foot=mesh(new THREE.SphereGeometry(.26,28,20),darkMat,pet);foot.scale.set(1.15,.42,1.35);foot.position.set(x,-1.59,.23);
+  const leg=mesh(new THREE.SphereGeometry(.36,36,24),shellMat,pet);leg.userData.role='leg';leg.scale.set(.78,.92,.8);leg.position.set(x,-1.3,.12);
+  const foot=mesh(new THREE.SphereGeometry(.26,28,20),darkMat,pet);foot.userData.role='foot';foot.scale.set(1.15,.42,1.35);foot.position.set(x,-1.59,.23);
   const footLight=mesh(new THREE.TorusGeometry(.18,.03,12,32),accentMat,pet);footLight.position.set(x,-1.57,.48);footLight.rotation.x=Math.PI/2;
 }
 
@@ -104,6 +104,114 @@ const innerRing=mesh(new THREE.TorusGeometry(.9,.025,12,72),accentMat,base);inne
 const floorGlow=mesh(new THREE.CircleGeometry(1.65,80),new THREE.MeshBasicMaterial({color:0x0b8eb2,transparent:true,opacity:.08}),base);floorGlow.rotation.x=-Math.PI/2;floorGlow.position.y=.14;
 
 
+
+const foxGroup=new THREE.Group();pet.add(foxGroup);
+const foxTail=mesh(new THREE.TorusGeometry(.58,.11,14,54,Math.PI*1.45),shellMat,foxGroup);
+foxTail.position.set(.68,-.85,-.62);foxTail.rotation.set(.2,.72,-.5);
+const foxTailLight=mesh(new THREE.TorusGeometry(.58,.026,10,54,Math.PI*1.45),accentMat,foxGroup);
+foxTailLight.position.copy(foxTail.position);foxTailLight.rotation.copy(foxTail.rotation);
+
+const pupGroup=new THREE.Group();pet.add(pupGroup);
+for(const x of [-1,1]){
+  const flap=mesh(new THREE.SphereGeometry(.34,28,20),shellMat,pupGroup);
+  flap.scale.set(.55,1.25,.32);flap.position.set(x*.87,1.36,.17);flap.rotation.z=x*.34;
+}
+const pupMuzzle=mesh(new THREE.SphereGeometry(.34,32,24),darkMat,pupGroup);
+pupMuzzle.scale.set(1.05,.6,.55);pupMuzzle.position.set(0,.48,1.35);
+
+const catGroup=new THREE.Group();pet.add(catGroup);
+for(const y of [.68,.54,.4]){
+  const l=mesh(new THREE.CylinderGeometry(.015,.015,.62,10),accentMat,catGroup);
+  l.position.set(-.63,y,1.28);l.rotation.z=Math.PI/2-.14;
+  const r=mesh(new THREE.CylinderGeometry(.015,.015,.62,10),accentMat,catGroup);
+  r.position.set(.63,y,1.28);r.rotation.z=Math.PI/2+.14;
+}
+const catTail=mesh(new THREE.TorusGeometry(.54,.08,12,48,Math.PI*1.4),shellMat,catGroup);
+catTail.position.set(.73,-.9,-.55);catTail.rotation.set(.15,.7,-.4);
+
+const birdGroup=new THREE.Group();pet.add(birdGroup);
+for(const x of [-1,1]){
+  const wing=mesh(new THREE.ConeGeometry(.36,1.15,5),shellMat,birdGroup);
+  wing.position.set(x*.92,-.43,-.05);wing.rotation.z=x*-1.18;wing.rotation.x=-.1;
+  const wingGlow=mesh(new THREE.BoxGeometry(.05,.7,.05),accentMat,birdGroup);
+  wingGlow.position.set(x*.87,-.38,.18);wingGlow.rotation.z=x*-1.12;
+}
+const beak=mesh(new THREE.ConeGeometry(.18,.52,4),shellMat,birdGroup);
+beak.position.set(0,.56,1.64);beak.rotation.x=Math.PI/2;
+
+const turtleGroup=new THREE.Group();pet.add(turtleGroup);
+const shellBack=mesh(new THREE.SphereGeometry(.82,48,32),shellMat,turtleGroup);
+shellBack.scale.set(1.03,.75,.42);shellBack.position.set(0,-.72,-.48);
+const shellPlate=mesh(new THREE.TorusGeometry(.55,.045,14,64),accentMat,turtleGroup);
+shellPlate.position.set(0,-.72,-.86);shellPlate.rotation.x=Math.PI/2;
+for(const x of [-1,1]){
+  const sideLeg=mesh(new THREE.SphereGeometry(.3,24,18),shellMat,turtleGroup);
+  sideLeg.scale.set(1.15,.42,.8);sideLeg.position.set(x*.92,-1.03,.0);
+}
+
+const boyGroup=new THREE.Group();pet.add(boyGroup);
+const boyBrowL=mesh(new THREE.BoxGeometry(.34,.045,.06),accentMat,boyGroup);
+boyBrowL.position.set(-.43,1.07,1.48);boyBrowL.rotation.z=.12;
+const boyBrowR=mesh(new THREE.BoxGeometry(.34,.045,.06),accentMat,boyGroup);
+boyBrowR.position.set(.43,1.07,1.48);boyBrowR.rotation.z=-.12;
+
+const girlGroup=new THREE.Group();pet.add(girlGroup);
+const girlCrest=mesh(new THREE.TorusGeometry(.29,.026,12,52,Math.PI*1.5),accentMat,girlGroup);
+girlCrest.position.set(0,1.52,1.02);girlCrest.rotation.z=.25;
+const girlSideL=mesh(new THREE.SphereGeometry(.06,18,12),glassMat,girlGroup);girlSideL.position.set(-.72,.92,1.23);
+const girlSideR=mesh(new THREE.SphereGeometry(.06,18,12),glassMat,girlGroup);girlSideR.position.set(.72,.92,1.23);
+
+foxGroup.visible=false;pupGroup.visible=false;catGroup.visible=false;birdGroup.visible=false;turtleGroup.visible=false;
+boyGroup.visible=true;girlGroup.visible=false;
+
+function configureCompanion(kind='nexus',gender='boy'){
+  foxGroup.visible=kind==='fox';
+  pupGroup.visible=kind==='pup';
+  catGroup.visible=kind==='cat';
+  birdGroup.visible=kind==='bird';
+  turtleGroup.visible=kind==='turtle';
+  boyGroup.visible=gender==='boy';
+  girlGroup.visible=gender==='girl';
+
+  pet.traverse(o=>{
+    if(o.userData.role==='ear'||o.userData.role==='earInner'){
+      o.visible=!['bird','turtle'].includes(kind);
+      if(kind==='fox')o.scale.set(.82,1.34,.8);
+      else if(kind==='pup')o.scale.set(.4,.58,.6);
+      else if(kind==='cat')o.scale.set(.72,1.0,.7);
+      else o.scale.set(1,1,1);
+    }
+    if(o.userData.role==='pod'){
+      o.visible=kind!=='bird';
+      if(kind==='turtle')o.scale.set(.48,.62,.5);
+      else if(kind==='pup')o.scale.set(.9,1.0,.85);
+      else o.scale.set(.75,.95,.7);
+    }
+    if(o.userData.role==='leg'){
+      if(kind==='bird')o.scale.set(.46,1.15,.52);
+      else if(kind==='turtle')o.scale.set(.58,.48,.85);
+      else if(kind==='pup')o.scale.set(.9,1.0,.9);
+      else o.scale.set(.78,.92,.8);
+    }
+    if(o.userData.role==='foot'){
+      if(kind==='bird')o.scale.set(.72,.34,.9);
+      else if(kind==='turtle')o.scale.set(1.25,.34,1.5);
+      else o.scale.set(1.15,.42,1.35);
+    }
+  });
+
+  if(kind==='fox'){head.scale.set(1.0,.82,.9);body.scale.set(.78,.84,.74);face.scale.set(.96,.68,.8)}
+  else if(kind==='pup'){head.scale.set(1.12,.9,1.0);body.scale.set(1.0,.88,.9);face.scale.set(1.06,.76,.9)}
+  else if(kind==='cat'){head.scale.set(.98,.84,.9);body.scale.set(.76,.88,.72);face.scale.set(.94,.7,.82)}
+  else if(kind==='bird'){head.scale.set(.92,.82,.84);body.scale.set(.62,1.04,.62);face.scale.set(.86,.66,.74)}
+  else if(kind==='turtle'){head.scale.set(.86,.76,.82);body.scale.set(1.08,.68,.98);face.scale.set(.82,.6,.72)}
+  else {head.scale.set(1.05,.88,.95);body.scale.set(.9,.83,.82);face.scale.set(1.01,.72,.83)}
+
+  // Boy/Girl presentation stays independent of species.
+  const gScale=gender==='girl'?0.97:1;
+  head.scale.multiplyScalar(gScale);
+  if(gender==='girl') face.scale.y*=1.04;
+}
 const scoutGroup=new THREE.Group();pet.add(scoutGroup);
 for(const x of [-1,1]){
   const fin=mesh(new THREE.ConeGeometry(.18,.95,4),shellMat,scoutGroup);
@@ -178,16 +286,7 @@ function configureBuild(build){
 
   orbGroup.visible=build!=='midnight';
   orbGroup.scale.setScalar(build==='pearl'?1.18:build==='aqua' ? .88:build==='solar'?1.05:1);
-  head.scale.set(
-    build==='midnight'?1.1:build==='pearl'?1.0:1.05,
-    build==='midnight' ? .92:build==='aqua' ? .82:.88,
-    build==='solar'?1.0:.95
-  );
-  body.scale.set(
-    build==='midnight'?1.02:build==='aqua' ? .84:.9,
-    build==='solar' ? .9:build==='midnight' ? .88:.83,
-    build==='solar' ? .9:.82
-  );
+  // Cosmetics now layer hardware/material changes without replacing the selected species silhouette.
   core.scale.setScalar(build==='solar'?1.42:build==='midnight' ? .82:build==='pearl' ? .9:1);
   coreBall.scale.setScalar(build==='solar'?1.55:build==='midnight' ? .82:1);
 }
@@ -216,6 +315,7 @@ renderer.domElement.addEventListener('click',()=>{
 
 function setAppearance(detail={}){
   current=detail.cosmetic||current;
+  configureCompanion(detail.companionKind||'nexus',detail.companionGender||'boy');
   configureBuild(current);
   const p=palette[current]||palette.classic;
   shellMat.color.setHex(p.shell);darkMat.color.setHex(p.dark);accentMat.color.setHex(p.accent);accentMat.emissive.setHex(p.accent);glassMat.color.setHex(p.glass);
@@ -249,7 +349,7 @@ function animate(){
   if(!dragging && performance.now()-lastInteract>1800) targetRotY=Math.sin(t*.35)*.18;
   pet.position.y=.28+Math.sin(t*1.7)*.035+boost*.08;
   pet.rotation.z=Math.sin(t*.8)*.018;
-  orbGroup.rotation.y=t*.7;orbit1.rotation.z=t*.65;orbit2.rotation.z=-t*.8;oracleHalo1.rotation.z=t*.32;oracleHalo2.rotation.z=-t*.41;oracleHalo3.rotation.z=t*.53;scoutGroup.rotation.y=Math.sin(t*.8)*.03;vanguardGroup.rotation.y=Math.sin(t*.55)*.025;
+  orbGroup.rotation.y=t*.7;orbit1.rotation.z=t*.65;orbit2.rotation.z=-t*.8;oracleHalo1.rotation.z=t*.32;oracleHalo2.rotation.z=-t*.41;oracleHalo3.rotation.z=t*.53;scoutGroup.rotation.y=Math.sin(t*.8)*.03;vanguardGroup.rotation.y=Math.sin(t*.55)*.025;foxGroup.rotation.z=Math.sin(t*1.15)*.025;catGroup.rotation.z=Math.sin(t*.9)*.018;birdGroup.rotation.z=Math.sin(t*1.8)*.035;turtleGroup.rotation.y=Math.sin(t*.5)*.02;
   baseRing.rotation.z=t*.16;innerRing.rotation.z=-t*.22;
   pupils.forEach((p,i)=>{const baseX=i===0?-.48:.48;p.position.x=baseX+pointerX*.045;p.position.y=.78-pointerY*.035});
   eyes.forEach((e,i)=>{e.scale.y=1-Math.max(0,Math.sin(t*.47+2.7))**36*.82});
