@@ -78,6 +78,7 @@
       </details>
       <button class="side-link" data-primary-view="announcements"><span>◌</span>Announcements</button>
       <button class="side-link" data-primary-view="ripplet"><span>✦</span>Ripplet</button>
+      <button class="side-link" data-primary-view="games"><span>◈</span>Games</button>
     </nav>
 
     <details class="settings-wrap customize-wrap" id="customizeDetails">
@@ -566,6 +567,70 @@
       </div>
     </section>
 
+    <section id="gamesSection" class="flow-section games-section primary-view-section" data-view-section="games">
+      <div class="games-hero">
+        <div>
+          <span class="eyebrow">XRPet // ARCADE</span>
+          <h1>XRPL Mini Games</h1>
+          <p>Three original arcade-style games inspired by XRP Ledger concepts. Scores are for fun inside XRPet—no tokens, money, or financial rewards.</p>
+        </div>
+        <div class="games-total-score"><span>ARCADE SCORE</span><strong id="gamesTotalScore">000000</strong><small>local session</small></div>
+      </div>
+
+      <div class="game-selector" role="tablist" aria-label="XRPet games">
+        <button class="game-tab active" type="button" role="tab" aria-selected="true" data-game-tab="ledgerRush">Ledger Rush</button>
+        <button class="game-tab" type="button" role="tab" aria-selected="false" data-game-tab="xrpFlow">XRP Flow</button>
+        <button class="game-tab" type="button" role="tab" aria-selected="false" data-game-tab="consensus80">Consensus 80</button>
+      </div>
+
+      <section class="game-panel active" data-game-panel="ledgerRush">
+        <div class="game-copy">
+          <span class="game-number">01</span>
+          <div><h2>Ledger Rush</h2><p>Validated ledgers are closing. Tap the active validation node before its signal expires. Build a streak before the 30-second round ends.</p></div>
+          <div class="game-stats"><span>Score <b id="rushScore">0</b></span><span>Streak <b id="rushStreak">0</b></span><span>Time <b id="rushTime">30</b></span></div>
+        </div>
+        <div id="rushArena" class="rush-arena" aria-label="Ledger Rush play area">
+          <button id="rushTarget" type="button" class="rush-target" aria-label="Validate active ledger node"><span>X</span></button>
+          <div class="rush-grid" aria-hidden="true"></div>
+        </div>
+        <div class="game-actions"><button id="rushStart" type="button" class="primary">Start Ledger Rush</button><span id="rushStatus" class="game-status">Ready.</span></div>
+      </section>
+
+      <section class="game-panel" data-game-panel="xrpFlow" hidden>
+        <div class="game-copy">
+          <span class="game-number">02</span>
+          <div><h2>XRP Flow</h2><p>Guide Ripplet's receiver between three settlement lanes. Catch XRP packets and avoid red congestion packets before the 35-second flow window closes.</p></div>
+          <div class="game-stats"><span>Score <b id="flowScore">0</b></span><span>Lives <b id="flowLives">3</b></span><span>Time <b id="flowTime">35</b></span></div>
+        </div>
+        <div id="flowArena" class="flow-arena" tabindex="0" aria-label="XRP Flow game. Use left and right buttons or arrow keys.">
+          <div class="flow-lane"></div><div class="flow-lane"></div><div class="flow-lane"></div>
+          <div id="flowReceiver" class="flow-receiver" data-lane="1"><span>R</span></div>
+        </div>
+        <div class="game-actions flow-controls">
+          <button id="flowLeft" type="button" class="secondary" aria-label="Move left">← Left</button>
+          <button id="flowStart" type="button" class="primary">Start XRP Flow</button>
+          <button id="flowRight" type="button" class="secondary" aria-label="Move right">Right →</button>
+          <span id="flowStatus" class="game-status">Ready.</span>
+        </div>
+      </section>
+
+      <section class="game-panel" data-game-panel="consensus80" hidden>
+        <div class="game-copy">
+          <span class="game-number">03</span>
+          <div><h2>Consensus 80</h2><p>Watch the validator sequence, then repeat it. Each successful round adds another signal. This is an arcade interpretation of consensus—not a protocol simulation.</p></div>
+          <div class="game-stats"><span>Round <b id="consensusRound">0</b></span><span>Best <b id="consensusBest">0</b></span><span>Status <b id="consensusState">READY</b></span></div>
+        </div>
+        <div class="consensus-board" aria-label="Consensus memory board">
+          <button type="button" data-validator="0"><span>V1</span></button>
+          <button type="button" data-validator="1"><span>V2</span></button>
+          <button type="button" data-validator="2"><span>V3</span></button>
+          <button type="button" data-validator="3"><span>V4</span></button>
+        </div>
+        <div class="consensus-meter"><span><i id="consensusMeter"></i></span><b>80%</b></div>
+        <div class="game-actions"><button id="consensusStart" type="button" class="primary">Start Consensus 80</button><span id="consensusStatus" class="game-status">Ready.</span></div>
+      </section>
+    </section>
+
     <section id="announcementsSection" class="flow-section announcements-section primary-view-section announcements-clean" data-view-section="announcements">
       <div class="announcements-hero">
         <div><span class="eyebrow">OFFICIAL SIGNAL FEED</span><h1>Announcements</h1><p>Official Ripple and XRP Ledger updates in one clean feed. Auto-refreshes every minute.</p></div>
@@ -590,6 +655,7 @@
 
 <script src="/app.js?v=4.10.0"></script>
 <script src="/timeline.js?v=4.10.0"></script>
+<script src="/games.js?v=5.0.0"></script>
 <script type="module" src="/companion3d.js?v=4.10.0"></script>
 
 <div id="xrpetMusicPlayer" class="xrpet-music-player" aria-label="XRPet soundtrack">
