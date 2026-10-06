@@ -8685,3 +8685,88 @@ body:not(.workspace-open) .main-shell>.primary-view-section:not(.view-active){
   color:#dffaff!important;
   margin-bottom:6px!important;
 }
+
+
+/* v5.5.33 — dedicated Settlements + History interface pages */
+.history-dedicated-page{
+  width:100%!important;
+  min-width:0!important;
+  padding:18px!important;
+}
+.history-dedicated-page.view-active:not([hidden]){
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+.history-dedicated-hero{
+  display:grid!important;
+  gap:7px!important;
+  padding:18px 20px!important;
+  margin-bottom:12px!important;
+  border:1px solid rgba(76,210,239,.14)!important;
+  border-radius:12px!important;
+  background:
+    radial-gradient(circle at 88% 18%,rgba(65,220,247,.08),transparent 28%),
+    linear-gradient(135deg,#08131a,#061017)!important;
+}
+.history-dedicated-hero .eyebrow{
+  font-size:.46rem!important;
+  letter-spacing:.16em!important;
+  color:#62dff3!important;
+}
+.history-dedicated-hero h1{
+  margin:0!important;
+  font-size:1.35rem!important;
+  line-height:1.08!important;
+  color:#eefcff!important;
+}
+.history-dedicated-hero p{
+  max-width:850px!important;
+  margin:0!important;
+  color:#8ba3ae!important;
+  font-size:.72rem!important;
+  line-height:1.55!important;
+}
+.history-dedicated-summary{
+  display:grid!important;
+  grid-template-columns:auto minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:10px!important;
+  padding:9px 12px!important;
+  margin-bottom:12px!important;
+  border:1px solid rgba(76,210,239,.10)!important;
+  border-radius:9px!important;
+  background:#071017!important;
+}
+.history-dedicated-summary span{
+  font-size:.38rem!important;
+  letter-spacing:.14em!important;
+  color:#587480!important;
+}
+.history-dedicated-summary strong{
+  font-size:.64rem!important;
+  color:#dffaff!important;
+}
+.history-dedicated-summary small{
+  font-size:.42rem!important;
+  color:#657f8a!important;
+}
+.history-page-timeline{
+  display:grid!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+.history-page-people{
+  display:grid!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+#historyNavDetails>summary.active{
+  border-color:#2e5969!important;
+  background:#0a1921!important;
+  color:#dffaff!important;
+}
+@media(max-width:760px){
+  .history-dedicated-page{padding:10px!important}
+  .history-dedicated-summary{grid-template-columns:1fr!important}
+}
