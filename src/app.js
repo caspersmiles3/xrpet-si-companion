@@ -1,4 +1,5 @@
-import { isInstalled as gemIsInstalled, getAddress as gemGetAddress, getNetwork as gemGetNetwork } from '@gemwallet/api';
+let gemApiPromise;
+const getGemApi=()=>gemApiPromise||(gemApiPromise=import('https://esm.sh/@gemwallet/api@3.7.0'));
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const STORE='xrpet-v1-state';
@@ -222,9 +223,10 @@ async function setConnectedWallet(provider,address,network){
 async function connectGemWallet(statusTarget='#walletConnection'){
   const status=$(statusTarget);
   try{
-    const installed=await gemIsInstalled();
+    const {isInstalled,getAddress,getNetwork}=await getGemApi();
+    const installed=await isInstalled();
     if(!installed?.result?.isInstalled){status.textContent='GemWallet is not installed in this browser.';return false}
-    const [addressResult,networkResult]=await Promise.all([gemGetAddress(),gemGetNetwork()]);
+    const [addressResult,networkResult]=await Promise.all([getAddress(),getNetwork()]);
     const address=addressResult?.result?.address;
     if(!address){status.textContent='GemWallet did not share an address.';return false}
     await setConnectedWallet('GemWallet',address,networkResult?.result?.network||'unknown');
