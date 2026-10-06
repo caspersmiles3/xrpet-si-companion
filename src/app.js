@@ -17,7 +17,7 @@ const state={
 };
 const FORMS=[['Drop',0],['Ripple',50],['Wave',150],['Surge',350],['Nexus',700],['Titan',1200],['Legend',2000]];
 const ROOM_NAMES={nexus:'Neon Horizon',ocean:'Ripple Sanctuary',vault:'Ledger Vault',aurora:'Sky Garden',legend:'Orbital Station'};
-const COSMETIC_NAMES={classic:'Classic',aqua:'Aqua Core',midnight:'Midnight',pearl:'Pearl',solar:'Solar Flare'};
+const COSMETIC_NAMES={classic:'Classic Nexus',aqua:'Ripple Scout',midnight:'Ledger Guardian',pearl:'Oracle Halo',solar:'Solar Vanguard'};
 function hexToUtf8(hex){try{return decodeURIComponent(hex.match(/.{1,2}/g).map(b=>'%'+b).join(''))}catch{return''}}
 function mediaUrl(uri){
   if(!uri)return null;
@@ -140,7 +140,7 @@ bind('#watchForm','submit',e=>{e.preventDefault();const a=q('#account').value.tr
 bind('#clearWallet','click',()=>{if(watchedSubscribed&&ws?.readyState===1)ws.send(JSON.stringify({id:'unwatch',command:'unsubscribe',accounts:[watchedSubscribed]}));watchedSubscribed=null;state.account=null;state.walletProvider='manual';persist();render();setText('#walletConnection','No wallet connected. Public wallet watch still works.')});
 bind('#connectXaman','click',connectXaman);bind('#connectGem','click',connectGem);
 let charge=0;bind('#charge','click',()=>{const t=new Date().toISOString().slice(0,10);if(state.lastMissionDate===t){mood('Complete','Today’s core mission is already complete.','calm');return}charge=Math.min(7,charge+1);setText('#chargeCount',charge+'/7');if(q('#meterFill'))q('#meterFill').style.width=(charge/7*100)+'%';if(charge===7){state.lastMissionDate=t;addXp(15);setText('#missionText','Mission complete. +15 XP. New pulse tomorrow.');mood('Charged','Core synchronized. Mission complete.','energized')}});
-qa('.room-choice').forEach(b=>b.addEventListener('click',()=>{if(b.disabled)return;state.room=b.dataset.room;persist();render();mood('Room changed','Environment synchronized to '+b.querySelector('strong')?.textContent+'.','calm')})); qa('.cosmetic-choice').forEach(b=>b.addEventListener('click',()=>{state.cosmetic=b.dataset.cosmetic;persist();render();mood('Customized','Companion finish changed to '+b.querySelector('strong')?.textContent+'.','energized')}));
+qa('.room-choice').forEach(b=>b.addEventListener('click',()=>{if(b.disabled)return;state.room=b.dataset.room;persist();render();mood('Theme changed','The entire XRPet interface is now running '+b.querySelector('strong')?.textContent+'.','calm')})); qa('.cosmetic-choice').forEach(b=>b.addEventListener('click',()=>{state.cosmetic=b.dataset.cosmetic;persist();render();mood('Reconfigured','Companion build changed to '+b.querySelector('strong')?.textContent+'.','energized')}));
 qa('[data-scroll]').forEach(b=>b.addEventListener('click',()=>q('#'+b.dataset.scroll)?.scrollIntoView({behavior:'smooth',block:'center'})));
 bind('#explainLevel','change',e=>{state.explainLevel=e.target.value;persist()});bind('#notifyLevel','change',e=>{state.notifyLevel=e.target.value;persist()});bind('#truthToggle','change',e=>{state.truthMode=e.target.checked;persist()});bind('#marketMoodToggle','change',e=>{state.marketMood=e.target.checked;persist()});
 bind('#notifyButton','click',async()=>{if(!('Notification'in window)){alert('Browser notifications are not supported here.');return}const p=await Notification.requestPermission();if(p==='granted')new Notification('XRPet alerts enabled',{body:'Browser alerts are ready while XRPet is open.'});});
