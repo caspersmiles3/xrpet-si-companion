@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=4.1.0">
+  <link rel="stylesheet" href="/styles.css?v=4.2.0">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
@@ -51,7 +51,8 @@
     </div>
 
     <nav class="side-nav" aria-label="Primary navigation">
-      <button class="side-link active" data-scroll="xrplPanel"><span>▥</span>XRPL Live</button>
+      <button class="side-link active" data-primary-view="home"><span>⌂</span>Home</button>
+      <button class="side-link" data-primary-view="live"><span>▥</span>XRPL Live</button>
       <details class="nav-dropdown" id="historyNavDetails">
         <summary class="side-link history-summary"><span>↯</span><b>Settlements + History</b><i>⌄</i></summary>
         <div class="nav-dropdown-menu">
@@ -67,7 +68,7 @@
           <button type="button" data-history-view="People">People Involved</button>
         </div>
       </details>
-      <button class="side-link" data-scroll="announcementsSection"><span>◌</span>Announcements</button>
+      <button class="side-link" data-primary-view="announcements"><span>◌</span>Announcements</button>
     </nav>
 
     <details class="settings-wrap customize-wrap" id="customizeDetails">
@@ -128,7 +129,7 @@
       </div>
     </header>
 
-    <div id="persistentCompanionLayer" class="persistent-companion-layer" aria-label="Persistent Ripplet companion">
+    <div id="persistentCompanionLayer" class="persistent-companion-layer home-companion-layer" data-home-companion aria-label="Ripplet companion">
       <div id="floatingCompanion" class="floating-companion persistent-ripplet" aria-label="Floating interactive XRPet">
   <div id="nftFloatingCompanion" class="nft-floating-companion hidden" aria-hidden="true">
     <img id="nftFloatingImage" alt="">
@@ -154,12 +155,12 @@
 
     
 
-    <section id="homeSection" class="flow-section home-section signal-command-home utility-panel-hidden">
+    <section id="homeSection" class="flow-section home-section signal-command-home primary-view-section" data-view-section="home">
       <div class="home-command-grid">
         <div class="section-copy home-command-copy">
-          <div class="signal-kicker-row"><span class="eyebrow">XRPL COMPANION COMMAND</span><span class="verified-pill">MAINNET // LIVE</span></div>
-          <h1>Live with the Ledger.<br><em>Move with the Signal.</em></h1>
-          <p>XRPet combines live XRP Ledger awareness, an evolving companion, grounded SI, wallet observation, room environments, and community culture in one premium XRPL-native experience.</p>
+          <div class="signal-kicker-row"><span class="eyebrow">XRPet // HOME</span><span class="verified-pill">MAINNET // LIVE</span></div>
+          <h1>Your XRP Ledger companion.<br><em>Live data. History. Context.</em></h1>
+          <p>XRPet is an XRP Ledger intelligence interface built around live XRPL telemetry, Ripple/XRP history, official announcements, settlement context, and Ripplet—the single official companion that reacts to the network.</p>
           <div class="hero-actions">
             <button id="catchup" class="primary signal-primary">Catch Me Up</button>
             <button id="dailyButton" class="secondary signal-secondary">Daily Signal</button>
@@ -184,9 +185,9 @@
       </div>
 
       <div class="home-overview signal-metric-grid">
-        <article><small>COMPANION MODEL</small><strong id="homeCompanionModel">Nexus</strong><span id="homeCompanionGender">Boy companion</span></article>
+        <article><small>COMPANION MODEL</small><strong id="homeCompanionModel">Ripplet</strong><span id="homeCompanionGender">Official XRPet companion</span></article>
         <article><small>ROOM ENVIRONMENT</small><strong id="homeRoom">Neon Horizon</strong><span>Full application theme</span></article>
-        <article><small>COMPANION BUILD</small><strong id="homeCosmetic">Classic Nexus</strong><span>XRPL equipment layer</span></article>
+        <article><small>COMPANION BUILD</small><strong id="homeCosmetic">Official Ripplet</strong><span>Signal appearance layer</span></article>
         <article><small>COMMUNITY SIGNAL</small><strong id="homeSignal589">589 // STANDBY</strong><span id="homeSignalCaption">Community-lore layer</span></article>
         <article><small>LEDGER HEALTH</small><strong id="homeLedgerHealth">CONNECTING</strong><span>Validated-network telemetry</span></article>
       </div>
@@ -194,10 +195,10 @@
       <p id="petSpeech" class="pet-speech command-transmission">TRANSMISSION // Connecting to live network data…</p>
     </section>
 
-<section id="xrplPanel" class="top-live panel">
+<section id="xrplPanel" class="top-live panel primary-view-section" data-view-section="live">
       <div class="panel-title">
         <div><span class="live-dot"></span><strong>XRPL Live</strong></div>
-        <span>Mainnet</span>
+        <div class="panel-title-actions"><button type="button" class="mini-button" data-primary-view="home">⌂ Home</button><span>Mainnet</span></div>
       </div>
       <div class="top-metrics">
         <article><span>XRP / USD</span><strong id="xrpPrice">—</strong><small id="xrpChange">Loading market</small></article>
@@ -208,7 +209,7 @@
     </section>
 
 
-<section id="xrpHistorySection" class="flow-section xrp-history-section">
+<section id="xrpHistorySection" class="flow-section xrp-history-section primary-view-section" data-view-section="history">
   <div class="section-heading">
     <div>
       <span class="eyebrow">RIPPLE + XRP // LIVING ARCHIVE</span>
@@ -576,7 +577,7 @@
       </div>
     </section>
 
-    <section id="announcementsSection" class="flow-section announcements-section">
+    <section id="announcementsSection" class="flow-section announcements-section primary-view-section" data-view-section="announcements">
       <div class="section-heading"><div><span class="eyebrow">OFFICIAL ANNOUNCEMENTS</span><h2>Ripple + XRPL announcements</h2><p class="section-subcopy">Official Ripple and XRP Ledger updates, refreshed automatically.</p></div><button id="refreshNews" class="mini-button">Refresh</button></div>
       <div id="updates" class="updates updates-large"><p class="muted">Loading official sources…</p></div>
     </section>
@@ -586,12 +587,12 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 4.1.0 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 4.2.0 · XRP Ledger companion</footer>
   </main>
 </div>
 
-<script src="/app.js?v=4.1.0"></script>
-<script src="/timeline.js?v=4.1.0"></script>
-<script type="module" src="/companion3d.js?v=4.1.0"></script>
+<script src="/app.js?v=4.2.0"></script>
+<script src="/timeline.js?v=4.2.0"></script>
+<script type="module" src="/companion3d.js?v=4.2.0"></script>
 </body>
 </html>
