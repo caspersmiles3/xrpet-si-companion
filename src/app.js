@@ -1066,10 +1066,11 @@ function dockPosition(){
   const dock=q('#rippletDock'),layer=roamLayer?.getBoundingClientRect(),avatar=lifeAvatar?.getBoundingClientRect();
   if(!dock||!layer)return null;
   const r=dock.getBoundingClientRect();
-  const w=Math.max(150,avatar?.width||170);
+  const w=Math.max(54,avatar?.width||70);
+  const h=Math.max(66,avatar?.height||86);
   return {
     x:r.left-layer.left+r.width/2-w/2,
-    y:Math.max(10,r.top-layer.top+Math.max(8,(r.height-(avatar?.height||205))*.16))
+    y:Math.max(6,r.top-layer.top+Math.max(4,(r.height-h)*.16))
   };
 }
 function setDockStatus(text){
@@ -1112,14 +1113,15 @@ function goRipplet(activity='explore'){
   if(activity==='socialize')target=null;
   if(activity==='ledger')target={x:layer.width*.72,y:Math.max(165,layer.height*.34)};
   if(!target){
-    const avatarH=Math.max(150,avatar?.height||210);
+    const avatarH=Math.max(66,avatar?.height||86);
+    const avatarW=Math.max(54,avatar?.width||70);
     target={
-      x:28+Math.random()*Math.max(60,layer.width-(avatar?.width||180)-56),
-      y:18+Math.random()*Math.max(40,layer.height-avatarH-36)
+      x:14+Math.random()*Math.max(40,layer.width-avatarW-28),
+      y:12+Math.random()*Math.max(36,layer.height-avatarH-24)
     };
   }
   const distance=Math.hypot(target.x-currentX,target.y-currentY);
-  const locomotion=activity==='dock'?'walk':distance>Math.max(360,layer.width*.34)?'run':'walk';
+  const locomotion=activity==='dock'?'walk':distance>Math.max(180,layer.width*.24)?'run':'walk';
   window.XRPet3D?.motor?.(locomotion);
   setRoamPosition(target.x,target.y,locomotion);
   if(activity==='socialize'){
@@ -1140,27 +1142,53 @@ function visibleInterfaceTargets(){
   const selectors=[
     '.primary-view-section.view-active h1',
     '.primary-view-section.view-active h2',
+    '.primary-view-section.view-active h3',
+    '.primary-view-section.view-active p',
+    '.primary-view-section.view-active .eyebrow',
+    '.primary-view-section.view-active button',
     '.primary-view-section.view-active .detail-card',
     '.primary-view-section.view-active .contact-card',
     '.primary-view-section.view-active .ecosystem-token-card',
-    '.primary-view-section.view-active .game-panel.active',
-    '.global-command-bar'
+    '.primary-view-section.view-active article',
+    '.primary-view-section.view-active .game-panel.active'
   ];
   return qa(selectors.join(',')).filter(el=>{
-    if(el.closest('.sidebar'))return false;
+    if(el.closest('.sidebar')||el.closest('#rippletDock')||el.closest('#topCommandDeck'))return false;
     const r=el.getBoundingClientRect(),style=getComputedStyle(el);
-    return style.display!=='none'&&style.visibility!=='hidden'&&r.width>36&&r.height>18&&
-      r.bottom>shell.top+28&&r.top<shell.bottom-26&&r.right>shell.left+24&&r.left<shell.right-24;
+    return style.display!=='none'&&style.visibility!=='hidden'&&r.width>28&&r.height>12&&
+      r.bottom>shell.top+18&&r.top<shell.bottom-18&&r.right>shell.left+12&&r.left<shell.right-12;
   });
 }
 function interfaceTargetPosition(el,mode='perch'){
   const layer=roamLayer?.getBoundingClientRect(),avatar=lifeAvatar?.getBoundingClientRect(),r=el?.getBoundingClientRect();
   if(!layer||!r)return null;
-  const aw=Math.max(140,avatar?.width||170),ah=Math.max(160,avatar?.height||205);
-  const centerX=r.left-layer.left+r.width*.5-aw*.5;
-  if(mode==='climb')return{x:r.left-layer.left-aw*.38,y:Math.min(layer.height-ah-8,r.bottom-layer.top-ah*.7)};
-  if(mode==='inspect')return{x:r.left-layer.left-aw*.72,y:r.top-layer.top+r.height*.5-ah*.55};
-  return{x:centerX,y:r.top-layer.top-ah+18};
+  const aw=Math.max(54,avatar?.width||70),ah=Math.max(66,avatar?.height||86);
+  const localLeft=r.left-layer.left,localTop=r.top-layer.top;
+  const centerX=localLeft+r.width*.5-aw*.5;
+  const rightEdge=localLeft+r.width-aw*.78;
+  const textLike=/^(H1|H2|H3|P|SPAN|STRONG|SMALL|BUTTON)$/.test(el.tagName);
+  if(mode==='climb'){
+    return {
+      x:Math.max(8,localLeft-aw*.56),
+      y:Math.max(8,Math.min(layer.height-ah-6,localTop+r.height*.45-ah*.46))
+    };
+  }
+  if(mode==='hop'){
+    return {
+      x:Math.max(8,Math.min(layer.width-aw-6,rightEdge)),
+      y:Math.max(8,localTop-ah+Math.min(18,r.height*.35))
+    };
+  }
+  if(mode==='inspect'){
+    return {
+      x:Math.max(8,localLeft-aw*.72),
+      y:Math.max(8,Math.min(layer.height-ah-6,localTop+r.height*.5-ah*.58))
+    };
+  }
+  return {
+    x:Math.max(8,Math.min(layer.width-aw-6,centerX)),
+    y:Math.max(8,localTop-ah+(textLike?10:16))
+  };
 }
 function markInterfaceTarget(el,on=true){
   qa('.ripplet-target-active').forEach(x=>x.classList.remove('ripplet-target-active'));
@@ -1193,7 +1221,50 @@ function dropPlayProp(){
   window.XRPet3D?.motor?.('reach',{side:'right'});
 }
 function makeInterfaceEcho(){return null;}
-function playWithInterface(){return false;}
+function playWithInterface(force=false){
+  if(roamDocked||!lifeAvatar||!roamLayer)return false;
+  if(!force&&Date.now()-lastInterfacePlayAt<4200)return false;
+  const targets=visibleInterfaceTargets();if(!targets.length)return false;
+  lastInterfacePlayAt=Date.now();
+
+  const target=targets[Math.floor(Math.random()*targets.length)];
+  const tag=target.tagName;
+  const heading=/^H[1-3]$/.test(tag);
+  const textLike=heading||tag==='P'||tag==='SPAN'||tag==='STRONG'||tag==='SMALL';
+  const roll=Math.random();
+
+  let mode='perch',action='walk';
+  if(heading&&roll<.48){mode='climb';action='climb'}
+  else if(textLike&&roll<.76){mode='hop';action='jump'}
+  else if(roll<.34){mode='inspect';action='walk'}
+
+  const p=interfaceTargetPosition(target,mode);if(!p)return false;
+  markInterfaceTarget(target,true);
+
+  if(action==='jump'){
+    window.XRPet3D?.motor?.('jump');
+    setRoamPosition(p.x,p.y,'jump');
+    setText('#mindAction','Jumping over text');
+    setText('#mindThought','I am moving through the page like it is my terrain.');
+  }else if(action==='climb'){
+    window.XRPet3D?.motor?.('climb');
+    setRoamPosition(p.x,p.y,'climb');
+    setText('#mindAction','Climbing the page');
+    setText('#mindThought','I found an edge in the interface and climbed it.');
+  }else{
+    window.XRPet3D?.motor?.('walk');
+    setRoamPosition(p.x,p.y,'walk');
+    setText('#mindAction','Exploring the page');
+    setText('#mindThought','I am walking between the words and interface elements.');
+  }
+
+  setTimeout(()=>{
+    markInterfaceTarget(target,false);
+    if(!roamDocked&&Math.random()<.5)window.XRPet3D?.perform?.(Math.random()<.5?'wave':'thinking');
+  },1800);
+
+  return true;
+}
 function playWithObject(){
   if(roamDocked)return false;
   const prop=nearestFreePlayProp();if(!prop)return false;
@@ -1224,10 +1295,9 @@ function roamingStep(){
     return;
   }
   const roll=Math.random();
-  if(roll<.32)playWithInterface();
-  else if(roll<.48)playWithObject();
+  if(roll<.68)playWithInterface();
   else goRipplet('explore');
-  roamTimer=setTimeout(roamingStep,6200+Math.random()*6200);
+  roamTimer=setTimeout(roamingStep,3800+Math.random()*4200);
 }
 function renderMind(){
   const labels={roam:'Roaming',dock:'Docked',socialize:'Signal Friend',scan:'Scanning XRPL',wave:'Waving',dance:'Dancing',focus:'Focused',run:'Running',jump:'Jumping',climb:'Climbing',reach:'Reaching',grab:'Grabbing',carry:'Carrying',crouch:'Crouching',turn:'Turning'};
