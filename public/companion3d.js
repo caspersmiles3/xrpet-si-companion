@@ -46,6 +46,63 @@ const glassMat=new THREE.MeshPhysicalMaterial({
 });
 const blackMat=new THREE.MeshPhysicalMaterial({color:0x010305,metalness:.35,roughness:.08,clearcoat:1});
 const softMat=new THREE.MeshPhysicalMaterial({color:0x25313a,metalness:.3,roughness:.42,clearcoat:.35});
+const detailTextures={};
+function makeDetailTexture(kind){
+  const c=document.createElement('canvas');c.width=c.height=192;
+  const x=c.getContext('2d');
+  x.fillStyle='#7f7f7f';x.fillRect(0,0,c.width,c.height);
+  const rnd=(seed=>()=>((seed=Math.imul(seed^seed>>>15,1|seed))+(seed^seed>>>7))>>>0)(kind.length*9173+41);
+
+  if(kind==='metal'){
+    for(let i=0;i<230;i++){
+      const y=(i/230)*c.height+(rnd()%5);
+      const a=.06+(rnd()%13)/100;
+      x.strokeStyle='rgba(235,235,235,'+a+')';x.lineWidth=.45+(rnd()%3)*.2;
+      x.beginPath();x.moveTo(0,y);x.lineTo(c.width,y+(rnd()%3-1));x.stroke();
+    }
+  }else if(kind==='fur'){
+    for(let i=0;i<850;i++){
+      const px=rnd()%c.width,py=rnd()%c.height,len=3+(rnd()%8);
+      const light=(rnd()%2)===0?230:45;
+      x.strokeStyle='rgba('+light+','+light+','+light+','+(.04+(rnd()%10)/100)+')';
+      x.lineWidth=.35+(rnd()%2)*.25;
+      x.beginPath();x.moveTo(px,py);x.lineTo(px+((rnd()%5)-2),py+len);x.stroke();
+    }
+  }else if(kind==='feather'){
+    for(let y=8;y<c.height;y+=14){
+      x.strokeStyle='rgba(235,235,235,.12)';x.lineWidth=1;
+      x.beginPath();x.moveTo(0,y);x.lineTo(c.width,y-5);x.stroke();
+      for(let px=0;px<c.width;px+=18){
+        x.strokeStyle='rgba(30,30,30,.08)';x.beginPath();x.moveTo(px,y);x.lineTo(px+9,y+8);x.stroke();
+      }
+    }
+  }else if(kind==='shell'){
+    x.strokeStyle='rgba(235,235,235,.12)';x.lineWidth=1;
+    const r=18;
+    for(let row=-1;row<12;row++){
+      for(let col=-1;col<12;col++){
+        const cx=col*r*1.5+(row%2?r*.75:0),cy=row*r*1.28;
+        x.beginPath();
+        for(let k=0;k<6;k++){
+          const a=Math.PI/3*k;const px=cx+Math.cos(a)*r*.8,py=cy+Math.sin(a)*r*.8;
+          k?x.lineTo(px,py):x.moveTo(px,py);
+        }
+        x.closePath();x.stroke();
+      }
+    }
+  }
+  const t=new THREE.CanvasTexture(c);
+  t.wrapS=t.wrapT=THREE.RepeatWrapping;
+  t.repeat.set(kind==='fur'?5:kind==='metal'?3:4,kind==='fur'?5:4);
+  t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy?.()||1);
+  t.needsUpdate=true;
+  return t;
+}
+detailTextures.metal=makeDetailTexture('metal');
+detailTextures.fur=makeDetailTexture('fur');
+detailTextures.feather=makeDetailTexture('feather');
+detailTextures.shell=makeDetailTexture('shell');
+
 
 function add(geo,mat,parent=root,name=''){
   const m=new THREE.Mesh(geo,mat);
@@ -226,6 +283,59 @@ for(const x of [-.69,.69]){
   gem.position.set(x,1.02,1.27);
 }
 
+
+/* higher-detail anatomy */
+const foxDetail=new THREE.Group();species.fox.add(foxDetail);
+for(const [x,s] of [[-.58,-1],[.58,1]]){
+  const tuft=add(new THREE.ConeGeometry(.12,.38,5),shellMat,foxDetail,'foxCheekTuft');
+  tuft.position.set(x,.69,1.2);tuft.rotation.z=s*1.05;tuft.rotation.x=-.05;
+}
+const foxTailTip=add(new THREE.SphereGeometry(.15,24,18),glassMat,foxTailPivot,'foxTailTip');
+foxTailTip.position.set(.47,.05,-.52);foxTailTip.scale.set(.7,1.4,.7);
+
+const pupDetail=new THREE.Group();species.pup.add(pupDetail);
+for(const x of [-.32,.32]){
+  for(let i=0;i<3;i++){
+    const claw=add(new THREE.ConeGeometry(.025,.12,8),shellDarkMat,pupDetail,'pupClaw');
+    claw.position.set(x+(i-1)*.07,-1.65,.47);claw.rotation.x=Math.PI/2;
+  }
+}
+const pupNose=add(new THREE.SphereGeometry(.11,24,18),blackMat,pupDetail,'pupNose');
+pupNose.scale.set(1.15,.72,.72);pupNose.position.set(0,.68,1.69);
+
+const catDetail=new THREE.Group();species.cat.add(catDetail);
+for(const x of [-.32,.32]){
+  for(let i=0;i<3;i++){
+    const claw=add(new THREE.ConeGeometry(.019,.095,7),shellDarkMat,catDetail,'catClaw');
+    claw.position.set(x+(i-1)*.06,-1.64,.48);claw.rotation.x=Math.PI/2;
+  }
+}
+for(const x of [-.18,.18]){
+  const whiskerPad=add(new THREE.SphereGeometry(.11,18,14),softMat,catDetail,'whiskerPad');
+  whiskerPad.scale.set(1.2,.65,.45);whiskerPad.position.set(x,.67,1.48);
+}
+
+const featherDetails=[];
+for(const [x,s] of [[-.93,-1],[.93,1]]){
+  for(let i=0;i<5;i++){
+    const feather=add(new THREE.CapsuleGeometry(.055,.34+.06*i,5,10),shellMat,species.bird,'featherLayer');
+    feather.position.set(x+s*(.12+.07*i),-.22-.08*i,-.03+.03*i);
+    feather.rotation.z=s*(-.8-.08*i);feather.rotation.x=-.08;featherDetails.push(feather);
+  }
+}
+for(let i=0;i<3;i++){
+  const tailFeather=add(new THREE.CapsuleGeometry(.045,.42+i*.08,5,10),shellMat,species.bird,'tailFeather');
+  tailFeather.position.set((i-1)*.12,-1.02,-.43);tailFeather.rotation.x=.22;tailFeather.rotation.z=(i-1)*.08;
+  featherDetails.push(tailFeather);
+}
+
+const turtleScutes=[];
+const scuteData=[[0,-.58,-.86,.17],[-.3,-.52,-.82,.13],[.3,-.52,-.82,.13],[-.18,-.78,-.8,.12],[.18,-.78,-.8,.12]];
+for(const [x,y,z,r] of scuteData){
+  const scute=add(new THREE.CircleGeometry(r,6),shellDarkMat,species.turtle,'shellScute');
+  scute.position.set(x,y,z);scute.rotation.y=Math.PI;scute.rotation.z=Math.PI/6;turtleScutes.push(scute);
+}
+
 // --- additive cosmetics ---
 const cosmeticGroups={
   classic:new THREE.Group(),
@@ -298,8 +408,14 @@ function applySurfaceProfile(kind){
     turtle:{metalness:.34,roughness:.43,clearcoat:.42,darkMetal:.3,darkRough:.48}
   };
   const p=profiles[kind]||profiles.nexus;
+  const detail=kind==='nexus'?detailTextures.metal:kind==='bird'?detailTextures.feather:kind==='turtle'?detailTextures.shell:detailTextures.fur;
   shellMat.metalness=p.metalness;shellMat.roughness=p.roughness;shellMat.clearcoat=p.clearcoat;
   shellDarkMat.metalness=p.darkMetal;shellDarkMat.roughness=p.darkRough;
+  shellMat.bumpMap=detail;shellDarkMat.bumpMap=detail;softMat.bumpMap=detail;
+  shellMat.bumpScale=kind==='nexus'?.018:kind==='turtle'?.026:.032;
+  shellDarkMat.bumpScale=kind==='nexus'?.014:.025;softMat.bumpScale=.022;
+  shellMat.roughnessMap=detail;shellDarkMat.roughnessMap=detail;
+  shellMat.needsUpdate=true;shellDarkMat.needsUpdate=true;softMat.needsUpdate=true;
 }
 
 function configureSpecies(kind){
@@ -516,7 +632,9 @@ function animate(){
     const speed=celebrating?7:alerting?4.3:2.2;
     w.rotation.z=Math.sin(t*speed+i*Math.PI)*amp;
   });
+  featherDetails.forEach((f,i)=>{f.rotation.x=-.08+Math.sin(t*1.6+i*.47)*.012});
   turtleShell.rotation.y=Math.sin(t*.34)*.018;
+  turtleScutes.forEach((s,i)=>{s.position.z=-.86+Math.sin(t*.45+i)*.003});
   species.turtle.rotation.x=sleeping?.035:Math.sin(t*.52)*.006;
 
   // cosmetic / XRP energy motion
