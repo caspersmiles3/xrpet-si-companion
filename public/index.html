@@ -106,7 +106,18 @@
         </div>
       </details>
       <button class="side-link" data-primary-view="announcements"><span>◌</span>Announcements</button>
-      <button class="side-link" data-primary-view="ripplet"><span>✦</span>Ripplet</button>
+      <details class="nav-dropdown" id="rippletNavDetails">
+        <summary class="side-link nav-parent-summary" data-primary-view="ripplet"><span>✦</span><b>Ripplet</b><i>⌄</i></summary>
+        <div class="nav-dropdown-menu ripplet-nav-menu">
+          <button type="button" data-ripplet-view="overview">Overview</button>
+          <button type="button" data-ripplet-view="mind">Autonomous Mind</button>
+          <button type="button" data-ripplet-view="identity">Identity</button>
+          <button type="button" data-ripplet-view="actions">Reactions + Motion</button>
+          <button type="button" data-ripplet-view="mission">Daily Pulse</button>
+          <button type="button" data-ripplet-view="memory">Memory</button>
+          <button type="button" data-ripplet-view="nft">NFT Companion</button>
+        </div>
+      </details>
       <details class="nav-dropdown" id="ecosystemNavDetails">
         <summary class="side-link nav-parent-summary" data-primary-view="ecosystem"><span>◎</span><b>XRPL Ecosystem</b><i>⌄</i></summary>
         <div class="nav-dropdown-menu ecosystem-nav-menu">
@@ -183,46 +194,47 @@
   </aside>
 
   <main class="main-shell">
-    <div id="rippletDock" class="ripplet-dock" aria-label="Ripplet companion dock">
-      <div class="ripplet-dock-platform" aria-hidden="true"><i></i><b>589</b><i></i></div>
-      <div class="ripplet-dock-copy">
-        <span>RIPPLET DOCK</span>
-        <strong id="rippletDockStatus">ROAMING</strong>
-      </div>
-      <div class="ripplet-dock-actions">
-        <button id="dockRipplet" type="button">Dock</button>
-        <button id="undockRipplet" type="button">Roam</button>
-      </div>
-    </div>
-    <div class="global-command-bar" id="globalCommandBar">
-      <button type="button" data-primary-view="live" class="global-xrp-price-button">
-        <span>XRP / USD</span>
-        <strong id="globalXrpPrice">—</strong>
-        <small id="globalXrpChange">Loading</small>
-      </button>
+    <section class="top-command-deck" id="topCommandDeck" aria-label="XRPet command deck">
+      <header class="topbar command-search-row">
+        <form id="globalSearchForm" class="global-search">
+          <span>⌕</span>
+          <input id="globalSearch" placeholder="Search XRPet…">
+        </form>
+      </header>
 
-      <div class="ecosystem-status">
-        <span class="global-xrp-live"><i></i> LIVE</span>
-        <strong id="lifeMode">Exploring</strong>
-      </div>
-    </div>
-    <header class="topbar">
-      <form id="globalSearchForm" class="global-search">
-        <span>⌕</span>
-        <input id="globalSearch" placeholder="Search XRPet…">
-      </form>
-      <div class="top-status">
-        <div class="visitor-ticker" aria-label="XRPet visitor counter">
-          <span class="visitor-label">VISITORS</span>
-          <span class="visitor-reel"><b id="visitorCount">000000</b></span>
+      <div class="global-command-bar command-status-row" id="globalCommandBar">
+        <button type="button" data-primary-view="live" class="global-xrp-price-button">
+          <span>XRP / USD</span>
+          <strong id="globalXrpPrice">—</strong>
+          <small id="globalXrpChange">Loading</small>
+        </button>
+
+        <div id="rippletDock" class="ripplet-dock" aria-label="Ripplet companion dock">
+          <div class="ripplet-dock-platform" aria-hidden="true"><i></i><b>589</b><i></i></div>
+          <div class="ripplet-dock-copy">
+            <span>RIPPLET DOCK</span>
+            <strong id="rippletDockStatus">ROAMING</strong>
+          </div>
+          <div class="ripplet-dock-actions">
+            <button id="dockRipplet" type="button">Dock</button>
+            <button id="undockRipplet" type="button">Roam</button>
+          </div>
         </div>
-        <span id="liveBadge" class="status-pill waiting"><i></i><span>Connecting</span></span>
-        <div class="profile-chip">
-          <div class="mini-avatar">X</div>
-          <div><strong id="topPetName">RIPPLET</strong><small><span id="topLevel">Level 1</span> · <span id="topXp">0 XP</span></small></div>
+
+        <div class="command-meta-strip">
+          <div class="visitor-ticker" aria-label="XRPet visitor counter">
+            <span class="visitor-label">VISITORS</span>
+            <span class="visitor-reel"><b id="visitorCount">000000</b></span>
+          </div>
+          <span id="liveBadge" class="status-pill waiting"><i></i><span>Connecting</span></span>
+          <div class="profile-chip">
+            <div class="mini-avatar">X</div>
+            <div><strong id="topPetName">RIPPLET</strong><small><span id="topLevel">Level 1</span> · <span id="topXp">0 XP</span></small></div>
+          </div>
+          <button type="button" class="signal-friend-button" data-life-action="socialize"><span>◉</span><b>Signal Friend</b><small>Interact</small></button>
         </div>
       </div>
-    </header>
+    </section>
     <div id="rippletRoamLayer" class="ripplet-roam-layer" aria-hidden="false">
       <div id="lifeAvatar" class="life-avatar global-life-avatar" aria-label="Ripplet roaming through XRPet">
         <div id="persistentCompanionLayer" class="persistent-companion-layer home-companion-layer" data-home-companion aria-label="Ripplet companion">
@@ -483,7 +495,7 @@
           <span id="personalityChip" class="chip">Guardian</span>
         </div>
 
-        <article class="detail-card ripplet-character-slot">
+        <article class="detail-card ripplet-character-slot ripplet-subview active" data-ripplet-panel="overview">
           <div>
             <span class="command-label">RIPPLET 3.0 // HOME BASE</span>
             <h3>One companion. Alive across the interface.</h3>
@@ -492,7 +504,7 @@
           <div class="ripplet-slot-mark" aria-hidden="true"><span>R</span></div>
         </article>
 
-        <article class="detail-card ripplet-mind-card">
+        <article class="detail-card ripplet-mind-card ripplet-subview" data-ripplet-panel="mind">
           <div class="card-title">
             <div><h3>Autonomous Mind</h3><p>Ripplet can choose what to do next from live XRPL/XRP state, his needs, and memory.</p></div>
             <span id="mindMode" class="chip">LOCAL AUTONOMY</span>
@@ -505,7 +517,7 @@
           <p class="ripplet-description">When an external SI provider is configured, Ripplet can ask it for a higher-level behavior decision. If not, his local autonomous brain continues running on its own.</p>
         </article>
 
-        <article class="detail-card ripplet-identity-card">
+        <article class="detail-card ripplet-identity-card ripplet-subview" data-ripplet-panel="identity">
           <div class="card-title"><div><h3>Official Identity</h3><p>One mascot across XRPet.</p></div><span id="companionModelChip" class="chip">OFFICIAL // RIPPLET</span></div>
           <div class="ripplet-spec-grid">
             <div><span>ROLE</span><strong>XRPL Signal Companion</strong></div>
@@ -516,7 +528,7 @@
           <p class="ripplet-description">Ripplet translates live ledger activity, settlement context, XRP market movement, official announcements, and verified information into a recognizable companion presence.</p>
         </article>
 
-        <article class="detail-card">
+        <article class="detail-card ripplet-subview" data-ripplet-panel="actions">
           <div class="mission-head"><h3>Ripplet Reactions</h3><span>behavior layer</span></div>
           <div class="companion-reactions" aria-label="Ripplet reactions">
             <div>
@@ -530,7 +542,7 @@
           </div>
         </article>
 
-        <article class="detail-card physical-motion-card">
+        <article class="detail-card physical-motion-card ripplet-subview" data-ripplet-panel="actions">
           <div class="mission-head"><h3>Physical Motion</h3><span>motor cortex</span></div>
           <p class="ripplet-description">Ripplet's autonomous mind can use the same full-body motor system. These controls let you test locomotion, balance, reaching and grip manually.</p>
           <div class="physical-motion-grid" aria-label="Ripplet physical motion controls">
@@ -547,7 +559,7 @@
           <small class="motion-note">Walk, run, blink, arm, leg and expression motion now use Ripplet's dedicated skinned GLB animation rig. Procedural motion remains as fallback for unsupported actions.</small>
         </article>
 
-        <article class="detail-card physical-motion-card">
+        <article class="detail-card physical-motion-card ripplet-subview" data-ripplet-panel="actions">
           <div class="mission-head"><h3>Ripplet Emotes</h3><span>native rig</span></div>
           <p class="ripplet-description">Trigger Ripplet's expressive animation library.</p>
           <div class="physical-motion-grid" aria-label="Ripplet emote controls">
@@ -566,20 +578,20 @@
           </div>
         </article>
 
-        <article class="detail-card mission-card">
+        <article class="detail-card mission-card ripplet-subview" data-ripplet-panel="mission">
           <div class="mission-head"><h3>Daily Pulse</h3><span id="streakChip">0 day streak</span></div>
           <p id="missionText">Charge the core 7 times to complete today's mission.</p>
           <div class="mission-meter"><span id="meterFill"></span></div>
           <button id="charge" class="secondary full">Charge Core · <span id="chargeCount">0/7</span></button>
         </article>
 
-        <article class="detail-card memory-card">
+        <article class="detail-card memory-card ripplet-subview" data-ripplet-panel="memory">
           <div class="card-title"><h3>Companion Memory</h3><span>stored locally</span></div>
           <form id="memoryForm" class="inline-form"><input id="memoryInput" maxlength="120" placeholder="Remember that I want short XRP summaries…"><button>Remember</button></form>
           <div id="memoryList" class="memory-list"></div>
         </article>
 
-        <article class="detail-card nft-companion-card">
+        <article class="detail-card nft-companion-card ripplet-subview" data-ripplet-panel="nft">
           <div class="card-title">
             <div><h3>Bring Your Own Companion</h3><p>Optionally use eligible XRPL NFT artwork as a personal override. Ripplet remains the official default.</p></div>
             <div class="nft-actions"><button id="useNativeCompanion" class="mini-button secondary">Restore Ripplet</button><button id="loadNfts" class="mini-button">Load my NFTs</button></div>
@@ -887,7 +899,7 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 5.5.2 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 5.5.6 · XRP Ledger companion</footer>
   </main>
 </div>
 
@@ -924,14 +936,14 @@
   },6000);
 })();
 </script>
-<script src="/launch-enhance.js?v=5.5.5"></script>
+<script src="/launch-enhance.js?v=5.5.6"></script>
 <script src="/contact-directory.js?v=5.5.3"></script>
 <script src="/music-player.js?v=5.5.2"></script>
 <script src="/games.js?v=5.5.2"></script>
 <script src="/ecosystem.js?v=5.5.2"></script>
 <script src="/app.js?v=5.5.6"></script>
 <script src="/timeline.js?v=5.5.2"></script>
-<script type="module" src="/companion3d.js?v=5.5.5"></script>
+<script type="module" src="/companion3d.js?v=5.5.6"></script>
 
 </body>
 </html>
