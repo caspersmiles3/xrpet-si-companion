@@ -429,14 +429,14 @@ function bindExchangeMenu(){
 function renderMarketChart(points=[]){
   const svg=q('#xrpMarketChart'),line=q('#marketLine'),area=q('#marketArea'),grid=q('#marketGrid');
   if(!svg||!line||!area||!grid||!points.length)return;
-  const pts=points.filter(p=>Number.isFinite(Number(p.close))&&Number.isFinite(Number(p.time)));
+  const pts=points.filter(p=>Number.isFinite(finiteNumber(p.close))&&Number.isFinite(finiteNumber(p.time)));
   if(pts.length<2)return;
-  const closes=pts.map(p=>Number(p.close));
-  const highs=pts.map(p=>Number(p.high)).filter(Number.isFinite);
-  const lows=pts.map(p=>Number(p.low)).filter(Number.isFinite);
+  const closes=pts.map(p=>finiteNumber(p.close));
+  const highs=pts.map(p=>finiteNumber(p.high)).filter(Number.isFinite);
+  const lows=pts.map(p=>finiteNumber(p.low)).filter(Number.isFinite);
   const min=Math.min(...lows,...closes),max=Math.max(...highs,...closes),span=Math.max(.000001,max-min);
   const W=1000,H=320,padX=18,padY=18,plotW=W-padX*2,plotH=H-padY*2;
-  const coords=pts.map((p,i)=>[padX+(i/(pts.length-1))*plotW,padY+(1-(Number(p.close)-min)/span)*plotH]);
+  const coords=pts.map((p,i)=>[padX+(i/(pts.length-1))*plotW,padY+(1-(finiteNumber(p.close)-min)/span)*plotH]);
   const d=coords.map(([x,y],i)=>(i?'L':'M')+x.toFixed(2)+' '+y.toFixed(2)).join(' ');
   line.setAttribute('d',d);
   area.setAttribute('d',d+' L '+coords[coords.length-1][0].toFixed(2)+' '+(H-padY)+' L '+coords[0][0].toFixed(2)+' '+(H-padY)+' Z');
@@ -446,7 +446,7 @@ function renderMarketChart(points=[]){
   if(panel)panel.dataset.direction=last>=first?'up':'down';
   setText('#chartHigh','$'+Math.max(...highs,...closes).toFixed(4));
   setText('#chartLow','$'+Math.min(...lows,...closes).toFixed(4));
-  const volume=pts.reduce((n,p)=>n+(Number.isFinite(Number(p.volume))?Number(p.volume):0),0);
+  const volume=pts.reduce((sum,p)=>{const v=finiteNumber(p.volume);return sum+(Number.isFinite(v)?v:0)},0);
   setText('#chartVolume',volume>=1e6?(volume/1e6).toFixed(1)+'M XRP':volume>=1e3?(volume/1e3).toFixed(1)+'K XRP':Math.round(volume)+' XRP');
   const fmt=t=>new Date(t).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
   setText('#chartStart',fmt(pts[0].time));setText('#chartEnd',fmt(pts[pts.length-1].time));setText('#chartRange','24H · 5 MIN CANDLES');
