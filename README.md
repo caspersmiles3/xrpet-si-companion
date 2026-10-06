@@ -1,4 +1,4 @@
-# XRPet SI Companion™ — v3.7.0
+# XRPet SI Companion™ — v3.8.0
 
 **Don't watch the Ledger. Live with it.**
 
@@ -8,7 +8,7 @@ XRPet is a lightweight, installable companion built around Ripple, XRP and the X
 
 Render service: https://xrpet-si-companion.onrender.com
 
-## v3.7 capabilities
+## v3.8 capabilities
 
 - Live XRPL ledger + fee signals
 - XRP/USD market snapshot with public-data fallback
@@ -73,3 +73,8 @@ The app automatically reads public feeds and live XRPL events. It does not requi
 ## Not financial advice
 
 XRPet reports market data and ecosystem information. It does not promise returns or price outcomes.
+
+
+## v3.8 data-first interface
+
+The normal XRPet interface is now focused on XRPL Live telemetry, Ripple/XRP settlement and history intelligence, and official announcements. Companion selection, rooms, cosmetics/equipment, wallet/NFT companion controls, and companion chat are moved behind the **Companion & Cosmetics** menu so they no longer crowd the primary information dashboard.

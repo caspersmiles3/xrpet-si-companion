@@ -613,3 +613,20 @@ if('serviceWorker' in navigator){
     navigator.serviceWorker.register('/sw.js').catch(err=>console.warn('XRPet service worker registration failed',err));
   },{once:true});
 }
+
+function closeCustomizationPanels(){
+  qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));
+  document.body.classList.remove('customization-open');
+}
+qa('[data-customize-target]').forEach(b=>b.addEventListener('click',()=>{
+  closeCustomizationPanels();
+  const panel=q('#'+b.dataset.customizeTarget);
+  if(panel){
+    panel.classList.add('is-open');
+    document.body.classList.add('customization-open');
+    q('#customizeDetails')?.removeAttribute('open');
+    panel.scrollTop=0;
+  }
+}));
+qa('[data-customize-close]').forEach(b=>b.addEventListener('click',closeCustomizationPanels));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCustomizationPanels()});
