@@ -96,10 +96,15 @@ let cameraTween=0;
     bloomPass.strength=.28;
     bloomPass.radius=.38;
     composer.addPass(bloomPass);
+    const rr=host.getBoundingClientRect();
+    composer.setSize(Math.max(1,rr.width),Math.max(1,rr.height));
+    ssaoPass.setSize?.(Math.max(1,rr.width),Math.max(1,rr.height));
     postFxReady=true;
+    window.dispatchEvent(new CustomEvent('xrpet:quality',{detail:{mode:'full',postFx:true,fps:XRPetQuality.fps}}));
   }catch(err){
     console.warn('XRPet post FX unavailable; using direct renderer',err);
     composer=null;ssaoPass=null;bloomPass=null;postFxReady=false;
+    window.dispatchEvent(new CustomEvent('xrpet:quality',{detail:{mode:XRPetQuality.lowPower?'performance':'standard',postFx:false,fps:XRPetQuality.fps}}));
   }
 })();
 
@@ -834,6 +839,9 @@ function applyRoom(room){
   };
   const r=rooms[room]||rooms.nexus;
   fill.color.setHex(r[0]);rim.color.setHex(r[1]);sideWarm.color.setHex(r[0]);
+  studioRim.color.setHex(r[0]);
+  studioWarm.color.setHex(room==='vault'||room==='legend'?0xd6aa62:0xaec8d1);
+  studioKey.intensity=room==='vault'?3.1:room==='legend'?4.0:3.6;
   faceFill.intensity=room==='vault'?6.2:room==='legend'?8.2:7.5;
   renderer.toneMappingExposure=r[2];
 }
@@ -1062,6 +1070,7 @@ new ResizeObserver(resize).observe(host);resize();
 
 host.querySelector('.companion3d-loading')?.remove();
 window.dispatchEvent(new CustomEvent('xrpet:3d-ready'));
+window.dispatchEvent(new CustomEvent('xrpet:quality',{detail:{mode:XRPetQuality.lowPower?'performance':'full',postFx:postFxReady,fps:XRPetQuality.fps}}));
 
 const clock=new THREE.Clock();
 function renderFrame(){
