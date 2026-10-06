@@ -108,3 +108,66 @@ border:1px solid #73909d;box-shadow:inset 7px 7px 15px #fff3,inset -10px -12px 1
   .rooms-strip .rooms-grid,.cosmetics-strip .cosmetics-grid{grid-template-columns:1fr 1fr}
   .companion-strip{align-items:flex-start}
 }
+
+
+/* XRPet v2.3 real-time 3D companion */
+.companion3d-host{
+  position:absolute;
+  left:49%;
+  top:46%;
+  transform:translate(-50%,-50%);
+  width:min(430px,62%);
+  height:470px;
+  z-index:6;
+  cursor:grab;
+  user-select:none;
+  touch-action:none;
+  filter:drop-shadow(0 30px 40px rgba(0,0,0,.45));
+}
+.companion3d-host:active{cursor:grabbing}
+.companion3d-host:after{
+  content:"DRAG TO ROTATE  •  CLICK TO REACT";
+  position:absolute;
+  left:50%;
+  bottom:7px;
+  transform:translateX(-50%);
+  white-space:nowrap;
+  color:#6d8795;
+  font-size:.52rem;
+  letter-spacing:.13em;
+  pointer-events:none;
+  opacity:.8;
+}
+.companion3d-canvas{
+  width:100%!important;
+  height:100%!important;
+  display:block;
+  outline:none;
+  touch-action:none;
+}
+.companion3d-loading{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  gap:12px;
+  color:#6f8996;
+  z-index:2;
+  pointer-events:none;
+}
+.loading-orb{
+  width:42px;height:42px;border-radius:50%;
+  border:1px solid #4ee8ff88;
+  box-shadow:0 0 25px #4ee8ff33,inset 0 0 20px #4ee8ff18;
+  animation:loadingPulse 1.2s ease-in-out infinite alternate;
+}
+.companion3d-loading small{font-size:.52rem;letter-spacing:.15em}
+@keyframes loadingPulse{to{transform:scale(1.12);box-shadow:0 0 38px #4ee8ff66,inset 0 0 24px #4ee8ff33}}
+@media(max-width:850px){
+  .companion3d-host{width:min(430px,82%);height:450px;top:45%}
+}
+@media(max-width:540px){
+  .companion3d-host{width:94%;height:410px;top:43%}
+  .companion3d-host:after{font-size:.46rem}
+}
