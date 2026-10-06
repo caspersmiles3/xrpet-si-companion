@@ -647,7 +647,8 @@ if('serviceWorker' in navigator){
 function closeCustomizationPanels(){
   qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));
   document.body.classList.remove('customization-open','workspace-open');
-  setTimeout(()=>scrollSectionTop('xrplPanel'),20);
+  const target=primaryView==='home'?'homeSection':primaryView==='live'?'xrplPanel':primaryView==='announcements'?'announcementsSection':'xrpHistorySection';
+  setTimeout(()=>scrollSectionTop(target),20);
 }
 qa('[data-customize-target]').forEach(b=>b.addEventListener('click',()=>{
   closeCustomizationPanels();
@@ -668,7 +669,27 @@ qa('[data-customize-target]').forEach(b=>b.addEventListener('click',()=>{
 qa('[data-customize-close]').forEach(b=>b.addEventListener('click',closeCustomizationPanels));
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCustomizationPanels()});
 
+let primaryView='home';
+function setPrimaryView(view='home'){
+  primaryView=view;
+  qa('[data-view-section]').forEach(section=>section.classList.toggle('view-active',section.dataset.viewSection===view));
+  const companion=q('[data-home-companion]');
+  if(companion)companion.classList.toggle('view-active',view==='home');
+  qa('[data-primary-view]').forEach(b=>b.classList.toggle('active',b.dataset.primaryView===view));
+  document.body.dataset.primaryView=view;
+  qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));
+  document.body.classList.remove('workspace-open','customization-open');
+  const target=view==='home'?'homeSection':view==='live'?'xrplPanel':view==='announcements'?'announcementsSection':'xrpHistorySection';
+  setTimeout(()=>scrollSectionTop(target),10);
+}
+qa('[data-primary-view]').forEach(b=>b.addEventListener('click',()=>setPrimaryView(b.dataset.primaryView)));
+
 function openHistoryView(view='All'){
+  primaryView='history';
+  qa('[data-view-section]').forEach(section=>section.classList.toggle('view-active',section.dataset.viewSection==='history'));
+  q('[data-home-companion]')?.classList.remove('view-active');
+  qa('[data-primary-view]').forEach(b=>b.classList.remove('active'));
+  document.body.dataset.primaryView='history';
   closeCustomizationPanels();
   const section=q('#xrpHistorySection');
   if(!section)return;
@@ -694,3 +715,5 @@ q('#customizeDetails')?.addEventListener('toggle',e=>{
 q('#settingsDetails')?.addEventListener('toggle',e=>{
   if(e.target.open) q('#customizeDetails')?.removeAttribute('open');
 });
+
+setPrimaryView('home');
