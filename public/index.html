@@ -131,16 +131,21 @@
 
     <div id="xrpetMusicPlayer" class="xrpet-music-player" aria-label="XRPet soundtrack">
       <audio id="xrpetAudio" preload="metadata"></audio>
-      <button id="musicToggle" class="music-main" type="button" aria-label="Play soundtrack">▶</button>
-      <div class="music-meta">
-        <span>XRPet Soundtrack</span>
-        <strong id="musicTrackName">Ready</strong>
+      <div class="music-play-column">
+        <button id="musicToggle" class="music-main" type="button" aria-label="Play soundtrack">▶</button>
+        <div class="music-meta">
+          <span>NOW PLAYING</span>
+          <strong id="musicTrackName">Ready</strong>
+        </div>
       </div>
       <canvas id="musicWaveform" class="music-waveform" width="220" height="42" aria-label="Live soundtrack waveform"></canvas>
-      <button id="musicPrev" type="button" aria-label="Previous track">‹</button>
-      <button id="musicNext" type="button" aria-label="Next track">›</button>
-      <button id="musicShuffle" type="button" aria-label="Toggle shuffle">⤨</button>
-      <span class="music-volume-icon" aria-hidden="true">🔊</span><input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.75" aria-label="Music volume">
+      <div class="music-controls-row">
+        <button id="musicPrev" type="button" aria-label="Previous track">‹</button>
+        <button id="musicNext" type="button" aria-label="Next track">›</button>
+        <button id="musicShuffle" type="button" aria-label="Toggle shuffle">⤨</button>
+        <span class="music-volume-icon" aria-hidden="true">🔊</span>
+        <input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.75" aria-label="Music volume">
+      </div>
     </div>
 
     <details class="settings-wrap customize-wrap" id="customizeDetails">
@@ -186,42 +191,45 @@
 
   <main class="main-shell">
     <section class="top-command-deck" id="topCommandDeck" aria-label="XRPet command deck">
-      <div class="command-primary-row">
+      <div class="top-utility-box">
         <form id="globalSearchForm" class="global-search command-search-box">
           <span>⌕</span>
           <input id="globalSearch" placeholder="Search XRPet…">
         </form>
-
-        <button type="button" data-primary-view="live" class="global-xrp-price-button command-primary-box">
+        <div class="top-visitor-block" aria-label="XRPet visitor counter">
+          <span>VISITORS</span>
+          <strong id="visitorCount">000000</strong>
+        </div>
+        <button type="button" data-primary-view="live" class="top-composite-price">
           <span>XRP COMPOSITE</span>
           <strong id="globalXrpPrice">—</strong>
           <small id="globalXrpChange">Loading</small>
         </button>
-
-        <div id="rippletDock" class="ripplet-dock command-primary-box" aria-label="Ripplet companion dock">
-          <div class="ripplet-dock-platform" aria-hidden="true"><i></i><b>589</b><i></i></div>
-          <div class="ripplet-dock-copy">
-            <span>RIPPLET DOCK</span>
-            <strong id="rippletDockStatus">ROAMING</strong>
-          </div>
-          <div class="ripplet-dock-actions">
-            <button id="dockRipplet" type="button">Dock</button>
-            <button id="undockRipplet" type="button">Roam</button>
-          </div>
-        </div>
+        <button type="button" data-primary-view="live" class="top-xrpl-live">
+          <i aria-hidden="true"></i>
+          <span>XRPL LIVE</span>
+        </button>
       </div>
 
-      <div class="command-meta-strip">
-        <div class="visitor-ticker" aria-label="XRPet visitor counter">
-          <span class="visitor-label">VISITORS</span>
-          <span class="visitor-reel"><b id="visitorCount">000000</b></span>
+      <div class="top-ripplet-box" id="rippletDock" aria-label="Ripplet companion dock">
+        <div class="ripplet-dock-platform" aria-hidden="true"><i></i><b>589</b><i></i></div>
+        <div class="ripplet-dock-copy">
+          <span>RIPPLET DOCK</span>
+          <strong id="rippletDockStatus">ROAMING</strong>
         </div>
-        <span id="liveBadge" class="status-pill waiting"><i></i><span>Connecting</span></span>
-        <div class="profile-chip compact-profile">
+        <div class="top-ripplet-profile">
           <div class="mini-avatar">X</div>
-          <div><strong id="topPetName">RIPPLET</strong><small><span id="topLevel">Level 1</span> · <span id="topXp">0 XP</span></small></div>
+          <div>
+            <strong id="topPetName">RIPPLET</strong>
+            <small><span id="topLevel">Level 1</span> · <span id="topXp">0 XP</span></small>
+          </div>
+        </div>
+        <div class="ripplet-dock-actions">
+          <button id="dockRipplet" type="button">Dock</button>
+          <button id="undockRipplet" type="button">Roam</button>
         </div>
       </div>
+      <span id="liveBadge" class="status-pill waiting top-live-state" aria-hidden="true"><i></i><span>Connecting</span></span>
     </section>
     <div id="rippletRoamLayer" class="ripplet-roam-layer" aria-hidden="false">
       <div id="lifeAvatar" class="life-avatar global-life-avatar" aria-label="Ripplet roaming through XRPet">
