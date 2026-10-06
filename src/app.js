@@ -200,6 +200,13 @@ qa('.side-link').forEach(b=>b.addEventListener('click',()=>{
 qa('.variant-dot').forEach(b=>b.addEventListener('click',()=>{state.cosmetic=b.dataset.cosmetic;persist();render();mood('Customized','Companion variant updated.','energized')}));
 window.addEventListener('xrpet:petInteract',()=>{playSound('pet');revealFloatControls();mood('Responsive','Core pulse received. Drag me to rotate, click to react.','energized');setTimeout(()=>mood('Connected','Live XRPL data is flowing.','calm'),900)});
 window.addEventListener('xrpet:3d-ready',()=>render());
+window.addEventListener('xrpet:model-ready',e=>{
+  const d=e.detail||{};setText('#modelRuntimeMode','Rigged GLB · '+(COMPANION_NAMES[d.kind]||d.kind||'Companion'));
+});
+window.addEventListener('xrpet:model-fallback',e=>{
+  const d=e.detail||{};setText('#modelRuntimeMode','Procedural fallback · '+(COMPANION_NAMES[d.kind]||d.kind||'Companion'));
+});
+
 
 
 let audioContext=null,lastSoundAt=0;
