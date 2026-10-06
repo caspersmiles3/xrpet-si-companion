@@ -58,9 +58,9 @@ face.scale.set(1.01,.72,.83); face.position.set(0,.61,.52);
 function ear(x,flip=1){
   const g=new THREE.ConeGeometry(.42,1.05,5);
   const e=mesh(g,shellMat,pet);
-  e.position.set(x,1.72,-.02); e.rotation.z=flip*.24; e.rotation.x=-.15;
+  e.position.set(x,1.72,-.02); e.rotation.z=flip*.24; e.rotation.x=-.15; e.userData.role='ear';
   const inner=mesh(new THREE.ConeGeometry(.26,.7,5),darkMat,pet);
-  inner.position.set(x,1.70,.15); inner.rotation.z=flip*.24; inner.rotation.x=-.15;
+  inner.position.set(x,1.70,.15); inner.rotation.z=flip*.24; inner.rotation.x=-.15; inner.userData.role='earInner';
 }
 ear(-.72,-1); ear(.72,1);
 
@@ -80,7 +80,7 @@ const core=mesh(new THREE.TorusGeometry(.19,.045,20,48),accentMat,pet); core.pos
 const coreBall=mesh(new THREE.SphereGeometry(.09,24,16),glassMat,pet);coreBall.position.copy(core.position);coreBall.z+=.04;
 
 for(const x of [-.94,.94]){
-  const pod=mesh(new THREE.SphereGeometry(.34,36,24),shellMat,pet);pod.scale.set(.75,.95,.7);pod.position.set(x,-.48,.05);
+  const pod=mesh(new THREE.SphereGeometry(.34,36,24),shellMat,pet);pod.scale.set(.75,.95,.7);pod.position.set(x,-.48,.05);pod.userData.role='pod';
   const ring=mesh(new THREE.TorusGeometry(.25,.045,16,48),accentMat,pet);ring.position.set(x,-.48,.29);ring.rotation.x=Math.PI/2;
 }
 for(const x of [-.45,.45]){
@@ -103,6 +103,94 @@ const innerRing=mesh(new THREE.TorusGeometry(.9,.025,12,72),accentMat,base);inne
 
 const floorGlow=mesh(new THREE.CircleGeometry(1.65,80),new THREE.MeshBasicMaterial({color:0x0b8eb2,transparent:true,opacity:.08}),base);floorGlow.rotation.x=-Math.PI/2;floorGlow.position.y=.14;
 
+
+const scoutGroup=new THREE.Group();pet.add(scoutGroup);
+for(const x of [-1,1]){
+  const fin=mesh(new THREE.ConeGeometry(.18,.95,4),shellMat,scoutGroup);
+  fin.position.set(x*.93,.9,.05);fin.rotation.z=x*-1.12;fin.rotation.x=.15;
+  const finLight=mesh(new THREE.BoxGeometry(.05,.52,.04),accentMat,scoutGroup);
+  finLight.position.set(x*.86,.92,.28);finLight.rotation.z=x*-1.05;
+}
+
+const guardianGroup=new THREE.Group();pet.add(guardianGroup);
+for(const x of [-1,1]){
+  const armor=mesh(new THREE.BoxGeometry(.55,.34,.42),shellMat,guardianGroup);
+  armor.position.set(x*.92,-.42,.12);armor.rotation.z=x*.16;armor.rotation.y=x*.12;
+  const armorLight=mesh(new THREE.BoxGeometry(.34,.045,.06),accentMat,guardianGroup);
+  armorLight.position.set(x*.91,-.4,.37);armorLight.rotation.z=x*.16;
+}
+const guardianVisor=mesh(new THREE.TorusGeometry(.77,.035,12,52,Math.PI),accentMat,guardianGroup);
+guardianVisor.position.set(0,.82,1.16);guardianVisor.rotation.z=Math.PI;
+
+const oracleGroup=new THREE.Group();pet.add(oracleGroup);
+const oracleHalo1=mesh(new THREE.TorusGeometry(.62,.024,12,72),accentMat,oracleGroup);
+oracleHalo1.position.set(0,2.35,0);oracleHalo1.rotation.x=1.18;
+const oracleHalo2=mesh(new THREE.TorusGeometry(.47,.018,12,64),accentMat,oracleGroup);
+oracleHalo2.position.set(0,2.35,0);oracleHalo2.rotation.set(.45,.3,.1);
+const oracleHalo3=mesh(new THREE.TorusGeometry(.31,.014,10,56),accentMat,oracleGroup);
+oracleHalo3.position.set(0,2.35,0);oracleHalo3.rotation.set(.2,-.55,.5);
+const oracleNode=mesh(new THREE.OctahedronGeometry(.16,1),glassMat,oracleGroup);
+oracleNode.position.set(0,2.35,0);
+
+const vanguardGroup=new THREE.Group();pet.add(vanguardGroup);
+for(const x of [-1,1]){
+  const wing=mesh(new THREE.ConeGeometry(.2,1.18,4),shellMat,vanguardGroup);
+  wing.position.set(x*1.03,-.15,-.02);wing.rotation.z=x*-1.0;wing.rotation.x=-.18;
+  const wingLight=mesh(new THREE.BoxGeometry(.06,.68,.05),accentMat,vanguardGroup);
+  wingLight.position.set(x*.98,-.12,.2);wingLight.rotation.z=x*-1.0;
+}
+const chestArmor=mesh(new THREE.BoxGeometry(.78,.42,.22),shellMat,vanguardGroup);
+chestArmor.position.set(0,-.58,.91);chestArmor.rotation.x=-.08;
+const chestReactor=mesh(new THREE.TorusGeometry(.28,.075,16,48),accentMat,vanguardGroup);
+chestReactor.position.set(0,-.58,1.06);chestReactor.rotation.x=Math.PI/2;
+
+scoutGroup.visible=false;guardianGroup.visible=false;oracleGroup.visible=false;vanguardGroup.visible=false;
+
+function configureBuild(build){
+  scoutGroup.visible=build==='aqua';
+  guardianGroup.visible=build==='midnight';
+  oracleGroup.visible=build==='pearl';
+  vanguardGroup.visible=build==='solar';
+
+  pet.traverse(o=>{
+    if(o.userData.role==='ear'){
+      if(build==='aqua'){o.scale.set(.68,.68,.68)}
+      else if(build==='midnight'){o.scale.set(.62,.72,.72)}
+      else if(build==='pearl'){o.scale.set(.82,1.2,.82)}
+      else if(build==='solar'){o.scale.set(.72,.9,.72)}
+      else{o.scale.set(1,1,1)}
+    }
+    if(o.userData.role==='earInner'){
+      if(build==='aqua'){o.scale.set(.68,.68,.68)}
+      else if(build==='midnight'){o.scale.set(.62,.72,.72)}
+      else if(build==='pearl'){o.scale.set(.82,1.2,.82)}
+      else if(build==='solar'){o.scale.set(.72,.9,.72)}
+      else{o.scale.set(1,1,1)}
+    }
+    if(o.userData.role==='pod'){
+      if(build==='aqua')o.scale.set(.46,.72,.52);
+      else if(build==='midnight')o.scale.set(1.04,1.18,.9);
+      else if(build==='pearl')o.scale.set(.6,.85,.62);
+      else if(build==='solar')o.scale.set(.9,1.05,.85);
+      else o.scale.set(.75,.95,.7);
+    }
+  });
+
+  orbGroup.visible=build!=='midnight';
+  orbGroup.scale.setScalar(build==='pearl'?1.18:build==='aqua'?.88:build==='solar'?1.05:1);
+  head.scale.set(
+    build==='midnight'?1.1:build==='pearl'?1.0:1.05,
+    build==='midnight'?.92:build==='aqua'?.82:.88,
+    build==='solar'?1.0:.95
+  );
+  body.scale.set(
+    build==='midnight'?1.02:build==='aqua'?.84:.9,
+    build==='solar'?.9:build==='midnight'?.88:.83,
+    build==='solar'?.9:.82
+  );
+  core.scale.setScalar(build==='solar'?1.42:build==='midnight'?.82:build==='pearl'?.9:1);
+  coreBall.scale.setScalar(build==='solar'?1.55:build==='midnight'?.82:1);
+}
 const hemi=new THREE.HemisphereLight(0xbfefff,0x071018,2.2);scene.add(hemi);
 const key=new THREE.SpotLight(0xffffff,48,20,.45,.45,1.3);key.position.set(-4,5,5);key.castShadow=true;scene.add(key);key.target=pet;
 const cyan=new THREE.PointLight(0x42e8ff,26,8,1.8);cyan.position.set(2.7,1.2,3.4);scene.add(cyan);
@@ -128,6 +216,7 @@ renderer.domElement.addEventListener('click',()=>{
 
 function setAppearance(detail={}){
   current=detail.cosmetic||current;
+  configureBuild(current);
   const p=palette[current]||palette.classic;
   shellMat.color.setHex(p.shell);darkMat.color.setHex(p.dark);accentMat.color.setHex(p.accent);accentMat.emissive.setHex(p.accent);glassMat.color.setHex(p.glass);
   const room=detail.room||'nexus';
@@ -160,7 +249,7 @@ function animate(){
   if(!dragging && performance.now()-lastInteract>1800) targetRotY=Math.sin(t*.35)*.18;
   pet.position.y=.28+Math.sin(t*1.7)*.035+boost*.08;
   pet.rotation.z=Math.sin(t*.8)*.018;
-  orbGroup.rotation.y=t*.7;orbit1.rotation.z=t*.65;orbit2.rotation.z=-t*.8;
+  orbGroup.rotation.y=t*.7;orbit1.rotation.z=t*.65;orbit2.rotation.z=-t*.8;oracleHalo1.rotation.z=t*.32;oracleHalo2.rotation.z=-t*.41;oracleHalo3.rotation.z=t*.53;scoutGroup.rotation.y=Math.sin(t*.8)*.03;vanguardGroup.rotation.y=Math.sin(t*.55)*.025;
   baseRing.rotation.z=t*.16;innerRing.rotation.z=-t*.22;
   pupils.forEach((p,i)=>{const baseX=i===0?-.48:.48;p.position.x=baseX+pointerX*.045;p.position.y=.78-pointerY*.035});
   eyes.forEach((e,i)=>{e.scale.y=1-Math.max(0,Math.sin(t*.47+2.7))**36*.82});
