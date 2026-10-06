@@ -5974,3 +5974,155 @@ body[data-primary-view="games"] .top-command-deck .topbar{display:block!importan
   .learn-quiz-head{display:grid}
   .quiz-progress{text-align:left}
 }
+
+
+/* v5.5.16 — fixed shoulder sockets + half-size Ripplet + play inside Ready box */
+.ripplet-roam-layer .global-life-avatar{
+  width:15px!important;
+  height:21px!important;
+}
+@media(max-width:760px){
+  .ripplet-roam-layer .global-life-avatar{width:14px!important;height:20px!important}
+}
+@media(max-width:520px){
+  .ripplet-roam-layer .global-life-avatar{width:13px!important;height:18px!important}
+}
+
+/* Shoulder sockets stay attached to torso. Only limb chains rotate. */
+.r2-arm{
+  transform:none!important;
+  animation:none!important;
+}
+.r2-shoulder{
+  transform:none!important;
+}
+.r2-arm-motion,
+.r2-forearm,
+.r2-hand{
+  transform-box:view-box!important;
+}
+.r2-arm-motion-left{transform-origin:22px 41px!important}
+.r2-arm-motion-right{transform-origin:42px 41px!important}
+.r2-forearm-left{transform-origin:20.5px 51px!important}
+.r2-forearm-right{transform-origin:43.5px 51px!important}
+.r2-hand-left{transform-origin:20.5px 59.9px!important}
+.r2-hand-right{transform-origin:43.5px 59.9px!important}
+
+/* Walking / running uses the anchored upper-arm pivots. */
+.ripplet2d[data-state="walk"] .r2-arm-motion-left{animation:r2ArmForward .64s ease-in-out infinite alternate!important}
+.ripplet2d[data-state="walk"] .r2-arm-motion-right{animation:r2ArmBack .64s ease-in-out infinite alternate!important}
+.ripplet2d[data-state="run"] .r2-arm-motion-left{animation:r2ArmForward .36s ease-in-out infinite alternate!important}
+.ripplet2d[data-state="run"] .r2-arm-motion-right{animation:r2ArmBack .36s ease-in-out infinite alternate!important}
+
+/* Climb / hang keep shoulder circles fixed while arms articulate from them. */
+.ripplet2d[data-state="climb"] .r2-arm-motion-left{animation:r2ClimbL .44s ease-in-out infinite alternate!important}
+.ripplet2d[data-state="climb"] .r2-arm-motion-right{animation:r2ClimbR .44s ease-in-out infinite alternate!important}
+.ripplet2d[data-state="hang"] .r2-arm-motion-left{transform:rotate(-62deg)!important}
+.ripplet2d[data-state="hang"] .r2-arm-motion-right{transform:rotate(62deg)!important}
+.ripplet2d[data-state="hang"] .r2-forearm-left{transform:rotate(-28deg)!important}
+.ripplet2d[data-state="hang"] .r2-forearm-right{transform:rotate(28deg)!important}
+
+/* Emotes also rotate only the arm chain, never the shoulder socket. */
+.ripplet2d[data-state="wave"] .r2-arm-motion-right{animation:r2Wave .3s ease-in-out infinite alternate!important}
+.ripplet2d[data-state="wave"] .r2-forearm-right{transform:rotate(-68deg)!important}
+.ripplet2d[data-state="salute"] .r2-arm-motion-right{transform:rotate(-62deg)!important}
+.ripplet2d[data-state="salute"] .r2-forearm-right{transform:rotate(-52deg)!important}
+.ripplet2d[data-state="thinking"] .r2-arm-motion-left{transform:rotate(28deg)!important}
+.ripplet2d[data-state="thinking"] .r2-forearm-left{transform:rotate(58deg)!important}
+.ripplet2d[data-state="happy"] .r2-arm-motion-left,
+.ripplet2d[data-state="excited"] .r2-arm-motion-left{transform:rotate(26deg)!important}
+.ripplet2d[data-state="happy"] .r2-arm-motion-right,
+.ripplet2d[data-state="excited"] .r2-arm-motion-right{transform:rotate(-26deg)!important}
+.ripplet2d[data-state="dance"] .r2-arm-motion-left,
+.ripplet2d[data-state="celebrate"] .r2-arm-motion-left,
+.ripplet2d[data-state="cheer"] .r2-arm-motion-left{animation:r2DanceArmL .44s ease-in-out infinite alternate!important}
+.ripplet2d[data-state="dance"] .r2-arm-motion-right,
+.ripplet2d[data-state="celebrate"] .r2-arm-motion-right,
+.ripplet2d[data-state="cheer"] .r2-arm-motion-right{animation:r2DanceArmR .44s ease-in-out infinite alternate!important}
+.ripplet2d[data-state="shrug"] .r2-arm-motion-left{transform:rotate(42deg)!important}
+.ripplet2d[data-state="shrug"] .r2-arm-motion-right{transform:rotate(-42deg)!important}
+.ripplet2d[data-state="point"] .r2-arm-motion-right{transform:rotate(-78deg)!important}
+.ripplet2d[data-state="point"] .r2-forearm-right{transform:rotate(14deg)!important}
+.ripplet2d[data-state="reach"] .r2-arm-motion-right{transform:rotate(-54deg)!important}
+
+/* Ears sit closer to the head and remain attached while twitching. */
+.r2-ear-left{transform-origin:20px 19px!important}
+.r2-ear-right{transform-origin:44px 19px!important}
+
+/* Music: play button is physically inside the Now Playing / Ready box. */
+.sidebar #xrpetMusicPlayer.music-player-clean{
+  grid-template-rows:44px 50px 38px 26px!important;
+  min-height:182px!important;
+}
+.sidebar #xrpetMusicPlayer .music-now-playing{
+  grid-row:1!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 40px!important;
+  align-items:center!important;
+  gap:8px!important;
+  min-height:44px!important;
+  padding:5px 6px 5px 9px!important;
+  border:1px solid rgba(80,207,235,.12)!important;
+  border-radius:8px!important;
+  background:#071118!important;
+  box-sizing:border-box!important;
+}
+.sidebar #xrpetMusicPlayer .music-now-copy{
+  min-width:0!important;
+  overflow:hidden!important;
+}
+.sidebar #xrpetMusicPlayer .music-now-copy span{
+  display:block!important;
+  font-size:.45rem!important;
+  line-height:1!important;
+  letter-spacing:.12em!important;
+  color:#6b8792!important;
+}
+.sidebar #xrpetMusicPlayer .music-now-copy strong{
+  display:block!important;
+  margin-top:4px!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  white-space:nowrap!important;
+  text-overflow:ellipsis!important;
+  font-size:.69rem!important;
+  line-height:1!important;
+  color:#e4fbff!important;
+}
+.sidebar #xrpetMusicPlayer .music-now-playing .music-main{
+  position:relative!important;
+  inset:auto!important;
+  justify-self:end!important;
+  display:grid!important;
+  place-items:center!important;
+  width:38px!important;
+  height:32px!important;
+  min-width:38px!important;
+  min-height:32px!important;
+  max-width:38px!important;
+  max-height:32px!important;
+  margin:0!important;
+  padding:0!important;
+  border:1px solid rgba(89,225,249,.30)!important;
+  border-radius:8px!important;
+  background:#0b2029!important;
+  color:#effdff!important;
+  font-size:1rem!important;
+  line-height:1!important;
+}
+.sidebar #xrpetMusicPlayer .music-transport{
+  grid-row:3!important;
+  grid-template-columns:38px 38px 38px!important;
+  justify-content:center!important;
+  gap:12px!important;
+  padding:0!important;
+}
+.sidebar #xrpetMusicPlayer .music-transport button{
+  width:38px!important;
+  height:34px!important;
+  min-width:38px!important;
+  min-height:34px!important;
+  max-width:38px!important;
+  max-height:34px!important;
+  font-size:1rem!important;
+}
