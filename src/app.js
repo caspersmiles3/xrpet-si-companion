@@ -8,7 +8,7 @@ const state={
   petName:saved.petName||'NEXUS-589',personality:saved.personality||'Guardian',
   focus:saved.focus||'',xp:Number(saved.xp)||0,streak:Number(saved.streak)||0,
   lastVisitDate:saved.lastVisitDate||null,lastMissionDate:saved.lastMissionDate||null,
-  room:saved.room||'nexus',memories:Array.isArray(saved.memories)?saved.memories:[],
+  room:saved.room||'nexus',cosmetic:saved.cosmetic||'classic',memories:Array.isArray(saved.memories)?saved.memories:[],
   account:saved.account||null,walletProvider:saved.walletProvider||'manual',
   explainLevel:saved.explainLevel||'balanced',notifyLevel:saved.notifyLevel||'quiet',
   truthMode:saved.truthMode!==false,marketMood:saved.marketMood!==false
@@ -21,8 +21,8 @@ function setText(sel,text){const el=q(sel);if(el)el.textContent=text}
 function mood(label,speech,cls='calm'){setText('#petMood',label);setText('#petSpeech',speech);const p=q('#pet');if(p){p.classList.remove('calm','energized','alert');p.classList.add(cls)}}
 function render(){
   const [name,min]=form(); const i=FORMS.findIndex(x=>x[0]===name); const next=FORMS[Math.min(i+1,FORMS.length-1)];
-  setText('#petName',state.petName);setText('#chatPetName',state.petName);setText('#evolution',name.toUpperCase());
-  setText('#level','Lv. '+(Math.floor(state.xp/100)+1));setText('#xpLabel',state.xp+' XP');
+  setText('#petName',state.petName);setText('#chatPetName',state.petName);setText('#topPetName',state.petName);setText('#evolution',name.toUpperCase());
+  const lvl=Math.floor(state.xp/100)+1; setText('#level','Lv. '+lvl);setText('#xpLabel',state.xp+' XP');setText('#topLevel','Level '+lvl);setText('#topXp',state.xp+' XP');
   const pct=name==='Legend'?100:Math.max(0,Math.min(100,(state.xp-min)/(next[1]-min)*100));
   if(q('#xpFill'))q('#xpFill').style.width=pct+'%';
   if(q('#profileName'))q('#profileName').value=state.petName;
@@ -32,8 +32,8 @@ function render(){
   if(q('#account'))q('#account').value=state.account||'';
   setText('#walletProvider',state.walletProvider==='manual'?'Manual':state.walletProvider);
   setText('#walletState',state.account?'Watching '+state.account.slice(0,8)+'…'+state.account.slice(-6)+' for validated activity.':'No public account is being watched.');
-  qa('.room-choice').forEach(b=>{const rank=FORMS.findIndex(x=>x[0]===name),need=b.dataset.room==='aurora'?2:b.dataset.room==='legend'?5:0;b.disabled=rank<need;b.classList.toggle('active',b.dataset.room===state.room)});
-  document.body.classList.remove('room-nexus','room-ocean','room-vault','room-aurora','room-legend');document.body.classList.add('room-'+state.room);
+  qa('.room-choice').forEach(b=>{const rank=FORMS.findIndex(x=>x[0]===name),need=b.dataset.room==='aurora'?2:b.dataset.room==='legend'?5:0;b.disabled=rank<need;b.classList.toggle('active',b.dataset.room===state.room)}); qa('.cosmetic-choice').forEach(b=>b.classList.toggle('active',b.dataset.cosmetic===state.cosmetic));
+  document.body.classList.remove('room-nexus','room-ocean','room-vault','room-aurora','room-legend');document.body.classList.add('room-'+state.room); const pet=q('#pet'); if(pet){pet.classList.remove('skin-classic','skin-aqua','skin-midnight','skin-pearl','skin-solar');pet.classList.add('skin-'+state.cosmetic)}
   setText('#unlocksChip',(['nexus','ocean','vault'].length+(FORMS.findIndex(x=>x[0]===name)>=2?1:0)+(FORMS.findIndex(x=>x[0]===name)>=5?1:0))+' unlocked');
   if(q('#explainLevel'))q('#explainLevel').value=state.explainLevel;if(q('#notifyLevel'))q('#notifyLevel').value=state.notifyLevel;
   if(q('#truthToggle'))q('#truthToggle').checked=state.truthMode;if(q('#marketMoodToggle'))q('#marketMoodToggle').checked=state.marketMood;
@@ -73,11 +73,38 @@ bind('#watchForm','submit',e=>{e.preventDefault();const a=q('#account').value.tr
 bind('#clearWallet','click',()=>{if(watchedSubscribed&&ws?.readyState===1)ws.send(JSON.stringify({id:'unwatch',command:'unsubscribe',accounts:[watchedSubscribed]}));watchedSubscribed=null;state.account=null;state.walletProvider='manual';persist();render();setText('#walletConnection','No wallet connected. Public wallet watch still works.')});
 bind('#connectXaman','click',connectXaman);bind('#connectGem','click',connectGem);
 let charge=0;bind('#charge','click',()=>{const t=new Date().toISOString().slice(0,10);if(state.lastMissionDate===t){mood('Complete','Today’s core mission is already complete.','calm');return}charge=Math.min(7,charge+1);setText('#chargeCount',charge+'/7');if(q('#meterFill'))q('#meterFill').style.width=(charge/7*100)+'%';if(charge===7){state.lastMissionDate=t;addXp(15);setText('#missionText','Mission complete. +15 XP. New pulse tomorrow.');mood('Charged','Core synchronized. Mission complete.','energized')}});
-qa('.room-choice').forEach(b=>b.addEventListener('click',()=>{if(b.disabled)return;state.room=b.dataset.room;persist();render()}));
+qa('.room-choice').forEach(b=>b.addEventListener('click',()=>{if(b.disabled)return;state.room=b.dataset.room;persist();render();mood('Room changed','Environment synchronized to '+b.querySelector('strong')?.textContent+'.','calm')})); qa('.cosmetic-choice').forEach(b=>b.addEventListener('click',()=>{state.cosmetic=b.dataset.cosmetic;persist();render();mood('Customized','Companion finish changed to '+b.querySelector('strong')?.textContent+'.','energized')}));
 qa('[data-scroll]').forEach(b=>b.addEventListener('click',()=>q('#'+b.dataset.scroll)?.scrollIntoView({behavior:'smooth',block:'center'})));
-bind('#settingsButton','click',()=>q('#settingsPanel')?.classList.toggle('hidden'));bind('#closeSettings','click',()=>q('#settingsPanel')?.classList.add('hidden'));
+bind('#settingsButton','click',()=>{const m=q('#settingsMenu');if(!m)return;const opening=m.classList.contains('hidden');m.classList.toggle('hidden');q('#settingsButton')?.setAttribute('aria-expanded',String(opening))});
 bind('#explainLevel','change',e=>{state.explainLevel=e.target.value;persist()});bind('#notifyLevel','change',e=>{state.notifyLevel=e.target.value;persist()});bind('#truthToggle','change',e=>{state.truthMode=e.target.checked;persist()});bind('#marketMoodToggle','change',e=>{state.marketMood=e.target.checked;persist()});
 bind('#notifyButton','click',async()=>{if(!('Notification'in window)){alert('Browser notifications are not supported here.');return}const p=await Notification.requestPermission();if(p==='granted')new Notification('XRPet alerts enabled',{body:'Browser alerts are ready while XRPet is open.'});});
 bind('#refreshIntegrations','click',integrationCheck);
+
+bind('#globalSearchForm','submit',e=>{
+  e.preventDefault();
+  const term=(q('#globalSearch')?.value||'').trim().toLowerCase();
+  if(!term)return;
+  const map=[
+    [['room','rooms','environment'], '#roomsSection'],
+    [['cosmetic','skin','appearance'], '#cosmeticsSection'],
+    [['wallet','xaman','gemwallet'], '#walletPanel'],
+    [['chat','ask','si','assistant'], '#chatPanel'],
+    [['ledger','xrpl','xrp','network','price'], '#xrplPanel'],
+    [['companion','pet','profile','memory','evolution'], '#companionSection']
+  ];
+  const match=map.find(([keys])=>keys.some(k=>term.includes(k)));
+  const target=q(match?.[1]||'#homeSection');
+  target?.scrollIntoView({behavior:'smooth',block:'start'});
+});
+qa('.side-link').forEach(b=>b.addEventListener('click',()=>{
+  qa('.side-link').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+}));
+document.addEventListener('click',e=>{
+  const menu=q('#settingsMenu'), trigger=q('#settingsButton');
+  if(menu && !menu.classList.contains('hidden') && !menu.contains(e.target) && !trigger?.contains(e.target)){
+    menu.classList.add('hidden');trigger?.setAttribute('aria-expanded','false');
+  }
+});
+
 bind('#pet','click',()=>{mood('Responsive','Core pulse received.','energized');setTimeout(()=>mood('Connected','Live XRPL data is flowing.','calm'),900)});
 dailyVisit();render();connectLedger();loadMarket();loadUpdates();integrationCheck();setInterval(loadMarket,120000);setInterval(integrationCheck,60000);
