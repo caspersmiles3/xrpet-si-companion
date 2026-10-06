@@ -649,6 +649,11 @@ qa('[data-customize-target]').forEach(b=>b.addEventListener('click',()=>{
   closeCustomizationPanels();
   const panel=q('#'+b.dataset.customizeTarget);
   if(panel){
+    if(b.dataset.customizeTarget==='roomsSection'){
+      pendingRoom=state.room;
+      qa('.room-choice').forEach(x=>x.classList.toggle('pending',x.dataset.room===pendingRoom));
+      setText('#roomPendingLabel','Current room: '+(ROOM_NAMES[state.room]||state.room)+'. Choose another room, then apply.');
+    }
     panel.classList.add('is-open');
     document.body.classList.add('customization-open');
     q('#customizeDetails')?.removeAttribute('open');
