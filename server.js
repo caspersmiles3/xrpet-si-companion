@@ -72,9 +72,19 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
 }
 
 async function fetchJson(url, options={}) {
-  const r = await fetch(url, { headers: { 'user-agent': 'XRPetSI/1.0 (+xrpl companion)' }, ...options });
-  if (!r.ok) throw new Error(`${r.status} ${url}`);
-  return r.json();
+  const ownController=options.signal?null:new AbortController();
+  const timer=ownController?setTimeout(()=>ownController.abort(),6500):null;
+  try{
+    const r = await fetch(url, {
+      headers: { 'user-agent': 'XRPetSI/1.0 (+xrpl companion)' },
+      ...options,
+      ...(ownController?{signal:ownController.signal}:{})
+    });
+    if (!r.ok) throw new Error(`${r.status} ${url}`);
+    return r.json();
+  }finally{
+    if(timer)clearTimeout(timer);
+  }
 }
 async function fetchJsonWithTimeout(url, options={}, timeoutMs=9000) {
   const controller=new AbortController();
@@ -108,9 +118,18 @@ async function xrplRpc(method,params=[{}]){
 }
 
 async function fetchPage(url) {
-  const r = await fetch(url, { headers: { 'user-agent': 'XRPetSI/1.0 (+xrpl companion)' }});
-  if (!r.ok) throw new Error(`${r.status} ${url}`);
-  return r.text();
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),6500);
+  try{
+    const r = await fetch(url, {
+      headers: { 'user-agent': 'XRPetSI/1.0 (+xrpl companion)' },
+      signal:controller.signal
+    });
+    if (!r.ok) throw new Error(`${r.status} ${url}`);
+    return r.text();
+  }finally{
+    clearTimeout(timer);
+  }
 }
 
 function classify(title, source) {
