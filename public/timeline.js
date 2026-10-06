@@ -1,6 +1,7 @@
 (() => {
   const el = s => document.querySelector(s);
   const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const finiteNumber=v=>{if(v===null||v===undefined||v==='')return null;const n=Number(v);return Number.isFinite(n)?n:null};
   let archive=null, liveUpdates=[], market=null, filter='All', query='';
 
   function tone(s){ return s==='up'||s==='positive'?'up':s==='down'?'down':s==='mixed'?'mixed':'neutral'; }
@@ -64,7 +65,7 @@
   }
   function renderMarket(){
     if(!market)return;
-    const p=Number(market.price), ch=Number(market.change24h);
+    const p=finiteNumber(market.price), ch=finiteNumber(market.change24h);
     const trend=Number.isFinite(ch)?(ch>=0?'UP':'DOWN'):'—';
     const box=el('#xrpArchiveLive');
     if(box)box.innerHTML=`
@@ -102,13 +103,13 @@
   async function init(){
     const root=el('#xrpHistorySection'); if(!root)return;
     try{
-      archive=await fetch('/xrp-history.json',{cache:'no-store'}).then(r=>r.json());
+      archive=await fetch('/xrp-history.json',{cache:'no-store'}).then(async r=>{if(!r.ok)throw new Error('History archive HTTP '+r.status);return r.json()});
       renderPeople();renderFilters();setView(window.XRPetHistoryPending||'All');
       const input=el('#xrpHistorySearch');
       input?.addEventListener('input',()=>{query=input.value;renderTimeline()});
       el('#xrpRefreshHistory')?.addEventListener('click',refreshLive);
       await refreshLive();
-      setInterval(refreshLive,60*1000);
+      setInterval(()=>{if(!document.hidden)refreshLive()},60*1000);
     }catch(e){
       const box=el('#xrpTimeline'); if(box)box.innerHTML='<p class="muted">Ripple/XRP history archive is temporarily unavailable.</p>';
     }
