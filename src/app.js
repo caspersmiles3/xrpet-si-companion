@@ -430,6 +430,24 @@ $('#onboardFinish').onclick=()=>{
   notify('Companion created',`${state.petName} is ready.`,'profile');
 };
 dailyVisit();renderProfile();renderNotifications();
+async function loadIntegrationStatus(){
+  const box=$('#integrationStatus');
+  if(!box)return;
+  try{
+    const r=await fetch('/api/config'); const d=await r.json();
+    const rows=[
+      ['XRPL Live',state.connected?'ACTIVE':'CONNECTING'],
+      ['Web Push',d.pushEnabled?'READY':'NOT CONFIGURED'],
+      ['Xaman',d.xamanApiKey?'READY':'NEEDS API KEY'],
+      ['Full SI',d.siProviderEnabled?'ACTIVE':'NEEDS PROVIDER']
+    ];
+    box.innerHTML=rows.map(([name,status])=>`<div class="integration-row"><span>${name}</span><strong class="${status==='ACTIVE'||status==='READY'?'ok':'wait'}">${status}</strong></div>`).join('');
+  }catch{
+    box.innerHTML='<p class="muted">Integration status unavailable.</p>';
+  }
+}
+$('#refreshIntegrations').onclick=loadIntegrationStatus;
+
 if(state.account){
   $('#account').value=state.account;
   $('#walletState').textContent=`Watching ${state.account.slice(0,6)}…${state.account.slice(-5)}.`;
@@ -439,5 +457,5 @@ if(state.account){
 if(state.lastMissionDate===todayKey()){
   charge=7;$('#chargeCount').textContent='7/7';$('#meterFill').style.width='100%';$('#missionText').textContent='Mission complete. New mission arrives tomorrow.';
 }
-connect();loadUpdates();loadMarket();setInterval(loadMarket,300000);setInterval(loadUpdates,900000);
+connect();loadUpdates();loadMarket();loadIntegrationStatus();setInterval(loadMarket,300000);setInterval(loadUpdates,900000);setInterval(loadIntegrationStatus,60000);
 if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
