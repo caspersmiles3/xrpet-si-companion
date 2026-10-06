@@ -3,7 +3,7 @@
   if (!host) return;
 
   host.innerHTML = `
-    <div id="ripplet2d" class="ripplet2d" data-state="idle" aria-label="Ripplet">
+    <div id="ripplet2d" class="ripplet2d" data-state="idle" data-facing="right" aria-label="Ripplet">
       <svg class="ripplet2d-svg" viewBox="0 0 64 88" role="img" aria-label="Ripplet 2D companion">
         <defs>
           <linearGradient id="r2-shell" x1="0" y1="0" x2="1" y2="1">
@@ -104,7 +104,7 @@
   let blinkTimer = 0;
 
   const durationFor = state => ({
-    idle: 0, walk: 1600, run: 1050, jump: 900, climb: 1500, hang: 1500,
+    idle: 0, stand: 0, sit: 0, walk: 1600, run: 1050, jump: 900, climb: 1500, hang: 1500,
     wave: 1600, salute: 1500, thinking: 2200, happy: 1700,
     excited: 1800, cheer: 1900, celebrate: 1900, dance: 2600,
     shrug: 1700, confused: 1900, surprised: 1500, focus: 1900,
@@ -138,8 +138,12 @@
   scheduleBlink();
 
   const api = {
-    mode: '2d-page-native',
+    mode: '2d-retro-pointer-platformer',
     motor(action, opts={}) { setState(action, opts); return true; },
+    face(direction='right') {
+      if(el) el.dataset.facing=direction==='left'?'left':'right';
+      return true;
+    },
     perform(action, opts={}) { setState(action, opts); return true; },
     react(action, opts={}) { setState(action, opts); return true; },
     celebrate() { setState('celebrate'); return true; },
@@ -151,6 +155,6 @@
   window.XRPet3D = api;
   window.XRPet2D = api;
   window.dispatchEvent(new CustomEvent('xrpet:model-ready', {
-    detail: { kind:'ripplet', mode:'2d-page-native', animations:['walk','run','jump','climb','wave','salute','thinking','happy','dance'] }
+    detail: { kind:'ripplet', mode:'2d-retro-pointer-platformer', animations:['stand','sit','walk','run','jump','climb','hang','wave','salute','thinking','happy','dance'] }
   }));
 })();
