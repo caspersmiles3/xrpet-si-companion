@@ -395,6 +395,53 @@ const holo=new THREE.Group();root.add(holo);holo.position.y=-1.92;
 const holoRing=add(new THREE.TorusGeometry(1.03,.025,12,72),accentMat,holo,'holoRing');holoRing.rotation.x=Math.PI/2;
 const holoRing2=add(new THREE.TorusGeometry(.7,.012,10,60),accentMat,holo,'holoRing2');holoRing2.rotation.x=Math.PI/2;
 
+// universal XRPet presentation layers for imported GLB companions
+const externalPresentation=new THREE.Group();root.add(externalPresentation);externalPresentation.visible=false;
+const externalGender={boy:new THREE.Group(),girl:new THREE.Group()};
+Object.values(externalGender).forEach(g=>externalPresentation.add(g));
+
+for(const [x,s] of [[-.58,-1],[.58,1]]){
+  const sig=add(new THREE.BoxGeometry(.28,.045,.055),accentMat,externalGender.boy,'externalBoySignal');
+  sig.position.set(x,.92,.92);sig.rotation.z=s*.12;
+}
+const extGirlCrest=add(new THREE.TorusGeometry(.3,.025,12,54,Math.PI*1.55),accentMat,externalGender.girl,'externalGirlCrest');
+extGirlCrest.position.set(0,1.35,.55);extGirlCrest.rotation.z=.25;
+for(const x of [-.48,.48]){
+  const gem=add(new THREE.SphereGeometry(.055,18,12),glassMat,externalGender.girl,'externalGirlGem');
+  gem.position.set(x,.88,.83);
+}
+
+const externalCosmetics={
+  classic:new THREE.Group(),aqua:new THREE.Group(),midnight:new THREE.Group(),pearl:new THREE.Group(),solar:new THREE.Group()
+};
+Object.values(externalCosmetics).forEach(g=>externalPresentation.add(g));
+
+const extCoreRing=add(new THREE.TorusGeometry(.2,.04,16,52),accentMat,externalCosmetics.classic,'externalCoreRing');
+extCoreRing.position.set(0,.05,1.15);extCoreRing.rotation.x=Math.PI/2;
+const extCore=add(new THREE.SphereGeometry(.09,24,18),glassMat,externalCosmetics.classic,'externalCore');
+extCore.position.set(0,.05,1.18);
+
+const extAqua1=add(new THREE.TorusGeometry(.88,.022,12,72),accentMat,externalCosmetics.aqua,'externalAquaOrbit1');
+extAqua1.position.set(0,.18,0);extAqua1.rotation.x=1.1;
+const extAqua2=add(new THREE.TorusGeometry(.66,.016,10,64),accentMat,externalCosmetics.aqua,'externalAquaOrbit2');
+extAqua2.position.set(0,.18,0);extAqua2.rotation.set(.45,.5,.2);
+
+const extGuardian=add(new THREE.TorusGeometry(.78,.04,12,60,Math.PI*1.35),accentMat,externalCosmetics.midnight,'externalGuardianShield');
+extGuardian.position.set(0,.25,.78);extGuardian.rotation.z=Math.PI*.83;
+
+const extHalo1=add(new THREE.TorusGeometry(.5,.023,12,68),accentMat,externalCosmetics.pearl,'externalHalo1');
+extHalo1.position.set(0,1.55,0);extHalo1.rotation.x=1.12;
+const extHalo2=add(new THREE.TorusGeometry(.34,.016,10,58),accentMat,externalCosmetics.pearl,'externalHalo2');
+extHalo2.position.set(0,1.55,0);extHalo2.rotation.set(.4,.4,.1);
+
+const extSolar=add(new THREE.TorusGeometry(.3,.065,16,52),accentMat,externalCosmetics.solar,'externalSolarReactor');
+extSolar.position.set(0,.08,1.08);extSolar.rotation.x=Math.PI/2;
+for(const [x,s] of [[-.76,-1],[.76,1]]){
+  const fin=add(new THREE.ConeGeometry(.11,.7,4),shellMat,externalCosmetics.solar,'externalSolarFin');
+  fin.position.set(x,.1,.15);fin.rotation.z=s*-1.03;
+}
+
+
 // lighting
 scene.add(new THREE.HemisphereLight(0xc9f6ff,0x061017,2.1));
 const key=new THREE.SpotLight(0xffffff,44,20,.5,.5,1.3);key.position.set(-4,5,5);key.castShadow=true;scene.add(key);key.target=pet;
@@ -507,6 +554,7 @@ function configureSpecies(kind){
 function configureGender(gender){
   currentGender=gender==='girl'?'girl':'boy';
   boyGroup.visible=currentGender==='boy';girlGroup.visible=currentGender==='girl';
+  externalGender.boy.visible=currentGender==='boy';externalGender.girl.visible=currentGender==='girl';
   // deliberately visible but subtle presentation differences
   if(currentGender==='girl'){
     head.scale.multiplyScalar(.97);face.scale.y*=1.04;
@@ -516,6 +564,7 @@ function configureGender(gender){
 function configureCosmetic(cosmetic){
   currentCosmetic=palette[cosmetic]?cosmetic:'classic';
   Object.entries(cosmeticGroups).forEach(([k,g])=>g.visible=k===currentCosmetic);
+  Object.entries(externalCosmetics).forEach(([k,g])=>g.visible=k===currentCosmetic);
   const p=palette[currentCosmetic];
   shellMat.color.setHex(p.shell);shellDarkMat.color.setHex(p.dark);accentMat.color.setHex(p.accent);
   accentMat.emissive.setHex(p.accent);glassMat.color.setHex(p.glass);
@@ -591,7 +640,7 @@ async function loadExternalModel(url,options={}){
   externalModel.rotation.y=options.rotationY||0;
   root.add(externalModel);
 
-  pet.visible=false;holo.visible=true;
+  pet.visible=false;holo.visible=true;externalPresentation.visible=true;
   externalMixer=gltf.animations?.length?new THREE.AnimationMixer(externalModel):null;
   if(externalMixer){
     for(const clip of gltf.animations)externalActions[clip.name]=externalMixer.clipAction(clip);
@@ -661,7 +710,7 @@ function useProceduralModel(kind=currentKind){
   externalLoadToken++;
   if(externalModel){root.remove(externalModel);externalModel=null}
   externalMixer=null;externalKind=null;externalActions={};externalActiveAction=null;externalLoadingKind=null;externalLoadingPromise=null;
-  pet.visible=true;
+  pet.visible=true;externalPresentation.visible=false;
   window.dispatchEvent(new CustomEvent('xrpet:model-ready',{detail:{kind,mode:'procedural',animations:[],credit:''}}));
 }
 
@@ -800,6 +849,9 @@ function animate(){
 
   // cosmetic / XRP energy motion
   halo1.rotation.z=t*(celebrating?.75:.3);halo2.rotation.z=-t*(celebrating?.95:.42);
+  extAqua1.rotation.z=t*(celebrating?.9:.34);extAqua2.rotation.z=-t*(celebrating?1.1:.48);
+  extHalo1.rotation.z=t*(celebrating?.72:.28);extHalo2.rotation.z=-t*(celebrating?.9:.4);
+  extSolar.rotation.z=t*(alerting?1.2:.5);extGuardian.rotation.z=Math.PI*.83+Math.sin(t*.8)*.025;
   orbGroup.rotation.y=t*(alerting?1.35:.7);orbit1.rotation.z=t*(celebrating?1.5:.62);orbit2.rotation.z=-t*(celebrating?1.7:.78);
   holoRing.rotation.z=t*(alerting?.34:.15);holoRing2.rotation.z=-t*(alerting?.45:.21);
 
