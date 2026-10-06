@@ -512,8 +512,8 @@ app.get('/api/self-test', (_req, res) => {
 });
 
 app.get('/api/health', (_req, res) => res.json({
-  ok:true, product:'XRPet SI Companion', version:'5.0.0',
-  capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch','gemwallet','xaman-hook','web-push','capacitor-mobile','external-si-hook','interactive-webgl-companion','signal-589-community-layer','equipment-matrix','full-audio-engine','room-environments','rigged-glb-roster','glass-studio-ui','orbit-camera','ssao','bloom','adaptive-render-quality','ripple-xrp-living-archive','auto-updating-history','ripplet-single-companion','nft-companion-override','persistent-ripplet','in-app-companion-workspaces','audio-default-on','isolated-primary-views','one-minute-live-refresh','simplified-ripplet-page','ripplet-life-system','bounded-companion-habitat','live-xrpl-transactions','sidebar-history-routing','global-xrp-ticker','cinematic-ripple-launch','global-ripplet-ecosystem','data-driven-companion-life','bounded-roaming-companion','ripplet-primary-tab','varied-live-reactions','visitor-counter','clean-home','clean-xrpl-live','expressive-ripplet-limbs','life-reaction-sounds','visible-ripplet-feet','free-roam-companion','live-reaction-overlays','spontaneous-companion-actions','xrpet-custom-cursor','ripplet-walk-cycle','autonomous-companion-mind','si-behavior-decisions','xrp-market-history','live-market-chart','ripplet-2-runtime','global-eye-tracking','organic-companion-anatomy','xrpet-games','ledger-rush','xrp-flow-game','consensus-80-game'],
+  ok:true, product:'XRPet SI Companion', version:'5.1.0',
+  capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch','gemwallet','xaman-hook','web-push','capacitor-mobile','external-si-hook','interactive-webgl-companion','signal-589-community-layer','equipment-matrix','full-audio-engine','room-environments','rigged-glb-roster','glass-studio-ui','orbit-camera','ssao','bloom','adaptive-render-quality','ripple-xrp-living-archive','auto-updating-history','ripplet-single-companion','nft-companion-override','persistent-ripplet','in-app-companion-workspaces','audio-default-on','isolated-primary-views','one-minute-live-refresh','simplified-ripplet-page','ripplet-life-system','bounded-companion-habitat','live-xrpl-transactions','sidebar-history-routing','global-xrp-ticker','cinematic-ripple-launch','global-ripplet-ecosystem','data-driven-companion-life','bounded-roaming-companion','ripplet-primary-tab','varied-live-reactions','visitor-counter','clean-home','clean-xrpl-live','expressive-ripplet-limbs','life-reaction-sounds','visible-ripplet-feet','free-roam-companion','live-reaction-overlays','spontaneous-companion-actions','xrpet-custom-cursor','ripplet-walk-cycle','autonomous-companion-mind','si-behavior-decisions','xrp-market-history','live-market-chart','ripplet-2-runtime','global-eye-tracking','organic-companion-anatomy','xrpet-games','ledger-rush','xrp-flow-game','consensus-80-game','ripplet-3-runtime','superellipsoid-shell-geometry','unified-head-rig','randomized-natural-blink','transparent-direct-alpha-render','high-detail-micro-hardware'],
   integrations:{ xaman:Boolean(process.env.XAMAN_API_KEY), push:Boolean(VAPID_PUBLIC_KEY&&VAPID_PRIVATE_KEY), si:Boolean(process.env.SI_PROVIDER_KEY) }
 }));
 
@@ -532,7 +532,7 @@ setInterval(async () => {
 }, 10 * 60 * 1000);
 
 app.listen(PORT, () => {
-  console.log(`XRPet // Signal 589 v5.0 running on http://localhost:${PORT}`);
+  console.log(`XRPet // Signal 589 v5.1 running on http://localhost:${PORT}`);
   console.log('Integration readiness:', {
     xaman:Boolean(process.env.XAMAN_API_KEY),
     push:Boolean(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY),
