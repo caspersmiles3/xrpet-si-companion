@@ -1022,3 +1022,18 @@ input:focus,select:focus,textarea:focus{outline:1px solid #397789;box-shadow:0 0
 .eq-swatch.cyan{background:#47e6ff;color:#47e6ff}.eq-swatch.white{background:#f5fbff;color:#f5fbff}
 .eq-swatch.violet{background:#8d78ff;color:#8d78ff}.eq-swatch.amber{background:#d5a64f;color:#d5a64f}
 @media(max-width:680px){.equipment-grid{grid-template-columns:1fr}}
+
+
+/* XRPet v3.5.1 browser stability */
+.companion3d-fallback{
+  min-height:180px;display:grid;place-content:center;text-align:center;gap:6px;padding:20px;
+  border:1px solid #294550;background:#071016;color:#dffaff;
+}
+.companion3d-fallback small{color:#718691;max-width:280px;line-height:1.45}
+.companion3d-host.webgl-lost canvas{display:none}
+.companion3d-host.webgl-lost:after{
+  content:"3D SAFE MODE ACTIVE";
+  position:absolute;inset:0;display:grid;place-items:center;
+  font-size:.55rem;font-weight:900;letter-spacing:.14em;color:#86dfea;
+  background:linear-gradient(145deg,#071016,#04090d);border:1px solid #27444f;
+}
