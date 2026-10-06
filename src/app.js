@@ -19,7 +19,7 @@ const state={
   notifyLevel:saved.notifyLevel||'quiet',
   truthMode:saved.truthMode!==false,
   marketMood:saved.marketMood!==false,
-  onboarded:saved.onboarded===true,
+  onboarded:true,
   walletProvider:saved.walletProvider||'manual',
   walletNetwork:saved.walletNetwork||null
 };
@@ -404,31 +404,8 @@ $('#notifyLevel').onchange=e=>{state.notifyLevel=e.target.value;persist()};
 $('#truthToggle').onchange=e=>{state.truthMode=e.target.checked;persist()};
 $('#marketMoodToggle').onchange=e=>{state.marketMood=e.target.checked;persist()};
 
-let onboardStep=1;
-function renderOnboarding(){
-  $$('[data-step]').forEach(s=>s.classList.toggle('hidden',Number(s.dataset.step)!==onboardStep));
-  $('#onboardBack').classList.toggle('hidden',onboardStep===1);
-  $('#onboardNext').classList.toggle('hidden',onboardStep===3);
-  $('#onboardFinish').classList.toggle('hidden',onboardStep!==3);
-}
-if(!state.onboarded){$('#onboarding').classList.remove('hidden');renderOnboarding()}
-$('#onboardNext').onclick=()=>{
-  if(onboardStep===1){
-    state.petName=$('#onboardName').value.trim()||'NEXUS-589';
-    state.personality=$('#onboardPersonality').value;
-  } else if(onboardStep===2){
-    state.focus=$('#onboardFocus').value.trim();
-    state.explainLevel=$('#onboardExplain').value;
-  }
-  onboardStep=Math.min(3,onboardStep+1);persist();renderOnboarding();
-};
-$('#onboardBack').onclick=()=>{onboardStep=Math.max(1,onboardStep-1);renderOnboarding()};
-$('#onboardGem').onclick=()=>connectGemWallet('#onboardWalletStatus');
-$('#onboardXaman').onclick=()=>connectXaman('#onboardWalletStatus');
-$('#onboardFinish').onclick=()=>{
-  state.onboarded=true;persist();$('#onboarding').classList.add('hidden');renderProfile();
-  notify('Companion created',`${state.petName} is ready.`,'profile');
-};
+state.onboarded=true;
+persist();
 dailyVisit();renderProfile();renderNotifications();
 async function loadIntegrationStatus(){
   const box=$('#integrationStatus');
