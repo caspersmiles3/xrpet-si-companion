@@ -861,9 +861,9 @@ function applyRoom(room){
   renderer.toneMappingExposure=r[2];
 }
 function performAction(name='greet'){
-  const allowed=new Set(['greet','celebrate','alert','sleep','wake','happy','focus','scan','orbit','sip','gulp','splash','bite','taste','charge','curl','dream','snore','wave','highfive','dance']);
+  const allowed=new Set(['greet','celebrate','alert','sleep','wake','happy','focus','scan','orbit','walk','sip','gulp','splash','bite','taste','charge','curl','dream','snore','wave','highfive','dance']);
   action=allowed.has(name)?name:'greet';
-  actionUntil=performance.now()+(['sleep','curl','dream','snore'].includes(action)?9000:action==='orbit'||action==='dance'?5200:action==='scan'||action==='gulp'||action==='taste'?3200:action==='focus'||action==='charge'?4200:action==='celebrate'||action==='splash'||action==='highfive'?2800:action==='alert'?2200:2200);
+  actionUntil=performance.now()+(['sleep','curl','dream','snore'].includes(action)?9000:action==='walk'?5000:action==='orbit'||action==='dance'?5200:action==='scan'||action==='gulp'||action==='taste'?3200:action==='focus'||action==='charge'?4200:action==='celebrate'||action==='splash'||action==='highfive'?2800:action==='alert'?2200:2200);
   lastInteract=performance.now();
   if(action==='wake')actionUntil=performance.now()+700;
   if(['happy','greet','celebrate','splash','bite','charge','wave','highfive','dance','sip','gulp','taste'].includes(action))boost=1;
@@ -1128,13 +1128,14 @@ function renderFrame(){
   const sipping=state==='sip',gulping=state==='gulp',splashing=state==='splash';
   const biting=state==='bite',tasting=state==='taste',charging=state==='charge';
   const curling=state==='curl',dreaming=state==='dream',snoring=state==='snore';
-  const highfiving=state==='highfive',dancing=state==='dance';
+  const highfiving=state==='highfive',dancing=state==='dance',walking=state==='walk';
 
   // levitation and body life
   let lift=.1+Math.sin(t*(sleeping?.72:1.25))*(sleeping?.018:.035);
   if(celebrating)lift+=Math.abs(Math.sin(t*8))*0.14;
   if(orbiting)lift+=.07+Math.sin(t*2.4)*.04;
   if(greeting)lift+=Math.abs(Math.sin(t*5))*0.045;
+  if(walking)lift+=Math.abs(Math.sin(t*7))*.035;
   pet.position.y=lift+boost*.06;
   chestPanel.position.y=-.3+Math.sin(t*(sleeping?.8:1.65))*(sleeping?.004:.009);
 
@@ -1184,6 +1185,7 @@ function renderFrame(){
     if(tasting){rz=side*(i===0?.35:.15)+Math.sin(t*3+i)*.05}
     if(charging){rz=side*.68;rx=-.25}
     if(highfiving){rz=side*(i===0?.9:.28);rx=-.25}
+    if(walking){rz=side*Math.sin(t*7+i*Math.PI)*.22;rx=Math.sin(t*7+i*Math.PI)*.08}
     if(dancing){rz=side*(.45+Math.sin(t*7+i*Math.PI)*.32)}
     sh.rotation.z+=(rz-sh.rotation.z)*.18;sh.rotation.x+=(rx-sh.rotation.x)*.18;
   });
@@ -1197,6 +1199,7 @@ function renderFrame(){
     if(tasting)rz=side*(i===0?.46:.18);
     if(charging)rz=side*.92;
     if(highfiving)rz=side*(i===0?1.08:.32);
+    if(walking){rz=side*(.09+Math.sin(t*7+i*Math.PI)*.28);rx=Math.sin(t*7+i*Math.PI)*.10}
     if(dancing)rz=side*(.55+Math.sin(t*8+i*Math.PI)*.4);
     fore.rotation.z+=(rz-fore.rotation.z)*.2;fore.rotation.x+=(rx-fore.rotation.x)*.18;
   });
@@ -1205,6 +1208,7 @@ function renderFrame(){
     if(splashing){rz=side*(.15+Math.sin(t*8+i*Math.PI)*.16);rx=Math.sin(t*8+i*Math.PI)*.12}
     if(charging){rz=side*.15;rx=-.08}
     if(curling||dreaming||snoring){rz=side*.28;rx=.22}
+    if(walking){rz=side*(.04+Math.sin(t*7+i*Math.PI)*.18);rx=Math.sin(t*7+i*Math.PI)*.28}
     if(dancing){rz=side*(.18+Math.sin(t*7+i*Math.PI)*.22);rx=Math.sin(t*7+i*Math.PI)*.16}
     leg.rotation.z+=(rz-leg.rotation.z)*.18;leg.rotation.x+=(rx-leg.rotation.x)*.18;
   });
@@ -1214,6 +1218,7 @@ function renderFrame(){
     if(gulping)rx=Math.sin(t*6+i)*.08;
     if(biting)ry=Math.sin(t*4+i)*.08;
     if(curling||dreaming||snoring){rx=.18;ry=(i===0?-1:1)*.12}
+    if(walking){rx=Math.sin(t*7+i*Math.PI)*.18;ry=Math.sin(t*7+i*Math.PI)*.06}
     if(dancing){rx=Math.sin(t*8+i*Math.PI)*.22;ry=Math.sin(t*5+i)*.12}
     foot.rotation.x+=(rx-foot.rotation.x)*.2;foot.rotation.y+=(ry-foot.rotation.y)*.2;
   });
