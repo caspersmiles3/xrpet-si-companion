@@ -1491,7 +1491,7 @@ if('serviceWorker' in navigator){
 function closeCustomizationPanels(){
   qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));
   document.body.classList.remove('customization-open','workspace-open');
-  const target=primaryView==='home'?'homeSection':primaryView==='live'?'xrplPanel':primaryView==='announcements'?'announcementsSection':primaryView==='ripplet'?'companionSection':primaryView==='ecosystem'?'ecosystemSection':primaryView==='games'?'gamesSection':'xrpHistorySection';
+  const target=primaryView==='home'?'homeSection':primaryView==='live'?'xrplPanel':primaryView==='learn'?'learnSection':primaryView==='announcements'?'announcementsSection':primaryView==='ripplet'?'companionSection':primaryView==='ecosystem'?'ecosystemSection':primaryView==='games'?'gamesSection':'xrpHistorySection';
   setTimeout(()=>scrollSectionTop(target),20);
 }
 qa('[data-customize-target]').forEach(b=>b.addEventListener('click',()=>{
@@ -1527,7 +1527,7 @@ function setPrimaryView(view='home'){
   document.body.dataset.primaryView=view;
   qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));
   document.body.classList.remove('workspace-open','customization-open');
-  const target=view==='home'?'homeSection':view==='live'?'xrplPanel':view==='announcements'?'announcementsSection':view==='ripplet'?'companionSection':view==='ecosystem'?'ecosystemSection':view==='games'?'gamesSection':'xrpHistorySection';
+  const target=view==='home'?'homeSection':view==='live'?'xrplPanel':view==='learn'?'learnSection':view==='announcements'?'announcementsSection':view==='ripplet'?'companionSection':view==='ecosystem'?'ecosystemSection':view==='games'?'gamesSection':'xrpHistorySection';
   ['historyNavDetails','exchangeNavDetails','rippletNavDetails','ecosystemNavDetails','gamesNavDetails','customizeDetails','settingsDetails'].forEach(id=>{q('#'+id)?.removeAttribute('open')});
   const pane=q('#'+target);if(pane)pane.scrollTop=0;
   setTimeout(()=>{
@@ -1540,6 +1540,88 @@ function setPrimaryView(view='home'){
   },0);
 }
 qa('[data-primary-view]').forEach(b=>b.addEventListener('click',()=>setPrimaryView(b.dataset.primaryView)));
+
+const XRP_LEARN_QUIZ=[
+  {category:'XRP BASICS',q:'What is XRP?',a:['A share of Ripple stock','The native digital asset of the XRP Ledger','A proof-of-work mining reward','A private bank database'],correct:1,why:'XRP is the native digital asset of the XRP Ledger. It is not Ripple stock.'},
+  {category:'RIPPLE VS. XRP',q:'Which statement is correct?',a:['Ripple, XRP, and XRPL are the same thing','Ripple owns every XRP Ledger validator','Ripple is a company, XRP is an asset, and XRPL is a public network','XRP can only be used by Ripple'],correct:2,why:'Ripple is a company; XRP is a digital asset; XRPL is the public ledger network.'},
+  {category:'XRPL',q:'Does the XRP Ledger use proof-of-work mining?',a:['Yes','No','Only at night','Only for XRP payments'],correct:1,why:'XRPL reaches consensus without proof-of-work mining.'},
+  {category:'XRPL',q:'What is a trust line primarily used for on XRPL?',a:['Mining XRP','Holding or transacting an issued currency from an issuer','Creating a password','Voting in political elections'],correct:1,why:'Trust lines define an account relationship with an issuer for issued currencies.'},
+  {category:'PAYMENTS',q:'What can a destination tag help a service identify?',a:['A specific customer or recipient within one XRP Ledger address','The current XRP market price','A validator private key','The total XRP supply'],correct:0,why:'Exchanges and custodial services commonly use destination tags to route deposits to the correct internal customer.'},
+  {category:'XRPL',q:'What does XRPL include natively for exchanging assets?',a:['Only centralized exchanges','An order-book DEX and AMM functionality','A proof-of-work mining pool','No exchange functionality'],correct:1,why:'XRPL includes built-in decentralized exchange functionality, including order books and AMMs.'},
+  {category:'XRP BASICS',q:'Owning XRP means you own part of Ripple the company.',a:['True','False'],correct:1,why:'XRP is a digital asset. It is not equity or ownership in Ripple.'},
+  {category:'PAYMENTS',q:'Can an XRPL payment path use liquidity to convert between compatible assets?',a:['Yes','No'],correct:0,why:'XRPL pathfinding can route payments through available liquidity and compatible asset pairs.'},
+  {category:'XRPL',q:'Who participates in agreeing on ledger state?',a:['Independent validators','Bitcoin miners only','Ripple customers only','Stock exchanges'],correct:0,why:'Independent validators participate in the consensus process that agrees on ledger state.'},
+  {category:'RIPPLE VS. XRP',q:'Can the XRP Ledger continue operating independently of Ripple as a company?',a:['Yes, it is a public open-source network','No, every transaction requires a Ripple employee','No, Ripple manually approves each block','Only during business hours'],correct:0,why:'XRPL is a public open-source network operated by a distributed ecosystem, not a company-operated transaction queue.'}
+];
+let learnModule='xrp',quizIndex=0,quizCorrect=0,quizAnswered=false;
+function openLearnModule(name='xrp'){
+  learnModule=name;
+  qa('[data-learn-panel]').forEach(p=>p.classList.toggle('active',p.dataset.learnPanel===name));
+  qa('[data-learn-module]').forEach(b=>b.classList.toggle('active',b.dataset.learnModule===name));
+  q('#learnSection')?.scrollTo({top:0,behavior:'auto'});
+  if(name==='quiz')renderQuiz();
+}
+qa('[data-learn-module]').forEach(b=>b.addEventListener('click',()=>openLearnModule(b.dataset.learnModule)));
+qa('[data-learn-next]').forEach(b=>b.addEventListener('click',()=>openLearnModule(b.dataset.learnNext)));
+
+function updateLearnBest(score){
+  const prev=Number(localStorage.getItem('xrpetLearnBest')||0);
+  const best=Math.max(prev,score);
+  localStorage.setItem('xrpetLearnBest',String(best));
+  setText('#learnBestScore',best+'%');
+}
+function renderQuiz(){
+  const item=XRP_LEARN_QUIZ[quizIndex];if(!item)return;
+  quizAnswered=false;
+  q('#quizResult')?.setAttribute('hidden','');
+  q('#quizCard')?.removeAttribute('hidden');
+  setText('#quizProgress',(quizIndex+1)+' / '+XRP_LEARN_QUIZ.length);
+  setText('#quizScoreLive',quizCorrect+' correct');
+  setText('#quizCategory',item.category);
+  setText('#quizQuestion',item.q);
+  const answers=q('#quizAnswers');if(!answers)return;
+  answers.innerHTML='';
+  item.a.forEach((label,i)=>{
+    const b=document.createElement('button');
+    b.type='button';b.textContent=label;b.dataset.quizAnswer=String(i);
+    b.addEventListener('click',()=>answerQuiz(i));
+    answers.appendChild(b);
+  });
+  const exp=q('#quizExplanation');if(exp){exp.textContent='';exp.className='quiz-explanation'}
+  const next=q('#quizNext');if(next){next.disabled=true;next.textContent=quizIndex===XRP_LEARN_QUIZ.length-1?'See Results':'Next Question'}
+}
+function answerQuiz(choice){
+  if(quizAnswered)return;quizAnswered=true;
+  const item=XRP_LEARN_QUIZ[quizIndex],correct=choice===item.correct;
+  if(correct)quizCorrect++;
+  qa('#quizAnswers button').forEach((b,i)=>{
+    b.disabled=true;
+    if(i===item.correct)b.classList.add('correct');
+    else if(i===choice)b.classList.add('wrong');
+  });
+  const exp=q('#quizExplanation');
+  if(exp){exp.textContent=(correct?'Correct. ':'Not quite. ')+item.why;exp.classList.add(correct?'correct':'wrong')}
+  setText('#quizScoreLive',quizCorrect+' correct');
+  q('#quizNext')?.removeAttribute('disabled');
+  window.XRPet3D?.perform?.(correct?'happy':'thinking');
+  playSound(correct?'success':'notification',true);
+}
+q('#quizNext')?.addEventListener('click',()=>{
+  if(!quizAnswered)return;
+  if(quizIndex<XRP_LEARN_QUIZ.length-1){quizIndex++;renderQuiz();return}
+  const pct=Math.round((quizCorrect/XRP_LEARN_QUIZ.length)*100);
+  q('#quizCard')?.setAttribute('hidden','');
+  q('#quizResult')?.removeAttribute('hidden');
+  setText('#quizFinalScore',pct+'%');
+  const passed=pct>=70,mastered=pct>=90;
+  setText('#quizResultTitle',mastered?'XRPL Scholar':passed?'Knowledge Check Passed':'Keep Learning');
+  setText('#quizResultText',mastered?'Excellent. You clearly understand the core differences between Ripple, XRP, and XRPL.':passed?'Good work. Review any missed concepts, then try for 90% or better.':'Go back through the four learning modules and retake the test when you are ready.');
+  updateLearnBest(pct);
+  if(passed){addXp(mastered?20:10);window.XRPet3D?.perform?.(mastered?'victory':'celebrate');playSound('success',true)}
+});
+q('#quizRestart')?.addEventListener('click',()=>{quizIndex=0;quizCorrect=0;quizAnswered=false;renderQuiz()});
+setText('#learnBestScore',(Number(localStorage.getItem('xrpetLearnBest')||0))+'%');
+
 
 function openHistoryView(view='All'){
   primaryView='history';
