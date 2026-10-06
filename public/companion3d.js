@@ -17,10 +17,10 @@ const lowPower=savedGraphics==='performance'?true:savedGraphics==='full'?false:a
 const XRPetQuality={
   mode:savedGraphics,
   lowPower,
-  pixelRatio:lowPower?1:Math.min(window.devicePixelRatio||1,1.35),
+  pixelRatio:lowPower?1:Math.min(window.devicePixelRatio||1,1.75),
   shadows:!lowPower,
   reflections:!lowPower,
-  fps:lowPower?24:30
+  fps:lowPower?24:45
 };
 
 let renderer;
@@ -1500,7 +1500,7 @@ function renderFrame(){
   mouth.scale.x=greeting?1.28:alerting?.9:sleeping?.82:1;
   mouth.scale.y=greeting?1.14:1;
   coreRing.rotation.z=celebrating?t*2.1:Math.sin(t*.5)*.02;
-  coreBall.scale.setScalar((currentCosmetic==='solar'?1.45:1)*(alerting?1.18:celebrating?1.24:charging?1.38:splashing?1.2:1));
+  coreBall.scale.setScalar((currentCosmetic==='solar'?1.45:1)*(alerting?1.18:celebrating?1.24:charging?1.38:splashing?1.2:1)*(1+Math.sin(t*1.8)*.025));
 
   // expressive Ripplet arms / hands / legs / feet
   shoulders.forEach((sh,i)=>{
@@ -1517,6 +1517,25 @@ function renderFrame(){
     if(dancing){rz=side*(.45+Math.sin(t*7+i*Math.PI)*.32)}
     sh.rotation.z+=(rz-sh.rotation.z)*.18;sh.rotation.x+=(rx-sh.rotation.x)*.18;
   });
+  if(idle&&!sleeping){
+    const breathe=Math.sin(t*1.35)*.012;
+    torso.scale.y+=(1+breathe-torso.scale.y)*.05;
+    pelvis.rotation.z+=(Math.sin(t*.47)*.008-pelvis.rotation.z)*.04;
+    shoulders.forEach((sh,i)=>{
+      const side=i===0?-1:1;
+      sh.rotation.x+=(Math.sin(t*.72+i)*.018-sh.rotation.x)*.035;
+      sh.rotation.z+=(side*(.02+Math.sin(t*.51+i)*.012)-sh.rotation.z)*.035;
+    });
+    hands.forEach((hand,i)=>{
+      const side=i===0?-1:1;
+      hand.rotation.y+=(side*Math.sin(t*.83+i)*.045-hand.rotation.y)*.04;
+      hand.rotation.x+=(Math.sin(t*.67+i)*.025-hand.rotation.x)*.04;
+    });
+    fingerPads.forEach((pad,i)=>{
+      const pulse=1+Math.sin(t*1.1+i*.7)*.025;
+      pad.scale.y+=(1.15*pulse-pad.scale.y)*.05;
+    });
+  }
   upperArms.forEach((arm,i)=>{
     const side=i===0?-1:1;let rz=side*.04,rx=0;
     if(walking){rz=side*Math.sin(t*7+i*Math.PI)*.16;rx=Math.sin(t*7+i*Math.PI)*.09}
