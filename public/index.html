@@ -81,9 +81,39 @@
       </details>
       <button class="side-link" data-primary-view="announcements"><span>◌</span>Announcements</button>
       <button class="side-link" data-primary-view="ripplet"><span>✦</span>Ripplet</button>
-      <button class="side-link" data-primary-view="ecosystem"><span>◎</span>XRPL Ecosystem</button>
-      <button class="side-link" data-primary-view="games"><span>◈</span>Games</button>
+      <details class="nav-dropdown" id="ecosystemNavDetails">
+        <summary class="side-link nav-parent-summary" data-primary-view="ecosystem"><span>◎</span><b>XRPL Ecosystem</b><i>⌄</i></summary>
+        <div class="nav-dropdown-menu ecosystem-nav-menu">
+          <button type="button" data-ecosystem-view="directory">Asset Directory</button>
+          <button type="button" data-ecosystem-view="contacts">Official Contacts + Sponsorship</button>
+          <button type="button" data-ecosystem-view="channels">Official Public Channels</button>
+          <button type="button" data-ecosystem-view="nft">Live NFT Activity</button>
+          <button type="button" data-ecosystem-view="xsignal">X Community Signal</button>
+        </div>
+      </details>
+      <details class="nav-dropdown" id="gamesNavDetails">
+        <summary class="side-link nav-parent-summary" data-primary-view="games"><span>◈</span><b>Games</b><i>⌄</i></summary>
+        <div class="nav-dropdown-menu games-nav-menu">
+          <button type="button" data-game-nav="ledgerRush">Ledger Rush</button>
+          <button type="button" data-game-nav="xrpFlow">XRP Flow</button>
+          <button type="button" data-game-nav="consensus80">Consensus 80</button>
+        </div>
+      </details>
     </nav>
+
+    <div id="xrpetMusicPlayer" class="xrpet-music-player" aria-label="XRPet soundtrack">
+      <audio id="xrpetAudio" preload="metadata"></audio>
+      <button id="musicToggle" class="music-main" type="button" aria-label="Play soundtrack">▶</button>
+      <div class="music-meta">
+        <span>XRPet Soundtrack</span>
+        <strong id="musicTrackName">Ready</strong>
+      </div>
+      <canvas id="musicWaveform" class="music-waveform" width="220" height="42" aria-label="Live soundtrack waveform"></canvas>
+      <button id="musicPrev" type="button" aria-label="Previous track">‹</button>
+      <button id="musicNext" type="button" aria-label="Next track">›</button>
+      <button id="musicShuffle" type="button" aria-label="Toggle shuffle">⤨</button>
+      <span class="music-volume-icon" aria-hidden="true">🔊</span><input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.75" aria-label="Music volume">
+    </div>
 
     <details class="settings-wrap customize-wrap" id="customizeDetails">
       <summary class="settings-trigger customize-trigger"><span>✦</span><b>Companion & Tools</b><i>⌄</i></summary>
@@ -709,7 +739,7 @@
         <span>XRPet does not guess a creator's identity or physical location. Location, team names, websites, and social accounts appear only when they are publicly supplied by the project or metadata source.</span>
       </div>
 
-      <section class="ecosystem-contact-hub" aria-labelledby="ecosystemContactTitle">
+      <section class="ecosystem-contact-hub ecosystem-subview" data-ecosystem-panel="contacts" aria-labelledby="ecosystemContactTitle">
         <div class="section-heading">
           <div><span class="eyebrow">OFFICIAL CONTACTS + PARTNERSHIPS</span><h2 id="ecosystemContactTitle">How to reach Ripple and the XRPL ecosystem</h2></div>
           <span class="truth-label">PUBLIC CHANNELS</span>
@@ -766,6 +796,20 @@
         </div>
       </section>
 
+      <section class="ecosystem-public-channels ecosystem-subview" data-ecosystem-panel="channels">
+        <div class="section-heading">
+          <div><span class="eyebrow">OFFICIAL + PUBLIC</span><h2>Verified public channels</h2></div>
+          <span class="truth-label">PRIMARY ROUTES</span>
+        </div>
+        <p class="ecosystem-contact-note">Use these public organizational routes for official information. XRPet keeps company channels, XRP Ledger documentation, foundation resources, and press sources separate.</p>
+        <div class="ecosystem-contact-grid">
+          <article class="contact-card"><span class="contact-type">RIPPLE</span><h3>Ripple official website</h3><p>Company information, products, contact routes, newsroom, and official announcements.</p><div class="contact-actions"><a href="https://ripple.com/" target="_blank" rel="noopener">Ripple.com ↗</a><a href="https://ripple.com/press-releases/" target="_blank" rel="noopener">Press Releases ↗</a></div></article>
+          <article class="contact-card"><span class="contact-type">XRP LEDGER</span><h3>XRPL.org</h3><p>Technical documentation, network concepts, developer references, amendments, and ecosystem resources for the public XRP Ledger.</p><div class="contact-actions"><a href="https://xrpl.org/" target="_blank" rel="noopener">XRPL.org ↗</a><a href="https://xrpl.org/blog/" target="_blank" rel="noopener">XRPL Blog ↗</a></div></article>
+          <article class="contact-card"><span class="contact-type">XRPL FOUNDATION</span><h3>Foundation public channel</h3><p>Independent nonprofit resources supporting the XRP Ledger ecosystem and community infrastructure.</p><div class="contact-actions"><a href="https://xrpl.foundation/" target="_blank" rel="noopener">XRPL Foundation ↗</a></div></article>
+        </div>
+      </section>
+
+      <div class="ecosystem-directory ecosystem-subview active" data-ecosystem-panel="directory">
       <div class="ecosystem-toolbar">
         <form id="ecosystemSearchForm" class="ecosystem-search">
           <input id="ecosystemSearch" type="search" placeholder="Search token, project, issuer or currency…" autocomplete="off">
@@ -800,23 +844,22 @@
         <span id="ecosystemPage">Page 1</span>
         <button id="ecosystemNext" type="button" class="secondary">Next →</button>
       </div>
-
-      <div class="ecosystem-lower-grid">
-        <article class="ecosystem-live-panel">
-          <div class="section-heading"><div><span class="eyebrow">LIVE NFT ACTIVITY</span><h2>NFT events happening now</h2></div><span class="truth-label">XRPL STREAM</span></div>
-          <div id="ecosystemNftActivity" class="ecosystem-activity-list"><p class="muted">Waiting for NFT transactions…</p></div>
-        </article>
-        <article class="ecosystem-live-panel">
-          <div class="section-heading"><div><span class="eyebrow">X / COMMUNITY SIGNAL</span><h2>XRPL social updates</h2></div><span id="ecosystemXBadge" class="truth-label">OPTIONAL API</span></div>
-          <form id="xPostForm" class="x-post-composer">
-            <div class="x-post-head"><span>POST FROM XRPET</span><b id="xWriteStatus">Checking X write access…</b></div>
-            <textarea id="xPostText" maxlength="280" placeholder="Write an XRPL/XRP update to post on X…"></textarea>
-            <div class="x-post-actions"><small><span id="xPostCount">0</span>/280</small><button id="xPostButton" type="submit">Post to X</button></div>
-            <p id="xPostResult" class="muted">X user write access must be configured on the server.</p>
-          </form>
-          <div id="ecosystemXFeed" class="ecosystem-x-feed"><p class="muted">Checking X integration…</p></div>
-        </article>
       </div>
+
+      <section class="ecosystem-live-panel ecosystem-subview" data-ecosystem-panel="nft">
+        <div class="section-heading"><div><span class="eyebrow">LIVE NFT ACTIVITY</span><h2>NFT events happening now</h2></div><span class="truth-label">XRPL STREAM</span></div>
+        <div id="ecosystemNftActivity" class="ecosystem-activity-list"><p class="muted">Waiting for NFT transactions…</p></div>
+      </section>
+      <section class="ecosystem-live-panel ecosystem-subview" data-ecosystem-panel="xsignal">
+        <div class="section-heading"><div><span class="eyebrow">X / COMMUNITY SIGNAL</span><h2>XRPL social updates</h2></div><span id="ecosystemXBadge" class="truth-label">OPTIONAL API</span></div>
+        <form id="xPostForm" class="x-post-composer">
+          <div class="x-post-head"><span>POST FROM XRPET</span><b id="xWriteStatus">Checking X write access…</b></div>
+          <textarea id="xPostText" maxlength="280" placeholder="Write an XRPL/XRP update to post on X…"></textarea>
+          <div class="x-post-actions"><small><span id="xPostCount">0</span>/280</small><button id="xPostButton" type="submit">Post to X</button></div>
+          <p id="xPostResult" class="muted">X user write access must be configured on the server.</p>
+        </form>
+        <div id="ecosystemXFeed" class="ecosystem-x-feed"><p class="muted">Checking X integration…</p></div>
+      </section>
     </section>
 
     <section id="announcementsSection" class="flow-section announcements-section primary-view-section announcements-clean" data-view-section="announcements">
@@ -841,19 +884,7 @@
   </main>
 </div>
 
-<div id="xrpetMusicPlayer" class="xrpet-music-player" aria-label="XRPet soundtrack">
-  <audio id="xrpetAudio" preload="metadata"></audio>
-  <button id="musicToggle" class="music-main" type="button" aria-label="Play soundtrack">▶</button>
-  <div class="music-meta">
-    <span>XRPet Soundtrack</span>
-    <strong id="musicTrackName">Ready</strong>
-  </div>
-  <canvas id="musicWaveform" class="music-waveform" width="220" height="42" aria-label="Live soundtrack waveform"></canvas>
-  <button id="musicPrev" type="button" aria-label="Previous track">‹</button>
-  <button id="musicNext" type="button" aria-label="Next track">›</button>
-  <button id="musicShuffle" type="button" aria-label="Toggle shuffle">⤨</button>
-  <span class="music-volume-icon" aria-hidden="true">🔊</span><input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.75" aria-label="Music volume">
-</div>
+
 
 <script>
 (()=>{
