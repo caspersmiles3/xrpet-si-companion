@@ -8,12 +8,12 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=5.5.15">
+  <link rel="stylesheet" href="/styles.css?v=5.5.16">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate clean-launch" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
   <video id="launchBackgroundVideo" class="clean-launch-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
-    <source src="/media/xrpet-launch-bg.mp4?v=5.5.15" type="video/mp4">
+    <source src="/media/xrpet-launch-bg.mp4?v=5.5.16" type="video/mp4">
   </video>
   <div class="clean-launch-video-shade" aria-hidden="true"></div>
   <div class="clean-launch-grid" aria-hidden="true"></div>
@@ -85,6 +85,7 @@
           <button type="button" data-history-view="People">People Involved</button>
         </div>
       </details>
+      <button class="side-link" data-primary-view="learn"><span>◫</span>Learn XRP + Ripple</button>
       <button class="side-link" data-primary-view="announcements"><span>◌</span>Announcements</button>
       <details class="nav-dropdown" id="rippletNavDetails">
         <summary class="side-link nav-parent-summary" data-primary-view="ripplet"><span>✦</span><b>Ripplet</b><i>⌄</i></summary>
@@ -436,6 +437,98 @@
   <div class="signal-disclosure history-overview-only">
     <strong>TRUTH LAYER</strong>
     <p>XRPet keeps Ripple the company, XRP the digital asset, and XRPL the open-source network distinct. Market moves are descriptive, not predictions. Live articles are labeled as current official-source updates and historical milestones link back to primary sources.</p>
+  </div>
+</section>
+
+<section id="learnSection" class="flow-section learn-section primary-view-section" data-view-section="learn">
+  <div class="section-heading learn-heading">
+    <div>
+      <span class="eyebrow">XRPL ACADEMY // LEARN + VERIFY</span>
+      <h2>Learn XRP, Ripple, and the XRP Ledger</h2>
+      <p class="section-subcopy">Read the fundamentals, then prove what you know. XRPet keeps Ripple the company, XRP the asset, and the XRP Ledger network separate so the concepts stay clear.</p>
+    </div>
+    <div class="learn-score-chip"><span>BEST SCORE</span><strong id="learnBestScore">0%</strong></div>
+  </div>
+
+  <div class="learn-layout">
+    <aside class="learn-module-rail" aria-label="Learning modules">
+      <button type="button" class="active" data-learn-module="xrp"><span>01</span><b>XRP Basics</b><small>Asset fundamentals</small></button>
+      <button type="button" data-learn-module="ripple"><span>02</span><b>Ripple vs. XRP</b><small>Know the difference</small></button>
+      <button type="button" data-learn-module="xrpl"><span>03</span><b>XRPL Fundamentals</b><small>Ledger mechanics</small></button>
+      <button type="button" data-learn-module="settlement"><span>04</span><b>Payments + Settlement</b><small>How value moves</small></button>
+      <button type="button" data-learn-module="quiz"><span>05</span><b>Knowledge Test</b><small>10-question challenge</small></button>
+    </aside>
+
+    <div class="learn-content">
+      <article class="learn-module active" data-learn-panel="xrp">
+        <span class="learn-kicker">MODULE 01</span>
+        <h3>XRP Basics</h3>
+        <p>XRP is the native digital asset of the XRP Ledger. It is not a share of Ripple, and owning XRP does not represent ownership in Ripple the company.</p>
+        <div class="learn-fact-grid">
+          <div><span>NATIVE ASSET</span><strong>XRP</strong><p>XRP exists directly on the XRP Ledger and is used by the network for transaction fees and account reserve requirements.</p></div>
+          <div><span>NO MINING</span><strong>Consensus network</strong><p>The XRP Ledger does not rely on proof-of-work mining to validate transactions.</p></div>
+          <div><span>TRANSFER</span><strong>Moves on XRPL</strong><p>XRP can be sent between XRP Ledger accounts and can also be traded through XRPL's built-in decentralized exchange functionality.</p></div>
+        </div>
+        <button type="button" class="learn-next" data-learn-next="ripple">Next: Ripple vs. XRP →</button>
+      </article>
+
+      <article class="learn-module" data-learn-panel="ripple">
+        <span class="learn-kicker">MODULE 02</span>
+        <h3>Ripple is not XRP</h3>
+        <p>Ripple is a technology company. XRP is a digital asset. The XRP Ledger is an open-source public blockchain network. They are related historically and commercially, but they are not the same thing.</p>
+        <div class="learn-compare">
+          <div><span>RIPPLE</span><strong>Company</strong><p>Builds enterprise blockchain and digital-asset infrastructure and develops products that can interact with blockchain networks.</p></div>
+          <div><span>XRP</span><strong>Digital asset</strong><p>The native asset of the XRP Ledger. It can exist and move independently of Ripple.</p></div>
+          <div><span>XRPL</span><strong>Public network</strong><p>The distributed ledger where XRP and other supported assets can be transacted.</p></div>
+        </div>
+        <button type="button" class="learn-next" data-learn-next="xrpl">Next: XRPL Fundamentals →</button>
+      </article>
+
+      <article class="learn-module" data-learn-panel="xrpl">
+        <span class="learn-kicker">MODULE 03</span>
+        <h3>XRP Ledger Fundamentals</h3>
+        <p>The XRP Ledger is designed for fast settlement, asset exchange, token issuance, and programmable financial functionality without proof-of-work mining.</p>
+        <div class="learn-fact-grid">
+          <div><span>CONSENSUS</span><strong>Validator agreement</strong><p>Independent validators participate in reaching agreement on the state of the ledger.</p></div>
+          <div><span>ISSUED ASSETS</span><strong>Trust lines</strong><p>XRPL accounts can hold issued currencies through trust lines, which define relationships between an account and an issuer.</p></div>
+          <div><span>BUILT-IN MARKET</span><strong>DEX + AMM</strong><p>XRPL includes native exchange functionality, including an order-book decentralized exchange and automated market maker features.</p></div>
+        </div>
+        <button type="button" class="learn-next" data-learn-next="settlement">Next: Payments + Settlement →</button>
+      </article>
+
+      <article class="learn-module" data-learn-panel="settlement">
+        <span class="learn-kicker">MODULE 04</span>
+        <h3>Payments + Settlement</h3>
+        <p>XRPL is built around transferring value and settling transactions on a shared ledger. Different assets can be represented and exchanged on the network, while XRP can function as a native bridge asset in some payment paths.</p>
+        <div class="learn-fact-grid">
+          <div><span>PAYMENTS</span><strong>Account to account</strong><p>XRPL Payment transactions can move XRP or supported issued assets between accounts.</p></div>
+          <div><span>DESTINATION TAG</span><strong>Recipient routing</strong><p>Services such as exchanges may use destination tags to identify a specific customer or internal recipient.</p></div>
+          <div><span>PATHS</span><strong>Asset conversion</strong><p>XRPL payment paths can use available liquidity to convert between compatible assets during settlement.</p></div>
+        </div>
+        <button type="button" class="learn-next primary" data-learn-next="quiz">Take the Knowledge Test →</button>
+      </article>
+
+      <article class="learn-module learn-quiz-module" data-learn-panel="quiz">
+        <div class="learn-quiz-head">
+          <div><span class="learn-kicker">MODULE 05 // KNOWLEDGE TEST</span><h3>Do you really know XRP + Ripple?</h3></div>
+          <div class="quiz-progress"><span id="quizProgress">1 / 10</span><strong id="quizScoreLive">0 correct</strong></div>
+        </div>
+        <div id="quizCard" class="quiz-card">
+          <span id="quizCategory">XRP BASICS</span>
+          <h4 id="quizQuestion">Loading question…</h4>
+          <div id="quizAnswers" class="quiz-answers"></div>
+          <div id="quizExplanation" class="quiz-explanation" aria-live="polite"></div>
+          <button id="quizNext" class="quiz-next" type="button" disabled>Next Question</button>
+        </div>
+        <div id="quizResult" class="quiz-result" hidden>
+          <span>FINAL SCORE</span>
+          <strong id="quizFinalScore">0%</strong>
+          <h4 id="quizResultTitle">Keep learning.</h4>
+          <p id="quizResultText"></p>
+          <button id="quizRestart" type="button">Retake Test</button>
+        </div>
+      </article>
+    </div>
   </div>
 </section>
 
@@ -918,7 +1011,7 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 5.5.15 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 5.5.16 · XRP Ledger companion</footer>
   </main>
 </div>
 
@@ -955,14 +1048,14 @@
   },6000);
 })();
 </script>
-<script src="/launch-enhance.js?v=5.5.15"></script>
-<script src="/contact-directory.js?v=5.5.15"></script>
-<script src="/music-player.js?v=5.5.15"></script>
-<script src="/games.js?v=5.5.15"></script>
-<script src="/ecosystem.js?v=5.5.15"></script>
-<script src="/ripplet2d.js?v=5.5.15"></script>
-<script src="/app.js?v=5.5.15"></script>
-<script src="/timeline.js?v=5.5.15"></script>
+<script src="/launch-enhance.js?v=5.5.16"></script>
+<script src="/contact-directory.js?v=5.5.16"></script>
+<script src="/music-player.js?v=5.5.16"></script>
+<script src="/games.js?v=5.5.16"></script>
+<script src="/ecosystem.js?v=5.5.16"></script>
+<script src="/ripplet2d.js?v=5.5.16"></script>
+<script src="/app.js?v=5.5.16"></script>
+<script src="/timeline.js?v=5.5.16"></script>
 
 </body>
 </html>
