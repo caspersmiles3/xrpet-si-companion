@@ -1,175 +1,167 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="theme-color" content="#08131c" />
-  <meta name="description" content="A living SI companion connected to Ripple, XRP and the XRP Ledger." />
-  <link rel="manifest" href="/manifest.webmanifest" />
-  <link rel="icon" href="/xrpet-icon.svg" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#070a0e">
+  <meta name="description" content="XRPet SI Companion — a living companion for XRP and the XRP Ledger.">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/styles.css?v=2.0.0">
 </head>
 <body>
-  <main class="shell">
-    <header class="topbar">
-      <div><span class="brand">XRPET</span><span class="slash">//</span><span class="subbrand">SI COMPANION</span></div>
-      <nav class="top-actions">
-        <button id="walletButton" class="ghost">Wallet</button>
-        <button id="notifyButton" class="ghost">Notifications</button>
-        <button id="settingsButton" class="ghost">Settings</button>
-        <div id="liveBadge" class="badge offline"><span></span> CONNECTING</div>
-      </nav>
-    </header>
+<div class="ambient a1"></div><div class="ambient a2"></div>
+<main class="app-shell">
+  <header class="nav">
+    <div class="mark"><span class="mark-dot"></span><div><b>XRPet</b><small>SI COMPANION</small></div></div>
+    <div class="nav-actions">
+      <button class="nav-btn" data-scroll="walletPanel">Wallet</button>
+      <button class="nav-btn" id="notifyButton">Alerts</button>
+      <button class="nav-btn" id="settingsButton">Settings</button>
+      <span id="liveBadge" class="status-pill waiting"><i></i><span>Connecting</span></span>
+    </div>
+  </header>
 
-    <section id="room" class="hero card room-nexus">
-      <div class="pet-wrap">
-        <div id="pet" class="pet calm form-drop" aria-label="XRPet companion">
-          <div class="ear e1"></div><div class="ear e2"></div>
-          <div class="face"><i class="eye"></i><i class="eye"></i><b class="core">X</b></div>
-          <div class="body"><div class="pulse"></div></div>
-        </div>
-        <div class="identity">
-          <h1 id="petName">NEXUS-589</h1>
-          <p id="petMood">Mood: Watching the Ledger</p>
-          <div class="level-line"><span id="evolution">Drop</span><span>•</span><span id="level">Lv. 1</span><span>•</span><span id="xpLabel">0 XP</span></div>
-          <div class="xpbar"><i id="xpFill"></i></div>
-        </div>
+  <section class="hero surface">
+    <div class="companion-stage">
+      <div class="halo h1"></div><div class="halo h2"></div>
+      <button id="pet" class="pet-core calm" aria-label="XRPet companion core">
+        <span class="pet-shell"><i class="eye left"></i><i class="eye right"></i><b class="xrp-glyph">X</b></span>
+        <span class="pet-ring"></span>
+      </button>
+      <div class="companion-id">
+        <span id="evolution" class="tier">DROP</span>
+        <h1 id="petName">NEXUS-589</h1>
+        <p id="petMood">Watching the Ledger</p>
+        <div class="progress"><span id="xpFill"></span></div>
+        <small><span id="level">Lv. 1</span> · <span id="xpLabel">0 XP</span></small>
       </div>
-      <div class="hero-copy">
-        <p class="eyebrow">A LIVING FRIEND FROM XRPL</p>
-        <h2>Don't watch the Ledger.<br><strong>Live with it.</strong></h2>
-        <p id="petSpeech">Connecting to the XRP Ledger…</p>
-        <div class="hero-buttons">
-          <button id="catchup">Catch Me Up</button>
-          <button id="dailyButton" class="ghost">Daily Briefing</button>
-        </div>
+    </div>
+
+    <div class="hero-copy">
+      <span class="kicker">LIVE XRPL COMPANION</span>
+      <h2>Your window into the <em>XRP Ledger.</em></h2>
+      <p id="petSpeech">Connecting to live network data…</p>
+      <div class="hero-actions">
+        <button id="catchup" class="primary">Catch Me Up</button>
+        <button id="dailyButton" class="secondary">Daily Briefing</button>
       </div>
-    </section>
-
-    <section class="grid stats">
-      <article class="card stat"><small>XRPL STATUS</small><strong id="status">Connecting</strong><span id="serverState">—</span></article>
-      <article class="card stat"><small>LATEST LEDGER</small><strong id="ledger">—</strong><span id="txCount">Waiting for close</span></article>
-      <article class="card stat"><small>XRP / USD</small><strong id="xrpPrice">Loading…</strong><span id="xrpChange">24h market data</span></article>
-      <article class="card stat"><small>BASE FEE</small><strong><span id="fee">—</span> drops</strong><span>Live network signal</span></article>
-      <article class="card stat"><small>NETWORK MOOD</small><strong id="networkMood">Calm</strong><span id="closeTime">—</span></article>
-    </section>
-
-    <section class="columns">
-      <article class="card panel">
-        <div class="panel-head"><div><p class="eyebrow">SI LIVE CORE</p><h3>Ask <span id="chatPetName">XRPet</span></h3></div><span class="truth">TRUTH MODE ●</span></div>
-        <div id="chat" class="chat"><div class="bubble pet-bubble">Ask me what's happening with Ripple, XRP, or the live ledger.</div></div>
-        <form id="chatForm"><input id="message" autocomplete="off" maxlength="500" placeholder="Ask your companion…"/><button>Send</button></form>
-        <div class="quick">
-          <button data-q="Catch me up">Catch me up</button>
-          <button data-q="What's the XRP price?">XRP price</button>
-          <button data-q="What's the live fee?">Live fee</button>
-          <button data-q="Verify this claim">Truth Mode</button>
-        </div>
-      </article>
-
-      <article class="card panel">
-        <div class="panel-head"><div><p class="eyebrow">OFFICIAL SIGNALS</p><h3>Ripple + XRPL Updates</h3></div><button id="refreshNews" class="ghost">Refresh</button></div>
-        <div id="updates" class="updates"><p class="muted">Loading official updates…</p></div>
-      </article>
-    </section>
-
-    <section class="columns">
-      <article class="card panel compact">
-        <div class="panel-head"><div><p class="eyebrow">COMPANION PROFILE</p><h3>Your XRPet</h3></div><span id="personalityChip" class="chip confirmed">Guardian</span></div>
-        <form id="profileForm" class="stack-form">
-          <label>Companion name<input id="profileName" maxlength="24" placeholder="NEXUS-589"/></label>
-          <label>Personality<select id="profilePersonality">
-            <option>Guardian</option><option>Explorer</option><option>Oracle</option><option>Builder</option><option>Spark</option><option>Jester</option>
-          </select></label>
-          <label>Your focus<input id="profileFocus" maxlength="80" placeholder="e.g. XRP, XRPL building, learning"/></label>
-          <button>Save Profile</button>
-        </form>
-        <p id="memorySummary" class="muted">No companion memory yet.</p>
-      </article>
-
-      <article class="card panel compact">
-        <div class="panel-head"><div><p class="eyebrow">EVOLUTION</p><h3>Growth Path</h3></div><span id="streakChip" class="chip">0 day streak</span></div>
-        <div class="evolution-track">
-          <span>Drop</span><span>Ripple</span><span>Wave</span><span>Surge</span><span>Nexus</span><span>Titan</span><span>Legend</span>
-        </div>
-        <div class="mission">
-          <strong id="missionTitle">Pulse Check</strong>
-          <p id="missionText">Tap the core 7 times to complete today's mission.</p>
-          <div class="meter"><i id="meterFill"></i></div>
-          <button id="charge">Charge Core <span id="chargeCount">0/7</span></button>
-        </div>
-      </article>
-    </section>
-
-    <section class="columns">
-      <article class="card panel compact">
-        <div class="panel-head"><div><p class="eyebrow">WALLET</p><h3>Connect or watch</h3></div><span id="walletProvider" class="chip">Manual</span></div>
-        <div class="wallet-buttons"><button id="connectGem">GemWallet</button><button id="connectXaman" class="ghost">Xaman</button></div>
-        <p id="walletConnection" class="muted">No wallet connected. You can still watch any public XRPL address.</p>
-        <h4>Public Wallet Watch</h4>
-        <p class="muted">Public address only. XRPet never asks for a seed phrase or private key.</p>
-        <form id="watchForm"><input id="account" placeholder="r… XRPL public address"/><button>Watch</button></form>
-        <div id="walletState" class="wallet-state">No account watched.</div>
-        <button id="clearWallet" class="ghost small">Stop watching</button>
-      </article>
-
-      <article class="card panel compact">
-        <div class="panel-head"><div><p class="eyebrow">ROOM + COSMETICS</p><h3>Customize</h3></div><span id="unlocksChip" class="chip">3 unlocked</span></div>
-        <div class="cosmetic-grid">
-          <button class="cosmetic active" data-room="nexus">Nexus Room</button>
-          <button class="cosmetic" data-room="ocean">Ripple Ocean</button>
-          <button class="cosmetic" data-room="vault">Vault Chamber</button>
-          <button class="cosmetic lockable" data-room="aurora">Aurora <small>Wave+</small></button>
-          <button class="cosmetic lockable" data-room="legend">Legend <small>Titan+</small></button>
-        </div>
-      </article>
-    </section>
-
-    <section class="columns">
-      <article class="card panel compact">
-        <div class="panel-head"><div><p class="eyebrow">NOTIFICATION CENTER</p><h3>Recent Signals</h3></div><button id="clearNotifications" class="ghost small">Clear</button></div>
-        <div id="notificationList" class="notification-list"><p class="muted">No signals yet.</p></div>
-      </article>
-
-      <article class="card panel compact">
-        <p class="eyebrow">COMPANION MEMORY</p><h3>Things your XRPet remembers</h3>
-        <form id="memoryForm"><input id="memoryInput" maxlength="120" placeholder="Remember that I want short XRP summaries"/><button>Remember</button></form>
-        <div id="memoryList" class="memory-list"></div>
-        <button id="clearMemory" class="ghost small">Clear companion memory</button>
-      </article>
-    </section>
-
-    <section class="card panel compact">
-      <div class="panel-head"><div><p class="eyebrow">INTEGRATIONS</p><h3>Activation Status</h3></div><button id="refreshIntegrations" class="ghost small">Refresh</button></div>
-      <div id="integrationStatus" class="integration-status">
-        <div class="integration-row"><span>XRPL Live</span><strong>Checking…</strong></div>
-        <div class="integration-row"><span>Web Push</span><strong>Checking…</strong></div>
-        <div class="integration-row"><span>Xaman</span><strong>Checking…</strong></div>
-        <div class="integration-row"><span>Full SI</span><strong>Checking…</strong></div>
+      <div class="mini-status">
+        <span><i class="dot"></i> Live ledger</span>
+        <span><i class="dot"></i> Grounded SI</span>
+        <span><i class="dot"></i> No seed phrases</span>
       </div>
-      <p class="muted">XRPet keeps working even when optional integrations are not activated.</p>
-      <div class="activation-actions">
-        <a class="button-link" href="https://apps.xaman.dev/" target="_blank" rel="noopener">Open Xaman Developer Console</a>
-        <button id="copyXamanEnv" class="ghost small">Copy Render variable name</button>
-      </div>
-      <p id="activationHelp" class="muted">For Xaman, create or open your app in the Xaman Developer Console, copy its public API key, then add it to Render as <code>XAMAN_API_KEY</code>.</p>
-    </section>
+    </div>
+  </section>
 
-    <section id="settingsPanel" class="card panel settings-panel hidden">
-      <div class="panel-head"><div><p class="eyebrow">SETTINGS</p><h3>Companion Preferences</h3></div><button id="closeSettings" class="ghost">Close</button></div>
-      <div class="settings-grid">
-        <label>Explanation level<select id="explainLevel"><option value="simple">Simple</option><option value="balanced">Balanced</option><option value="technical">Technical</option></select></label>
-        <label>Notification intensity<select id="notifyLevel"><option value="quiet">Quiet</option><option value="normal">Normal</option><option value="active">Active</option></select></label>
-        <label class="toggle"><input id="truthToggle" type="checkbox" checked/> Truth Mode</label>
-        <label class="toggle"><input id="marketMoodToggle" type="checkbox" checked/> Let XRP market movement affect mood</label>
-      </div>
-      <p class="muted">Everything in this v1.0 build is stored locally in your browser. No account or paid database is required.</p>
-    </section>
+  <section class="stats">
+    <article class="metric surface"><span>XRPL</span><strong id="status">Connecting</strong><small id="serverState">Live network</small></article>
+    <article class="metric surface"><span>Ledger</span><strong id="ledger">—</strong><small id="txCount">Waiting for close</small></article>
+    <article class="metric surface"><span>XRP / USD</span><strong id="xrpPrice">—</strong><small id="xrpChange">Loading market</small></article>
+    <article class="metric surface"><span>Base fee</span><strong><b id="fee">—</b> drops</strong><small>Reference fee</small></article>
+  </section>
 
-    <footer>XRPet SI Companion™ · v1.5 foundation · Web + Android/iOS ready · Not financial advice</footer>
-  </main>
-  <script src="https://xumm.app/assets/cdn/xumm.min.js"></script>
-  <script src="/app.js?v=1.5.4"></script>
+  <section class="workspace">
+    <article class="surface chat-panel">
+      <div class="section-head">
+        <div><span class="kicker">SI LIVE CORE</span><h3>Ask <span id="chatPetName">XRPet</span></h3></div>
+        <span class="truth-pill">TRUTH MODE</span>
+      </div>
+      <div id="chat" class="chat" aria-live="polite">
+        <div class="bubble assistant">Ask me about XRP, XRPL activity, Ripple updates, or paste a claim for verification.</div>
+      </div>
+      <form id="chatForm" class="composer">
+        <input id="message" maxlength="500" autocomplete="off" placeholder="Ask XRPet…">
+        <button class="send">Send</button>
+      </form>
+      <div class="quick">
+        <button data-q="Catch me up">Catch me up</button>
+        <button data-q="What is the XRP price?">XRP price</button>
+        <button data-q="What is the live XRPL fee?">Live fee</button>
+        <button data-q="Verify this claim: ">Truth mode</button>
+      </div>
+    </article>
+
+    <article class="surface signals-panel">
+      <div class="section-head">
+        <div><span class="kicker">OFFICIAL SIGNALS</span><h3>Ripple + XRPL</h3></div>
+        <button id="refreshNews" class="icon-btn">Refresh</button>
+      </div>
+      <div id="updates" class="updates"><p class="muted">Loading official sources…</p></div>
+    </article>
+  </section>
+
+  <section class="workspace">
+    <article id="walletPanel" class="surface card-panel">
+      <div class="section-head"><div><span class="kicker">WALLET</span><h3>Connect or watch</h3></div><span id="walletProvider" class="chip">Manual</span></div>
+      <div class="wallet-actions">
+        <button id="connectXaman" class="primary">Connect Xaman</button>
+        <button id="connectGem" class="secondary">GemWallet</button>
+      </div>
+      <p id="walletConnection" class="muted">No wallet connected. Public wallet watch works without signing access.</p>
+      <form id="watchForm" class="inline-form">
+        <input id="account" autocomplete="off" placeholder="r… XRPL classic address">
+        <button>Watch</button>
+      </form>
+      <div id="walletState" class="info-box">No public account is being watched.</div>
+      <button id="clearWallet" class="text-btn">Clear wallet watch</button>
+    </article>
+
+    <article class="surface card-panel">
+      <div class="section-head"><div><span class="kicker">COMPANION</span><h3>Identity + memory</h3></div><span id="personalityChip" class="chip">Guardian</span></div>
+      <form id="profileForm" class="form-grid">
+        <label>Name<input id="profileName" maxlength="24"></label>
+        <label>Personality<select id="profilePersonality"><option>Guardian</option><option>Explorer</option><option>Oracle</option><option>Builder</option><option>Spark</option><option>Jester</option></select></label>
+        <label class="wide">Your focus<input id="profileFocus" maxlength="80" placeholder="XRP, learning, XRPL building…"></label>
+        <button class="primary wide">Save companion</button>
+      </form>
+      <form id="memoryForm" class="inline-form">
+        <input id="memoryInput" maxlength="120" placeholder="Remember a preference…">
+        <button>Remember</button>
+      </form>
+      <div id="memoryList" class="memory-list"></div>
+    </article>
+  </section>
+
+  <section class="workspace">
+    <article class="surface card-panel">
+      <div class="section-head"><div><span class="kicker">EVOLUTION</span><h3>Daily pulse</h3></div><span id="streakChip" class="chip">0 day streak</span></div>
+      <p id="missionText" class="muted">Charge the core 7 times to complete today's mission.</p>
+      <div class="mission-meter"><span id="meterFill"></span></div>
+      <button id="charge" class="primary full">Charge Core · <span id="chargeCount">0/7</span></button>
+      <div class="evolution-track"><span>Drop</span><span>Ripple</span><span>Wave</span><span>Surge</span><span>Nexus</span><span>Titan</span><span>Legend</span></div>
+    </article>
+
+    <article class="surface card-panel">
+      <div class="section-head"><div><span class="kicker">ENVIRONMENT</span><h3>Companion room</h3></div><span id="unlocksChip" class="chip">3 unlocked</span></div>
+      <div class="room-grid">
+        <button data-room="nexus" class="room-choice active"><b>Nexus</b><small>Deep ledger</small></button>
+        <button data-room="ocean" class="room-choice"><b>Ripple Ocean</b><small>Liquid signal</small></button>
+        <button data-room="vault" class="room-choice"><b>Vault</b><small>Secure mode</small></button>
+        <button data-room="aurora" class="room-choice"><b>Aurora</b><small>Wave+</small></button>
+        <button data-room="legend" class="room-choice"><b>Legend</b><small>Titan+</small></button>
+      </div>
+    </article>
+  </section>
+
+  <section id="settingsPanel" class="surface settings hidden">
+    <div class="section-head"><div><span class="kicker">SETTINGS</span><h3>Preferences</h3></div><button id="closeSettings" class="icon-btn">Close</button></div>
+    <div class="settings-grid">
+      <label>Explanation<select id="explainLevel"><option value="simple">Simple</option><option value="balanced">Balanced</option><option value="technical">Technical</option></select></label>
+      <label>Alerts<select id="notifyLevel"><option value="quiet">Quiet</option><option value="normal">Normal</option><option value="active">Active</option></select></label>
+      <label class="toggle"><input id="truthToggle" type="checkbox"> <span>Truth Mode</span></label>
+      <label class="toggle"><input id="marketMoodToggle" type="checkbox"> <span>Market-reactive mood</span></label>
+    </div>
+  </section>
+
+  <section class="surface integration-panel">
+    <div class="section-head"><div><span class="kicker">SYSTEM</span><h3>Integration health</h3></div><button id="refreshIntegrations" class="icon-btn">Run check</button></div>
+    <div id="integrationStatus" class="integration-grid"></div>
+  </section>
+
+  <footer>XRPet SI Companion™ · Beta 2.0 · XRP Ledger companion · Not financial advice</footer>
+</main>
+<script src="/app.js?v=2.0.0"></script>
 </body>
 </html>
