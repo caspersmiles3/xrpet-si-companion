@@ -11,19 +11,6 @@
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <div id="onboarding" class="onboarding hidden">
-    <div class="onboarding-card card">
-      <p class="eyebrow">WELCOME TO XRPET</p>
-      <h1>Create your companion</h1>
-      <p class="muted">About a minute. No wallet or payment is required.</p>
-      <div class="onboard-steps">
-        <section data-step="1"><label>Companion name<input id="onboardName" maxlength="24" value="NEXUS-589"/></label><label>Personality<select id="onboardPersonality"><option>Guardian</option><option>Explorer</option><option>Oracle</option><option>Builder</option><option>Spark</option><option>Jester</option></select></label></section>
-        <section data-step="2" class="hidden"><label>Your focus<input id="onboardFocus" maxlength="80" placeholder="XRP, XRPL, learning, building…"/></label><label>Briefing style<select id="onboardExplain"><option value="simple">Simple</option><option value="balanced" selected>Balanced</option><option value="technical">Technical</option></select></label></section>
-        <section data-step="3" class="hidden"><p>Connect a wallet now, or skip it. XRPet never asks for a seed phrase.</p><div class="wallet-buttons"><button id="onboardGem" type="button">Connect GemWallet</button><button id="onboardXaman" type="button" class="ghost">Connect Xaman</button></div><p id="onboardWalletStatus" class="muted">Optional.</p></section>
-      </div>
-      <div class="onboard-actions"><button id="onboardBack" class="ghost hidden">Back</button><button id="onboardNext">Next</button><button id="onboardFinish" class="hidden">Enter XRPet</button></div>
-    </div>
-  </div>
   <main class="shell">
     <header class="topbar">
       <div><span class="brand">XRPET</span><span class="slash">//</span><span class="subbrand">SI COMPANION</span></div>
@@ -182,8 +169,7 @@
 
     <footer>XRPet SI Companion™ · v1.5 foundation · Web + Android/iOS ready · Not financial advice</footer>
   </main>
-  <script src="/bootstrap.js?v=1.5.3"></script>
   <script src="https://xumm.app/assets/cdn/xumm.min.js"></script>
-  <script src="/app.js?v=1.5.3"></script>
+  <script src="/app.js?v=1.5.4"></script>
 </body>
 </html>
