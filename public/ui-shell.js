@@ -14,8 +14,22 @@
     games:'gamesSection'
   };
 
-  function showView(view='home'){
+  function closeSidebarMenus(except=null){
+    qa('#xrpetSidebar details[open]').forEach(menu=>{
+      if(menu!==except)menu.removeAttribute('open');
+    });
+  }
+
+  function showView(view='home',{keepMenu=null}={}){
     const next=VIEW_TARGETS[view]?view:'home';
+
+    // Primary navigation always exits tools/customization mode.
+    document.body.classList.remove('workspace-open','customization-open');
+    qa('[data-customization-panel]').forEach(panel=>{
+      panel.classList.remove('is-open');
+      panel.hidden=true;
+    });
+
     qa('[data-view-section]').forEach(section=>{
       const active=section.dataset.viewSection===next;
       section.classList.toggle('view-active',active);
@@ -29,12 +43,20 @@
     qa('[data-primary-view]').forEach(el=>el.classList.toggle('active',el.dataset.primaryView===next));
     document.body.dataset.primaryView=next;
     const shell=q('.main-shell');
-    if(shell)shell.scrollTop=0;
     const target=q('#'+VIEW_TARGETS[next]);
     if(target){
       target.hidden=false;
       target.scrollTop=0;
-      requestAnimationFrame(()=>target.scrollIntoView({block:'start',behavior:'auto'}));
+    }
+    closeSidebarMenus(keepMenu);
+    if(shell&&target){
+      const deck=q('#topCommandDeck');
+      const gap=(deck?.offsetHeight||0)+12;
+      requestAnimationFrame(()=>{
+        shell.scrollTop=Math.max(0,target.offsetTop-gap);
+      });
+    }else if(shell){
+      shell.scrollTop=0;
     }
     window.dispatchEvent(new CustomEvent('xrpet:view-change',{detail:{view:next}}));
   }
@@ -51,38 +73,51 @@
   }
 
   document.addEventListener('click',e=>{
+    const summary=e.target.closest?.('#xrpetSidebar summary[data-primary-view]');
+    if(summary&&!summary.closest('details')?.disabled){
+      showView(summary.dataset.primaryView,{keepMenu:summary.closest('details')});
+      return;
+    }
+
     const primary=e.target.closest?.('[data-primary-view]');
     if(primary&&!primary.disabled){
       showView(primary.dataset.primaryView);
+      return;
     }
 
     const exchange=e.target.closest?.('[data-exchange]');
     if(exchange&&!exchange.disabled){
       showView('exchanges');
+      return;
     }
 
     const history=e.target.closest?.('[data-history-view]');
     if(history&&!history.disabled){
       showView('history');
+      return;
     }
 
     const ripplet=e.target.closest?.('[data-ripplet-view]');
     if(ripplet&&!ripplet.disabled){
       showView('ripplet');
+      return;
     }
 
     const ecosystem=e.target.closest?.('[data-ecosystem-view]');
     if(ecosystem&&!ecosystem.disabled){
       showView('ecosystem');
+      return;
     }
 
     const game=e.target.closest?.('[data-game-nav]');
     if(game&&!game.disabled){
       showView('games');
+      return;
     }
 
     const custom=e.target.closest?.('[data-customize-target]');
     if(custom&&!custom.disabled){
+      closeSidebarMenus();
       showCustomization(custom.dataset.customizeTarget);
     }
   },true);
@@ -142,7 +177,7 @@
     });
   }
 
-  window.XRPetShell={showView,refreshMarket};
+  window.XRPetShell={showView,refreshMarket,closeSidebarMenus};
   if(!qa('.primary-view-section.view-active').length)showView('home');
   refreshMarket();
   setInterval(refreshMarket,5000);
