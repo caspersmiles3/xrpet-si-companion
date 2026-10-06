@@ -117,7 +117,7 @@ const LIFE_REACTIONS={
   socialize:[
     {name:'Signal Wave',actions:[['wave',0],['greet',950]],sounds:[['wave',0],['greet',900]],variant:'a'},
     {name:'Signal High-Five',actions:[['highfive',0],['celebrate',1100]],sounds:[['highfive',0],['celebrate',1100]],variant:'b'},
-    {name:'Signal Dance',actions:[['dance',0],['orbit',1200]],sounds:[['dance',0],['success',1200]],variant:'c'}
+    {name:'Signal Cheer',actions:[['cheer',0],['salute',1200]],sounds:[['success',0],['greet',1150]],variant:'c'}
   ]
 };
 const lastLifeReaction={};
@@ -706,6 +706,11 @@ qa('.gender-choice').forEach(b=>b.addEventListener('click',()=>{state.companionG
 qa('[data-pet-action]').forEach(b=>b.addEventListener('click',()=>{
   const action=b.dataset.petAction;
   state.nftCompanion=null;applyNftCompanion();
+  if(action==='dance'&&window.XRPetMusicPlaying!==true){
+    setText('#petMood','Waiting for music');
+    setText('#petSpeech','Ripplet only dances while the XRPet music player is actually playing.');
+    return;
+  }
   window.XRPet3D?.perform?.(action);
   if(action==='celebrate'){playSound('success');setText('#petMood','Celebrating');setText('#petSpeech','Celebration protocol active. XRP signal lattice energized.')}
   else if(action==='alert'){playSound('alert');setText('#petMood','Alert');setText('#petSpeech','Sensors focused. Watching validated ledger activity closely.')}
@@ -1112,6 +1117,9 @@ let rippletPointer={x:0,y:0,active:false,movedAt:0};
 let rippletPointerTimer=0;
 let rippletLastPointerTarget=null;
 let rippletRouteToken=0;
+let rippletRouteUntil=0;
+let rippletMusicDancing=false;
+let rippletMusicDanceTimer=0;
 
 function syncRoamBounds(){
   const shell=q('.main-shell');if(!shell||!roamLayer)return;
