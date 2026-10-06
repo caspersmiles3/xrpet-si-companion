@@ -88,7 +88,7 @@ function renderSignal589(){
 
 function render(){
   const [name,min]=form(); const i=FORMS.findIndex(x=>x[0]===name); const next=FORMS[Math.min(i+1,FORMS.length-1)];
-  setText('#petName',state.petName);setText('#chatPetName',state.petName);setText('#topPetName',state.petName);setText('#floatingPetName',state.nftCompanion?.name||state.petName);setText('#evolution',name.toUpperCase());
+  setText('#petName',state.petName);setText('#chatPetName',state.petName);setText('#topPetName',state.petName);setText('#floatingPetName',state.nftCompanion?.name||state.petName);setText('#studioCompanionName',state.nftCompanion?.name||state.petName);setText('#studioQualityBadge',(state.graphicsQuality||'auto').toUpperCase()+' QUALITY');setText('#evolution',name.toUpperCase());
   const lvl=Math.floor(state.xp/100)+1; setText('#level','Lv. '+lvl);setText('#xpLabel',state.xp+' XP');setText('#topLevel','Level '+lvl);setText('#topXp',state.xp+' XP');
   const pct=name==='Legend'?100:Math.max(0,Math.min(100,(state.xp-min)/(next[1]-min)*100));
   if(q('#xpFill'))q('#xpFill').style.width=pct+'%';
@@ -273,12 +273,12 @@ qa('.side-link').forEach(b=>b.addEventListener('click',()=>{
 qa('.variant-dot').forEach(b=>b.addEventListener('click',()=>{state.cosmetic=b.dataset.cosmetic;persist();render();mood('Customized','Companion variant updated.','energized')}));
 window.addEventListener('xrpet:petInteract',()=>{playSound('pet');revealFloatControls();mood('Responsive','Core pulse received. Drag me to rotate, click to react.','energized');setTimeout(()=>mood('Connected','Live XRPL data is flowing.','calm'),900)});
 window.addEventListener('xrpet:3d-ready',()=>render());
-window.addEventListener('xrpet:model-loading',e=>{const d=e.detail||{};setText('#modelRuntimeMode','Loading rigged model · '+(COMPANION_NAMES[d.kind]||d.kind||'Companion'));playSound('model')});
+window.addEventListener('xrpet:model-loading',e=>{const d=e.detail||{};setText('#modelRuntimeMode','Loading rigged model · '+(COMPANION_NAMES[d.kind]||d.kind||'Companion'));setText('#studioRenderBadge','LOADING GLB');playSound('model')});
 window.addEventListener('xrpet:model-ready',e=>{
-  const d=e.detail||{};setText('#modelRuntimeMode',(d.mode==='rigged'?'Rigged GLB':d.mode==='real'?'Real GLB':'Procedural')+' · '+(COMPANION_NAMES[d.kind]||d.kind||'Companion'));playSound('success')
+  const d=e.detail||{};setText('#modelRuntimeMode',(d.mode==='rigged'?'Rigged GLB':d.mode==='real'?'Real GLB':'Procedural')+' · '+(COMPANION_NAMES[d.kind]||d.kind||'Companion'));setText('#studioRenderBadge',d.mode==='rigged'?'RIGGED GLB':d.mode==='real'?'REAL GLB':'PROCEDURAL');playSound('success')
 });
 window.addEventListener('xrpet:model-fallback',e=>{
-  const d=e.detail||{};setText('#modelRuntimeMode','Safe fallback · '+(COMPANION_NAMES[d.kind]||d.kind||'Companion'));playSound('error')
+  const d=e.detail||{};setText('#modelRuntimeMode','Safe fallback · '+(COMPANION_NAMES[d.kind]||d.kind||'Companion'));setText('#studioRenderBadge','SAFE MODE');playSound('error')
 });
 
 
@@ -531,10 +531,16 @@ if(launchGate){
 }
 
 
+bind('#studioViewFront','click',()=>window.XRPet3D?.cameraPreset?.('front'));
+bind('#studioViewThreeQuarter','click',()=>window.XRPet3D?.cameraPreset?.('threeQuarter'));
+bind('#studioViewProfile','click',()=>window.XRPet3D?.cameraPreset?.('profile'));
+bind('#studioResetCamera','click',()=>window.XRPet3D?.reset?.());
+
 const floatEl=q('#floatingCompanion'),floatHandle=q('#floatingHandle');
 let floatPinned=state.floatingPinned,dragFloat=false,dragDX=0,dragDY=0,floatRAF=0;
 function clampFloat(){
   if(!floatEl)return;
+  if(floatEl.classList.contains('studio-docked')){floatEl.style.left='';floatEl.style.top='';floatEl.style.right='';floatEl.style.bottom='';return}
   const r=floatEl.getBoundingClientRect();
   let x=state.floatX??(innerWidth-r.width-28), y=state.floatY??(innerHeight-r.height-22);
   x=Math.max(0,Math.min(innerWidth-r.width,x));y=Math.max(0,Math.min(innerHeight-r.height,y));
@@ -543,10 +549,14 @@ function clampFloat(){
 }
 function setPinned(v){
   floatPinned=v;state.floatingPinned=v;persist();
+  if(floatEl?.classList.contains('studio-docked')){
+    setText('#toggleFloat','Studio');setText('#floatingModeLabel','Interactive studio · orbit, zoom, and configure');
+    return;
+  }
   setText('#toggleFloat',v?'Unpin':'Pin');setText('#floatingModeLabel',v?'pinned · drag tag to move':'auto levitate · drag tag to place');
 }
 function animateFloat(t){
-  if(floatEl&&!floatPinned&&!dragFloat){
+  if(floatEl&&!floatEl.classList.contains('studio-docked')&&!floatPinned&&!dragFloat){
     const r=floatEl.getBoundingClientRect();
     const maxX=Math.max(0,innerWidth-r.width),maxY=Math.max(0,innerHeight-r.height);
     const x=maxX*(.5+.34*Math.sin(t/8500)+.10*Math.sin(t/3100));
@@ -558,6 +568,7 @@ function animateFloat(t){
   floatRAF=requestAnimationFrame(animateFloat);
 }
 floatHandle?.addEventListener('pointerdown',e=>{
+  if(floatEl?.classList.contains('studio-docked'))return;
   dragFloat=true;setPinned(true);const r=floatEl.getBoundingClientRect();dragDX=e.clientX-r.left;dragDY=e.clientY-r.top;floatHandle.setPointerCapture?.(e.pointerId);e.preventDefault();
 });
 floatHandle?.addEventListener('pointermove',e=>{
@@ -567,10 +578,10 @@ floatHandle?.addEventListener('pointermove',e=>{
 });
 floatHandle?.addEventListener('pointerup',e=>{if(!dragFloat)return;dragFloat=false;floatHandle.releasePointerCapture?.(e.pointerId);persist()});
 qa('.floating-controls button').forEach(b=>b.addEventListener('pointerdown',e=>e.stopPropagation()));
-bind('#toggleFloat','click',()=>setPinned(!floatPinned));
-bind('#centerFloat','click',()=>{setPinned(true);if(floatEl){const r=floatEl.getBoundingClientRect();state.floatX=Math.max(0,(innerWidth-r.width)/2);state.floatY=Math.max(0,(innerHeight-r.height)/2);clampFloat();persist()}});
-addEventListener('resize',()=>{if(floatPinned)clampFloat()});
-if(floatPinned)clampFloat();setPinned(floatPinned);requestAnimationFrame(animateFloat);applyNftCompanion();
+bind('#toggleFloat','click',()=>{if(floatEl?.classList.contains('studio-docked'))return;setPinned(!floatPinned)});
+bind('#centerFloat','click',()=>{if(floatEl?.classList.contains('studio-docked')){window.XRPet3D?.reset?.();return}setPinned(true);if(floatEl){const r=floatEl.getBoundingClientRect();state.floatX=Math.max(0,(innerWidth-r.width)/2);state.floatY=Math.max(0,(innerHeight-r.height)/2);clampFloat();persist()}});
+addEventListener('resize',()=>{if(floatEl?.classList.contains('studio-docked'))clampFloat();else if(floatPinned)clampFloat()});
+clampFloat();setPinned(floatPinned);requestAnimationFrame(animateFloat);applyNftCompanion();
 
 let controlsHideTimer=null;
 function revealFloatControls(){
