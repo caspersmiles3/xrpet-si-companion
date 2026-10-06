@@ -1,4 +1,4 @@
-# XRPet SI Companion™ — v5.2.1
+# XRPet SI Companion™ — v5.3.0
 
 **Don't watch the Ledger. Live with it.**
 
@@ -263,3 +263,19 @@ Mini-game events feed back into Ripplet's animation/sound system and award small
 - Settings now opens as a smaller upward/right-side popover with tighter controls and labels.
 - Settlements + History also opens outside the rail so its ten history destinations do not increase sidebar height.
 - Narrow application widths keep a smaller fixed left rail rather than moving navigation above the content.
+
+
+## v5.3 physical motor cortex
+
+- Ripplet now has a separate physical motor-control layer beneath his autonomous mind. The mind chooses behavior; the motor controller coordinates the body.
+- Added procedural full-body actions for walking, running, jumping, climbing, reaching, grabbing, carrying, crouching, turning, and balancing.
+- Walking/running use opposing arm and leg phases, larger stride amplitudes, body counter-rotation, pelvis compensation, and different movement speeds.
+- Jumping includes takeoff compression, an airborne arc, coordinated arm/leg motion, and landing recovery.
+- Climbing uses alternating hand-over-hand and leg cycles with torso lean.
+- Reaching/grabbing/carrying coordinate shoulder, upper arm, forearm, hand, and finger curl. Finger segments now participate in grip states.
+- Crouching lowers the center of mass and bends legs/feet instead of simply shrinking the character.
+- External rigged Ripplet models also receive matching physical action poses when compatible bone/node names are present.
+- The autonomous decision API may now choose physical behaviors including run, jump, climb, reach, grab, carry, crouch, and turn.
+- Long roaming moves automatically use running; shorter moves use walking. Station visits can use reach/grab motions near the destination.
+- The Ripplet page includes manual Physical Motion test controls for verifying each motor action.
+- These motions are physically inspired procedural animation. A dedicated skinned GLB with inverse kinematics and motion-capture clips would be the next step for film-level biomechanical realism.
