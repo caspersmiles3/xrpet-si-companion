@@ -3436,6 +3436,20 @@ footer{padding-bottom:24px}
   outline:none
 }
 #xPostText:focus{border-color:#4edff6;box-shadow:0 0 0 2px rgba(78,223,246,.06)}
+#xPostKey{
+  width:100%;
+  min-height:34px;
+  border:1px solid #193541;
+  border-radius:8px;
+  background:#050d12;
+  color:#dff9ff;
+  padding:7px 9px;
+  font:inherit;
+  font-size:.58rem;
+  outline:none
+}
+#xPostKey:focus{border-color:#4edff6;box-shadow:0 0 0 2px rgba(78,223,246,.06)}
+
 .x-post-actions{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .x-post-actions small{font-size:.5rem;color:#637a86}
 .x-post-actions button{
