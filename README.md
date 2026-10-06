@@ -1,4 +1,4 @@
-# XRPet SI Companion™ — v4.7.0
+# XRPet SI Companion™ — v4.8.0
 
 **Don't watch the Ledger. Live with it.**
 
@@ -8,7 +8,7 @@ XRPet is a lightweight, installable companion built around Ripple, XRP and the X
 
 Render service: https://xrpet-si-companion.onrender.com
 
-## v4.7 capabilities
+## v4.8 capabilities
 
 - Live XRPL ledger + fee signals
 - XRP/USD market snapshot with public-data fallback
@@ -174,3 +174,14 @@ The live 3D Ripplet layer is mounted inside the habitat instead of roaming over 
 - Sleep reactions: **Quiet Curl**, **Ledger Dream**, **Deep Snore**.
 - Signal Friend reactions: **Signal Wave**, **Signal High-Five**, **Signal Dance**.
 - Each reaction variant has its own synthesized sound sequence. XRPet still avoids immediately repeating the same reaction variant for the same activity.
+
+
+## v4.8 free roaming + XRPet cursor
+
+- Ripplet's roaming and live-signal reactions are now separate systems. Automatic Water, Food, Sleep, and Signal Friend events animate wherever Ripplet currently is instead of forcing him to stand at a station.
+- Free roaming continues even while live XRP/XRPL reactions are firing.
+- Manual station taps can still guide Ripplet to a station temporarily.
+- Ripplet receives new random waypoints every few seconds and uses a visible walk cycle with alternating arms, legs, feet, and body bounce.
+- Added spontaneous non-network reactions so Ripplet can greet, scan, focus, wave, dance, or react between live data events.
+- Quiet XRPL periods can still trigger sleep reactions, but they no longer freeze roaming.
+- Added custom XRPet mouse cursors for desktop/fine-pointer devices: a cyan XRPet signal cursor and a distinct interactive pointer for buttons, links, transaction cards, and controls.

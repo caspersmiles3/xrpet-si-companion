@@ -162,7 +162,8 @@ function playLifeReaction(activity){
 }
 function performLifeActivity(activity,manual=false){
   if(state.lifePinned&&activity!=='sit'&&!manual)return;
-  state.lifeActivity=activity;
+  const isLiveOverlay=!manual&&['drink','eat','sleep','socialize'].includes(activity);
+  if(!isLiveOverlay)state.lifeActivity=activity;
   if(activity==='drink')state.lifeWater=clampNeed(state.lifeWater+(manual?12:4));
   if(activity==='eat')state.lifeFood=clampNeed(state.lifeFood+(manual?12:4));
   if(activity==='sleep')state.lifeRest=clampNeed(state.lifeRest+(manual?10:3));
@@ -170,21 +171,26 @@ function performLifeActivity(activity,manual=false){
   const reaction=activity==='ledger'?'scan':activity==='explore'?'greet':activity==='sit'?'focus':'greet';
   const lifeReaction=['drink','eat','sleep','socialize'].includes(activity)?playLifeReaction(activity):null;
   if(!lifeReaction)window.XRPet3D?.perform?.(reaction);
-  window.XRPetRoam?.go?.(activity);
+  // Automatic live reactions happen wherever Ripplet currently is. Manual station taps may guide him there.
+  if(manual)window.XRPetRoam?.go?.(activity);
   clearTimeout(lifeReturnTimer);
-  if(!state.lifePinned&&['drink','eat','socialize'].includes(activity)){
-    lifeReturnTimer=setTimeout(()=>{if(!state.lifePinned){state.lifeActivity='explore';window.XRPetRoam?.go?.('explore');renderLife();persist()}},5200);
+  if(manual&&!state.lifePinned&&['drink','eat','sleep','socialize'].includes(activity)){
+    lifeReturnTimer=setTimeout(()=>{if(!state.lifePinned){state.lifeActivity='explore';renderLife();persist()}},4200);
   }
   renderLife();persist();
 }
 function lifeTick(){
   state.lifeFood=clampNeed(state.lifeFood-.03);state.lifeWater=clampNeed(state.lifeWater-.04);
-  state.lifeRest=clampNeed(state.lifeRest+(state.lifeActivity==='sleep'?.16:-.03));
+  state.lifeRest=clampNeed(state.lifeRest-.02);
   state.lifeSocial=clampNeed(state.lifeSocial-.02);state.lifeLastTick=Date.now();
   const quiet=Date.now()-(state.lastLedgerTxAt||0)>20000;
-  if(!state.lifePinned&&quiet&&state.lifeActivity!=='sleep')performLifeActivity('sleep');
-  else if(!state.lifePinned&&!quiet&&state.lifeActivity==='sleep')performLifeActivity('ledger');
-  else {renderLife();persist();}
+  if(!state.lifePinned&&quiet&&Date.now()-lastQuietReactionAt>45000){
+    lastQuietReactionAt=Date.now();performLifeActivity('sleep');
+    setText('#sleepSignal','Quiet period');
+  }else if(!quiet){
+    setText('#sleepSignal','XRPL active');
+  }
+  renderLife();persist();
 }
 applyOfflineLifeDecay();
 function render(){
@@ -264,7 +270,7 @@ if(Number.isFinite(previousPrice)&&Number.isFinite(state.xrpPrice)&&previousPric
 async function loadUpdates(){const box=q('#updates');if(box)box.innerHTML='<p class="muted">Checking official Ripple and XRPL sources…</p>';try{const r=await fetch('/api/updates',{cache:'no-store'});const d=await r.json();if(!r.ok||!Array.isArray(d.items)||!d.items.length)throw new Error();const items=d.items.slice(0,12);box.innerHTML=items.map((x,i)=>'<article class="announcement-card"><div class="announcement-index">'+String(i+1).padStart(2,'0')+'</div><div><span class="announcement-source">'+esc(x.source)+' · '+esc(x.label||'CONFIRMED')+'</span><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title)+'</a><small>Official source ↗</small></div></article>').join('');setText('#announcementStatus','Live');setText('#announcementUpdated','Updated '+new Date().toLocaleTimeString());const newest=items[0]?.title||'';setText('#friendSignal',newest?'New signal':'Standing by');if(newest&&state.lastAnnouncementTitle&&newest!==state.lastAnnouncementTitle&&!state.lifePinned)performLifeActivity('socialize');state.lastAnnouncementTitle=newest;persist()}catch{if(box)box.innerHTML='<p class="muted">Official update feed is temporarily unavailable.</p>';setText('#announcementStatus','Unavailable');setText('#announcementUpdated','Retrying automatically')}}
 const liveTransactions=[];
 const seenLiveTx=new Set();
-let liveTxRenderTimer=0,lifeWaterTimer=0,lifeReturnTimer=0;
+let liveTxRenderTimer=0,lifeWaterTimer=0,lifeReturnTimer=0,lastQuietReactionAt=0,spontaneousReactionTimer=0;
 function shortAccount(v){if(!v)return '—';const s=String(v);return s.length>18?s.slice(0,9)+'…'+s.slice(-6):s}
 function formatLedgerAmount(amount){
   if(amount==null)return '—';
@@ -782,12 +788,23 @@ function goRipplet(activity='explore'){
   if(activity==='ledger'){setRoamPosition(layer.width*.72,Math.max(165,layer.height*.34),'ledger');return}
   const x=70+Math.random()*Math.max(60,layer.width-300);
   const y=190+Math.random()*Math.max(40,layer.height-430);
+  window.XRPet3D?.perform?.('walk');
   setRoamPosition(x,y,'walk');
 }
 function roamingStep(){
   clearTimeout(roamTimer);
-  if(!roamPinned&&state.lifeActivity==='explore')goRipplet('explore');
-  roamTimer=setTimeout(roamingStep,7000+Math.random()*6000);
+  if(!roamPinned)goRipplet('explore');
+  roamTimer=setTimeout(roamingStep,4200+Math.random()*5200);
+}
+function spontaneousRippletReaction(){
+  clearTimeout(spontaneousReactionTimer);
+  if(!roamPinned){
+    const options=['greet','happy','focus','scan','wave','dance'];
+    const pick=options[Math.floor(Math.random()*options.length)];
+    window.XRPet3D?.perform?.(pick);
+    if(Math.random()<.35)playSound(pick==='dance'?'dance':pick==='wave'?'wave':pick==='scan'?'ledgerTx':'pet',true);
+  }
+  spontaneousReactionTimer=setTimeout(spontaneousRippletReaction,6500+Math.random()*9000);
 }
 function setRoamPinned(v){
   roamPinned=!!v;state.lifePinned=roamPinned;state.lifeRoaming=!roamPinned;persist();
@@ -797,7 +814,7 @@ function setRoamPinned(v){
 window.XRPetRoam={go:goRipplet,pin:setRoamPinned,sync:syncRoamBounds};
 addEventListener('resize',()=>{syncRoamBounds();goRipplet(state.lifePinned?'sit':state.lifeActivity)});
 addEventListener('scroll',syncRoamBounds,{passive:true});
-syncRoamBounds();setTimeout(()=>goRipplet(state.lifePinned?'sit':'explore'),300);roamingStep();applyNftCompanion();
+syncRoamBounds();setTimeout(()=>goRipplet(state.lifePinned?'sit':'explore'),300);roamingStep();spontaneousRippletReaction();applyNftCompanion();
 qa('[data-life-action]').forEach(b=>b.addEventListener('click',()=>{if(state.lifePinned)setRoamPinned(false);performLifeActivity(b.dataset.lifeAction,true)}));
 bind('#lifeSitStay','click',()=>setRoamPinned(!state.lifePinned));
 setInterval(lifeTick,15000);
