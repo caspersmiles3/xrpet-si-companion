@@ -32,6 +32,7 @@ const state={
   lastAnnouncementAt:Number(saved.lastAnnouncementAt)||0,
   lastMarketPrice:Number.isFinite(saved.lastMarketPrice)?saved.lastMarketPrice:null,
   lastPriceTickPct:Number.isFinite(saved.lastPriceTickPct)?saved.lastPriceTickPct:0,
+  selectedExchange:saved.selectedExchange||'all',
   mindAction:saved.mindAction||'roam',
   mindThought:saved.mindThought||'Watching the Ledger and deciding what to do next.',
   mindMode:saved.mindMode||'local-autonomy'
@@ -224,7 +225,20 @@ async function registerVisitor(){
   visitorPollTimer=setInterval(async()=>{try{const r=await fetch('/api/visitor-count',{cache:'no-store'});const d=await r.json();if(r.ok&&Number(d.count)!==visitorShown)animateVisitorCount(d.count)}catch{}},3000);
 }
 
-let marketWs=null,marketRetry=0,marketLastTickAt=0,liveChartPoints=[];
+let marketWs=null,marketRetry=0,marketPollTimer=0,marketLastTickAt=0,liveChartPoints=[];
+const EXCHANGE_LABELS={
+  all:{name:'All Exchanges',pair:'XRP/USD + XRP/USDT',quote:'MIXED'},
+  coinbase:{name:'Coinbase',pair:'XRP/USD',quote:'USD'},
+  kraken:{name:'Kraken',pair:'XRP/USD',quote:'USD'},
+  bitstamp:{name:'Bitstamp',pair:'XRP/USD',quote:'USD'},
+  bitfinex:{name:'Bitfinex',pair:'XRP/USD',quote:'USD'},
+  binanceus:{name:'Binance.US',pair:'XRP/USDT',quote:'USDT'},
+  okx:{name:'OKX',pair:'XRP/USDT',quote:'USDT'},
+  bybit:{name:'Bybit',pair:'XRP/USDT',quote:'USDT'},
+  kucoin:{name:'KuCoin',pair:'XRP/USDT',quote:'USDT'},
+  gateio:{name:'Gate.io',pair:'XRP/USDT',quote:'USDT'},
+  mexc:{name:'MEXC',pair:'XRP/USDT',quote:'USDT'}
+};
 function fmtMarketNumber(v,digits=4){
   const n=Number(v);return Number.isFinite(n)?'$'+n.toFixed(digits):'—';
 }
@@ -235,20 +249,39 @@ function fmtCompact(v,suffix=''){
   if(Math.abs(n)>=1e3)return (n/1e3).toFixed(1)+'K'+suffix;
   return n.toFixed(2)+suffix;
 }
+function selectedExchangeMeta(){
+  return EXCHANGE_LABELS[state.selectedExchange]||EXCHANGE_LABELS.all;
+}
+function renderExchangeSelection(){
+  const meta=selectedExchangeMeta();
+  setText('#selectedExchangeName',meta.name);
+  setText('#marketPairLabel',meta.pair);
+  setText('#marketBidVenue',meta.name);
+  setText('#marketAskVenue',meta.name);
+  setText('#chartQuoteVolumeLabel',meta.quote==='USDT'?'USDT VOLUME':meta.quote==='USD'?'USD VOLUME':'QUOTE VOLUME');
+  setText('#marketChartEyebrow',meta.pair+' // '+meta.name.toUpperCase());
+  setText('#marketChartCopy',state.selectedExchange==='all'
+    ? 'Composite XRP price and 24-hour market snapshot across supported public exchanges. The chart uses a liquid reference candle feed while the composite snapshot refreshes live.'
+    : 'Rolling 5-minute XRP market history from '+meta.name+' public market data. This is descriptive market data, not a prediction.');
+  qa('[data-exchange]').forEach(b=>b.classList.toggle('active',b.dataset.exchange===state.selectedExchange));
+}
 function updateMarketDetail(d={}){
   const bid=Number(d.bestBid??d.best_bid),ask=Number(d.bestAsk??d.best_ask),price=Number(d.price);
   const spread=Number.isFinite(bid)&&Number.isFinite(ask)?ask-bid:Number(d.spread);
   const spreadBps=Number.isFinite(spread)&&Number.isFinite(price)&&price>0?(spread/price)*10000:Number(d.spreadBps);
+  const meta=EXCHANGE_LABELS[d.exchange]||selectedExchangeMeta();
   setText('#marketBid',fmtMarketNumber(bid,5));
   setText('#marketAsk',fmtMarketNumber(ask,5));
+  setText('#marketBidVenue',d.exchangeName||meta.name);
+  setText('#marketAskVenue',d.exchangeName||meta.name);
   setText('#marketSpread',Number.isFinite(spread)?'$'+spread.toFixed(6):'—');
   setText('#marketSpreadBps',Number.isFinite(spreadBps)?spreadBps.toFixed(2)+' bps':'— bps');
-  if(Number.isFinite(Number(d.open24h)))setText('#chartOpen',fmtMarketNumber(d.open24h));
-  if(Number.isFinite(Number(d.high24h)))setText('#chartHigh',fmtMarketNumber(d.high24h));
-  if(Number.isFinite(Number(d.low24h)))setText('#chartLow',fmtMarketNumber(d.low24h));
-  if(Number.isFinite(Number(d.volume24hXrp)))setText('#chartVolume',fmtCompact(d.volume24hXrp,' XRP'));
-  if(Number.isFinite(Number(d.volume24hUsd)))setText('#chartVolumeUsd','$'+fmtCompact(d.volume24hUsd));
-  if(Number.isFinite(Number(d.range24hPct)))setText('#chartRangePct',Number(d.range24hPct).toFixed(2)+'%');
+  setText('#chartOpen',Number.isFinite(Number(d.open24h))?fmtMarketNumber(d.open24h):'—');
+  setText('#chartHigh',Number.isFinite(Number(d.high24h))?fmtMarketNumber(d.high24h):'—');
+  setText('#chartLow',Number.isFinite(Number(d.low24h))?fmtMarketNumber(d.low24h):'—');
+  setText('#chartVolume',Number.isFinite(Number(d.volume24hXrp))?fmtCompact(d.volume24hXrp,' XRP'):'—');
+  setText('#chartVolumeUsd',Number.isFinite(Number(d.volume24hUsd))?'$'+fmtCompact(d.volume24hUsd):'—');
+  setText('#chartRangePct',Number.isFinite(Number(d.range24hPct))?Number(d.range24hPct).toFixed(2)+'%':'—');
   if(d.source)setText('#marketSource',d.source);
   if(d.generatedAt)setText('#marketLastTick',new Date(d.generatedAt).toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'}));
 }
@@ -264,80 +297,112 @@ function mergeLiveTickIntoChart(p){
   if(liveChartPoints.length>288)liveChartPoints=liveChartPoints.slice(-288);
 }
 function applyLiveMarketTick(ticker={}){
+  if(state.selectedExchange!=='coinbase')return;
   const p=Number(ticker.price);
   if(!Number.isFinite(p)||p<=0)return;
   const previousPrice=state.lastMarketPrice;
   state.xrpPrice=p;state.lastMarketPrice=p;
   const change24h=Number(ticker.price_percent_chg_24_h);
   if(Number.isFinite(change24h))state.xrpChange24h=change24h;
-  if(Number.isFinite(previousPrice)&&previousPrice!==p){
-    const delta=(p-previousPrice)/previousPrice*100;
-    state.lastPriceTickPct=delta;
-    setText('#foodSignal',(delta>=0?'+':'')+delta.toFixed(3)+'% tick');
-  }
+  if(Number.isFinite(previousPrice)&&previousPrice!==p)state.lastPriceTickPct=(p-previousPrice)/previousPrice*100;
   const livePrice='$'+p.toFixed(5);
   const liveChange=Number.isFinite(state.xrpChange24h)?(state.xrpChange24h>=0?'+':'')+state.xrpChange24h.toFixed(2)+'% · 24h':'STREAMING';
   setText('#xrpPrice',livePrice);setText('#xrpChange',liveChange);
   setText('#globalXrpPrice',livePrice);setText('#globalXrpChange',liveChange);
   marketLastTickAt=Date.now();
-  const bid=Number(ticker.best_bid),ask=Number(ticker.best_ask);
-  const vol=Number(ticker.volume_24_h),hi=Number(ticker.high_24_h),lo=Number(ticker.low_24_h);
+  const bid=Number(ticker.best_bid),ask=Number(ticker.best_ask),vol=Number(ticker.volume_24_h),hi=Number(ticker.high_24_h),lo=Number(ticker.low_24_h);
   updateMarketDetail({
-    price:p,bestBid:bid,bestAsk:ask,
+    exchange:'coinbase',exchangeName:'Coinbase',price:p,bestBid:bid,bestAsk:ask,
     volume24hXrp:vol,volume24hUsd:Number.isFinite(vol)?vol*p:null,
-    high24h:hi,low24h:lo,
-    range24hPct:Number.isFinite(hi)&&Number.isFinite(lo)&&lo>0?((hi-lo)/lo)*100:null,
-    source:'Coinbase live ticker',
-    generatedAt:new Date().toISOString()
+    high24h:hi,low24h:lo,range24hPct:Number.isFinite(hi)&&Number.isFinite(lo)&&lo>0?((hi-lo)/lo)*100:null,
+    source:'Coinbase live WebSocket ticker',generatedAt:new Date().toISOString()
   });
   mergeLiveTickIntoChart(p);
   if(liveChartPoints.length>=2)renderMarketChart(liveChartPoints);
   renderSignal589();
 }
+function closeMarketStream(){
+  clearTimeout(marketRetry);clearInterval(marketPollTimer);marketPollTimer=0;
+  if(marketWs){
+    marketWs.onclose=null;marketWs.onerror=null;
+    try{marketWs.close()}catch{}
+    marketWs=null;
+  }
+}
 function scheduleMarketReconnect(){
   clearTimeout(marketRetry);
+  if(state.selectedExchange!=='coinbase')return;
   marketRetry=setTimeout(connectMarketStream,2500);
 }
 function connectMarketStream(){
-  clearTimeout(marketRetry);
+  closeMarketStream();
+  if(state.selectedExchange!=='coinbase'){
+    const interval=state.selectedExchange==='all'?6000:4000;
+    marketPollTimer=setInterval(()=>loadMarket(false),interval);
+    return;
+  }
   try{marketWs=new WebSocket('wss://advanced-trade-ws.coinbase.com')}catch{return scheduleMarketReconnect()}
   marketWs.onopen=()=>{
     marketWs.send(JSON.stringify({type:'subscribe',product_ids:['XRP-USD'],channel:'ticker'}));
     marketWs.send(JSON.stringify({type:'subscribe',channel:'heartbeats'}));
     setText('#globalXrpChange','LIVE STREAM');
-    setText('#marketSource','Coinbase live ticker');
+    setText('#marketSource','Coinbase live WebSocket ticker');
   };
   marketWs.onmessage=e=>{
     let m;try{m=JSON.parse(e.data)}catch{return}
     if(m.channel!=='ticker'||!Array.isArray(m.events))return;
     for(const ev of m.events){
       for(const t of ev.tickers||[]){
-        if(t.product_id!=='XRP-USD')continue;
-        applyLiveMarketTick(t);
+        if(t.product_id==='XRP-USD')applyLiveMarketTick(t);
       }
     }
   };
   marketWs.onclose=scheduleMarketReconnect;
   marketWs.onerror=()=>{try{marketWs.close()}catch{}};
 }
-async function loadMarket(){
+async function loadMarket(showOffline=true){
+  const exchange=state.selectedExchange||'all';
   try{
-    const r=await fetch('/api/market',{cache:'no-store'}),d=await r.json();if(!r.ok)throw new Error();
+    const r=await fetch('/api/market?exchange='+encodeURIComponent(exchange),{cache:'no-store'}),d=await r.json();
+    if(!r.ok)throw new Error(d.detail||'Unavailable');
     const previousPrice=state.lastMarketPrice;
     state.xrpPrice=Number(d.price);state.xrpChange24h=Number(d.change24h);state.lastMarketPrice=state.xrpPrice;
-    renderSignal589();updateMarketDetail(d);
     if(Number.isFinite(previousPrice)&&Number.isFinite(state.xrpPrice)&&previousPrice!==state.xrpPrice){
-      const delta=(state.xrpPrice-previousPrice)/previousPrice*100;
-      state.lastPriceTickPct=delta;setText('#foodSignal',(delta>=0?'+':'')+delta.toFixed(3)+'% tick');
-      performLifeActivity('eat');
+      state.lastPriceTickPct=(state.xrpPrice-previousPrice)/previousPrice*100;
     }
+    renderSignal589();updateMarketDetail(d);
     const livePrice=Number.isFinite(state.xrpPrice)?'$'+state.xrpPrice.toFixed(5):'Unavailable';
     const liveChange=Number.isFinite(state.xrpChange24h)?(state.xrpChange24h>=0?'+':'')+state.xrpChange24h.toFixed(2)+'% · 24h':'24h unavailable';
     setText('#xrpPrice',livePrice);setText('#xrpChange',liveChange);setText('#globalXrpPrice',livePrice);setText('#globalXrpChange',liveChange);
-    if(state.marketMood&&Number.isFinite(state.xrpChange24h)&&Math.abs(state.xrpChange24h)>=5)mood(state.xrpChange24h>0?'Excited':'Watchful','XRP moved '+Math.abs(state.xrpChange24h).toFixed(2)+'% over 24 hours. Movement is not a prediction.',state.xrpChange24h>0?'energized':'alert');
+    marketLastTickAt=Date.now();
+    if(state.marketMood&&Number.isFinite(state.xrpChange24h)&&Math.abs(state.xrpChange24h)>=5)mood(state.xrpChange24h>0?'Excited':'Watchful','XRP moved '+Math.abs(state.xrpChange24h).toFixed(2)+'% over 24 hours on '+(d.exchangeName||selectedExchangeMeta().name)+'. Movement is not a prediction.',state.xrpChange24h>0?'energized':'alert');
   }catch{
-    setText('#xrpPrice','Unavailable');setText('#xrpChange','Market feed offline');setText('#globalXrpPrice','Unavailable');setText('#globalXrpChange','Market feed offline');setText('#marketSource','Market feed offline');renderSignal589();
+    if(showOffline){
+      setText('#xrpPrice','Unavailable');setText('#xrpChange','Exchange feed offline');
+      setText('#globalXrpPrice','Unavailable');setText('#globalXrpChange','Exchange feed offline');
+      setText('#marketSource',selectedExchangeMeta().name+' feed unavailable');
+    }
+    renderSignal589();
   }
+}
+async function setExchange(id,{initial=false}={}){
+  if(!EXCHANGE_LABELS[id])id='all';
+  state.selectedExchange=id;
+  persist();
+  renderExchangeSelection();
+  closeMarketStream();
+  liveChartPoints=[];
+  setText('#chartRange','LOADING '+selectedExchangeMeta().name.toUpperCase());
+  await Promise.allSettled([loadMarket(true),loadMarketHistory()]);
+  connectMarketStream();
+  if(!initial){
+    window.XRPet3D?.perform?.('scan');
+    const details=q('#exchangeNavDetails');if(details)details.open=false;
+  }
+}
+function bindExchangeMenu(){
+  qa('[data-exchange]').forEach(button=>button.addEventListener('click',()=>setExchange(button.dataset.exchange)));
+  renderExchangeSelection();
 }
 function renderMarketChart(points=[]){
   const svg=q('#xrpMarketChart'),line=q('#marketLine'),area=q('#marketArea'),grid=q('#marketGrid');
@@ -366,10 +431,13 @@ function renderMarketChart(points=[]){
 }
 async function loadMarketHistory(){
   try{
-    const r=await fetch('/api/market-history',{cache:'no-store'}),d=await r.json();
+    const exchange=state.selectedExchange||'all';
+    const r=await fetch('/api/market-history?exchange='+encodeURIComponent(exchange),{cache:'no-store'}),d=await r.json();
     if(!r.ok||!Array.isArray(d.points))throw new Error();
     liveChartPoints=(d.points||[]).slice(-288).map(p=>({...p,time:Number(p.time)}));
     renderMarketChart(liveChartPoints);
+    const meta=selectedExchangeMeta();
+    setText('#chartRange',(exchange==='all'?'REFERENCE':'24H')+' · 5 MIN · '+meta.name.toUpperCase());
   }catch{setText('#chartRange','MARKET CHART OFFLINE')}
 }
 async function loadUpdates(){const box=q('#updates');if(box)box.innerHTML='<p class="muted">Checking official Ripple and XRPL sources…</p>';try{const r=await fetch('/api/updates',{cache:'no-store'});const d=await r.json();if(!r.ok||!Array.isArray(d.items)||!d.items.length)throw new Error();const items=d.items.slice(0,12);box.innerHTML=items.map((x,i)=>'<article class="announcement-card"><div class="announcement-index">'+String(i+1).padStart(2,'0')+'</div><div><span class="announcement-source">'+esc(x.source)+' · '+esc(x.label||'CONFIRMED')+'</span><a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title)+'</a><small>Official source ↗</small></div></article>').join('');setText('#announcementStatus','Live');setText('#announcementUpdated','Updated '+new Date().toLocaleTimeString());const newest=items[0]?.title||'';setText('#friendSignal',newest?'New signal':'Standing by');if(newest&&state.lastAnnouncementTitle&&newest!==state.lastAnnouncementTitle&&!false){state.lastAnnouncementAt=Date.now();performLifeActivity('socialize')}state.lastAnnouncementTitle=newest;persist()}catch{if(box)box.innerHTML='<p class="muted">Official update feed is temporarily unavailable.</p>';setText('#announcementStatus','Unavailable');setText('#announcementUpdated','Retrying automatically')}}
@@ -1300,7 +1368,7 @@ q('.main-shell')?.addEventListener('scroll',()=>{syncRoamBounds();if(roamDocked)
 syncRoamBounds();setTimeout(()=>goRipplet('explore'),300);roamingStep();spontaneousRippletReaction();applyNftCompanion();
 qa('[data-life-action]').forEach(b=>b.addEventListener('click',()=>performLifeActivity(b.dataset.lifeAction,true,false)));
 setInterval(lifeTick,15000);
-dailyVisit();render();registerVisitor();connectLedger();loadRecentTransactionsFallback(true);loadMarket();loadMarketHistory();connectMarketStream();loadUpdates();integrationCheck();setTimeout(runAutonomousMind,12000);setInterval(()=>{if(Date.now()-marketLastTickAt>15000)loadMarket()},15000);setInterval(loadMarketHistory,300000);setInterval(loadUpdates,15000);setInterval(integrationCheck,15000);setInterval(()=>loadRecentTransactionsFallback(false),8000);
+dailyVisit();render();registerVisitor();connectLedger();loadRecentTransactionsFallback(true);bindExchangeMenu();setExchange(state.selectedExchange||'all',{initial:true});loadUpdates();integrationCheck();setTimeout(runAutonomousMind,12000);setInterval(()=>{if(Date.now()-marketLastTickAt>18000)loadMarket(false)},18000);setInterval(loadMarketHistory,300000);setInterval(loadUpdates,15000);setInterval(integrationCheck,15000);setInterval(()=>loadRecentTransactionsFallback(false),8000);
 
 window.addEventListener('xrpet:gameEvent',e=>{
   const d=e.detail||{};
