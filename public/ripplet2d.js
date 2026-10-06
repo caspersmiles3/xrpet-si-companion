@@ -9,12 +9,12 @@
   const companionHost=document.getElementById('companion3d');
   for(const node of [roam,persistent,host,companionHost]){
     if(!node)continue;
-    node.style.setProperty('width','6px','important');
-    node.style.setProperty('height','8px','important');
-    node.style.setProperty('min-width','6px','important');
-    node.style.setProperty('min-height','8px','important');
-    node.style.setProperty('max-width','6px','important');
-    node.style.setProperty('max-height','8px','important');
+    node.style.setProperty('width','52px','important');
+    node.style.setProperty('height','72px','important');
+    node.style.setProperty('min-width','52px','important');
+    node.style.setProperty('min-height','72px','important');
+    node.style.setProperty('max-width','52px','important');
+    node.style.setProperty('max-height','72px','important');
   }
 
   host.innerHTML = `
@@ -116,18 +116,18 @@
 
   const el = document.getElementById('ripplet2d');
   if(el){
-    el.style.setProperty('width','6px','important');
-    el.style.setProperty('height','8px','important');
-    el.style.setProperty('min-width','6px','important');
-    el.style.setProperty('min-height','8px','important');
-    el.style.setProperty('max-width','6px','important');
-    el.style.setProperty('max-height','8px','important');
+    el.style.setProperty('width','52px','important');
+    el.style.setProperty('height','72px','important');
+    el.style.setProperty('min-width','52px','important');
+    el.style.setProperty('min-height','72px','important');
+    el.style.setProperty('max-width','52px','important');
+    el.style.setProperty('max-height','72px','important');
     const svg=el.querySelector('.ripplet2d-svg');
     if(svg){
-      svg.style.setProperty('width','6px','important');
-      svg.style.setProperty('height','8px','important');
-      svg.style.setProperty('max-width','6px','important');
-      svg.style.setProperty('max-height','8px','important');
+      svg.style.setProperty('width','52px','important');
+      svg.style.setProperty('height','72px','important');
+      svg.style.setProperty('max-width','52px','important');
+      svg.style.setProperty('max-height','72px','important');
     }
   }
   let resetTimer = 0;
