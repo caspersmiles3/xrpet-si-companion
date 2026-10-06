@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=3.7.0">
+  <link rel="stylesheet" href="/styles.css?v=3.8.0">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
@@ -51,16 +51,21 @@
     </div>
 
     <nav class="side-nav" aria-label="Primary navigation">
-      <button class="side-link active" data-scroll="homeSection"><span>⌂</span>Home</button>
-      <button class="side-link" data-scroll="signal589Section"><span>589</span>Signal 589</button>
-      <button class="side-link" data-scroll="companionSection"><span>◉</span>Companion</button>
-      <button class="side-link" data-scroll="roomsSection"><span>◇</span>Rooms</button>
-      <button class="side-link" data-scroll="cosmeticsSection"><span>✦</span>Cosmetics</button>
-      <button class="side-link" data-scroll="walletPanel"><span>▣</span>Wallet</button>
-      <button class="side-link" data-scroll="xrplPanel"><span>▥</span>XRPL Live</button>
-      <button class="side-link" data-scroll="xrpHistorySection"><span>↯</span>XRP History</button>
-      <button class="side-link" data-scroll="chatPanel"><span>◌</span>Chat</button>
+      <button class="side-link active" data-scroll="xrplPanel"><span>▥</span>XRPL Live</button>
+      <button class="side-link" data-scroll="xrpHistorySection"><span>↯</span>Settlements + History</button>
+      <button class="side-link" data-scroll="announcementsSection"><span>◌</span>Announcements</button>
     </nav>
+
+    <details class="settings-wrap customize-wrap" id="customizeDetails">
+      <summary class="settings-trigger customize-trigger"><span>✦</span><b>Companion & Cosmetics</b><i>⌄</i></summary>
+      <div class="settings-menu customize-menu">
+        <button type="button" class="menu-action" data-customize-target="companionSection">Companion</button>
+        <button type="button" class="menu-action" data-customize-target="roomsSection">Rooms</button>
+        <button type="button" class="menu-action" data-customize-target="cosmeticsSection">Cosmetics & Equipment</button>
+        <button type="button" class="menu-action" data-customize-target="walletPanel">Wallet & NFT Companion</button>
+        <button type="button" class="menu-action" data-customize-target="chatPanel">Companion Chat</button>
+      </div>
+    </details>
 
     <details class="settings-wrap" id="settingsDetails">
       <summary class="settings-trigger"><span>⚙</span><b>Settings</b><i>⌄</i></summary>
@@ -115,7 +120,7 @@
 
     
 
-    <section id="homeSection" class="flow-section home-section signal-command-home">
+    <section id="homeSection" class="flow-section home-section signal-command-home utility-panel-hidden">
       <div class="home-command-grid">
         <div class="section-copy home-command-copy">
           <div class="signal-kicker-row"><span class="eyebrow">XRPL COMPANION COMMAND</span><span class="verified-pill">MAINNET // LIVE</span></div>
@@ -208,7 +213,7 @@
   </div>
 </section>
 
-<section id="signal589Section" class="flow-section signal589-section">
+<section id="signal589Section" class="flow-section signal589-section utility-panel-hidden">
   <div class="section-heading signal-heading">
     <div>
       <span class="eyebrow">SIGNAL 589 // COMMUNITY LAYER</span>
@@ -255,7 +260,8 @@
 
 
 
-<section id="chatPanel" class="top-chat panel">
+<section id="chatPanel" class="top-chat panel customization-panel" data-customization-panel>
+      <button type="button" class="customization-close" data-customize-close aria-label="Close companion chat">×</button>
       <div class="chat-head">
         <div class="chat-identity"><div class="mini-avatar">X</div><div><strong>Chat with <span id="chatPetName">XRPet</span></strong><small><i></i> Online · grounded SI</small></div></div>
         <span class="truth-badge">TRUTH MODE</span>
@@ -270,7 +276,7 @@
       <form id="chatForm" class="composer"><input id="message" maxlength="500" autocomplete="off" placeholder="Message XRPet…"><button>Send</button></form>
     </section>
 
-<section id="companionSection" class="flow-section">
+<section id="companionSection" class="flow-section customization-panel" data-customization-panel>
       <div class="section-heading">
         <div><span class="eyebrow">COMPANION // DIGITAL FAMILIAR</span><h2>Choose an XRPL-native identity—not a generic pet.</h2><p class="section-subcopy">Every companion uses a distinct silhouette, real-model path, XRP signal equipment, reactions, memory, and evolution.</p></div>
         <span id="personalityChip" class="chip">Guardian</span>
@@ -467,7 +473,7 @@
       </article>
     </section>
 
-    <section id="roomsSection" class="flow-section">
+    <section id="roomsSection" class="flow-section customization-panel" data-customization-panel>
       <div class="section-heading">
         <div><span class="eyebrow">ROOM ENVIRONMENTS</span><h2>Transform the entire XRPet command environment</h2><p class="section-subcopy">Rooms are now full interface themes. The panels, background, glow, atmosphere, and companion lighting all change together.</p></div>
         <span id="unlocksChip" class="chip">3 unlocked</span>
@@ -496,7 +502,7 @@
       </div>
     </section>
 
-    <section id="cosmeticsSection" class="flow-section">
+    <section id="cosmeticsSection" class="flow-section customization-panel" data-customization-panel>
       <div class="section-heading">
         <div><span class="eyebrow">COMPANION EQUIPMENT</span><h2>Build identity through hardware, cores, halos, armor, and signal trails.</h2><p class="section-subcopy">These are physical XRPL equipment layers—not simple recolors.</p></div>
         <span class="chip">3D materials</span>
@@ -514,7 +520,7 @@
       
     </section>
 
-    <section id="walletPanel" class="flow-section">
+    <section id="walletPanel" class="flow-section customization-panel" data-customization-panel>
       <div class="section-heading"><div><span class="eyebrow">WALLET</span><h2>Connect or watch an XRPL account</h2></div><span id="walletProvider" class="chip">Manual</span></div>
       <div class="wallet-layout">
         <article class="detail-card">
@@ -541,12 +547,12 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 3.7.0 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 3.8.0 · XRP Ledger companion</footer>
   </main>
 </div>
 
-<script src="/app.js?v=3.7.0"></script>
-<script src="/timeline.js?v=3.7.0"></script>
-<script type="module" src="/companion3d.js?v=3.7.0"></script>
+<script src="/app.js?v=3.8.0"></script>
+<script src="/timeline.js?v=3.8.0"></script>
+<script type="module" src="/companion3d.js?v=3.8.0"></script>
 </body>
 </html>
