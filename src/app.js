@@ -914,6 +914,24 @@ bind('#lifeSitStay','click',()=>setRoamPinned(!state.lifePinned));
 setInterval(lifeTick,15000);
 dailyVisit();render();registerVisitor();connectLedger();loadMarket();loadMarketHistory();loadUpdates();integrationCheck();setTimeout(runAutonomousMind,12000);setInterval(loadMarket,60000);setInterval(loadMarketHistory,60000);setInterval(loadUpdates,60000);setInterval(integrationCheck,60000);
 
+window.addEventListener('xrpet:gameEvent',e=>{
+  const d=e.detail||{};
+  if(d.type==='hit'){
+    const action=d.streak>=5?'celebrate':d.game==='Consensus 80'?'scan':'happy';
+    window.XRPet3D?.perform?.(action);
+    playSound(d.streak>=5?'success':'notification',true);
+    addXp(d.streak>=5?2:1);
+  }else if(d.type==='miss'){
+    window.XRPet3D?.perform?.('alert');playSound('error',true);
+  }else if(d.type==='complete'){
+    window.XRPet3D?.perform?.((d.score||0)>100?'celebrate':'greet');
+    playSound((d.score||0)>100?'success':'pet',true);
+    addXp(Math.max(1,Math.min(10,Math.floor((Number(d.score)||0)/50)+1)));
+  }else if(d.type==='start'){
+    window.XRPet3D?.perform?.('focus');playSound('open',true);
+  }
+});
+
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
     navigator.serviceWorker.register('/sw.js').catch(err=>console.warn('XRPet service worker registration failed',err));
@@ -923,7 +941,7 @@ if('serviceWorker' in navigator){
 function closeCustomizationPanels(){
   qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));
   document.body.classList.remove('customization-open','workspace-open');
-  const target=primaryView==='home'?'homeSection':primaryView==='live'?'xrplPanel':primaryView==='announcements'?'announcementsSection':primaryView==='ripplet'?'companionSection':'xrpHistorySection';
+  const target=primaryView==='home'?'homeSection':primaryView==='live'?'xrplPanel':primaryView==='announcements'?'announcementsSection':primaryView==='ripplet'?'companionSection':primaryView==='games'?'gamesSection':'xrpHistorySection';
   setTimeout(()=>scrollSectionTop(target),20);
 }
 qa('[data-customize-target]').forEach(b=>b.addEventListener('click',()=>{
@@ -953,7 +971,7 @@ function setPrimaryView(view='home'){
   document.body.dataset.primaryView=view;
   qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));
   document.body.classList.remove('workspace-open','customization-open');
-  const target=view==='home'?'homeSection':view==='live'?'xrplPanel':view==='announcements'?'announcementsSection':view==='ripplet'?'companionSection':'xrpHistorySection';
+  const target=view==='home'?'homeSection':view==='live'?'xrplPanel':view==='announcements'?'announcementsSection':view==='ripplet'?'companionSection':view==='games'?'gamesSection':'xrpHistorySection';
   setTimeout(()=>scrollSectionTop(target),10);
 }
 qa('[data-primary-view]').forEach(b=>b.addEventListener('click',()=>setPrimaryView(b.dataset.primaryView)));
