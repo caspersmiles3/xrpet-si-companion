@@ -13,7 +13,7 @@ app.use((req,res,next)=>{
   res.setHeader('Permissions-Policy','camera=(), microphone=(), geolocation=()');
   res.setHeader('Cross-Origin-Opener-Policy','same-origin');
   res.setHeader('Cross-Origin-Resource-Policy','same-origin');
-  res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' https://xumm.app https://esm.sh; connect-src 'self' https://api.coinbase.com https://api.exchange.coinbase.com https://api.coingecko.com https://ripple.com https://xrpl.org https://xrplcluster.com wss://xrplcluster.com https://xumm.app https://esm.sh https://ipfs.io https://raw.githubusercontent.com; img-src 'self' data: https:; media-src 'self' https://raw.githubusercontent.com; style-src 'self' 'unsafe-inline'; font-src 'self'; frame-src https://xumm.app; object-src 'none'; base-uri 'self'; form-action 'self'");
+  res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self' https://xumm.app https://esm.sh; connect-src 'self' https://api.coinbase.com https://api.exchange.coinbase.com wss://advanced-trade-ws.coinbase.com https://api.coingecko.com https://ripple.com https://xrpl.org https://xrplcluster.com wss://xrplcluster.com https://xumm.app https://esm.sh https://ipfs.io https://raw.githubusercontent.com; img-src 'self' data: https:; media-src 'self' https://raw.githubusercontent.com; style-src 'self' 'unsafe-inline'; font-src 'self'; frame-src https://xumm.app; object-src 'none'; base-uri 'self'; form-action 'self'");
   next();
 });
 
@@ -58,7 +58,7 @@ const cache = {
   marketHistory: { at: 0, data: [] }
 };
 const FIVE_MIN = 5 * 60 * 1000;
-const TEN_MIN = 10 * 60 * 1000;
+const TEN_MIN = 15 * 1000;
 const clean = s => (s || '').replace(/\s+/g, ' ').trim();
 const pushSubscriptions = new Map();
 const visitorIds = new Set();
