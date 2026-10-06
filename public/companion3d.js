@@ -1104,6 +1104,124 @@ function poseExternalPart(name,opts={},speed=.14){
   o.scale.y+=(b.scale.y*sp[1]-o.scale.y)*speed;
   o.scale.z+=(b.scale.z*sp[2]-o.scale.z)*speed;
 }
+
+function poseArmChain(side='L',cfg={},speed=.22){
+  poseExternalPart('UpperArm_'+side,{
+    rot:cfg.shoulderRot||[0,0,0],
+    pos:cfg.shoulderPos||[0,0,0]
+  },speed);
+  poseExternalPart('Forearm_'+side,{
+    rot:cfg.elbowRot||[0,0,0],
+    pos:cfg.elbowPos||[0,0,0]
+  },Math.min(.5,speed+.02));
+  poseExternalPart('Hand_'+side,{
+    rot:cfg.wristRot||[0,0,0],
+    pos:cfg.wristPos||[0,0,0]
+  },Math.min(.5,speed+.04));
+}
+
+function resolveEyePart(names=[]){
+  for(const name of names){
+    if(externalParts[name])return externalParts[name];
+  }
+  return null;
+}
+
+function makeJointCoupler(name,parent,radius=.055){
+  if(!parent||externalParts[name])return externalParts[name]||null;
+  const mat=new THREE.MeshPhysicalMaterial({
+    color:0xb7eaf2,
+    emissive:0x1b9db6,
+    emissiveIntensity:.10,
+    metalness:.78,
+    roughness:.22,
+    clearcoat:1
+  });
+  const mesh=new THREE.Mesh(new THREE.SphereGeometry(radius,18,14),mat);
+  mesh.name=name;
+  mesh.castShadow=true;
+  mesh.receiveShadow=true;
+  parent.add(mesh);
+  externalParts[name]=mesh;
+  return mesh;
+}
+
+function ensureRippletJointCouplers(){
+  if(externalKind!=='ripplet'||!externalModel)return;
+  const upperL=externalParts['UpperArm_L'],upperR=externalParts['UpperArm_R'];
+  const foreL=externalParts['Forearm_L'],foreR=externalParts['Forearm_R'];
+  const handL=externalParts['Hand_L'],handR=externalParts['Hand_R'];
+
+  makeJointCoupler('XR_ShoulderCoupler_L',upperL,.064);
+  makeJointCoupler('XR_ShoulderCoupler_R',upperR,.064);
+  makeJointCoupler('XR_ElbowCoupler_L',foreL,.056);
+  makeJointCoupler('XR_ElbowCoupler_R',foreR,.056);
+  makeJointCoupler('XR_WristCoupler_L',handL,.046);
+  makeJointCoupler('XR_WristCoupler_R',handR,.046);
+}
+
+function animateRippletEyes(t,state){
+  if(externalKind!=='ripplet'||!externalModel)return;
+  const eyeL=resolveEyePart(['EnergyEye_L','Eye_L','LeftEye']);
+  const eyeR=resolveEyePart(['EnergyEye_R','Eye_R','RightEye']);
+  if(!eyeL||!eyeR)return;
+
+  const blinkWindow=(t%4.3);
+  const naturalBlink=(blinkWindow>.06&&blinkWindow<.16)?.10:1;
+  let targetY=naturalBlink;
+  let targetX=1;
+
+  if(state==='focus'||state==='scan')targetY=Math.min(targetY,.55);
+  else if(state==='alert')targetY=Math.min(targetY,.72);
+  else if(state==='sad')targetY=Math.min(targetY,.58);
+  else if(state==='confused')targetY=Math.min(targetY,.78);
+  else if(state==='sleep'||state==='curl'||state==='dream'||state==='snore')targetY=.08;
+  else if(state==='surprised'){targetY=Math.max(targetY,1.28);targetX=1.08}
+  else if(state==='happy'||state==='excited'||state==='celebrate'||state==='cheer'||state==='victory')targetY=Math.max(targetY,1.08);
+
+  eyeL.scale.y+=(targetY-eyeL.scale.y)*.30;
+  eyeR.scale.y+=(targetY-eyeR.scale.y)*.30;
+  eyeL.scale.x+=(targetX-eyeL.scale.x)*.22;
+  eyeR.scale.x+=(targetX-eyeR.scale.x)*.22;
+
+  const pulse=.16+(Math.sin(t*3.1)+1)*.08+(state==='alert'?.14:0)+(state==='excited'||state==='celebrate'?.10:0);
+  for(const eye of [eyeL,eyeR]){
+    const mats=Array.isArray(eye.material)?eye.material:[eye.material];
+    for(const mat of mats){
+      if(mat&&'emissiveIntensity' in mat)mat.emissiveIntensity=pulse;
+    }
+  }
+}
+
+function animateRippletBodyLife(t,state){
+  if(externalKind!=='ripplet'||!externalModel||state!=='idle')return;
+  const breathe=Math.sin(t*1.55);
+  const sway=Math.sin(t*.72);
+
+  poseExternalPart('Ripplet_Torso',{
+    rot:[0,0,sway*.012],
+    pos:[0,Math.abs(breathe)*.012,0],
+    scale:[1,1+breathe*.008,1]
+  },.10);
+
+  poseExternalPart('Ripplet_Head',{
+    rot:[sway*.016,Math.sin(t*.46)*.040,sway*.010],
+    pos:[0,Math.sin(t*1.05)*.012,0]
+  },.12);
+
+  poseArmChain('L',{
+    shoulderRot:[Math.sin(t*.76)*.020,0,.045],
+    elbowRot:[Math.sin(t*.76+1.2)*.024,0,.065],
+    wristRot:[0,Math.sin(t*.88)*.035,0]
+  },.12);
+
+  poseArmChain('R',{
+    shoulderRot:[Math.sin(t*.76+1.5)*.020,0,-.045],
+    elbowRot:[Math.sin(t*.76+2.0)*.024,0,-.065],
+    wristRot:[0,-Math.sin(t*.88+1.1)*.035,0]
+  },.12);
+}
+
 function animateExternalRipplet(t,state){
   if(externalKind!=='ripplet'||!externalModel||externalNativeRig)return;
   const s=Math.sin(t*2.2), slow=Math.sin(t*.72), walk=Math.sin(t*6.2);
@@ -1234,13 +1352,17 @@ function animateNativeRippletExpression(t,state){
   const wave=Math.sin(t*7.5),quick=Math.sin(t*10.5),slow=Math.sin(t*2.6);
 
   if(state==='happy'||state==='excited'){
-    poseExternalPart('UpperArm_L',{rot:[-.12,0,.64+wave*.08]},.34);
-    poseExternalPart('UpperArm_R',{rot:[-.12,0,-.64-wave*.08]},.34);
-    poseExternalPart('Forearm_L',{rot:[-.05,0,.30]},.34);
-    poseExternalPart('Forearm_R',{rot:[-.05,0,-.30]},.34);
+    poseArmChain('L',{
+      shoulderRot:[-.10,0,.48+wave*.06],
+      elbowRot:[-.06,0,.28],
+      wristRot:[0,.05,.08]
+    },.32);
+    poseArmChain('R',{
+      shoulderRot:[-.10,0,-.48-wave*.06],
+      elbowRot:[-.06,0,-.28],
+      wristRot:[0,-.05,-.08]
+    },.32);
     poseExternalPart('Ripplet_Head',{rot:[-.10,slow*.08,wave*.025],pos:[0,.04+Math.abs(wave)*.02,0]},.30);
-    poseExternalPart('EnergyEye_L',{scale:[1,1.12,1.08]},.30);
-    poseExternalPart('EnergyEye_R',{scale:[1,1.12,1.08]},.30);
   }else if(state==='celebrate'||state==='cheer'||state==='victory'||state==='dance'){
     poseExternalPart('UpperArm_L',{rot:[-.18,0,1.05+wave*.16],pos:[0,.08,0]},.38);
     poseExternalPart('UpperArm_R',{rot:[-.18,0,-1.05-wave*.16],pos:[0,.08,0]},.38);
@@ -1256,12 +1378,16 @@ function animateNativeRippletExpression(t,state){
     poseExternalPart('Ripplet_Head',{rot:[-.18,0,wave*.045],pos:[0,Math.abs(quick)*.035,0]},.34);
     poseExternalPart('Ripplet_Torso',{rot:[-.08,0,0],pos:[0,Math.abs(quick)*.025,0]},.30);
   }else if(state==='shrug'){
-    poseExternalPart('UpperArm_L',{rot:[0,0,.52],pos:[0,.06,0]},.34);
-    poseExternalPart('UpperArm_R',{rot:[0,0,-.52],pos:[0,.06,0]},.34);
-    poseExternalPart('Forearm_L',{rot:[0,0,.72]},.34);
-    poseExternalPart('Forearm_R',{rot:[0,0,-.72]},.34);
-    poseExternalPart('Hand_L',{rot:[0,.18,.12]},.30);
-    poseExternalPart('Hand_R',{rot:[0,-.18,-.12]},.30);
+    poseArmChain('L',{
+      shoulderRot:[0,0,.42],
+      elbowRot:[0,0,.56],
+      wristRot:[0,.14,.12]
+    },.32);
+    poseArmChain('R',{
+      shoulderRot:[0,0,-.42],
+      elbowRot:[0,0,-.56],
+      wristRot:[0,-.14,-.12]
+    },.32);
     poseExternalPart('Ripplet_Head',{rot:[0,-.08,.08]},.28);
   }else if(state==='confused'){
     poseExternalPart('Ripplet_Head',{rot:[.02,Math.sin(t*2.2)*.12,.18]},.32);
@@ -1278,22 +1404,42 @@ function animateNativeRippletExpression(t,state){
     poseExternalPart('EnergyEye_L',{scale:[1,.52,1]},.30);
     poseExternalPart('EnergyEye_R',{scale:[1,.52,1]},.30);
   }else if(state==='point'){
-    poseExternalPart('UpperArm_R',{rot:[-.82,0,-.34]},.38);
-    poseExternalPart('Forearm_R',{rot:[-.52,0,-.10],pos:[0,.04,.10]},.38);
-    poseExternalPart('Hand_R',{rot:[-.18,0,0],pos:[0,.08,.14]},.38);
+    poseArmChain('R',{
+      shoulderRot:[-.74,0,-.30],
+      elbowRot:[-.42,0,-.10],
+      elbowPos:[0,.035,.075],
+      wristRot:[-.16,0,0],
+      wristPos:[0,.06,.12]
+    },.38);
     poseExternalPart('Ripplet_Head',{rot:[-.04,.14,0]},.30);
   }else if(state==='salute'){
-    poseExternalPart('UpperArm_R',{rot:[-.22,0,-.72]},.38);
-    poseExternalPart('Forearm_R',{rot:[-.58,0,-1.00],pos:[0,.05,.03]},.40);
-    poseExternalPart('Hand_R',{rot:[-.12,0,-.18],pos:[0,.10,.06]},.38);
+    poseArmChain('R',{
+      shoulderRot:[-.20,0,-.54],
+      elbowRot:[-.50,0,-.82],
+      elbowPos:[0,.035,.025],
+      wristRot:[-.10,0,-.16],
+      wristPos:[0,.075,.045]
+    },.36);
+    poseArmChain('L',{
+      shoulderRot:[0,0,.08],
+      elbowRot:[0,0,.06],
+      wristRot:[0,0,0]
+    },.22);
     poseExternalPart('Ripplet_Head',{rot:[-.04,.04,0]},.28);
   }else if(state==='thinking'){
     poseExternalPart('Ripplet_Head',{rot:[.05,-.11,.10]},.28);
-    poseExternalPart('UpperArm_L',{rot:[-.18,0,.42]},.30);
-    poseExternalPart('Forearm_L',{rot:[-.62,0,.82],pos:[0,.05,.05]},.36);
-    poseExternalPart('Hand_L',{rot:[-.18,.10,.08],pos:[0,.08,.08]},.34);
-    poseExternalPart('EnergyEye_L',{scale:[1,.68,1]},.28);
-    poseExternalPart('EnergyEye_R',{scale:[1,.78,1]},.28);
+    poseArmChain('L',{
+      shoulderRot:[-.18,0,.34],
+      elbowRot:[-.58,0,.70],
+      elbowPos:[0,.035,.035],
+      wristRot:[-.14,.10,.06],
+      wristPos:[0,.055,.055]
+    },.34);
+    poseArmChain('R',{
+      shoulderRot:[.02,0,-.10],
+      elbowRot:[.04,0,-.07],
+      wristRot:[0,0,0]
+    },.22);
   }else if(state==='surprised'){
     poseExternalPart('UpperArm_L',{rot:[-.18,0,.48]},.32);
     poseExternalPart('UpperArm_R',{rot:[-.18,0,-.48]},.32);
@@ -1380,6 +1526,7 @@ async function loadExternalModel(url,options={}){
   externalModel.userData.xrpetBaseRotX=externalModel.rotation.x;
   root.add(externalModel);
   captureExternalRippletParts();
+  ensureRippletJointCouplers();
 
   pet.visible=false;
   const bareRipplet=externalKind==='ripplet';
@@ -1429,7 +1576,9 @@ function playExternalAction(name){
   const patterns=(custom[name]&&custom[name].length?custom[name]:fallback[name])||fallback.idle;
   const next=findExternalAction(patterns);
   if(!next||next===externalActiveAction)return;
-  next.reset().setEffectiveTimeScale(1).setEffectiveWeight(1);
+  const expressionOverlay=new Set(['happy','excited','thinking','shrug','confused','sad','point','salute','surprised','focus','scan','alert','cheer','laugh','victory','celebrate']);
+  const clipWeight=externalNativeRig&&expressionOverlay.has(name)?.58:1;
+  next.reset().setEffectiveTimeScale(1).setEffectiveWeight(clipWeight);
   const looping=new Set(['idle','walk','run','dance','orbit']);
   if(looping.has(name)){next.setLoop(THREE.LoopRepeat,Infinity);next.clampWhenFinished=false}
   else{next.setLoop(THREE.LoopOnce,1);next.clampWhenFinished=true}
@@ -1438,7 +1587,9 @@ function playExternalAction(name){
     const clipMs=Math.max(450,(next.getClip?.().duration||0)*1000+180);
     actionUntil=Math.max(actionUntil,performance.now()+clipMs);
   }
-  if(externalActiveAction&&externalActiveAction!==externalBlinkAction)externalActiveAction.fadeOut(.18);
+  if(externalActiveAction&&externalActiveAction!==externalBlinkAction){
+    externalActiveAction.fadeOut(expressionOverlay.has(name)?.12:.18);
+  }
   externalActiveAction=next;
 }
 async function ensureBuiltInModel(kind){
@@ -1600,6 +1751,8 @@ function renderFrame(){
     }
   }
   animateNativeRippletExpression(t,state);
+  animateRippletEyes(t,state);
+  animateRippletBodyLife(t,state);
   animateExternalRipplet(t,state);
   if(externalModel){
     const extSleep=state==='sleep',extCelebrate=state==='celebrate',extAlert=state==='alert',extFocus=state==='focus',extScan=state==='scan',extOrbit=state==='orbit',extRun=state==='run',extJump=state==='jump',extClimb=state==='climb',extCrouch=state==='crouch';
