@@ -1,3 +1,5 @@
+let gemApiPromise;
+const getGemApi=()=>gemApiPromise||(gemApiPromise=import('https://esm.sh/@gemwallet/api@3.7.0'));
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const STORE='xrpet-v1-state';
@@ -16,7 +18,10 @@ const state={
   explainLevel:saved.explainLevel||'balanced',
   notifyLevel:saved.notifyLevel||'quiet',
   truthMode:saved.truthMode!==false,
-  marketMood:saved.marketMood!==false
+  marketMood:saved.marketMood!==false,
+  onboarded:saved.onboarded===true,
+  walletProvider:saved.walletProvider||'manual',
+  walletNetwork:saved.walletNetwork||null
 };
 
 function persist(){
@@ -26,7 +31,8 @@ function persist(){
     lastMissionDate:state.lastMissionDate,lastVisitDate:state.lastVisitDate,
     room:state.room,memories:state.memories.slice(-8),notifications:state.notifications.slice(0,40),
     explainLevel:state.explainLevel,notifyLevel:state.notifyLevel,
-    truthMode:state.truthMode,marketMood:state.marketMood
+    truthMode:state.truthMode,marketMood:state.marketMood,
+    onboarded:state.onboarded,walletProvider:state.walletProvider,walletNetwork:state.walletNetwork
   }));
 }
 
@@ -201,6 +207,54 @@ function subscribeAccount(account){
   if(ws?.readyState===1) ws.send(JSON.stringify({id:'xrpet-account',command:'subscribe',accounts:[account]}));
 }
 
+async function setConnectedWallet(provider,address,network){
+  state.walletProvider=provider;
+  state.walletNetwork=network||'unknown';
+  state.account=address;
+  persist();
+  $('#walletProvider').textContent=provider;
+  $('#walletConnection').textContent=`${provider} connected · ${address.slice(0,6)}…${address.slice(-5)} · ${state.walletNetwork}`;
+  $('#account').value=address;
+  $('#walletState').textContent=`Watching connected wallet ${address.slice(0,6)}…${address.slice(-5)}.`;
+  subscribeAccount(address);
+  notify('Wallet connected',`${provider} connected safely. XRPet received only your public address.`,'wallet');
+  addXp(5,'Connected a wallet safely.');
+}
+async function connectGemWallet(statusTarget='#walletConnection'){
+  const status=$(statusTarget);
+  try{
+    const {isInstalled,getAddress,getNetwork}=await getGemApi();
+    const installed=await isInstalled();
+    if(!installed?.result?.isInstalled){status.textContent='GemWallet is not installed in this browser.';return false}
+    const [addressResult,networkResult]=await Promise.all([getAddress(),getNetwork()]);
+    const address=addressResult?.result?.address;
+    if(!address){status.textContent='GemWallet did not share an address.';return false}
+    await setConnectedWallet('GemWallet',address,networkResult?.result?.network||'unknown');
+    status.textContent=`GemWallet connected: ${address.slice(0,6)}…${address.slice(-5)}`;
+    return true;
+  }catch(e){status.textContent='GemWallet connection failed.';return false}
+}
+async function loadPublicConfig(){
+  try{const r=await fetch('/api/config');return await r.json()}catch{return {}}
+}
+async function connectXaman(statusTarget='#walletConnection'){
+  const status=$(statusTarget);
+  const cfg=await loadPublicConfig();
+  if(!cfg.xamanApiKey){status.textContent='Xaman is ready, but the public Xaman API key has not been configured on the server yet.';return false}
+  if(typeof window.Xumm!=='function'){status.textContent='Xaman SDK did not load.';return false}
+  try{
+    const xumm=new window.Xumm(cfg.xamanApiKey);
+    status.textContent='Opening Xaman authorization…';
+    await xumm.authorize();
+    const address=await xumm.user?.account;
+    const network=await xumm.environment?.openTxNetworkEndpoint;
+    if(!address){status.textContent='Xaman authorization completed without an account address.';return false}
+    await setConnectedWallet('Xaman',address,network||'XRPL');
+    status.textContent=`Xaman connected: ${address.slice(0,6)}…${address.slice(-5)}`;
+    return true;
+  }catch(e){status.textContent='Xaman connection was cancelled or failed.';return false}
+}
+
 async function loadMarket(){
   try{
     const r=await fetch('/api/market'); const d=await r.json();
@@ -284,7 +338,9 @@ $('#watchForm').addEventListener('submit',e=>{
   notify('Wallet Watch enabled','A public XRPL address is now being watched. No secret key was requested.','wallet');
 });
 $('#clearWallet').onclick=()=>{
-  state.account=null;persist();$('#account').value='';$('#walletState').textContent='No account watched.';
+  state.account=null;state.walletProvider='manual';state.walletNetwork=null;persist();
+  $('#account').value='';$('#walletState').textContent='No account watched.';
+  $('#walletProvider').textContent='Manual';$('#walletConnection').textContent='No wallet connected. You can still watch any public XRPL address.';
   if(ws?.readyState===1) ws.send(JSON.stringify({id:'xrpet-unsub',command:'unsubscribe',accounts:[]}));
 };
 
@@ -311,11 +367,32 @@ $$('.cosmetic').forEach(b=>b.onclick=()=>{
 });
 
 $('#clearNotifications').onclick=()=>{state.notifications=[];persist();renderNotifications()};
-$('#notifyButton').onclick=async()=>{
-  if(!('Notification'in window)){notify('Notifications unavailable','This browser does not support system notifications.','warning');return}
-  const p=await Notification.requestPermission();
-  notify('Notification permission',p==='granted'?'System notifications are enabled.':'System notifications were not enabled.','settings');
-};
+$('#connectGem').onclick=()=>connectGemWallet();
+$('#connectXaman').onclick=()=>connectXaman();
+$('#walletButton').onclick=()=>document.querySelector('#connectGem')?.scrollIntoView({behavior:'smooth',block:'center'});
+function urlBase64ToUint8Array(base64String){
+  const padding='='.repeat((4-base64String.length%4)%4);
+  const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(base64);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
+}
+async function enablePush(){
+  if(!('Notification'in window)||!('serviceWorker'in navigator)||!('PushManager'in window)){
+    notify('Push unavailable','This browser does not support Web Push.','warning');return false
+  }
+  const permission=await Notification.requestPermission();
+  if(permission!=='granted'){notify('Notifications disabled','Permission was not granted.','settings');return false}
+  try{
+    const keyRes=await fetch('/api/push/public-key'); const key=await keyRes.json();
+    if(!key.enabled){notify('Push not configured','Browser notifications work, but server push is not configured.','settings');return false}
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub) sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(key.publicKey)});
+    await fetch('/api/push/subscribe',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({subscription:sub})});
+    notify('Push enabled','XRPet can deliver selected signals while the app is closed.','settings');
+    return true;
+  }catch{notify('Push setup failed','Local notifications still work.','warning');return false}
+}
+$('#notifyButton').onclick=enablePush;
 $('#settingsButton').onclick=()=>$('#settingsPanel').classList.remove('hidden');
 $('#closeSettings').onclick=()=>$('#settingsPanel').classList.add('hidden');
 $('#explainLevel').value=state.explainLevel;
@@ -327,8 +404,38 @@ $('#notifyLevel').onchange=e=>{state.notifyLevel=e.target.value;persist()};
 $('#truthToggle').onchange=e=>{state.truthMode=e.target.checked;persist()};
 $('#marketMoodToggle').onchange=e=>{state.marketMood=e.target.checked;persist()};
 
+let onboardStep=1;
+function renderOnboarding(){
+  $('[data-step]').forEach(s=>s.classList.toggle('hidden',Number(s.dataset.step)!==onboardStep));
+  $('#onboardBack').classList.toggle('hidden',onboardStep===1);
+  $('#onboardNext').classList.toggle('hidden',onboardStep===3);
+  $('#onboardFinish').classList.toggle('hidden',onboardStep!==3);
+}
+if(!state.onboarded){$('#onboarding').classList.remove('hidden');renderOnboarding()}
+$('#onboardNext').onclick=()=>{
+  if(onboardStep===1){
+    state.petName=$('#onboardName').value.trim()||'NEXUS-589';
+    state.personality=$('#onboardPersonality').value;
+  } else if(onboardStep===2){
+    state.focus=$('#onboardFocus').value.trim();
+    state.explainLevel=$('#onboardExplain').value;
+  }
+  onboardStep=Math.min(3,onboardStep+1);persist();renderOnboarding();
+};
+$('#onboardBack').onclick=()=>{onboardStep=Math.max(1,onboardStep-1);renderOnboarding()};
+$('#onboardGem').onclick=()=>connectGemWallet('#onboardWalletStatus');
+$('#onboardXaman').onclick=()=>connectXaman('#onboardWalletStatus');
+$('#onboardFinish').onclick=()=>{
+  state.onboarded=true;persist();$('#onboarding').classList.add('hidden');renderProfile();
+  notify('Companion created',`${state.petName} is ready.`,'profile');
+};
 dailyVisit();renderProfile();renderNotifications();
-if(state.account){$('#account').value=state.account;$('#walletState').textContent=`Watching ${state.account.slice(0,6)}…${state.account.slice(-5)}.`}
+if(state.account){
+  $('#account').value=state.account;
+  $('#walletState').textContent=`Watching ${state.account.slice(0,6)}…${state.account.slice(-5)}.`;
+  $('#walletProvider').textContent=state.walletProvider==='manual'?'Manual':state.walletProvider;
+  if(state.walletProvider!=='manual') $('#walletConnection').textContent=`${state.walletProvider} connected · ${state.account.slice(0,6)}…${state.account.slice(-5)} · ${state.walletNetwork||'XRPL'}`;
+}
 if(state.lastMissionDate===todayKey()){
   charge=7;$('#chargeCount').textContent='7/7';$('#meterFill').style.width='100%';$('#missionText').textContent='Mission complete. New mission arrives tomorrow.';
 }
