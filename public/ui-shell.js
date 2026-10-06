@@ -149,13 +149,11 @@
     }
     closeSidebarMenus(keepMenu);
 
-    if(shell&&target){
-      const deck=q('#topCommandDeck');
-      const gap=(deck?.offsetHeight||0)+12;
-      requestAnimationFrame(()=>{shell.scrollTop=Math.max(0,target.offsetTop-gap)});
-    }else if(shell){
-      shell.scrollTop=0;
-    }
+    // The shell is locked; only the active page scrolls.
+    if(shell)shell.scrollTop=0;
+    requestAnimationFrame(()=>{
+      if(target)target.scrollTop=0;
+    });
 
     if(next==='announcements')loadAnnouncements();
     if(next==='exchanges')refreshMarket();
@@ -241,7 +239,8 @@
     document.body.classList.remove('customization-open');
     closeSidebarMenus();
     const shell=q('.main-shell');if(shell)shell.scrollTop=0;
-    requestAnimationFrame(()=>panel.scrollIntoView({block:'start',behavior:'auto'}));
+    panel.scrollTop=0;
+    requestAnimationFrame(()=>{panel.scrollTop=0});
   }
 
   async function selectExchange(id='all'){
