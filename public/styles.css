@@ -10102,3 +10102,401 @@ body.ripplet-docked .top-ripplet-box .ripplet-dock-platform{
   from{transform:rotate(-7deg)}
   to{transform:rotate(7deg)}
 }
+
+
+/* XRPet 5.5.61 — command center integrated into left rail; full-page workspace */
+:root{
+  --xrpet-sidebar-open:274px!important;
+  --xrpet-sidebar-closed:22px!important;
+}
+.app-frame{
+  grid-template-columns:var(--xrpet-sidebar-open) minmax(0,1fr)!important;
+  width:100vw!important;
+  height:100dvh!important;
+  min-height:100dvh!important;
+  overflow:hidden!important;
+}
+#xrpetSidebar{
+  width:var(--xrpet-sidebar-open)!important;
+  min-width:var(--xrpet-sidebar-open)!important;
+  max-width:var(--xrpet-sidebar-open)!important;
+  height:100dvh!important;
+  max-height:100dvh!important;
+  padding:8px!important;
+  gap:4px!important;
+  overflow:visible!important;
+}
+#xrpetSidebar .brand-lockup{
+  flex:0 0 39px!important;
+  height:39px!important;
+  min-height:39px!important;
+  padding:2px 6px 4px!important;
+}
+#xrpetSidebar .side-nav{
+  flex:0 0 auto!important;
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  grid-template-rows:repeat(9,24px)!important;
+  gap:2px!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:visible!important;
+}
+#xrpetSidebar .side-link{
+  height:24px!important;
+  min-height:24px!important;
+  padding:3px 7px!important;
+  font-size:.49rem!important;
+}
+#xrpetSidebar .nav-parent-summary b,
+#xrpetSidebar .history-summary b{
+  font-size:.49rem!important;
+}
+
+/* The former top bar is now a compact permanent sidebar command center. */
+#xrpetSidebar #topCommandDeck.sidebar-command-center{
+  position:relative!important;
+  inset:auto!important;
+  top:auto!important;
+  z-index:190!important;
+  flex:0 0 244px!important;
+  width:100%!important;
+  height:244px!important;
+  min-height:244px!important;
+  margin:3px 0 2px!important;
+  padding:5px!important;
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  grid-template-rows:151px 83px!important;
+  gap:5px!important;
+  border:1px solid rgba(83,190,212,.12)!important;
+  border-radius:10px!important;
+  background:#050b0f!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+#xrpetSidebar #topCommandDeck::after{
+  left:5px!important;
+  right:5px!important;
+  bottom:4px!important;
+}
+#xrpetSidebar #topCommandDeck .top-utility-box{
+  width:100%!important;
+  height:151px!important;
+  min-height:151px!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 62px!important;
+  grid-template-rows:28px 30px 87px!important;
+  grid-template-areas:
+    "search search"
+    "price live"
+    "music music"!important;
+  gap:3px 5px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  overflow:visible!important;
+}
+#xrpetSidebar #topCommandDeck .command-search-box{
+  grid-area:search!important;
+  height:28px!important;
+  min-height:28px!important;
+  padding:0 8px!important;
+  border:1px solid rgba(91,210,233,.11)!important;
+  border-radius:6px!important;
+  background:#071116!important;
+}
+#xrpetSidebar #topCommandDeck .command-search-box input{
+  font-size:.55rem!important;
+  padding:4px 0!important;
+}
+#xrpetSidebar #topCommandDeck .top-composite-price{
+  grid-area:price!important;
+  height:30px!important;
+  min-height:30px!important;
+  display:grid!important;
+  grid-template-columns:1fr auto!important;
+  grid-template-rows:1fr!important;
+  align-items:center!important;
+  padding:3px 7px!important;
+  border:1px solid rgba(91,210,233,.10)!important;
+  border-radius:6px!important;
+  background:#071116!important;
+}
+#xrpetSidebar #topCommandDeck .top-composite-price span{
+  display:none!important;
+}
+#xrpetSidebar #topCommandDeck .top-composite-price strong{
+  grid-column:1!important;
+  grid-row:1!important;
+  margin:0!important;
+  font-size:.64rem!important;
+}
+#xrpetSidebar #topCommandDeck .top-composite-price small{
+  grid-column:2!important;
+  grid-row:1!important;
+  margin:0!important;
+  max-width:72px!important;
+  font-size:.34rem!important;
+  text-align:right!important;
+}
+#xrpetSidebar #topCommandDeck .top-xrpl-live{
+  grid-area:live!important;
+  width:100%!important;
+  height:30px!important;
+  min-height:30px!important;
+  padding:0 6px!important;
+  border:1px solid rgba(91,210,233,.10)!important;
+  border-radius:6px!important;
+  background:#071116!important;
+}
+#xrpetSidebar #topCommandDeck .top-xrpl-live span{
+  font-size:.39rem!important;
+}
+
+/* Sleek compact soundtrack inside the rail. */
+#xrpetSidebar #xrpetMusicPlayer.top-music-player{
+  grid-area:music!important;
+  width:100%!important;
+  height:87px!important;
+  min-height:87px!important;
+  max-height:87px!important;
+  margin:0!important;
+  padding:5px 6px!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 88px!important;
+  grid-template-rows:34px 35px!important;
+  grid-template-areas:
+    "now wave"
+    "transport volume"!important;
+  gap:5px 6px!important;
+  border:1px solid rgba(91,210,233,.11)!important;
+  border-radius:7px!important;
+  background:#071116!important;
+}
+#xrpetSidebar #xrpetMusicPlayer .music-now-playing{
+  grid-area:now!important;
+  height:34px!important;
+  min-height:34px!important;
+  padding:2px 3px 2px 5px!important;
+  grid-template-columns:minmax(0,1fr) 28px!important;
+}
+#xrpetSidebar #xrpetMusicPlayer .music-main{
+  width:27px!important;
+  height:27px!important;
+  min-width:27px!important;
+  min-height:27px!important;
+  max-width:27px!important;
+  max-height:27px!important;
+}
+#xrpetSidebar #xrpetMusicPlayer .music-waveform{
+  grid-area:wave!important;
+  width:100%!important;
+  height:34px!important;
+  min-height:34px!important;
+  max-height:34px!important;
+}
+#xrpetSidebar #xrpetMusicPlayer .music-transport{
+  grid-area:transport!important;
+  height:35px!important;
+  display:grid!important;
+  grid-template-columns:27px 27px 27px!important;
+  justify-content:start!important;
+  gap:5px!important;
+}
+#xrpetSidebar #xrpetMusicPlayer .music-transport button{
+  width:27px!important;
+  height:27px!important;
+  min-width:27px!important;
+  min-height:27px!important;
+  max-width:27px!important;
+  max-height:27px!important;
+}
+#xrpetSidebar #xrpetMusicPlayer .music-volume-row{
+  grid-area:volume!important;
+  height:35px!important;
+  min-height:35px!important;
+  grid-template-columns:18px minmax(0,1fr)!important;
+}
+
+/* Ripplet dock is integrated directly under the player in the rail. */
+#xrpetSidebar #rippletDock.top-ripplet-box{
+  width:100%!important;
+  height:83px!important;
+  min-height:83px!important;
+  display:grid!important;
+  grid-template-columns:68px minmax(0,1fr) 58px!important;
+  grid-template-rows:42px 31px!important;
+  gap:3px 7px!important;
+  padding:4px 5px!important;
+  border:1px solid rgba(91,210,233,.11)!important;
+  border-radius:7px!important;
+  background:#071116!important;
+}
+#xrpetSidebar #rippletDock .ripplet-dock-platform{
+  grid-column:1!important;
+  grid-row:1/3!important;
+  width:62px!important;
+  height:73px!important;
+  min-width:62px!important;
+  min-height:73px!important;
+  margin:0!important;
+  align-self:end!important;
+}
+#xrpetSidebar #rippletDock .top-ripplet-profile{
+  grid-column:2!important;
+  grid-row:1!important;
+  min-width:0!important;
+}
+#xrpetSidebar #rippletDock .top-ripplet-profile .mini-avatar{
+  width:23px!important;
+  height:23px!important;
+  min-width:23px!important;
+}
+#xrpetSidebar #rippletDock .top-ripplet-profile strong{
+  font-size:.50rem!important;
+}
+#xrpetSidebar #rippletDock .top-ripplet-profile small{
+  font-size:.37rem!important;
+}
+#xrpetSidebar #rippletDock .ripplet-dock-copy{
+  grid-column:2!important;
+  grid-row:2!important;
+  gap:4px!important;
+}
+#xrpetSidebar #rippletDock .ripplet-dock-copy span{
+  display:none!important;
+}
+#xrpetSidebar #rippletDock .ripplet-dock-copy strong{
+  font-size:.44rem!important;
+}
+#xrpetSidebar #rippletDock .ripplet-dock-actions{
+  grid-column:3!important;
+  grid-row:1/3!important;
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  grid-template-rows:32px 32px!important;
+  gap:4px!important;
+  align-self:center!important;
+}
+#xrpetSidebar #rippletDock .ripplet-dock-actions button{
+  height:32px!important;
+  min-height:32px!important;
+  padding:0 4px!important;
+  font-size:.43rem!important;
+}
+
+/* Keep bottom rail controls visible below the integrated command center. */
+#xrpetSidebar .customize-wrap{
+  margin-top:0!important;
+}
+#xrpetSidebar .settings-wrap{
+  flex:0 0 28px!important;
+  height:28px!important;
+  min-height:28px!important;
+  margin-top:0!important;
+}
+#xrpetSidebar .settings-trigger{
+  height:28px!important;
+  min-height:28px!important;
+  padding:4px 7px!important;
+  font-size:.48rem!important;
+}
+#xrpetSidebar .ledger-badge{
+  flex:0 0 42px!important;
+  height:42px!important;
+  min-height:42px!important;
+  margin-top:auto!important;
+}
+
+/* Right side is now a true full-height page viewport; no top command row consumes space. */
+.main-shell{
+  grid-column:2!important;
+  display:flex!important;
+  flex-direction:column!important;
+  width:100%!important;
+  height:100dvh!important;
+  min-height:0!important;
+  max-height:100dvh!important;
+  margin:0!important;
+  padding:8px 10px!important;
+  overflow:hidden!important;
+}
+.main-shell>.primary-view-section,
+.main-shell>[data-customization-panel]{
+  scroll-margin-top:0!important;
+}
+.main-shell>.primary-view-section.view-active,
+.main-shell>[data-customization-panel].is-open{
+  flex:1 1 auto!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:100%!important;
+  margin:0!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  overscroll-behavior:contain!important;
+}
+body[data-primary-view="games"] .main-shell{
+  padding-top:8px!important;
+  padding-bottom:8px!important;
+}
+
+/* Ripplet is viewport-fixed so it can live over the sidebar command-center rail. */
+#rippletRoamLayer.ripplet-roam-layer{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100dvh!important;
+  z-index:214!important;
+  pointer-events:none!important;
+  overflow:visible!important;
+}
+body.sidebar-collapsed #topCommandDeck,
+body.sidebar-collapsed #rippletRoamLayer{
+  display:none!important;
+}
+
+@media(max-width:760px){
+  :root{--xrpet-sidebar-open:100%!important}
+  .app-frame{
+    display:block!important;
+    height:auto!important;
+    min-height:100dvh!important;
+    overflow:visible!important;
+  }
+  #xrpetSidebar{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow:visible!important;
+  }
+  #xrpetSidebar .side-nav{
+    display:flex!important;
+    overflow-x:auto!important;
+    grid-template-rows:none!important;
+  }
+  #xrpetSidebar .side-link{
+    min-width:max-content!important;
+    height:30px!important;
+  }
+  #xrpetSidebar #topCommandDeck.sidebar-command-center{
+    height:auto!important;
+    min-height:0!important;
+    grid-template-rows:auto auto!important;
+  }
+  .main-shell{
+    grid-column:auto!important;
+    height:100dvh!important;
+    min-height:100dvh!important;
+    max-height:100dvh!important;
+  }
+  #rippletRoamLayer.ripplet-roam-layer{
+    display:none!important;
+  }
+}

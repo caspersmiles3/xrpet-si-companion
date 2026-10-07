@@ -1093,17 +1093,14 @@ function activePageBounds(pad=8){
   return {left,top,right,bottom};
 }
 function topRailBounds(includeDock=false){
-  const shell=q('.main-shell'),deck=q('#topCommandDeck'),dock=q('#rippletDock'),avatar=lifeAvatar?.getBoundingClientRect();
-  if(!shell||!deck)return shellMovementBounds();
-  const sr=shell.getBoundingClientRect(),dr=deck.getBoundingClientRect(),rr=dock?.getBoundingClientRect();
+  const deck=q('#topCommandDeck'),dock=q('#rippletDock'),avatar=lifeAvatar?.getBoundingClientRect();
+  if(!deck)return {left:4,top:4,right:Math.max(8,window.innerWidth-4),bottom:Math.max(8,window.innerHeight-4)};
+  const dr=deck.getBoundingClientRect(),rr=dock?.getBoundingClientRect();
   const aw=Math.max(52,avatar?.width||52),ah=Math.max(72,avatar?.height||72);
-  const deckLeft=dr.left-sr.left+shell.scrollLeft;
-  const deckRight=dr.right-sr.left+shell.scrollLeft;
-  const dockLeft=rr?rr.left-sr.left+shell.scrollLeft:deckRight;
-  const left=Math.max(2,deckLeft+8);
-  const right=Math.max(left+aw,includeDock?deckRight-8:dockLeft-10);
-  // One grounded walking line: Ripplet's feet stay on the top-rail floor.
-  const ground=dr.bottom-sr.top+shell.scrollTop-7;
+  const left=Math.max(2,dr.left+6);
+  const right=Math.max(left+aw,includeDock?dr.right-6:(rr?rr.left-6:dr.right-6));
+  // The bottom edge of the sidebar command center is Ripplet's physical walking floor.
+  const ground=dr.bottom-5;
   const top=Math.max(0,ground-ah);
   return {left,top,right,bottom:top+ah};
 }
@@ -1117,11 +1114,11 @@ function rippletPositionInsideActivePage(x,y){
 }
 
 function syncRoamBounds(){
-  const shell=q('.main-shell');if(!shell||!roamLayer)return;
+  if(!roamLayer)return;
   roamLayer.style.left='0px';
   roamLayer.style.top='0px';
-  roamLayer.style.width=Math.max(shell.clientWidth,shell.scrollWidth)+'px';
-  roamLayer.style.height=Math.max(shell.clientHeight,shell.scrollHeight)+'px';
+  roamLayer.style.width=window.innerWidth+'px';
+  roamLayer.style.height=window.innerHeight+'px';
 }
 function setRoamPosition(x,y,activity='walk',durationOverride=''){
   if(!lifeAvatar||!roamLayer)return;
@@ -1144,9 +1141,8 @@ function setRoamPosition(x,y,activity='walk',durationOverride=''){
 function walkRippletTo(x,activity='walk',durationOverride=''){
   if(!lifeAvatar)return false;
   if(rippletRouteBusy()&&activity!=='dock')return false;
-  const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar.getBoundingClientRect();
-  if(!shell||!sr)return false;
-  const currentX=ar.left-sr.left+shell.scrollLeft;
+  const ar=lifeAvatar.getBoundingClientRect();
+  const currentX=ar.left;
   const distance=Math.abs(x-currentX);
   const duration=durationOverride||Math.max(.28,Math.min(2.4,distance/145)).toFixed(2)+'s';
   window.XRPet2D?.face?.(x<currentX?'left':'right');
@@ -1160,19 +1156,16 @@ function walkRippletTo(x,activity='walk',durationOverride=''){
 }
 function cancelRippletRoute(){
   if(!lifeAvatar)return;
-  const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar.getBoundingClientRect();
+  const ar=lifeAvatar.getBoundingClientRect();
   ++rippletRouteToken;
   rippletRouteUntil=0;
   rippletRouteAllowsShell=false;
-  if(shell&&sr){
-    const x=ar.left-sr.left+shell.scrollLeft;
-    const y=ar.top-sr.top+shell.scrollTop;
-    lifeAvatar.style.transitionDuration='0s';
-    lifeAvatar.style.transform='translate3d('+x+'px,'+y+'px,0)';
-    void lifeAvatar.offsetWidth;
-    roamX=shell.scrollWidth?x/Math.max(1,shell.scrollWidth-ar.width):.5;
-    roamY=shell.scrollHeight?y/Math.max(1,shell.scrollHeight-ar.height):.5;
-  }
+  const x=ar.left,y=ar.top;
+  lifeAvatar.style.setProperty('transition-duration','0s','important');
+  lifeAvatar.style.transform='translate3d('+x+'px,'+y+'px,0)';
+  void lifeAvatar.offsetWidth;
+  roamX=window.innerWidth?x/Math.max(1,window.innerWidth-ar.width):.5;
+  roamY=0;
 }
 function rippletRouteBusy(){return performance.now()<rippletRouteUntil}
 
@@ -1183,13 +1176,13 @@ function stationPosition(activity){
   return {x:r.left-layer.left+r.width/2-85,y:r.bottom-layer.top+4};
 }
 function dockPosition(){
-  const dock=q('#rippletDock'),berth=q('#rippletDock .ripplet-dock-platform'),shell=q('.main-shell'),avatar=lifeAvatar?.getBoundingClientRect();
-  if(!dock||!berth||!shell)return null;
-  const sr=shell.getBoundingClientRect(),r=berth.getBoundingClientRect();
+  const dock=q('#rippletDock'),berth=q('#rippletDock .ripplet-dock-platform'),avatar=lifeAvatar?.getBoundingClientRect();
+  if(!dock||!berth)return null;
+  const r=berth.getBoundingClientRect();
   const w=Math.max(52,avatar?.width||52),h=Math.max(72,avatar?.height||72);
   const b=topRailBounds(true);
-  const desiredX=r.left-sr.left+shell.scrollLeft+(r.width-w)/2;
-  const desiredY=r.bottom-sr.top+shell.scrollTop-h-1;
+  const desiredX=r.left+(r.width-w)/2;
+  const desiredY=r.bottom-h-1;
   return {
     x:Math.max(b.left,Math.min(b.right-w,desiredX)),
     y:desiredY
@@ -1208,8 +1201,8 @@ function dockRipplet(){
   syncRoamBounds();
   const target=dockPosition();
   if(target){
-    const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar?.getBoundingClientRect();
-    const currentX=shell&&sr&&ar?ar.left-sr.left+shell.scrollLeft:target.x;
+    const ar=lifeAvatar?.getBoundingClientRect();
+    const currentX=ar?ar.left:target.x;
     const distance=Math.abs(target.x-currentX);
     const walkMs=Math.max(320,Math.min(2200,Math.round(distance/145*1000)));
     setDockStatus('DOCKING');
@@ -1238,12 +1231,11 @@ function goRipplet(activity='explore'){
   if(rippletMusicDancing||!lifeAvatar)return false;
   if(rippletRouteBusy()&&activity!=='dock')return false;
   if(activity==='dock'){dockRipplet();return true}
-  const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar.getBoundingClientRect();
-  if(!shell||!sr)return false;
+  const ar=lifeAvatar.getBoundingClientRect();
   const b=topRailBounds(false);
   const aw=Math.max(52,ar.width||52);
   const minX=b.left,maxX=Math.max(minX,b.right-aw);
-  const currentX=ar.left-sr.left+shell.scrollLeft;
+  const currentX=ar.left;
   let targetX=minX+Math.random()*Math.max(1,maxX-minX);
   if(Math.abs(targetX-currentX)<70){
     targetX=currentX<(minX+maxX)/2?Math.min(maxX,currentX+110):Math.max(minX,currentX-110);
@@ -2147,11 +2139,11 @@ function musicControlButton(control){
     control==='shuffle'?'#musicShuffle':'');
 }
 function musicControlPosition(control){
-  const button=musicControlButton(control),shell=q('.main-shell'),avatar=lifeAvatar?.getBoundingClientRect();
-  if(!button||!shell||!avatar)return null;
-  const sr=shell.getBoundingClientRect(),br=button.getBoundingClientRect(),b=topRailBounds(false);
-  const aw=Math.max(52,avatar.width||52),ah=Math.max(72,avatar.height||72);
-  const x=br.left-sr.left+shell.scrollLeft+br.width/2-aw/2;
+  const button=musicControlButton(control),avatar=lifeAvatar?.getBoundingClientRect();
+  if(!button||!avatar)return null;
+  const br=button.getBoundingClientRect(),b=topRailBounds(false);
+  const aw=Math.max(52,avatar.width||52);
+  const x=br.left+br.width/2-aw/2;
   return {x:Math.max(b.left,Math.min(b.right-aw,x)),y:b.top,button};
 }
 function resumeAfterMusicControl(){
@@ -2193,8 +2185,8 @@ function rippletPressMusicControl(control='play'){
   document.body.classList.remove('music-ripplet-stage');
   q('#xrpetMusicPlayer')?.classList.remove('ripplet-stage-active');
 
-  const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar?.getBoundingClientRect();
-  const currentX=shell&&sr&&ar?ar.left-sr.left+shell.scrollLeft:target.x;
+  const ar=lifeAvatar?.getBoundingClientRect();
+  const currentX=ar?ar.left:target.x;
   const distance=Math.abs(target.x-currentX);
   const travelMs=Math.max(320,Math.min(2200,Math.round(distance/145*1000)));
   const label=control==='previous'?'Previous':control==='next'?'Next':control==='shuffle'?'Shuffle':'Play';
@@ -2249,12 +2241,12 @@ window.XRPetMusicByRipplet={
   shuffle:()=>rippletPressMusicControl('shuffle')
 };
 function musicPlayerStagePosition(){
-  const player=q('#xrpetMusicPlayer'),shell=q('.main-shell'),ar=lifeAvatar?.getBoundingClientRect();
-  if(!player||!shell||!ar)return null;
-  const sr=shell.getBoundingClientRect(),pr=player.getBoundingClientRect();
+  const player=q('#xrpetMusicPlayer'),ar=lifeAvatar?.getBoundingClientRect();
+  if(!player||!ar)return null;
+  const pr=player.getBoundingClientRect();
   const aw=Math.max(52,ar.width||52);
   const b=topRailBounds(false);
-  const x=pr.left-sr.left+shell.scrollLeft+Math.max(aw*.5,pr.width*.72)-aw*.5;
+  const x=pr.left+Math.max(aw*.5,pr.width*.68)-aw*.5;
   return {
     x:Math.max(b.left,Math.min(b.right-aw,x)),
     y:b.top,
@@ -2294,9 +2286,9 @@ function runRippletToMusicStage(){
     return;
   }
   const token=++rippletMusicStageToken;
-  const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar?.getBoundingClientRect();
-  if(!shell||!sr||!ar)return;
-  const currentX=ar.left-sr.left+shell.scrollLeft;
+  const ar=lifeAvatar?.getBoundingClientRect();
+  if(!ar)return;
+  const currentX=ar.left;
   const distance=Math.abs(stage.x-currentX);
   const walkMs=Math.max(320,Math.min(2200,Math.round(distance/145*1000)));
 

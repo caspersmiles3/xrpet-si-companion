@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-xrpet-build="5.5.60">
+<html lang="en" data-xrpet-build="5.5.61">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -8,12 +8,12 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=5.5.60">
+  <link rel="stylesheet" href="/styles.css?v=5.5.61">
 </head>
 <body class="launch-locked">
 <div id="launchGate" class="launch-gate clean-launch" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
   <video id="launchBackgroundVideo" class="clean-launch-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
-    <source src="/media/xrpet-launch-bg.mp4?v=5.5.60" type="video/mp4">
+    <source src="/media/xrpet-launch-bg.mp4?v=5.5.61" type="video/mp4">
   </video>
   <div class="launch-pillar launch-pillar-left" aria-hidden="true"></div>
   <div class="launch-pillar launch-pillar-right" aria-hidden="true"></div>
@@ -103,6 +103,68 @@
       </details>
     </nav>
 
+    <section class="top-command-deck sidebar-command-center" id="topCommandDeck" aria-label="XRPet command deck">
+    <div class="top-utility-box">
+    <form id="globalSearchForm" class="global-search command-search-box">
+    <span>⌕</span>
+    <input id="globalSearch" placeholder="Search XRPet…">
+    </form>
+    <div class="top-composite-price top-composite-ticker" role="status" aria-live="polite" aria-label="Live XRP composite price">
+    <span>XRP COMPOSITE</span>
+    <strong id="globalXrpPrice">—</strong>
+    <small id="globalXrpChange">Loading</small>
+    </div>
+    <div id="xrpetMusicPlayer" class="xrpet-music-player music-player-clean top-music-player" aria-label="XRPet soundtrack">
+    <audio id="xrpetAudio" preload="metadata"></audio>
+    
+    <div class="music-now-playing">
+    <div class="music-now-copy">
+    <span>NOW PLAYING</span>
+    <strong id="musicTrackName">Ready</strong>
+    </div>
+    <button id="musicToggle" class="music-main" type="button" aria-label="Play soundtrack" title="Play">▶</button>
+    </div>
+    
+    <canvas id="musicWaveform" class="music-waveform" width="220" height="42" aria-label="Live soundtrack waveform"></canvas>
+    
+    <div class="music-transport" aria-label="Music controls">
+    <button id="musicPrev" type="button" aria-label="Previous track" title="Previous">‹</button>
+    <button id="musicNext" type="button" aria-label="Next track" title="Next">›</button>
+    <button id="musicShuffle" type="button" aria-label="Toggle shuffle" title="Shuffle">⤨</button>
+    </div>
+    
+    <div class="music-volume-row">
+    <span class="music-volume-icon" aria-hidden="true">VOL</span>
+    <input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.75" aria-label="Music volume">
+    </div>
+    </div>
+    
+    <button type="button" data-primary-view="live" class="top-xrpl-live">
+    <i aria-hidden="true"></i>
+    <span>XRPL LIVE</span>
+    </button>
+    </div>
+    
+    <div class="top-ripplet-box" id="rippletDock" aria-label="Ripplet companion dock">
+    <div class="ripplet-dock-platform" data-ripplet-berth aria-hidden="true"><i></i><b>589</b><i></i></div>
+    <div class="ripplet-dock-copy">
+    <span>RIPPLET DOCK</span>
+    <strong id="rippletDockStatus">ROAMING</strong>
+    </div>
+    <div class="top-ripplet-profile">
+    <div class="mini-avatar">X</div>
+    <div>
+    <strong id="topPetName">RIPPLET</strong>
+    <small><span id="topLevel">Level 1</span> · <span id="topXp">0 XP</span></small>
+    </div>
+    </div>
+    <div class="ripplet-dock-actions">
+    <button id="dockRipplet" type="button">Dock</button>
+    <button id="undockRipplet" type="button">Roam</button>
+    </div>
+    </div>
+    </section>
+
     <details class="settings-wrap customize-wrap" id="customizeDetails">
       <summary class="settings-trigger customize-trigger"><span>✦</span><b>Companion & Tools</b><i>⌄</i></summary>
       <div class="settings-menu customize-menu">
@@ -151,67 +213,6 @@
   </aside>
 
   <main class="main-shell">
-    <section class="top-command-deck" id="topCommandDeck" aria-label="XRPet command deck">
-      <div class="top-utility-box">
-        <form id="globalSearchForm" class="global-search command-search-box">
-          <span>⌕</span>
-          <input id="globalSearch" placeholder="Search XRPet…">
-        </form>
-        <div class="top-composite-price top-composite-ticker" role="status" aria-live="polite" aria-label="Live XRP composite price">
-          <span>XRP COMPOSITE</span>
-          <strong id="globalXrpPrice">—</strong>
-          <small id="globalXrpChange">Loading</small>
-        </div>
-        <div id="xrpetMusicPlayer" class="xrpet-music-player music-player-clean top-music-player" aria-label="XRPet soundtrack">
-          <audio id="xrpetAudio" preload="metadata"></audio>
-
-          <div class="music-now-playing">
-            <div class="music-now-copy">
-              <span>NOW PLAYING</span>
-              <strong id="musicTrackName">Ready</strong>
-            </div>
-            <button id="musicToggle" class="music-main" type="button" aria-label="Play soundtrack" title="Play">▶</button>
-          </div>
-
-          <canvas id="musicWaveform" class="music-waveform" width="220" height="42" aria-label="Live soundtrack waveform"></canvas>
-
-          <div class="music-transport" aria-label="Music controls">
-            <button id="musicPrev" type="button" aria-label="Previous track" title="Previous">‹</button>
-            <button id="musicNext" type="button" aria-label="Next track" title="Next">›</button>
-            <button id="musicShuffle" type="button" aria-label="Toggle shuffle" title="Shuffle">⤨</button>
-          </div>
-
-          <div class="music-volume-row">
-            <span class="music-volume-icon" aria-hidden="true">VOL</span>
-            <input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.75" aria-label="Music volume">
-          </div>
-        </div>
-
-        <button type="button" data-primary-view="live" class="top-xrpl-live">
-          <i aria-hidden="true"></i>
-          <span>XRPL LIVE</span>
-        </button>
-      </div>
-
-      <div class="top-ripplet-box" id="rippletDock" aria-label="Ripplet companion dock">
-        <div class="ripplet-dock-platform" data-ripplet-berth aria-hidden="true"><i></i><b>589</b><i></i></div>
-        <div class="ripplet-dock-copy">
-          <span>RIPPLET DOCK</span>
-          <strong id="rippletDockStatus">ROAMING</strong>
-        </div>
-        <div class="top-ripplet-profile">
-          <div class="mini-avatar">X</div>
-          <div>
-            <strong id="topPetName">RIPPLET</strong>
-            <small><span id="topLevel">Level 1</span> · <span id="topXp">0 XP</span></small>
-          </div>
-        </div>
-        <div class="ripplet-dock-actions">
-          <button id="dockRipplet" type="button">Dock</button>
-          <button id="undockRipplet" type="button">Roam</button>
-        </div>
-      </div>
-    </section>
     <div id="rippletRoamLayer" class="ripplet-roam-layer" aria-hidden="false">
       <div id="lifeAvatar" class="life-avatar global-life-avatar" style="width:52px!important;height:72px!important;min-width:52px!important;min-height:72px!important;max-width:52px!important;max-height:72px!important;" aria-label="Ripplet roaming through XRPet">
         <div id="persistentCompanionLayer" class="persistent-companion-layer home-companion-layer" style="width:52px!important;height:72px!important;min-width:52px!important;min-height:72px!important;max-width:52px!important;max-height:72px!important;" data-home-companion aria-label="Ripplet companion">
@@ -1090,21 +1091,21 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 5.5.60 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 5.5.61 · XRP Ledger companion</footer>
   </main>
 </div>
 
 
 
-<script src="/launch-enhance.js?v=5.5.60"></script>
-<script src="/contact-directory.js?v=5.5.60"></script>
-<script src="/music-player.js?v=5.5.60"></script>
-<script src="/games.js?v=5.5.60"></script>
-<script src="/ecosystem.js?v=5.5.60"></script>
-<script src="/ripplet2d.js?v=5.5.60"></script>
-<script src="/ui-shell.js?v=5.5.60"></script>
-<script src="/app.js?v=5.5.60"></script>
-<script src="/timeline.js?v=5.5.60"></script>
+<script src="/launch-enhance.js?v=5.5.61"></script>
+<script src="/contact-directory.js?v=5.5.61"></script>
+<script src="/music-player.js?v=5.5.61"></script>
+<script src="/games.js?v=5.5.61"></script>
+<script src="/ecosystem.js?v=5.5.61"></script>
+<script src="/ripplet2d.js?v=5.5.61"></script>
+<script src="/ui-shell.js?v=5.5.61"></script>
+<script src="/app.js?v=5.5.61"></script>
+<script src="/timeline.js?v=5.5.61"></script>
 
 </body>
 </html>
