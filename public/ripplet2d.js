@@ -2,20 +2,33 @@
   const host = document.getElementById('floatingCompanion');
   if (!host) return;
 
-  // Hard-lock the visible companion tree to Atari-scale dimensions.
-  // The roaming wrapper alone is not enough because older child sizing rules can overflow it.
-  const roam=document.getElementById('lifeAvatar');
-  const persistent=document.getElementById('persistentCompanionLayer');
-  const companionHost=document.getElementById('companion3d');
-  for(const node of [roam,persistent,host,companionHost]){
-    if(!node)continue;
-    node.style.setProperty('width','52px','important');
-    node.style.setProperty('height','72px','important');
-    node.style.setProperty('min-width','52px','important');
-    node.style.setProperty('min-height','72px','important');
-    node.style.setProperty('max-width','52px','important');
-    node.style.setProperty('max-height','72px','important');
-  }
+  const RIPPLET_WIDTH=52;
+  const RIPPLET_HEIGHT=72;
+  const px=n=>n+'px';
+  const sizeNode=node=>{
+    if(!node)return;
+    node.style.setProperty('width',px(RIPPLET_WIDTH),'important');
+    node.style.setProperty('height',px(RIPPLET_HEIGHT),'important');
+    node.style.setProperty('min-width',px(RIPPLET_WIDTH),'important');
+    node.style.setProperty('min-height',px(RIPPLET_HEIGHT),'important');
+    node.style.setProperty('max-width',px(RIPPLET_WIDTH),'important');
+    node.style.setProperty('max-height',px(RIPPLET_HEIGHT),'important');
+  };
+  const enforceVisibleSize=()=>{
+    const roam=document.getElementById('lifeAvatar');
+    const persistent=document.getElementById('persistentCompanionLayer');
+    const companionHost=document.getElementById('companion3d');
+    const visible=document.getElementById('ripplet2d');
+    const svg=visible?.querySelector('.ripplet2d-svg');
+    [roam,persistent,host,companionHost,visible,svg].forEach(sizeNode);
+    if(visible){
+      visible.style.setProperty('transform-origin','50% 100%','important');
+      visible.dataset.renderWidth=String(RIPPLET_WIDTH);
+      visible.dataset.renderHeight=String(RIPPLET_HEIGHT);
+    }
+  };
+
+  enforceVisibleSize();
 
   host.innerHTML = `
     <div id="ripplet2d" class="ripplet2d" data-state="idle" data-facing="right" aria-label="Ripplet">
@@ -115,21 +128,14 @@
   `;
 
   const el = document.getElementById('ripplet2d');
-  if(el){
-    el.style.setProperty('width','52px','important');
-    el.style.setProperty('height','72px','important');
-    el.style.setProperty('min-width','52px','important');
-    el.style.setProperty('min-height','72px','important');
-    el.style.setProperty('max-width','52px','important');
-    el.style.setProperty('max-height','72px','important');
-    const svg=el.querySelector('.ripplet2d-svg');
-    if(svg){
-      svg.style.setProperty('width','52px','important');
-      svg.style.setProperty('height','72px','important');
-      svg.style.setProperty('max-width','52px','important');
-      svg.style.setProperty('max-height','72px','important');
-    }
-  }
+  enforceVisibleSize();
+  requestAnimationFrame(enforceVisibleSize);
+  setTimeout(enforceVisibleSize,100);
+  setTimeout(enforceVisibleSize,700);
+  window.addEventListener('resize',enforceVisibleSize);
+  window.addEventListener('xrpet:view-change',enforceVisibleSize);
+  window.addEventListener('xrpet:model-ready',enforceVisibleSize);
+  window.XRPetEnforceRippletSize=enforceVisibleSize;
   let resetTimer = 0;
   let blinkTimer = 0;
 
