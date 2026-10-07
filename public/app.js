@@ -1098,7 +1098,8 @@ function topRailBounds(includeDock=false){
   const dr=deck.getBoundingClientRect(),rr=dock?.getBoundingClientRect();
   const aw=Math.max(52,avatar?.width||52),ah=Math.max(72,avatar?.height||72);
   const left=Math.max(2,dr.left+6);
-  const right=Math.max(left+aw,includeDock?dr.right-6:(rr?rr.left-6:dr.right-6));
+  // Dock is vertically integrated below the player now, so the full command-center width is walkable.
+  const right=Math.max(left+aw,dr.right-6);
   // The bottom edge of the sidebar command center is Ripplet's physical walking floor.
   const ground=dr.bottom-5;
   const top=Math.max(0,ground-ah);
