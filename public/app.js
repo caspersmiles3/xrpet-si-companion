@@ -2152,10 +2152,7 @@ function syncDanceButton(){
   });
 }
 function musicControlButton(control){
-  return q(control==='play'?'#musicToggle':
-    control==='previous'?'#musicPrev':
-    control==='next'?'#musicNext':
-    control==='shuffle'?'#musicShuffle':'');
+  return window.XRPetMusicUI?.getButton?.(control)||null;
 }
 function musicControlPosition(control){
   const button=musicControlButton(control),avatar=lifeAvatar?.getBoundingClientRect();
@@ -2207,7 +2204,7 @@ function rippletPressMusicControl(control='play'){
   rippletMusicStageState='control';
   rippletRouteAllowsShell=true;
   document.body.classList.remove('music-ripplet-stage');
-  q('#xrpetMusicPlayer')?.classList.remove('ripplet-stage-active');
+  q('#xrpetMusicDeck')?.classList.remove('ripplet-stage-active');
 
   const ar=lifeAvatar?.getBoundingClientRect();
   const currentX=ar?ar.left:target.x,currentY=ar?ar.top:target.y;
@@ -2265,7 +2262,7 @@ window.XRPetMusicByRipplet={
   shuffle:()=>rippletPressMusicControl('shuffle')
 };
 function musicPlayerStagePosition(){
-  const player=q('#xrpetMusicPlayer'),ar=lifeAvatar?.getBoundingClientRect();
+  const player=q('#xrpetMusicDeck'),ar=lifeAvatar?.getBoundingClientRect();
   if(!player||!ar)return null;
   const pr=player.getBoundingClientRect();
   const aw=Math.max(52,ar.width||52),ah=Math.max(72,ar.height||72);
@@ -2365,7 +2362,7 @@ function setRippletMusicDance(playing){
   }
 
   ++rippletMusicStageToken;
-  q('#xrpetMusicPlayer')?.classList.remove('ripplet-stage-active');
+  q('#xrpetMusicDeck')?.classList.remove('ripplet-stage-active');
   document.body.classList.remove('music-ripplet-stage');
 
   if(lifeAvatar){
