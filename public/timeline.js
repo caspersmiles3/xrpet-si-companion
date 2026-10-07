@@ -114,5 +114,10 @@
       const box=el('#xrpTimeline'); if(box)box.innerHTML='<p class="muted">Ripple/XRP history archive is temporarily unavailable.</p>';
     }
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init); else init();
+  function startTimelineRuntime(){
+    if(document.body.classList.contains('launch-locked')){
+      window.addEventListener('xrpet:launch-complete',init,{once:true});
+    }else init();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startTimelineRuntime,{once:true}); else startTimelineRuntime();
 })();

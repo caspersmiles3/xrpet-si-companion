@@ -9718,3 +9718,26 @@ body:not(.workspace-open) .main-shell>.primary-view-section:not(.view-active){
     radial-gradient(circle at 50% 44%,rgba(18,64,76,.34),transparent 34%),
     #000!important;
 }
+
+
+/* XRPet 5.5.52 — performance stabilization */
+body:not(.launch-locked) .panel,
+body:not(.launch-locked) .flow-section,
+body:not(.launch-locked) .top-command-deck,
+body:not(.launch-locked) .settings-menu,
+body:not(.launch-locked) .room-apply-bar,
+body:not(.launch-locked) .floating-tag{
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+[data-view-section][hidden],
+[data-customization-panel][hidden],
+[data-learn-panel][hidden],
+[data-ecosystem-panel][hidden],
+[data-game-panel][hidden],
+.ripplet-subview[hidden]{
+  display:none!important;
+}
+.primary-view-section{
+  contain:layout paint style;
+}

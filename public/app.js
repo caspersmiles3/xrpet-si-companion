@@ -222,7 +222,10 @@ async function registerVisitor(){
     const d=await r.json();if(r.ok)animateVisitorCount(d.count);
   }catch{}
   clearInterval(visitorPollTimer);
-  visitorPollTimer=setInterval(async()=>{try{const r=await fetch('/api/visitor-count',{cache:'no-store'});const d=await r.json();if(r.ok&&Number(d.count)!==visitorShown)animateVisitorCount(d.count)}catch{}},3000);
+  visitorPollTimer=setInterval(async()=>{
+    if(document.hidden||document.body.classList.contains('launch-locked'))return;
+    try{const r=await fetch('/api/visitor-count',{cache:'no-store'});const d=await r.json();if(r.ok&&Number(d.count)!==visitorShown)animateVisitorCount(d.count)}catch{}
+  },15000);
 }
 
 let marketWs=null,marketRetry=0,marketPollTimer=0,marketLastTickAt=0,liveChartPoints=[];
@@ -337,8 +340,11 @@ function scheduleMarketReconnect(){
 function connectMarketStream(){
   closeMarketStream();
   if(state.selectedExchange!=='coinbase'){
-    const interval=state.selectedExchange==='all'?4000:3000;
-    marketPollTimer=setInterval(()=>loadMarket(false),interval);
+    const interval=state.selectedExchange==='all'?6500:5500;
+    marketPollTimer=setInterval(()=>{
+      if(document.hidden||document.body.classList.contains('launch-locked'))return;
+      loadMarket(false);
+    },interval);
     return;
   }
   try{marketWs=new WebSocket('wss://advanced-trade-ws.coinbase.com')}catch{return scheduleMarketReconnect()}
@@ -424,7 +430,10 @@ function bindExchangeMenu(){
   renderExchangeSelection();
   clearInterval(exchangeBoardTimer);
   loadExchangeBoard();
-  exchangeBoardTimer=setInterval(loadExchangeBoard,5000);
+  exchangeBoardTimer=setInterval(()=>{
+    if(document.hidden||document.body.classList.contains('launch-locked'))return;
+    loadExchangeBoard();
+  },12000);
 }
 function renderMarketChart(points=[]){
   const svg=q('#xrpMarketChart'),line=q('#marketLine'),area=q('#marketArea'),grid=q('#marketGrid');
@@ -1212,6 +1221,29 @@ function goRipplet(activity='explore'){
   return moved;
 }
 let lastInterfacePlayAt=0;
+let rippletTerrainCache={at:0,view:'',scrollTop:-1,width:0,height:0,text:[],lines:[],targets:[]};
+function invalidateRippletTerrain(){
+  rippletTerrainCache.at=0;
+}
+function getRippletTerrainSnapshot(force=false){
+  const shell=q('.main-shell');
+  const now=performance.now();
+  const view=activeViewName();
+  const scrollTop=shell?.scrollTop||0;
+  const width=shell?.clientWidth||0;
+  const height=shell?.clientHeight||0;
+  const valid=!force&&rippletTerrainCache.at>0&&now-rippletTerrainCache.at<900&&
+    rippletTerrainCache.view===view&&Math.abs(rippletTerrainCache.scrollTop-scrollTop)<2&&
+    rippletTerrainCache.width===width&&rippletTerrainCache.height===height;
+  if(valid)return rippletTerrainCache;
+  rippletTerrainCache={
+    at:now,view,scrollTop,width,height,
+    text:visibleTextTerrain(),
+    lines:visibleLineTerrain(),
+    targets:visibleInterfaceTargets()
+  };
+  return rippletTerrainCache;
+}
 
 function visibleTextTerrain(){
   const shellEl=q('.main-shell'),shell=shellEl?.getBoundingClientRect();
@@ -1364,7 +1396,8 @@ function terrainDistanceToPointer(rect){
   return Math.hypot(dx,dy);
 }
 function terrainNearPointer(){
-  const pool=[...visibleTextTerrain(),...visibleLineTerrain(),...visibleInterfaceTargets()];
+  const terrain=getRippletTerrainSnapshot();
+  const pool=[...terrain.text,...terrain.lines,...terrain.targets];
   return pool.map(target=>{
     const rect=terrainRectLocal(target);
     return rect?{target,rect,distance:terrainDistanceToPointer(rect)}:null;
@@ -1444,6 +1477,7 @@ function followRippletPointer(force=false){
   return true;
 }
 function updateRippletPointer(e){
+  if(document.hidden||document.body.classList.contains('launch-locked'))return;
   const shell=q('.main-shell');if(!shell)return;
   const r=shell.getBoundingClientRect();
   rippletPointer.x=e.clientX-r.left+shell.scrollLeft;
@@ -1451,7 +1485,7 @@ function updateRippletPointer(e){
   rippletPointer.active=true;
   rippletPointer.movedAt=Date.now();
   clearTimeout(rippletPointerTimer);
-  rippletPointerTimer=setTimeout(()=>followRippletPointer(),120);
+  rippletPointerTimer=setTimeout(()=>followRippletPointer(),240);
 }
 function rectsOverlap(a,b,pad=0){
   return !(a.right<=b.left+pad||a.left>=b.right-pad||a.bottom<=b.top+pad||a.top>=b.bottom-pad);
@@ -1465,7 +1499,8 @@ function visibleCollisionRects(ignoreTarget=null){
   const shell=q('.main-shell'),sr=shell?.getBoundingClientRect();
   if(!shell||!sr)return[];
   const rects=[],seen=new Set();
-  const targets=[...visibleTextTerrain(),...visibleLineTerrain(),...visibleInterfaceTargets()];
+  const terrain=getRippletTerrainSnapshot();
+  const targets=[...terrain.text,...terrain.lines,...terrain.targets];
   for(const target of targets){
     if(target===ignoreTarget)continue;
     const r=target?.__rect||target?.getBoundingClientRect?.();
@@ -2024,9 +2059,10 @@ function playWithInterface(force=false){
   if(rippletRouteBusy())return false;
   if(!force&&Date.now()-lastInterfacePlayAt<1900)return false;
 
-  const words=visibleTextTerrain();
-  const lines=visibleLineTerrain();
-  const elements=visibleInterfaceTargets();
+  const terrainSnapshot=getRippletTerrainSnapshot();
+  const words=terrainSnapshot.text;
+  const lines=terrainSnapshot.lines;
+  const elements=terrainSnapshot.targets;
   if(!words.length&&!lines.length&&!elements.length)return false;
   lastInterfacePlayAt=Date.now();
 
@@ -2303,37 +2339,111 @@ window.XRPetRoam={go:goRipplet,pin:()=>setRoamPinned(false),dock:dockRipplet,und
 q('#dockRipplet')?.addEventListener('click',dockRipplet);
 q('#undockRipplet')?.addEventListener('click',undockRipplet);
 q('#rippletDock')?.addEventListener('dblclick',()=>roamDocked?undockRipplet():dockRipplet());
-let roamScrollTimer=0;
+let roamScrollTimer=0,roamResizeTimer=0;
 const rippletShell=q('.main-shell');
 rippletShell?.addEventListener('pointermove',updateRippletPointer,{passive:true});
 rippletShell?.addEventListener('pointerenter',updateRippletPointer,{passive:true});
 rippletShell?.addEventListener('pointerleave',()=>{rippletPointer.active=false},{passive:true});
 addEventListener('resize',()=>{
-  syncRoamBounds();
-  ensureCryptoCoins(true);
-  if(roamDocked){
-    const p=dockPosition();if(p)setRoamPosition(p.x,p.y,'dock');
-  }else if(!heldCryptoCoin&&!pendingCryptoCoin){
-    keepRippletInsideActivePage();
-    if(!rippletRouteBusy()){
-      if(rippletPointer.active)followRippletPointer(true);
-      else playWithInterface(true);
+  clearTimeout(roamResizeTimer);
+  roamResizeTimer=setTimeout(()=>{
+    if(document.hidden||document.body.classList.contains('launch-locked'))return;
+    invalidateRippletTerrain();
+    syncRoamBounds();
+    ensureCryptoCoins(true);
+    if(roamDocked){
+      const p=dockPosition();if(p)setRoamPosition(p.x,p.y,'dock');
+    }else if(!heldCryptoCoin&&!pendingCryptoCoin){
+      keepRippletInsideActivePage();
+      if(!rippletRouteBusy()){
+        if(rippletPointer.active)followRippletPointer(true);
+        else playWithInterface(true);
+      }
     }
-  }
+  },180);
 });
 q('.main-shell')?.addEventListener('scroll',()=>{
-  syncRoamBounds();
-  if(roamDocked){
-    const p=dockPosition();if(p)setRoamPosition(p.x,p.y,'dock');
-    return;
-  }
   clearTimeout(roamScrollTimer);
-  roamScrollTimer=setTimeout(()=>rippletPointer.active?followRippletPointer(true):playWithInterface(true),180);
+  roamScrollTimer=setTimeout(()=>{
+    if(document.hidden||document.body.classList.contains('launch-locked'))return;
+    invalidateRippletTerrain();
+    syncRoamBounds();
+    if(roamDocked){
+      const p=dockPosition();if(p)setRoamPosition(p.x,p.y,'dock');
+      return;
+    }
+    rippletPointer.active?followRippletPointer(true):playWithInterface(true);
+  },220);
 },{passive:true});
-syncRoamBounds();setTimeout(()=>goRipplet('explore'),300);roamingStep();spontaneousRippletReaction();applyNftCompanion();
+window.addEventListener('xrpet:view-change',invalidateRippletTerrain);
+
 qa('[data-life-action]').forEach(b=>b.addEventListener('click',()=>performLifeActivity(b.dataset.lifeAction,true,false)));
-setInterval(lifeTick,15000);
-dailyVisit();render();registerVisitor();connectLedger();loadRecentTransactionsFallback(true);bindExchangeMenu();setExchange(state.selectedExchange||'all',{initial:true});loadUpdates();integrationCheck();setTimeout(runAutonomousMind,12000);setInterval(()=>{if(Date.now()-marketLastTickAt>9000)loadMarket(false)},9000);setInterval(loadMarketHistory,300000);setInterval(loadUpdates,60000);setInterval(integrationCheck,30000);setInterval(()=>loadRecentTransactionsFallback(false),5000);
+
+let xrpetRuntimeStarted=false;
+function startXRPetRuntime(){
+  if(xrpetRuntimeStarted)return;
+  xrpetRuntimeStarted=true;
+
+  // First paint the app; stagger live systems so they do not all compete for the main thread.
+  dailyVisit();
+  render();
+  applyNftCompanion();
+  invalidateRippletTerrain();
+  syncRoamBounds();
+
+  setTimeout(()=>{
+    if(document.hidden)return;
+    connectLedger();
+    setExchange(state.selectedExchange||'all',{initial:true});
+  },120);
+
+  setTimeout(()=>{
+    if(document.hidden)return;
+    loadRecentTransactionsFallback(true);
+    bindExchangeMenu();
+  },520);
+
+  setTimeout(()=>{
+    if(document.hidden)return;
+    registerVisitor();
+    loadUpdates();
+  },1050);
+
+  setTimeout(()=>{
+    if(document.hidden)return;
+    integrationCheck();
+  },1700);
+
+  setTimeout(()=>{
+    if(document.hidden)return;
+    goRipplet('explore');
+    roamingStep();
+    spontaneousRippletReaction();
+  },900);
+
+  setTimeout(runAutonomousMind,14000);
+
+  setInterval(()=>{if(!document.hidden)lifeTick()},30000);
+  setInterval(()=>{
+    if(document.hidden||Date.now()-marketLastTickAt<=15000)return;
+    loadMarket(false);
+  },15000);
+  setInterval(()=>{if(!document.hidden)loadMarketHistory()},300000);
+  setInterval(()=>{if(!document.hidden)loadUpdates()},120000);
+  setInterval(()=>{if(!document.hidden)integrationCheck()},120000);
+  setInterval(()=>{
+    if(document.hidden||state.connected)return;
+    loadRecentTransactionsFallback(false);
+  },8000);
+
+  setTimeout(checkXRPetBuild,12000);
+  setInterval(()=>{if(!document.hidden)checkXRPetBuild()},60000);
+}
+if(document.body.classList.contains('launch-locked')){
+  window.addEventListener('xrpet:launch-complete',startXRPetRuntime,{once:true});
+}else{
+  startXRPetRuntime();
+}
 
 window.addEventListener('xrpet:gameEvent',e=>{
   const d=e.detail||{};
@@ -2387,8 +2497,7 @@ async function checkXRPetBuild(){
     location.reload();
   }catch{}
 }
-setTimeout(checkXRPetBuild,4000);
-setInterval(checkXRPetBuild,20000);
+// Build checks are started by startXRPetRuntime() after the loading screen is released.
 
 function closeCustomizationPanels(){
   qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));

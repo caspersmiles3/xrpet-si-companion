@@ -176,9 +176,19 @@
   q('#ecosystemPrev')?.addEventListener('click',()=>{offset=Math.max(0,offset-PAGE);loadTokens();q('#ecosystemSection')?.scrollIntoView({block:'start'})});
   q('#ecosystemNext')?.addEventListener('click',()=>{if(offset+PAGE<count)offset+=PAGE;loadTokens();q('#ecosystemSection')?.scrollIntoView({block:'start'})});
 
-  loadStats();loadTokens();loadX();
-  setInterval(()=>{if(!document.hidden)loadStats()},60000);
-  setInterval(()=>{if(!document.hidden)loadX()},30000);
-  setInterval(()=>{if(!document.hidden)loadTokens()},300000);
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden){loadStats();loadX();loadTokens()}});
+  let ecosystemStarted=false;
+  function startEcosystemRuntime(){
+    if(ecosystemStarted)return;
+    ecosystemStarted=true;
+    loadStats();
+    setTimeout(loadTokens,350);
+    setTimeout(loadX,750);
+    setInterval(()=>{if(!document.hidden)loadStats()},120000);
+    setInterval(()=>{if(!document.hidden)loadX()},60000);
+    setInterval(()=>{if(!document.hidden)loadTokens()},300000);
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden){loadStats();loadX()}});
+  }
+  if(document.body.classList.contains('launch-locked')){
+    window.addEventListener('xrpet:launch-complete',startEcosystemRuntime,{once:true});
+  }else startEcosystemRuntime();
 })();

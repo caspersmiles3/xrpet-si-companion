@@ -69,7 +69,14 @@
       analyser=null;audioCtx=null;
     }
   }
-  function drawWave(){
+  let lastWaveFrame=0;
+  function drawWave(frameTime=0){
+    waveRaf=requestAnimationFrame(drawWave);
+    if(document.hidden)return;
+    const playing=!audio.paused&&!audio.ended;
+    const minFrameMs=playing?40:140;
+    if(frameTime-lastWaveFrame<minFrameMs)return;
+    lastWaveFrame=frameTime;
     cancelAnimationFrame(waveRaf);
     if(!waveform||!waveCtx)return;
     resizeWave();
@@ -96,7 +103,6 @@
       waveCtx.fillStyle=grad;
       waveCtx.fillRect(x,y,bw,bh);
     }
-    waveRaf=requestAnimationFrame(drawWave);
   }
 
   function loadTrack(i,autoplay=false){
