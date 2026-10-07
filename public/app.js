@@ -1054,22 +1054,15 @@ let rippletRouteToken=0;
 let rippletRouteUntil=0;
 let rippletMusicDancing=false;
 let rippletMusicDanceTimer=0;
+let rippletMusicStageState='idle';
+let rippletMusicStageToken=0;
 let rippletRouteAllowsShell=false;
 let heldCryptoCoin=null;
 let pendingCryptoCoin=null;
 let cryptoCoinMissionTimer=0;
 let cryptoCoinDeposits=0;
 
-const RIPPLET_CRYPTO_COINS=[
-  {symbol:'XRP',label:'XRP'},
-  {symbol:'XRP',label:'XRP'},
-  {symbol:'XRP',label:'XRP'},
-  {symbol:'BTC',label:'Bitcoin'},
-  {symbol:'ETH',label:'Ethereum'},
-  {symbol:'SOL',label:'Solana'},
-  {symbol:'XLM',label:'Stellar'},
-  {symbol:'HBAR',label:'Hedera'}
-];
+const RIPPLET_CRYPTO_COINS=[]; // Removed in 5.5.54: Ripplet no longer spawns collectible crypto tokens.
 
 function activePageElement(){
   return q('.primary-view-section.view-active:not([hidden])')||q('.primary-view-section.view-active');
@@ -1106,15 +1099,18 @@ function syncRoamBounds(){
   roamLayer.style.width=Math.max(shell.clientWidth,shell.scrollWidth)+'px';
   roamLayer.style.height=Math.max(shell.clientHeight,shell.scrollHeight)+'px';
 }
-function setRoamPosition(x,y,activity='explore'){
+function setRoamPosition(x,y,activity='explore',durationOverride=''){
   if(!lifeAvatar||!roamLayer)return;
   const avatar=lifeAvatar.getBoundingClientRect();
-  const allowShell=rippletRouteAllowsShell||['dock','coin-return','page-enter'].includes(activity);
+  const allowShell=rippletRouteAllowsShell||rippletMusicStageState!=='idle'||['dock','coin-return','page-enter'].includes(activity);
   const b=rippletMovementBounds(allowShell);
   const minX=b.left,minY=b.top;
   const maxX=Math.max(minX,b.right-avatar.width),maxY=Math.max(minY,b.bottom-avatar.height);
   const px=Math.max(minX,Math.min(maxX,x)),py=Math.max(minY,Math.min(maxY,y));
-  lifeAvatar.style.transitionDuration=activity==='run'?'.72s':activity==='jump'?'.58s':activity==='climb'?'1s':'1.18s';
+  lifeAvatar.style.transitionDuration=durationOverride||(
+    activity==='run'?'.72s':activity==='jump'?'.58s':activity==='climb'?'1s':'1.18s'
+  );
+  lifeAvatar.style.transitionTimingFunction=activity==='run'?'linear':'cubic-bezier(.2,.72,.2,1)';
   lifeAvatar.style.transform='translate3d('+px+'px,'+py+'px,0)';
   lifeAvatar.dataset.activity=activity;
   roamX=maxX>minX?(px-minX)/(maxX-minX):.5;
@@ -1172,7 +1168,6 @@ function dockRipplet(){
       if(!roamDocked)return;
       setDockStatus('DOCKED');
       lifeAvatar && (lifeAvatar.dataset.activity='dock');
-      if(heldCryptoCoin)depositCryptoCoin();
       window.XRPet3D?.perform?.('salute');
       setTimeout(()=>{if(roamDocked)window.XRPet3D?.perform?.('thinking')},2600);
     },1750);
@@ -1855,43 +1850,12 @@ function cryptoCoinSpotClear(x,y,size=12){
   }
   return true;
 }
-function ensureCryptoCoins(force=false){
-  if(!roamLayer)return;
-  const view=activeViewName();
-  if(force){
-    qa('.ripplet-crypto-coin').forEach(coin=>{
-      if(coin!==heldCryptoCoin)coin.remove();
-    });
-    if(pendingCryptoCoin!==heldCryptoCoin)pendingCryptoCoin=null;
-  }else{
-    qa('.ripplet-crypto-coin').forEach(coin=>{
-      if(coin!==heldCryptoCoin&&coin.dataset.view!==view)coin.remove();
-    });
-  }
-
-  const existing=qa('.ripplet-crypto-coin:not(.is-carried)').filter(coin=>coin.dataset.view===view);
-  const desired=innerWidth<600?3:5;
-  if(existing.length>=desired)return;
-
-  const b=activePageBounds(14),size=12;
-  let needed=desired-existing.length,tries=0;
-  while(needed>0&&tries<260){
-    tries++;
-    const x=b.left+Math.random()*Math.max(1,b.right-b.left-size);
-    const y=b.top+Math.random()*Math.max(1,b.bottom-b.top-size);
-    if(!cryptoCoinSpotClear(x,y,size))continue;
-    const type=RIPPLET_CRYPTO_COINS[Math.floor(Math.random()*RIPPLET_CRYPTO_COINS.length)];
-    const coin=document.createElement('span');
-    coin.className='ripplet-crypto-coin';
-    coin.dataset.symbol=type.symbol;
-    coin.dataset.label=type.label;
-    coin.dataset.view=view;
-    coin.setAttribute('aria-hidden','true');
-    coin.style.left=x+'px';
-    coin.style.top=y+'px';
-    roamLayer.appendChild(coin);
-    needed--;
-  }
+function ensureCryptoCoins(){
+  qa('.ripplet-crypto-coin,.dock-crypto-token').forEach(node=>node.remove());
+  heldCryptoCoin=null;
+  pendingCryptoCoin=null;
+  clearTimeout(cryptoCoinMissionTimer);
+  return false;
 }
 function nearestCryptoCoin(){
   const view=activeViewName(),shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar?.getBoundingClientRect();
@@ -2032,27 +1996,7 @@ function pickUpCryptoCoin(coin){
   cryptoCoinMissionTimer=setTimeout(carryCryptoCoinToDock,420);
   return true;
 }
-function collectRandomCryptoCoin(){
-  if(roamDocked||rippletMusicDancing||heldCryptoCoin||pendingCryptoCoin||rippletRouteBusy())return false;
-  ensureCryptoCoins(false);
-  const ranked=nearestCryptoCoin();if(!ranked?.length)return false;
-  const pool=ranked.slice(0,Math.min(3,ranked.length));
-  const coin=pool[Math.floor(Math.random()*pool.length)]?.coin;
-  const target=cryptoCoinPickupPosition(coin);
-  if(!coin||!target)return false;
-  pendingCryptoCoin=coin;
-  coin.classList.add('is-targeted');
-  if(!routeRippletTo(target.x,target.y,'walk')){
-    coin.classList.remove('is-targeted');
-    pendingCryptoCoin=null;
-    return false;
-  }
-  setText('#mindAction','Coin spotted');
-  setText('#mindThought','I noticed a tiny '+(coin.dataset.symbol||'crypto')+' coin in an open spot, so I am going to pick it up.');
-  const wait=Math.max(700,rippletRouteUntil-performance.now()+160);
-  cryptoCoinMissionTimer=setTimeout(()=>pickUpCryptoCoin(coin),wait);
-  return true;
-}
+function collectRandomCryptoCoin(){return false;}
 function makeInterfaceEcho(){return null;}
 function playWithInterface(force=false){
   if(roamDocked||rippletMusicDancing||!lifeAvatar||!roamLayer)return false;
@@ -2134,16 +2078,14 @@ function playWithInterface(force=false){
 
   return true;
 }
-function playWithObject(){
-  return collectRandomCryptoCoin();
-}
+function playWithObject(){return false;}
 window.XRPetPlayground={
   play:()=>playWithInterface(true),
   object:playWithObject,
-  drop:()=>heldCryptoCoin?depositCryptoCoin():false,
-  refresh:()=>ensureCryptoCoins(true)
+  drop:()=>false,
+  refresh:()=>false
 };
-setTimeout(()=>ensureCryptoCoins(true),320);
+ensureCryptoCoins();
 
 function syncDanceButton(){
   qa('[data-pet-action="dance"]').forEach(button=>{
@@ -2151,54 +2093,130 @@ function syncDanceButton(){
     button.title=button.disabled?'Start the XRPet music player to let Ripplet dance.':'Dance with the music';
   });
 }
+function musicPlayerStagePosition(){
+  const player=q('#xrpetMusicPlayer'),shell=q('.main-shell'),ar=lifeAvatar?.getBoundingClientRect();
+  if(!player||!shell||!ar)return null;
+  const sr=shell.getBoundingClientRect(),pr=player.getBoundingClientRect();
+  const aw=Math.max(52,ar.width||52),ah=Math.max(72,ar.height||72);
+  // The landing strip is attached to the locked music player rail, near its waveform side.
+  const stageLineY=pr.bottom-sr.top+shell.scrollTop-3;
+  const x=pr.left-sr.left+shell.scrollLeft+Math.max(aw*.5,pr.width*.70)-aw*.5;
+  const y=stageLineY-ah;
+  const b=shellMovementBounds();
+  return {
+    x:Math.max(b.left,Math.min(b.right-aw,x)),
+    y:Math.max(b.top,Math.min(b.bottom-ah,y)),
+    approachY:Math.max(b.top,Math.min(b.bottom-ah,y+Math.min(30,rippletMaxJumpHeight()-4))),
+    player
+  };
+}
+function snapRippletToMusicStage(){
+  if(!rippletMusicDancing||rippletMusicStageState!=='dancing')return false;
+  const stage=musicPlayerStagePosition();if(!stage)return false;
+  rippletRouteAllowsShell=true;
+  setRoamPosition(stage.x,stage.y,'dance','0s');
+  return true;
+}
 function danceToMusicBeat(){
   clearTimeout(rippletMusicDanceTimer);
   if(!rippletMusicDancing||window.XRPetMusicPlaying!==true)return;
-  if(rippletRouteBusy()){
-    rippletMusicDanceTimer=setTimeout(danceToMusicBeat,240);
+  if(rippletMusicStageState!=='dancing'){
+    rippletMusicDanceTimer=setTimeout(danceToMusicBeat,160);
     return;
   }
+  snapRippletToMusicStage();
   if(lifeAvatar){
     lifeAvatar.dataset.activity='dance';
     lifeAvatar.dataset.reaction='dance';
   }
   window.XRPet3D?.perform?.('dance');
   state.mindAction='dance';
-  state.mindThought='The music is playing, so I am dancing in place.';
+  state.mindThought='The music is playing. I am dancing on the music-player stage so I stay out of the page.';
   renderMind();
   rippletMusicDanceTimer=setTimeout(danceToMusicBeat,2250);
 }
-function setRippletMusicDance(playing){
-  const next=playing===true;
-  rippletMusicDancing=next;
-  syncDanceButton();
-  clearTimeout(rippletMusicDanceTimer);
-  if(next){
-    clearTimeout(roamTimer);
-    clearTimeout(cryptoCoinMissionTimer);
-    if(pendingCryptoCoin&&pendingCryptoCoin!==heldCryptoCoin){
-      pendingCryptoCoin.classList.remove('is-targeted');
-      pendingCryptoCoin=null;
-    }
-    cancelRippletRoute();
-    setText('#mindAction','Dancing to music');
-    setText('#mindThought','Music is on. I stay grounded and dance where I am.');
+function runRippletToMusicStage(){
+  const stage=musicPlayerStagePosition();
+  if(!stage){
+    rippletMusicStageState='dancing';
     danceToMusicBeat();
     return;
   }
+  const token=++rippletMusicStageToken;
+  const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar?.getBoundingClientRect();
+  if(!shell||!sr||!ar)return;
+  const currentX=ar.left-sr.left+shell.scrollLeft;
+  const currentY=ar.top-sr.top+shell.scrollTop;
+  const distance=Math.hypot(stage.x-currentX,stage.approachY-currentY);
+  const sprintMs=Math.max(170,Math.min(620,Math.round(distance/1.25)));
+
+  rippletMusicStageState='running';
+  rippletRouteAllowsShell=true;
+  document.body.classList.add('music-ripplet-stage');
+  stage.player.classList.add('ripplet-stage-active');
+  setText('#mindAction','Sprinting to music stage');
+  setText('#mindThought','Music started. I am running to the locked music-player rail so I can dance out of the way.');
+  window.XRPet2D?.motor?.('run');
+  setRoamPosition(stage.x,stage.approachY,'run',sprintMs+'ms');
+
+  setTimeout(()=>{
+    if(token!==rippletMusicStageToken||!rippletMusicDancing||window.XRPetMusicPlaying!==true)return;
+    rippletMusicStageState='jumping';
+    setText('#mindAction','Jumping onto music stage');
+    window.XRPet2D?.motor?.('jump');
+    setRoamPosition(stage.x,stage.y,'jump','320ms');
+
+    setTimeout(()=>{
+      if(token!==rippletMusicStageToken||!rippletMusicDancing||window.XRPetMusicPlaying!==true)return;
+      rippletMusicStageState='dancing';
+      setRoamPosition(stage.x,stage.y,'stand','0s');
+      window.XRPet2D?.motor?.('stand');
+      danceToMusicBeat();
+    },340);
+  },sprintMs+40);
+}
+function setRippletMusicDance(playing){
+  const next=playing===true;
+  syncDanceButton();
+
+  // Ignore duplicate play events from audio.play() + UI synchronization.
+  if(next===rippletMusicDancing&&next&&rippletMusicStageState!=='idle')return;
+
+  rippletMusicDancing=next;
+  clearTimeout(rippletMusicDanceTimer);
+  clearTimeout(roamTimer);
+  clearTimeout(cryptoCoinMissionTimer);
+  ensureCryptoCoins();
+
+  if(next){
+    roamDocked=false;
+    setDockStatus('ROAMING');
+    cancelRippletRoute();
+    runRippletToMusicStage();
+    return;
+  }
+
+  ++rippletMusicStageToken;
+  q('#xrpetMusicPlayer')?.classList.remove('ripplet-stage-active');
+  document.body.classList.remove('music-ripplet-stage');
+
   if(lifeAvatar){
     if(lifeAvatar.dataset.activity==='dance')lifeAvatar.dataset.activity='stand';
     if(lifeAvatar.dataset.reaction==='dance')delete lifeAvatar.dataset.reaction;
   }
   window.XRPet2D?.motor?.('stand');
-  state.mindAction=heldCryptoCoin?'carry':'roam';
-  state.mindThought=heldCryptoCoin
-    ? 'The music stopped. I am finishing my coin delivery to the dock.'
-    : 'The music stopped. I can move through the interface again.';
+  rippletRouteAllowsShell=false;
+  rippletMusicStageState='idle';
+  state.mindAction='roam';
+  state.mindThought='The music stopped. I am leaving the music-player stage and returning to the page.';
   renderMind();
-  clearTimeout(roamTimer);
-  if(heldCryptoCoin)cryptoCoinMissionTimer=setTimeout(carryCryptoCoinToDock,260);
-  roamTimer=setTimeout(roamingStep,420);
+
+  setTimeout(()=>{
+    if(rippletMusicDancing)return;
+    invalidateRippletTerrain();
+    keepRippletInsideActivePage();
+    roamTimer=setTimeout(roamingStep,420);
+  },140);
 }
 window.addEventListener('xrpet:music-state',e=>setRippletMusicDance(e.detail?.playing===true));
 setTimeout(()=>setRippletMusicDance(window.XRPetMusicPlaying===true),0);
@@ -2207,15 +2225,6 @@ function roamingStep(){
   clearTimeout(roamTimer);
   if(rippletMusicDancing){
     roamTimer=setTimeout(roamingStep,700);
-    return;
-  }
-  if(heldCryptoCoin){
-    if(!rippletRouteBusy())carryCryptoCoinToDock();
-    roamTimer=setTimeout(roamingStep,700);
-    return;
-  }
-  if(pendingCryptoCoin){
-    roamTimer=setTimeout(roamingStep,500);
     return;
   }
   if(rippletRouteBusy()){
@@ -2231,7 +2240,6 @@ function roamingStep(){
   }
 
   keepRippletInsideActivePage();
-  ensureCryptoCoins(false);
 
   if(rippletPointer.active&&Date.now()-rippletPointer.movedAt<8000){
     followRippletPointer(true);
@@ -2240,13 +2248,8 @@ function roamingStep(){
   }
 
   const roll=Math.random();
-  if(roll<.14){
-    if(!collectRandomCryptoCoin())playWithInterface();
-  }else if(roll<.92){
-    playWithInterface();
-  }else{
-    goRipplet('explore');
-  }
+  if(roll<.92)playWithInterface();
+  else goRipplet('explore');
   roamTimer=setTimeout(roamingStep,1900+Math.random()*2700);
 }
 function renderMind(){
@@ -2350,7 +2353,10 @@ addEventListener('resize',()=>{
     if(document.hidden||document.body.classList.contains('launch-locked'))return;
     invalidateRippletTerrain();
     syncRoamBounds();
-    ensureCryptoCoins(true);
+    if(rippletMusicDancing){
+      snapRippletToMusicStage();
+      return;
+    }
     if(roamDocked){
       const p=dockPosition();if(p)setRoamPosition(p.x,p.y,'dock');
     }else if(!heldCryptoCoin&&!pendingCryptoCoin){
@@ -2388,6 +2394,7 @@ function startXRPetRuntime(){
   dailyVisit();
   render();
   applyNftCompanion();
+  ensureCryptoCoins();
   invalidateRippletTerrain();
   syncRoamBounds();
 

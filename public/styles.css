@@ -9741,3 +9741,35 @@ body:not(.launch-locked) .floating-tag{
 .primary-view-section{
   contain:layout paint style;
 }
+
+
+/* XRPet 5.5.54 — remove crypto pickups + music-player dance stage */
+.ripplet-crypto-coin,
+.ripplet-dock-platform .dock-crypto-token{
+  display:none!important;
+  animation:none!important;
+}
+body.music-ripplet-stage .ripplet-roam-layer{
+  z-index:96!important;
+}
+#xrpetMusicPlayer.ripplet-stage-active{
+  position:relative!important;
+  overflow:visible!important;
+}
+#xrpetMusicPlayer.ripplet-stage-active::before{
+  content:""!important;
+  position:absolute!important;
+  right:18%!important;
+  bottom:-3px!important;
+  width:72px!important;
+  height:3px!important;
+  border-radius:99px!important;
+  background:linear-gradient(90deg,transparent,rgba(100,235,255,.72),transparent)!important;
+  box-shadow:0 0 10px rgba(77,224,247,.28)!important;
+  pointer-events:none!important;
+  z-index:8!important;
+}
+body.music-ripplet-stage #lifeAvatar{
+  z-index:214!important;
+  pointer-events:none!important;
+}

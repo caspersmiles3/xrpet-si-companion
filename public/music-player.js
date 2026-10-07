@@ -141,7 +141,9 @@
 
   function musicState(reason='state'){
     const playing=!audio.paused&&!audio.ended&&!audio.error;
+    const previous=window.XRPetMusicPlaying;
     window.XRPetMusicPlaying=playing;
+    if(previous===playing&&reason!=='init')return playing;
     window.dispatchEvent(new CustomEvent('xrpet:music-state',{
       detail:{playing,reason,index:state.index,track:tracks[state.index]?.[0]||''}
     }));
