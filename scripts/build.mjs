@@ -28,17 +28,6 @@ const launchBase64=(await Promise.all(launchParts.map(path=>readFile(path,'utf8'
   .join('');
 await writeFile('public/media/xrpet-launch-bg.mp4',Buffer.from(launchBase64,'base64'));
 
-const launchSideDir='scripts/launch-side';
-const launchSideParts=(await readdir(launchSideDir))
-  .filter(name=>/^part\d+\.txt$/.test(name))
-  .sort()
-  .map(name=>launchSideDir+'/'+name);
-if(launchSideParts.length!==10){
-  throw new Error('Expected 10 launch-side video parts, found '+launchSideParts.length);
-}
-const launchSideBase64=(await Promise.all(launchSideParts.map(path=>readFile(path,'utf8'))))
-  .map(part=>part.trim())
-  .join('');
-await writeFile('public/media/xrpet-launch-side.mp4',Buffer.from(launchSideBase64,'base64'));
 
-console.log('XRPet client, center launch video, and portrait side-panel launch video built');
+
+console.log('XRPet client and center launch video built');

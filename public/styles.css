@@ -9610,3 +9610,57 @@ body:not(.workspace-open) .main-shell>.primary-view-section:not(.view-active){
 #rippletRoamLayer #ripplet2d{
   inset:0!important;
 }
+
+
+/* XRPet 5.5.50 — repaired launch screen: black pillars + single launch controller */
+.launch-gate.clean-launch{
+  background:#000!important;
+  overflow:hidden!important;
+}
+.launch-side-video{
+  display:none!important;
+}
+.launch-pillar{
+  display:block!important;
+  position:absolute!important;
+  top:0!important;
+  bottom:0!important;
+  z-index:2!important;
+  background:#000!important;
+  opacity:1!important;
+  pointer-events:none!important;
+}
+.launch-pillar-left{
+  left:0!important;
+  right:auto!important;
+  width:max(0px,calc((100vw - 133.333vh)/2))!important;
+}
+.launch-pillar-right{
+  right:0!important;
+  left:auto!important;
+  width:max(0px,calc((100vw - 133.333vh)/2))!important;
+}
+.clean-launch-video{
+  z-index:1!important;
+}
+.clean-launch-video-shade{z-index:3!important;pointer-events:none!important}
+.clean-launch .clean-launch-grid{z-index:4!important;pointer-events:none!important}
+.clean-launch .clean-launch-content{
+  z-index:5!important;
+  pointer-events:auto!important;
+}
+.clean-launch-enter,
+.launch-word-action{
+  pointer-events:auto!important;
+  position:relative!important;
+  z-index:6!important;
+}
+.launch-gate.clean-launch.launch-complete{
+  pointer-events:none!important;
+}
+@media(max-aspect-ratio:4/3){
+  .launch-pillar-left,
+  .launch-pillar-right{
+    width:0!important;
+  }
+}

@@ -1008,7 +1008,7 @@ document.addEventListener('change',e=>{
 });
 document.addEventListener('submit',e=>{if(e.target.matches('form'))playSound(e.target.id==='chatForm'?'chatSend':'success')});
 
-const launchGate=q('#launchGate'),launchEnter=q('#launchEnter'),launchBar=q('#launchProgressBar');
+const launchGate=q('#launchGate'),launchBar=q('#launchProgressBar');
 const launchBackgroundVideo=q('#launchBackgroundVideo');
 if(launchBackgroundVideo){
   launchBackgroundVideo.muted=true;
@@ -1016,99 +1016,24 @@ if(launchBackgroundVideo){
   launchBackgroundVideo.playsInline=true;
   launchBackgroundVideo.play?.().catch(()=>{});
 }
-qa('.launch-side-video').forEach(video=>{
-  video.muted=true;
-  video.loop=true;
-  video.playsInline=true;
-  video.play?.().catch(()=>{});
-});
-let launchOpened=false,launchProgress=0,launchTimer=0,launchIdleTimer=0,launchPulse=1;
-
-const launchIdleMessages=[
-  ['Ripplet is online and waiting.','Watching XRPL mainnet'],
-  ['Validated ledgers keep moving.','Following network consensus'],
-  ['Live signals are still flowing.','Listening for transactions'],
-  ['XRPet is ready when you are.','Companion systems active'],
-  ['No rush — the Ledger never sleeps.','Monitoring XRPL mainnet']
-];
 
 function setSimpleLaunchProgress(value,text){
-  launchProgress=Math.max(0,Math.min(100,Number(value)||0));
-  if(launchBar)launchBar.style.width=launchProgress+'%';
+  const controller=window.XRPetLaunch;
+  if(controller?.setProgress){
+    controller.setProgress(value,text);
+    return;
+  }
+  const progress=Math.max(0,Math.min(100,Number(value)||0));
+  if(launchBar)launchBar.style.width=progress+'%';
   if(text)setText('#launchStatus',text);
 }
-function updateLaunchActivity(label){
-  if(label)setText('#launchActivityLabel',label);
-  setText('#launchActivityPulse','signal '+String(launchPulse++).padStart(3,'0'));
-}
-function finishLaunch(){
-  if(launchOpened)return;
-  launchOpened=true;
-  clearInterval(launchTimer);
-  clearInterval(launchIdleTimer);
-  setSimpleLaunchProgress(100,'XRPet ready.');
-  updateLaunchActivity('Opening companion interface');
-  launchGate?.classList.add('launch-complete');
+
+if(!launchGate){
   document.body.classList.remove('launch-locked');
-  setTimeout(()=>{
-    launchGate?.remove();
-    window.XRPet3D?.react?.();
-    window.dispatchEvent(new CustomEvent('xrpet:launch-complete'));
-    setTimeout(()=>setRoomAmbience(state.room),120);
-  },420);
-}
-if(launchGate){
-  setSimpleLaunchProgress(18,'Connecting to XRPL live data…');
-  updateLaunchActivity('Listening for validated ledgers');
-
-  launchTimer=setInterval(()=>{
-    if(launchOpened)return;
-    if(launchProgress<88){
-      const next=Math.min(88,launchProgress+Math.max(3,Math.round((90-launchProgress)*.12)));
-      const text=next<42?'Connecting to XRPL live data…':next<70?'Synchronizing live signals…':'Waking Ripplet…';
-      const activity=next<42?'Opening XRPL mainnet stream':next<70?'Matching ledger + market signals':'Companion systems coming online';
-      setSimpleLaunchProgress(next,text);
-      updateLaunchActivity(activity);
-    }
-  },180);
-
-  let idleIndex=0;
-  setTimeout(()=>{
-    if(launchOpened)return;
-    setSimpleLaunchProgress(Math.max(launchProgress,92),'Waiting for your command.');
-    updateLaunchActivity('Companion systems active');
-    launchIdleTimer=setInterval(()=>{
-      if(launchOpened)return;
-      const item=launchIdleMessages[idleIndex++%launchIdleMessages.length];
-      setSimpleLaunchProgress(Math.max(launchProgress,92),item[0]);
-      updateLaunchActivity(item[1]);
-      launchGate.classList.remove('launch-pulse');
-      requestAnimationFrame(()=>launchGate.classList.add('launch-pulse'));
-    },2600);
-  },1800);
-
-  launchEnter?.addEventListener('click',finishLaunch);
-  launchGate?.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();finishLaunch()}});
-  launchGate?.addEventListener('pointermove',e=>{
-    const r=launchGate.getBoundingClientRect();
-    const x=((e.clientX-r.left)/Math.max(1,r.width)-.5)*2;
-    const y=((e.clientY-r.top)/Math.max(1,r.height)-.5)*2;
-    launchGate.style.setProperty('--launch-mx',x.toFixed(3));
-    launchGate.style.setProperty('--launch-my',y.toFixed(3));
-  });
-  launchGate?.addEventListener('pointerleave',()=>{
-    launchGate.style.setProperty('--launch-mx','0');
-    launchGate.style.setProperty('--launch-my','0');
-  });
-  q('#launchLiveOrbit')?.addEventListener('click',()=>{
-    launchGate.classList.remove('launch-pulse');
-    requestAnimationFrame(()=>launchGate.classList.add('launch-pulse'));
-    updateLaunchActivity('XRPL signal ping acknowledged');
-    setText('#launchStatus','Mainnet signal received. Ripplet is listening.');
-    playSound('notification',true);
-  });
 }else{
-  document.body.classList.remove('launch-locked');
+  window.addEventListener('xrpet:launch-complete',()=>{
+    setTimeout(()=>setRoomAmbience(state.room),120);
+  },{once:true});
 }
 
 const floatEl=q('#floatingCompanion'),roamLayer=q('#rippletRoamLayer'),lifeAvatar=q('#lifeAvatar');
