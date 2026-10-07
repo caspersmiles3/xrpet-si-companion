@@ -10033,3 +10033,72 @@ body.music-ripplet-stage #lifeAvatar,
 body:not(.music-ripplet-stage) #lifeAvatar{
   filter:none!important;
 }
+
+
+/* XRPet 5.5.60 — continuous walking, exact berth fit, expanded dance set */
+.ripplet-roam-layer .global-life-avatar{
+  transition-property:transform!important;
+  transition-timing-function:linear!important;
+}
+.ripplet-roam-layer .global-life-avatar[data-activity="dock"]{
+  transition-timing-function:linear!important;
+}
+.top-ripplet-box .ripplet-dock-platform{
+  align-self:end!important;
+  margin-bottom:1px!important;
+}
+body.ripplet-docked #lifeAvatar{
+  z-index:215!important;
+}
+body.ripplet-docked .top-ripplet-box .ripplet-dock-platform{
+  overflow:visible!important;
+}
+
+/* Extra grounded dance motions — no travel/teleporting, only body animation in place. */
+.ripplet2d[data-state="dance2"] .r2-character{
+  animation:r2DanceSway .34s ease-in-out infinite alternate!important;
+}
+.ripplet2d[data-state="dance2"] .r2-arm-motion-left{
+  animation:r2DanceArmL .34s ease-in-out infinite alternate!important;
+}
+.ripplet2d[data-state="dance2"] .r2-arm-motion-right{
+  animation:r2DanceArmR .34s ease-in-out infinite alternate-reverse!important;
+}
+.ripplet2d[data-state="dance3"] .r2-character{
+  animation:r2DanceGroove .42s ease-in-out infinite alternate!important;
+}
+.ripplet2d[data-state="dance3"] .r2-leg-left{
+  animation:r2DanceLegL .42s ease-in-out infinite alternate!important;
+}
+.ripplet2d[data-state="dance3"] .r2-leg-right{
+  animation:r2DanceLegR .42s ease-in-out infinite alternate!important;
+}
+.ripplet2d[data-state="dance4"] .r2-head{
+  animation:r2DanceHead .28s ease-in-out infinite alternate!important;
+}
+.ripplet2d[data-state="dance4"] .r2-arm-motion-left{
+  animation:r2CheerArmL .28s ease-in-out infinite alternate!important;
+}
+.ripplet2d[data-state="dance4"] .r2-arm-motion-right{
+  animation:r2Wave .22s ease-in-out infinite alternate!important;
+}
+@keyframes r2DanceSway{
+  from{transform:rotate(-5deg)}
+  to{transform:rotate(5deg)}
+}
+@keyframes r2DanceGroove{
+  from{transform:scaleX(.97) rotate(-2deg)}
+  to{transform:scaleX(1.03) rotate(2deg)}
+}
+@keyframes r2DanceLegL{
+  from{transform:rotate(-8deg)}
+  to{transform:rotate(10deg)}
+}
+@keyframes r2DanceLegR{
+  from{transform:rotate(8deg)}
+  to{transform:rotate(-10deg)}
+}
+@keyframes r2DanceHead{
+  from{transform:rotate(-7deg)}
+  to{transform:rotate(7deg)}
+}

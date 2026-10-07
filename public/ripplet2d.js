@@ -189,7 +189,7 @@
   const durationFor = state => ({
     idle: 0, stand: 0, sit: 0, walk: 6500, run: 3000, jump: 900, climb: 1500, hang: 1500,
     wave: 1600, salute: 1500, thinking: 2200, happy: 1700,
-    excited: 1800, cheer: 1900, celebrate: 1900, dance: 2600,
+    excited: 1800, cheer: 1900, celebrate: 1900, dance: 1800, dance2: 1800, dance3: 1800, dance4: 1800,
     shrug: 1700, confused: 1900, surprised: 1500, focus: 1900,
     scan: 2000, alert: 1700, laugh: 1900, point: 1700,
     crouch: 1100, turn: 900, reach: 1200, grab: 1100, carry: 1900

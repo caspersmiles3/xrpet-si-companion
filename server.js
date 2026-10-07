@@ -797,12 +797,9 @@ function deterministicCompanionDecision(context={}) {
     add('music_previous',.035,'I want to press Previous and revisit the last track.');
     add('music_shuffle',.045,'I want to press Shuffle and mix up the soundtrack.');
   }
-  add('run',txRecent<8?1.7:.55,'I want to move quickly across the top rail.');
-  add('jump',priceMove>.08?1.4:.35,'I have enough energy for a quick jump.');
   add('crouch',.35,'I want to lower my stance and observe for a moment.');
   add('turn',.45,'I want to turn and look around the interface.');
   add('reach',.4,'I want to reach toward something nearby and inspect it.');
-  add('climb',.12,'I want to practice a climbing motion.');
   add('socialize',Number(needs.social)<50?2.6:context.newAnnouncement?2.8:.4,'I want to check in with Signal Friend.',false);
   const total=choices.reduce((n,x)=>n+x.weight,0);
   let roll=Math.random()*total;
@@ -818,7 +815,7 @@ async function askExternalDecision(context={}) {
   const updates=await getUpdates().catch(()=>[]);
   const prompt=[
     'Choose ONE next autonomous behavior for Ripplet, an XRPet companion.',
-    'Allowed actions: roam, socialize, scan, wave, dance, music_next, music_previous, music_shuffle, focus, run, jump, climb, reach, grab, carry, crouch, turn.',
+    'Allowed actions: roam, socialize, scan, wave, dance, music_next, music_previous, music_shuffle, focus, reach, grab, carry, crouch, turn.',
     'Return strict JSON only with keys action, thought, visitStation.',
     'visitStation must be false. Ripplet no longer has food, water, or sleep needs.',
     'Keep thought under 110 characters.',
@@ -829,7 +826,7 @@ async function askExternalDecision(context={}) {
   try{
     const text=raw.replace(/`{3}json|`{3}/gi,'').trim();
     const parsed=JSON.parse(text);
-    const allowed=new Set(['roam','socialize','scan','wave','dance','music_next','music_previous','music_shuffle','focus','run','jump','climb','reach','grab','carry','crouch','turn']);
+    const allowed=new Set(['roam','socialize','scan','wave','dance','music_next','music_previous','music_shuffle','focus','reach','grab','carry','crouch','turn']);
     if(!allowed.has(parsed.action))return null;
     return {
       action:parsed.action,

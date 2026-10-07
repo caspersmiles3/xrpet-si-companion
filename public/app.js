@@ -1059,6 +1059,8 @@ let rippletRouteToken=0;
 let rippletRouteUntil=0;
 let rippletMusicDancing=false;
 let rippletMusicDanceTimer=0;
+let rippletDanceVariantIndex=0;
+const RIPPLET_DANCE_SEQUENCE=['dance','dance2','dance3','dance4','cheer','dance2','happy','dance3'];
 let rippletMusicStageState='idle';
 let rippletMusicStageToken=0;
 let rippletMusicControlToken=0;
@@ -1129,11 +1131,11 @@ function setRoamPosition(x,y,activity='walk',durationOverride=''){
   const minX=b.left;
   const maxX=Math.max(minX,b.right-avatar.width);
   const px=Math.max(minX,Math.min(maxX,x));
-  const py=b.top;
+  const py=activity==='dock'&&Number.isFinite(Number(y))?Number(y):b.top;
   const duration=durationOverride||'.9s';
-  lifeAvatar.style.transitionProperty='transform';
-  lifeAvatar.style.transitionDuration=duration;
-  lifeAvatar.style.transitionTimingFunction='linear';
+  lifeAvatar.style.setProperty('transition-property','transform','important');
+  lifeAvatar.style.setProperty('transition-duration',duration,'important');
+  lifeAvatar.style.setProperty('transition-timing-function','linear','important');
   lifeAvatar.style.transform='translate3d('+px+'px,'+py+'px,0)';
   lifeAvatar.dataset.activity=activity;
   roamX=maxX>minX?(px-minX)/(maxX-minX):.5;
@@ -1141,6 +1143,7 @@ function setRoamPosition(x,y,activity='walk',durationOverride=''){
 }
 function walkRippletTo(x,activity='walk',durationOverride=''){
   if(!lifeAvatar)return false;
+  if(rippletRouteBusy()&&activity!=='dock')return false;
   const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar.getBoundingClientRect();
   if(!shell||!sr)return false;
   const currentX=ar.left-sr.left+shell.scrollLeft;
@@ -1186,9 +1189,10 @@ function dockPosition(){
   const w=Math.max(52,avatar?.width||52),h=Math.max(72,avatar?.height||72);
   const b=topRailBounds(true);
   const desiredX=r.left-sr.left+shell.scrollLeft+(r.width-w)/2;
+  const desiredY=r.bottom-sr.top+shell.scrollTop-h-1;
   return {
     x:Math.max(b.left,Math.min(b.right-w,desiredX)),
-    y:b.top
+    y:desiredY
   };
 }
 function setDockStatus(text){
@@ -1232,6 +1236,7 @@ function undockRipplet(){
 function goRipplet(activity='explore'){
   syncRoamBounds();
   if(rippletMusicDancing||!lifeAvatar)return false;
+  if(rippletRouteBusy()&&activity!=='dock')return false;
   if(activity==='dock'){dockRipplet();return true}
   const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar.getBoundingClientRect();
   if(!shell||!sr)return false;
@@ -2269,15 +2274,17 @@ function danceToMusicBeat(){
     rippletMusicDanceTimer=setTimeout(danceToMusicBeat,160);
     return;
   }
+  const move=RIPPLET_DANCE_SEQUENCE[rippletDanceVariantIndex%RIPPLET_DANCE_SEQUENCE.length];
+  rippletDanceVariantIndex=(rippletDanceVariantIndex+1)%RIPPLET_DANCE_SEQUENCE.length;
   if(lifeAvatar){
     lifeAvatar.dataset.activity='dance';
-    lifeAvatar.dataset.reaction='dance';
+    lifeAvatar.dataset.reaction=move;
   }
-  window.XRPet3D?.perform?.('dance');
+  window.XRPet3D?.perform?.(move);
   state.mindAction='dance';
-  state.mindThought='The music is playing. I am dancing on the music-player stage so I stay out of the page.';
+  state.mindThought='The music is playing. I am cycling through dance moves on the top rail.';
   renderMind();
-  rippletMusicDanceTimer=setTimeout(danceToMusicBeat,2250);
+  rippletMusicDanceTimer=setTimeout(danceToMusicBeat,1450);
 }
 function runRippletToMusicStage(){
   const stage=musicPlayerStagePosition();
@@ -2332,6 +2339,7 @@ function setRippletMusicDance(playing){
   ensureCryptoCoins();
 
   if(next){
+    rippletDanceVariantIndex=0;
     roamDocked=false;
     setDockStatus('ROAMING');
     cancelRippletRoute();
@@ -2435,11 +2443,12 @@ function executeMindDecision(decision){
     performLifeActivity('socialize',false,false);
   }else if(action==='roam'){
     state.lifeActivity='explore';window.XRPetRoam?.go?.('explore');
-  }else if(action==='jump'){
-    window.XRPet3D?.motor?.('jump');
-  }else if(['scan','wave','focus','run','climb','reach','grab','carry','crouch','turn'].includes(action)){
-    if(action==='run')window.XRPetRoam?.go?.('explore');
-    else window.XRPet3D?.motor?.(action,{side:Math.random()<.5?'left':'right',turn:(Math.random()<.5?-1:1)*.45});
+  }else if(['run','jump','climb'].includes(action)){
+    state.mindAction='roam';
+    state.mindThought='I stay grounded on the top rail, so I am walking instead.';
+    window.XRPetRoam?.go?.('explore');
+  }else if(['scan','wave','focus','reach','grab','carry','crouch','turn'].includes(action)){
+    window.XRPet3D?.motor?.(action,{side:Math.random()<.5?'left':'right',turn:(Math.random()<.5?-1:1)*.45});
     if(action==='wave')playSound('wave',true);
     if(action==='scan')playSound('ledgerTx',true);
   }
@@ -2494,6 +2503,7 @@ addEventListener('resize',()=>{
   roamResizeTimer=setTimeout(()=>{
     if(document.hidden||document.body.classList.contains('launch-locked'))return;
     syncRoamBounds();
+    if(rippletRouteBusy())return;
     if(rippletMusicDancing){
       snapRippletToMusicStage();
       return;
@@ -2507,6 +2517,7 @@ addEventListener('resize',()=>{
 });
 window.addEventListener('xrpet:view-change',()=>{
   syncRoamBounds();
+  if(rippletRouteBusy())return;
   if(rippletMusicDancing)snapRippletToMusicStage();
   else if(roamDocked){
     const p=dockPosition();if(p)walkRippletTo(p.x,'dock','.35s');
