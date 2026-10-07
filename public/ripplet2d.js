@@ -4,6 +4,7 @@
 
   const RIPPLET_WIDTH=52;
   const RIPPLET_HEIGHT=72;
+  const SIZE_EPSILON=.5;
   const px=n=>n+'px';
   const sizeNode=node=>{
     if(!node)return;
@@ -13,19 +14,39 @@
     node.style.setProperty('min-height',px(RIPPLET_HEIGHT),'important');
     node.style.setProperty('max-width',px(RIPPLET_WIDTH),'important');
     node.style.setProperty('max-height',px(RIPPLET_HEIGHT),'important');
+    if(node.dataset)node.dataset.rippletSizeLock='penny';
+  };
+  const sizeTargets=()=>{
+    const visible=document.getElementById('ripplet2d');
+    return [
+      document.getElementById('lifeAvatar'),
+      document.getElementById('persistentCompanionLayer'),
+      host,
+      document.getElementById('companion3d'),
+      visible,
+      visible?.querySelector('.ripplet2d-svg')
+    ].filter(Boolean);
   };
   const enforceVisibleSize=()=>{
-    const roam=document.getElementById('lifeAvatar');
-    const persistent=document.getElementById('persistentCompanionLayer');
-    const companionHost=document.getElementById('companion3d');
+    sizeTargets().forEach(sizeNode);
     const visible=document.getElementById('ripplet2d');
-    const svg=visible?.querySelector('.ripplet2d-svg');
-    [roam,persistent,host,companionHost,visible,svg].forEach(sizeNode);
     if(visible){
       visible.style.setProperty('transform-origin','50% 100%','important');
       visible.dataset.renderWidth=String(RIPPLET_WIDTH);
       visible.dataset.renderHeight=String(RIPPLET_HEIGHT);
     }
+  };
+  let sizeFrame=0;
+  const verifyVisibleSize=()=>{
+    cancelAnimationFrame(sizeFrame);
+    sizeFrame=requestAnimationFrame(()=>{
+      const wrong=sizeTargets().some(node=>{
+        const r=node.getBoundingClientRect();
+        if(r.width<=0||r.height<=0)return false;
+        return Math.abs(r.width-RIPPLET_WIDTH)>SIZE_EPSILON||Math.abs(r.height-RIPPLET_HEIGHT)>SIZE_EPSILON;
+      });
+      if(wrong)enforceVisibleSize();
+    });
   };
 
   enforceVisibleSize();
@@ -132,10 +153,36 @@
   requestAnimationFrame(enforceVisibleSize);
   setTimeout(enforceVisibleSize,100);
   setTimeout(enforceVisibleSize,700);
-  window.addEventListener('resize',enforceVisibleSize);
-  window.addEventListener('xrpet:view-change',enforceVisibleSize);
-  window.addEventListener('xrpet:model-ready',enforceVisibleSize);
-  window.XRPetEnforceRippletSize=enforceVisibleSize;
+
+  const observedSizeNodes=new WeakSet();
+  const sizeObserver=typeof ResizeObserver==='function'
+    ? new ResizeObserver(()=>verifyVisibleSize())
+    : null;
+  const observeSizeTargets=()=>{
+    if(!sizeObserver)return;
+    sizeTargets().forEach(node=>{
+      if(observedSizeNodes.has(node))return;
+      observedSizeNodes.add(node);
+      sizeObserver.observe(node);
+    });
+  };
+  observeSizeTargets();
+
+  const roamRoot=document.getElementById('rippletRoamLayer');
+  if(roamRoot&&typeof MutationObserver==='function'){
+    new MutationObserver(()=>{
+      enforceVisibleSize();
+      observeSizeTargets();
+    }).observe(roamRoot,{childList:true,subtree:true});
+  }
+
+  window.addEventListener('resize',()=>{enforceVisibleSize();observeSizeTargets()});
+  window.addEventListener('xrpet:view-change',()=>{enforceVisibleSize();observeSizeTargets()});
+  window.addEventListener('xrpet:model-ready',()=>{enforceVisibleSize();observeSizeTargets()});
+  window.XRPetEnforceRippletSize=()=>{
+    enforceVisibleSize();
+    observeSizeTargets();
+  };
   let resetTimer = 0;
   let blinkTimer = 0;
 
