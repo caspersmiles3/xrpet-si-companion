@@ -93,7 +93,10 @@
 
     if (index >= states.length) {
       ready = true;
-      if (activity) activity.textContent = 'Press Enter XRPet to continue';
+      if (activity) {
+        activity.textContent = 'Press Enter XRPet to continue';
+        animateLaunchCopy(activity);
+      }
       return;
     }
     stateTimer = window.setTimeout(renderNextState, 1100);
