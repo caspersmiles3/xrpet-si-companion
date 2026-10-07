@@ -77,14 +77,12 @@
     const minFrameMs=playing?40:140;
     if(frameTime-lastWaveFrame<minFrameMs)return;
     lastWaveFrame=frameTime;
-    cancelAnimationFrame(waveRaf);
     if(!waveform||!waveCtx)return;
     resizeWave();
     const W=waveform.width,H=waveform.height,dpr=Math.min(2,window.devicePixelRatio||1);
     waveCtx.clearRect(0,0,W,H);
     const bars=36,gap=2*dpr,bw=Math.max(1,(W-gap*(bars-1))/bars);
     if(analyser&&waveData){analyser.getByteFrequencyData(waveData)}
-    const playing=!audio.paused&&!audio.ended;
     const now=performance.now()/1000;
     for(let i=0;i<bars;i++){
       let level;
