@@ -9773,3 +9773,28 @@ body.music-ripplet-stage #lifeAvatar{
   z-index:214!important;
   pointer-events:none!important;
 }
+
+
+/* XRPet 5.5.55 — Home cleanup + read-only XRP Composite ticker */
+#homeSection .home-command-grid{
+  grid-template-columns:minmax(0,1fr)!important;
+  min-height:220px!important;
+}
+#homeSection .home-command-copy{
+  max-width:1040px!important;
+}
+#homeSection .home-command-copy>p{
+  max-width:860px!important;
+}
+.top-command-deck .top-composite-ticker{
+  cursor:default!important;
+  pointer-events:none!important;
+  user-select:none!important;
+}
+.top-command-deck .top-composite-ticker:hover,
+.top-command-deck .top-composite-ticker:focus,
+.top-command-deck .top-composite-ticker:active{
+  transform:none!important;
+  outline:none!important;
+  box-shadow:none!important;
+}
