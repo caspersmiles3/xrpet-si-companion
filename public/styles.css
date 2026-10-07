@@ -11040,3 +11040,30 @@ body.sidebar-collapsed #rippletRoamLayer{
     min-height:32px!important;
   }
 }
+
+
+/* XRPet 5.5.64 — exact professional sidebar sizing */
+#xrpetSidebar #topCommandDeck.sidebar-command-center{
+  flex-basis:230px!important;
+  height:230px!important;
+  min-height:230px!important;
+  grid-template-rows:132px 80px!important;
+}
+#xrpetSidebar #rippletDock.top-ripplet-box{
+  height:80px!important;
+  min-height:80px!important;
+  padding:3px 4px!important;
+}
+@media(max-height:700px) and (min-width:761px){
+  #xrpetSidebar #topCommandDeck.sidebar-command-center{
+    flex-basis:224px!important;
+    height:224px!important;
+    min-height:224px!important;
+    grid-template-rows:132px 74px!important;
+  }
+  #xrpetSidebar #rippletDock.top-ripplet-box{
+    height:74px!important;
+    min-height:74px!important;
+    padding:1px 4px!important;
+  }
+}
