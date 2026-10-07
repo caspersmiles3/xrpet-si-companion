@@ -2204,14 +2204,15 @@ function rippletPressMusicControl(control='play'){
         if(control==='play'){
           setTimeout(()=>{
             if(token!==rippletMusicControlToken)return;
-            if(!rippletMusicDancing&&window.XRPetMusicPlaying===true){
+            if(window.XRPetMusicPlaying===true){
+              rippletMusicControlBusy=false;
               rippletMusicDancing=true;
               rippletMusicStageState='idle';
               runRippletToMusicStage();
-            }else if(window.XRPetMusicPlaying!==true){
+            }else{
+              rippletMusicControlBusy=false;
               resumeAfterMusicControl();
             }
-            rippletMusicControlBusy=false;
           },420);
           return;
         }
