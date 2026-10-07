@@ -62,7 +62,7 @@ const cache = {
   ecosystemStats: { at: 0, data: null },
   ecosystemTokens: new Map()
 };
-const MARKET_CACHE_MS = 15 * 1000;
+const MARKET_CACHE_MS = 4 * 1000;
 const UPDATES_CACHE_MS = 60 * 1000;
 const clean = s => (s || '').replace(/\s+/g, ' ').trim();
 const pushSubscriptions = new Map();
@@ -111,18 +111,21 @@ async function fetchFirstJson(urls, options={}, timeoutMs=9000){
   }
   throw lastError||new Error('All upstream sources failed');
 }
-async function xrplRpc(method,params=[{}]){
+async function xrplRpc(method,params=[{}],timeoutMs=6500){
   const endpoints=['https://s1.ripple.com:51234/','https://xrplcluster.com/'];
   const body=JSON.stringify({method,params});
   let lastError;
   for(const url of endpoints){
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),timeoutMs);
     try{
-      const r=await fetch(url,{method:'POST',headers:{'content-type':'application/json','user-agent':'XRPetSI/1.0'},body});
+      const r=await fetch(url,{method:'POST',headers:{'content-type':'application/json','user-agent':'XRPetSI/1.0'},body,signal:controller.signal});
       if(!r.ok)throw new Error('XRPL RPC '+r.status);
       const d=await r.json();
       if(d?.result?.status&&d.result.status!=='success')throw new Error(d.result.error_message||d.result.error||'XRPL RPC error');
       return {result:d.result,source:url};
     }catch(e){lastError=e}
+    finally{clearTimeout(timer)}
   }
   throw lastError||new Error('XRPL RPC unavailable');
 }

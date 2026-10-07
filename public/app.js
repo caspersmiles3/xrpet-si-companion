@@ -337,7 +337,7 @@ function scheduleMarketReconnect(){
 function connectMarketStream(){
   closeMarketStream();
   if(state.selectedExchange!=='coinbase'){
-    const interval=state.selectedExchange==='all'?6000:4000;
+    const interval=state.selectedExchange==='all'?4000:3000;
     marketPollTimer=setInterval(()=>loadMarket(false),interval);
     return;
   }
@@ -2408,7 +2408,7 @@ q('.main-shell')?.addEventListener('scroll',()=>{
 syncRoamBounds();setTimeout(()=>goRipplet('explore'),300);roamingStep();spontaneousRippletReaction();applyNftCompanion();
 qa('[data-life-action]').forEach(b=>b.addEventListener('click',()=>performLifeActivity(b.dataset.lifeAction,true,false)));
 setInterval(lifeTick,15000);
-dailyVisit();render();registerVisitor();connectLedger();loadRecentTransactionsFallback(true);bindExchangeMenu();setExchange(state.selectedExchange||'all',{initial:true});loadUpdates();integrationCheck();setTimeout(runAutonomousMind,12000);setInterval(()=>{if(Date.now()-marketLastTickAt>18000)loadMarket(false)},18000);setInterval(loadMarketHistory,300000);setInterval(loadUpdates,60000);setInterval(integrationCheck,30000);setInterval(()=>loadRecentTransactionsFallback(false),8000);
+dailyVisit();render();registerVisitor();connectLedger();loadRecentTransactionsFallback(true);bindExchangeMenu();setExchange(state.selectedExchange||'all',{initial:true});loadUpdates();integrationCheck();setTimeout(runAutonomousMind,12000);setInterval(()=>{if(Date.now()-marketLastTickAt>9000)loadMarket(false)},9000);setInterval(loadMarketHistory,300000);setInterval(loadUpdates,60000);setInterval(integrationCheck,30000);setInterval(()=>loadRecentTransactionsFallback(false),5000);
 
 window.addEventListener('xrpet:gameEvent',e=>{
   const d=e.detail||{};
