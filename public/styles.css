@@ -11788,3 +11788,272 @@ body.sidebar-collapsed #rippletRoamLayer.ripplet-roam-layer{
     scroll-behavior:auto!important;
   }
 }
+
+
+/* XRPet 5.5.69 — split cinematic loading console with clearer video */
+#launchGate.clean-launch{
+  --launch-panel-bg:rgba(4,13,18,.69);
+  --launch-panel-edge:rgba(120,225,242,.18);
+}
+#launchGate .clean-launch-video{
+  opacity:1!important;
+  filter:contrast(1.07) saturate(1.02) brightness(.96)!important;
+}
+#launchGate .clean-launch-video-shade{
+  opacity:1!important;
+  background:
+    linear-gradient(90deg,rgba(0,0,0,.15),transparent 18%,transparent 82%,rgba(0,0,0,.15)),
+    linear-gradient(180deg,rgba(0,0,0,.08),transparent 24%,transparent 74%,rgba(0,0,0,.24))!important;
+}
+#launchGate.clean-launch::before{
+  background:
+    radial-gradient(circle at 50% 48%,transparent 0 38%,rgba(0,0,0,.05) 62%,rgba(0,0,0,.34) 100%),
+    linear-gradient(180deg,rgba(5,18,23,.02),rgba(0,0,0,.10))!important;
+}
+#launchGate .launch-split-console.clean-launch-content{
+  width:min(1180px,calc(100vw - 64px))!important;
+  max-width:1180px!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  transform:none!important;
+  isolation:isolate!important;
+}
+#launchGate .launch-split-console::before,
+#launchGate .launch-split-console::after{
+  display:none!important;
+  content:none!important;
+}
+#launchGate .launch-console-grid{
+  display:grid!important;
+  grid-template-columns:minmax(310px,430px) minmax(300px,390px)!important;
+  justify-content:space-between!important;
+  align-items:center!important;
+  gap:clamp(72px,10vw,170px)!important;
+  width:100%!important;
+}
+#launchGate .launch-console-panel{
+  position:relative!important;
+  min-width:0!important;
+  padding:22px 23px 20px!important;
+  border:1px solid var(--launch-panel-edge)!important;
+  border-top-color:rgba(183,242,251,.30)!important;
+  border-radius:14px!important;
+  background:
+    linear-gradient(145deg,rgba(11,28,36,.70),var(--launch-panel-bg) 58%,rgba(2,7,10,.74))!important;
+  box-shadow:
+    0 20px 42px rgba(0,0,0,.36),
+    0 5px 13px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.055),
+    inset 0 -1px 0 rgba(0,0,0,.66)!important;
+}
+#launchGate .launch-console-panel::before{
+  content:""!important;
+  position:absolute!important;
+  inset:5px!important;
+  pointer-events:none!important;
+  border:1px solid rgba(120,222,239,.045)!important;
+  border-radius:10px!important;
+}
+#launchGate .launch-console-panel::after{
+  content:""!important;
+  position:absolute!important;
+  top:-1px!important;
+  left:14%!important;
+  right:14%!important;
+  height:1px!important;
+  pointer-events:none!important;
+  background:linear-gradient(90deg,transparent,rgba(151,239,251,.62),transparent)!important;
+  opacity:.55!important;
+}
+#launchGate .launch-console-left{
+  justify-self:start!important;
+  text-align:left!important;
+}
+#launchGate .launch-console-right{
+  justify-self:end!important;
+}
+#launchGate .launch-console-left .launch-corporate-mark{
+  margin:0 0 14px!important;
+}
+#launchGate .launch-console-left .clean-launch-kicker{
+  margin:0 0 9px!important;
+  font-size:.52rem!important;
+  letter-spacing:.15em!important;
+}
+#launchGate .launch-console-left #launchTitle{
+  margin:0!important;
+  max-width:390px!important;
+  font-size:clamp(2rem,3.4vw,3.2rem)!important;
+  line-height:.96!important;
+  text-align:left!important;
+}
+#launchGate .launch-console-left #launchStatus{
+  margin:13px 0 16px!important;
+  max-width:360px!important;
+  font-size:.67rem!important;
+  line-height:1.45!important;
+  text-align:left!important;
+}
+#launchGate .launch-console-left .clean-launch-progress{
+  width:100%!important;
+  margin:0!important;
+}
+#launchGate .launch-console-left .clean-launch-note{
+  display:block!important;
+  margin-top:11px!important;
+  text-align:left!important;
+  font-size:.45rem!important;
+  color:#6f929c!important;
+}
+#launchGate .launch-console-heading{
+  display:grid!important;
+  gap:3px!important;
+  margin-bottom:12px!important;
+  padding-bottom:11px!important;
+  border-bottom:1px solid rgba(104,215,233,.10)!important;
+}
+#launchGate .launch-console-heading span{
+  color:#58808c!important;
+  font-size:.39rem!important;
+  font-weight:850!important;
+  letter-spacing:.16em!important;
+}
+#launchGate .launch-console-heading strong{
+  color:#dff8fb!important;
+  font-size:.78rem!important;
+  letter-spacing:.06em!important;
+}
+#launchGate .launch-console-heading small{
+  color:#647f89!important;
+  font-size:.43rem!important;
+}
+#launchGate .launch-console-right .launch-wordline{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:7px!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+#launchGate .launch-console-right .launch-word-action{
+  grid-column:1/-1!important;
+  min-height:54px!important;
+  padding:9px 10px!important;
+  display:grid!important;
+  grid-template-columns:9px minmax(0,1fr)!important;
+  grid-template-rows:auto auto!important;
+  gap:2px 7px!important;
+  align-items:center!important;
+  text-align:left!important;
+  border:1px solid rgba(99,216,236,.12)!important;
+  border-radius:8px!important;
+  background:linear-gradient(180deg,rgba(8,25,32,.72),rgba(3,11,15,.76))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.025),
+    inset 0 -2px 5px rgba(0,0,0,.28)!important;
+}
+#launchGate .launch-console-right .launch-word-action .launch-signal-core-dot{
+  grid-row:1/3!important;
+}
+#launchGate .launch-console-right .launch-word-action b{
+  font-size:.56rem!important;
+  letter-spacing:.10em!important;
+}
+#launchGate .launch-console-right .launch-word-action small{
+  font-size:.40rem!important;
+  line-height:1.3!important;
+}
+#launchGate .launch-console-right .launch-word-separator{
+  display:none!important;
+}
+#launchGate .launch-console-right .launch-word-stat{
+  display:grid!important;
+  gap:4px!important;
+  min-height:48px!important;
+  padding:8px 10px!important;
+  border:1px solid rgba(99,216,236,.10)!important;
+  border-radius:8px!important;
+  background:linear-gradient(180deg,rgba(8,24,31,.65),rgba(3,10,14,.72))!important;
+}
+#launchGate .launch-console-right .launch-word-stat{
+  color:#638793!important;
+  font-size:.36rem!important;
+  letter-spacing:.11em!important;
+}
+#launchGate .launch-console-right .launch-word-stat strong{
+  color:#d9f8fc!important;
+  font-size:.61rem!important;
+  letter-spacing:.03em!important;
+}
+#launchGate .launch-console-right .clean-launch-enter{
+  width:100%!important;
+  margin:12px 0 0!important;
+  padding:11px 13px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  text-align:left!important;
+  border-radius:8px!important;
+}
+#launchGate .launch-console-right .clean-launch-enter span{
+  font-size:.63rem!important;
+  font-weight:900!important;
+  letter-spacing:.07em!important;
+}
+#launchGate .launch-console-right .clean-launch-enter small{
+  margin:0!important;
+  font-size:.40rem!important;
+}
+#launchGate .launch-console-panel,
+#launchGate .launch-console-panel *{
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+#launchGate.launch-video-fallback .launch-console-grid{
+  gap:28px!important;
+}
+
+@media(max-width:920px){
+  #launchGate .launch-split-console.clean-launch-content{
+    width:min(92vw,720px)!important;
+  }
+  #launchGate .launch-console-grid{
+    grid-template-columns:1fr!important;
+    gap:12px!important;
+  }
+  #launchGate .launch-console-panel{
+    width:100%!important;
+    justify-self:stretch!important;
+  }
+  #launchGate .launch-console-left{
+    padding-bottom:17px!important;
+  }
+  #launchGate .launch-console-left #launchTitle{
+    max-width:none!important;
+    font-size:clamp(1.75rem,6vw,2.7rem)!important;
+  }
+  #launchGate .launch-console-left #launchStatus{
+    max-width:none!important;
+  }
+}
+@media(max-height:650px) and (min-width:921px){
+  #launchGate .launch-console-panel{
+    padding:17px 19px 16px!important;
+  }
+  #launchGate .launch-console-left #launchTitle{
+    font-size:clamp(1.8rem,3.2vw,2.65rem)!important;
+  }
+  #launchGate .launch-console-left #launchStatus{
+    margin:9px 0 12px!important;
+  }
+  #launchGate .launch-console-heading{
+    margin-bottom:9px!important;
+    padding-bottom:8px!important;
+  }
+}

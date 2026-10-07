@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-xrpet-build="5.5.68">
+<html lang="en" data-xrpet-build="5.5.69">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -8,44 +8,54 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=5.5.68">
+  <link rel="stylesheet" href="/styles.css?v=5.5.69">
 </head>
 <body class="launch-locked xrpet-realistic-3d">
 <div id="launchGate" class="launch-gate clean-launch" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
   <video id="launchBackgroundVideo" class="clean-launch-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
-    <source src="/media/xrpet-launch-bg.mp4?v=5.5.68" type="video/mp4">
+    <source src="/media/xrpet-launch-bg.mp4?v=5.5.69" type="video/mp4">
   </video>
   <div class="launch-pillar launch-pillar-left" aria-hidden="true"></div>
   <div class="launch-pillar launch-pillar-right" aria-hidden="true"></div>
   <div class="clean-launch-video-shade" aria-hidden="true"></div>
   <div class="clean-launch-grid" aria-hidden="true"></div>
-  <div class="clean-launch-content launch-text-interface">
-    <div class="launch-corporate-mark" aria-hidden="true"><span></span><b>XRP</b><span></span></div>
-    <p class="clean-launch-kicker">XRP LEDGER // INTELLIGENT COMPANION INTERFACE</p>
-    <h1 id="launchTitle">Ripplet is waking up.</h1>
-    <p id="launchStatus" class="clean-launch-status" aria-live="polite">Connecting to XRPL live data…</p>
+  <div class="clean-launch-content launch-text-interface launch-split-console">
+    <div class="launch-console-grid">
+      <section class="launch-console-panel launch-console-left" aria-label="XRPet startup status">
+        <div class="launch-corporate-mark" aria-hidden="true"><span></span><b>XRP</b><span></span></div>
+        <p class="clean-launch-kicker">XRP LEDGER // INTELLIGENT COMPANION INTERFACE</p>
+        <h1 id="launchTitle">Ripplet is waking up.</h1>
+        <p id="launchStatus" class="clean-launch-status" aria-live="polite">Connecting to XRPL live data…</p>
 
-    <div class="launch-wordline" aria-label="XRPL launch telemetry">
-      <button id="launchLiveOrbit" class="launch-word-action" type="button">
-        <span class="launch-signal-core-dot"></span>
-        <b>XRPL MAINNET</b>
-        <small id="launchActivityLabel">Listening for validated ledgers</small>
-      </button>
-      <span class="launch-word-separator">•</span>
-      <span class="launch-word-stat">LEDGER <strong id="launchLedgerCounter">LIVE</strong></span>
-      <span class="launch-word-separator">•</span>
-      <span class="launch-word-stat">SIGNAL <strong id="launchActivityPulse">001</strong></span>
+        <div class="clean-launch-progress" aria-hidden="true">
+          <span id="launchProgressBar"></span>
+        </div>
+        <small class="clean-launch-note">Ripple + XRP + XRPL live companion interface</small>
+      </section>
+
+      <section class="launch-console-panel launch-console-right" aria-label="XRPL live telemetry">
+        <div class="launch-console-heading">
+          <span>LIVE NETWORK</span>
+          <strong>XRPL TELEMETRY</strong>
+          <small>Validated ledger signal</small>
+        </div>
+
+        <div class="launch-wordline" aria-label="XRPL launch telemetry">
+          <button id="launchLiveOrbit" class="launch-word-action" type="button">
+            <span class="launch-signal-core-dot"></span>
+            <b>XRPL MAINNET</b>
+            <small id="launchActivityLabel">Listening for validated ledgers</small>
+          </button>
+          <span class="launch-word-stat">LEDGER <strong id="launchLedgerCounter">LIVE</strong></span>
+          <span class="launch-word-stat">SIGNAL <strong id="launchActivityPulse">001</strong></span>
+        </div>
+
+        <button id="launchEnter" class="clean-launch-enter launch-enter-text" type="button">
+          <span>Enter XRPet</span>
+          <small>Open live interface →</small>
+        </button>
+      </section>
     </div>
-
-    <div class="clean-launch-progress" aria-hidden="true">
-      <span id="launchProgressBar"></span>
-    </div>
-
-    <button id="launchEnter" class="clean-launch-enter launch-enter-text" type="button">
-      <span>Enter XRPet</span>
-      <small>Open live interface →</small>
-    </button>
-    <small class="clean-launch-note">Ripple + XRP + XRPL live companion interface</small>
   </div>
 </div>
 <div class="ambient ambient-one"></div>
@@ -1093,21 +1103,21 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 5.5.68 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 5.5.69 · XRP Ledger companion</footer>
   </main>
 </div>
 
 
 
-<script src="/launch-enhance.js?v=5.5.68"></script>
-<script src="/contact-directory.js?v=5.5.68"></script>
-<script src="/music-player.js?v=5.5.68"></script>
-<script src="/games.js?v=5.5.68"></script>
-<script src="/ecosystem.js?v=5.5.68"></script>
-<script src="/ripplet2d.js?v=5.5.68"></script>
-<script src="/ui-shell.js?v=5.5.68"></script>
-<script src="/app.js?v=5.5.68"></script>
-<script src="/timeline.js?v=5.5.68"></script>
+<script src="/launch-enhance.js?v=5.5.69"></script>
+<script src="/contact-directory.js?v=5.5.69"></script>
+<script src="/music-player.js?v=5.5.69"></script>
+<script src="/games.js?v=5.5.69"></script>
+<script src="/ecosystem.js?v=5.5.69"></script>
+<script src="/ripplet2d.js?v=5.5.69"></script>
+<script src="/ui-shell.js?v=5.5.69"></script>
+<script src="/app.js?v=5.5.69"></script>
+<script src="/timeline.js?v=5.5.69"></script>
 
 </body>
 </html>
