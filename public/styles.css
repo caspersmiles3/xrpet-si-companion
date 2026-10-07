@@ -12057,3 +12057,357 @@ body.sidebar-collapsed #rippletRoamLayer.ripplet-roam-layer{
     padding-bottom:8px!important;
   }
 }
+
+
+/* XRPet 5.5.70 — panels locked inside black pillars + animated launch typography */
+#launchGate.clean-launch{
+  --launch-side-width:max(0px,calc((100vw - 133.333vh)/2));
+  --launch-side-pad:clamp(7px,1.05vw,15px);
+}
+#launchGate .launch-split-console.clean-launch-content{
+  position:absolute!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100dvh!important;
+  max-width:none!important;
+  padding:0!important;
+  margin:0!important;
+  pointer-events:none!important;
+}
+#launchGate .launch-console-grid{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  display:grid!important;
+  grid-template-columns:var(--launch-side-width) minmax(0,1fr) var(--launch-side-width)!important;
+  grid-template-rows:1fr!important;
+  gap:0!important;
+  align-items:center!important;
+  justify-content:stretch!important;
+  pointer-events:none!important;
+}
+#launchGate .launch-console-panel{
+  width:calc(100% - (var(--launch-side-pad) * 2))!important;
+  max-width:none!important;
+  min-width:0!important;
+  max-height:calc(100dvh - 34px)!important;
+  padding:clamp(11px,1.3vw,18px) clamp(9px,1.15vw,16px)!important;
+  pointer-events:auto!important;
+  overflow:hidden!important;
+  border-radius:11px!important;
+  background:
+    linear-gradient(150deg,rgba(10,27,34,.84),rgba(3,10,14,.88) 58%,rgba(1,5,8,.92))!important;
+  border:1px solid rgba(108,218,237,.18)!important;
+  border-top-color:rgba(172,238,249,.30)!important;
+  box-shadow:
+    0 16px 32px rgba(0,0,0,.38),
+    inset 0 1px 0 rgba(255,255,255,.05),
+    inset 0 -5px 15px rgba(0,0,0,.32)!important;
+}
+#launchGate .launch-console-left{
+  grid-column:1!important;
+  grid-row:1!important;
+  justify-self:center!important;
+}
+#launchGate .launch-console-right{
+  grid-column:3!important;
+  grid-row:1!important;
+  justify-self:center!important;
+}
+#launchGate .launch-console-left::after,
+#launchGate .launch-console-right::after{
+  content:""!important;
+  display:block!important;
+  position:absolute!important;
+  top:0!important;
+  bottom:0!important;
+  width:1px!important;
+  height:auto!important;
+  left:auto!important;
+  right:auto!important;
+  opacity:.8!important;
+  pointer-events:none!important;
+  background:linear-gradient(180deg,transparent,rgba(125,232,247,.7),transparent)!important;
+  animation:launchEdgeTravel 3.8s ease-in-out infinite!important;
+}
+#launchGate .launch-console-left::after{
+  right:0!important;
+}
+#launchGate .launch-console-right::after{
+  left:0!important;
+  animation-delay:1.1s!important;
+}
+#launchGate .launch-console-panel::before{
+  inset:4px!important;
+  border-radius:8px!important;
+  animation:launchInnerBreath 3.2s ease-in-out infinite alternate!important;
+}
+
+/* Left pillar typography is compact enough to remain fully inside the black panel. */
+#launchGate .launch-console-left .launch-corporate-mark{
+  margin:0 0 10px!important;
+  padding:5px 8px!important;
+  transform-origin:left center!important;
+  animation:launchMarkPulse 3s ease-in-out infinite!important;
+}
+#launchGate .launch-console-left .clean-launch-kicker{
+  margin:0 0 7px!important;
+  font-size:clamp(.30rem,.48vw,.47rem)!important;
+  line-height:1.45!important;
+  letter-spacing:.11em!important;
+  overflow-wrap:anywhere!important;
+  animation:launchKickerTrack 4.4s ease-in-out infinite alternate!important;
+}
+#launchGate .launch-console-left #launchTitle{
+  max-width:100%!important;
+  font-size:clamp(1.05rem,1.45vw,1.7rem)!important;
+  line-height:1.02!important;
+  letter-spacing:-.025em!important;
+  overflow-wrap:anywhere!important;
+  animation:launchTitleAlive 3.1s ease-in-out infinite!important;
+}
+#launchGate .launch-console-left #launchStatus{
+  margin:10px 0 12px!important;
+  max-width:100%!important;
+  min-height:30px!important;
+  font-size:clamp(.39rem,.53vw,.56rem)!important;
+  line-height:1.45!important;
+  overflow-wrap:anywhere!important;
+}
+#launchGate .launch-console-left .clean-launch-note{
+  margin-top:9px!important;
+  font-size:clamp(.29rem,.4vw,.40rem)!important;
+  line-height:1.4!important;
+  overflow-wrap:anywhere!important;
+  animation:launchNoteFade 4.7s ease-in-out infinite!important;
+}
+#launchGate .launch-console-left .clean-launch-progress{
+  height:6px!important;
+}
+#launchGate .launch-console-left .clean-launch-progress span{
+  position:relative!important;
+  overflow:hidden!important;
+}
+#launchGate .launch-console-left .clean-launch-progress span::after{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.68),transparent)!important;
+  transform:translateX(-120%)!important;
+  animation:launchProgressSweep 2.2s ease-in-out infinite!important;
+}
+
+/* Right pillar telemetry is deliberately vertical so it fits narrow black panels. */
+#launchGate .launch-console-heading{
+  gap:2px!important;
+  margin-bottom:9px!important;
+  padding-bottom:8px!important;
+}
+#launchGate .launch-console-heading span{
+  font-size:clamp(.27rem,.37vw,.35rem)!important;
+  animation:launchTelemetryLabel 3.3s ease-in-out infinite!important;
+}
+#launchGate .launch-console-heading strong{
+  font-size:clamp(.52rem,.68vw,.70rem)!important;
+  line-height:1.15!important;
+  overflow-wrap:anywhere!important;
+  animation:launchTelemetryStrong 2.7s ease-in-out infinite!important;
+}
+#launchGate .launch-console-heading small{
+  font-size:clamp(.29rem,.39vw,.38rem)!important;
+}
+#launchGate .launch-console-right .launch-wordline{
+  grid-template-columns:1fr!important;
+  gap:5px!important;
+}
+#launchGate .launch-console-right .launch-word-action{
+  grid-column:1!important;
+  min-height:48px!important;
+  padding:7px 8px!important;
+  grid-template-columns:7px minmax(0,1fr)!important;
+  gap:2px 6px!important;
+}
+#launchGate .launch-console-right .launch-word-action b{
+  font-size:clamp(.37rem,.48vw,.49rem)!important;
+  overflow-wrap:anywhere!important;
+}
+#launchGate .launch-console-right .launch-word-action small{
+  font-size:clamp(.28rem,.37vw,.37rem)!important;
+  overflow-wrap:anywhere!important;
+}
+#launchGate .launch-console-right .launch-word-stat{
+  min-height:39px!important;
+  padding:6px 8px!important;
+  gap:2px!important;
+  font-size:clamp(.28rem,.36vw,.35rem)!important;
+  animation:launchStatBreath 3.4s ease-in-out infinite alternate!important;
+}
+#launchGate .launch-console-right .launch-word-stat:nth-of-type(2){
+  animation-delay:.7s!important;
+}
+#launchGate .launch-console-right .launch-word-stat strong{
+  font-size:clamp(.46rem,.60vw,.60rem)!important;
+  animation:launchDigitGlow 2.2s ease-in-out infinite!important;
+}
+#launchGate .launch-console-right .clean-launch-enter{
+  margin-top:8px!important;
+  padding:8px 9px!important;
+  gap:6px!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  animation:launchEnterBreath 3s ease-in-out infinite!important;
+}
+#launchGate .launch-console-right .clean-launch-enter span{
+  font-size:clamp(.43rem,.55vw,.56rem)!important;
+}
+#launchGate .launch-console-right .clean-launch-enter small{
+  font-size:clamp(.28rem,.36vw,.36rem)!important;
+}
+
+/* Live copy updates visibly when each loading phase changes. */
+#launchGate .launch-copy-update{
+  animation:launchCopyUpdate .58s cubic-bezier(.2,.75,.2,1) both!important;
+}
+
+/* Signal elements feel alive without obscuring the video. */
+#launchGate .launch-signal-core-dot{
+  animation:launchSignalPulse 1.35s ease-in-out infinite!important;
+}
+#launchGate .launch-word-action{
+  animation:launchNetworkBreath 3.7s ease-in-out infinite alternate!important;
+}
+#launchGate .launch-corporate-mark span{
+  animation:launchMarkLine 2.6s ease-in-out infinite alternate!important;
+}
+#launchGate .launch-corporate-mark span:last-child{
+  animation-delay:.7s!important;
+}
+
+@keyframes launchEdgeTravel{
+  0%,100%{opacity:.15;transform:scaleY(.24)}
+  48%{opacity:.85;transform:scaleY(.88)}
+}
+@keyframes launchInnerBreath{
+  from{border-color:rgba(120,222,239,.035)}
+  to{border-color:rgba(120,222,239,.11)}
+}
+@keyframes launchMarkPulse{
+  0%,100%{opacity:.78;transform:translateX(0)}
+  50%{opacity:1;transform:translateX(2px)}
+}
+@keyframes launchMarkLine{
+  from{opacity:.28;transform:scaleX(.72)}
+  to{opacity:.85;transform:scaleX(1)}
+}
+@keyframes launchKickerTrack{
+  from{letter-spacing:.09em;opacity:.72}
+  to{letter-spacing:.14em;opacity:1}
+}
+@keyframes launchTitleAlive{
+  0%,100%{opacity:.90;text-shadow:0 2px 0 #001014,0 8px 24px rgba(0,0,0,.68),0 0 10px rgba(71,218,241,.06)}
+  50%{opacity:1;text-shadow:0 2px 0 #001014,0 8px 24px rgba(0,0,0,.68),0 0 22px rgba(71,218,241,.22)}
+}
+@keyframes launchNoteFade{
+  0%,100%{opacity:.55}
+  50%{opacity:.92}
+}
+@keyframes launchProgressSweep{
+  0%,22%{transform:translateX(-120%)}
+  72%,100%{transform:translateX(120%)}
+}
+@keyframes launchTelemetryLabel{
+  0%,100%{opacity:.55;letter-spacing:.13em}
+  50%{opacity:.96;letter-spacing:.18em}
+}
+@keyframes launchTelemetryStrong{
+  0%,100%{opacity:.84}
+  50%{opacity:1;text-shadow:0 0 12px rgba(93,224,241,.18)}
+}
+@keyframes launchStatBreath{
+  from{border-color:rgba(99,216,236,.07);transform:translateX(0)}
+  to{border-color:rgba(99,216,236,.18);transform:translateX(1px)}
+}
+@keyframes launchDigitGlow{
+  0%,100%{opacity:.72;text-shadow:none}
+  50%{opacity:1;text-shadow:0 0 10px rgba(103,232,248,.28)}
+}
+@keyframes launchEnterBreath{
+  0%,100%{border-color:rgba(103,227,246,.15)}
+  50%{border-color:rgba(103,227,246,.35);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 0 14px rgba(62,204,227,.07)}
+}
+@keyframes launchCopyUpdate{
+  0%{opacity:.2;transform:translateY(4px);letter-spacing:.05em}
+  60%{opacity:1;transform:translateY(0);letter-spacing:.01em}
+  100%{opacity:1;transform:translateY(0);letter-spacing:normal}
+}
+@keyframes launchSignalPulse{
+  0%,100%{opacity:.55;transform:scale(.75);box-shadow:0 0 4px rgba(89,232,177,.35)}
+  50%{opacity:1;transform:scale(1.22);box-shadow:0 0 13px rgba(89,232,177,.72)}
+}
+@keyframes launchNetworkBreath{
+  from{border-color:rgba(99,216,236,.09)}
+  to{border-color:rgba(99,216,236,.22)}
+}
+
+/* When the viewport has no meaningful black side pillars, fall back to the split overlay. */
+@media(max-aspect-ratio:1.62/1){
+  #launchGate .launch-split-console.clean-launch-content{
+    display:grid!important;
+    place-items:center!important;
+    padding:16px!important;
+  }
+  #launchGate .launch-console-grid{
+    position:relative!important;
+    inset:auto!important;
+    width:min(92vw,720px)!important;
+    height:auto!important;
+    grid-template-columns:1fr!important;
+    grid-template-rows:auto auto!important;
+    gap:10px!important;
+  }
+  #launchGate .launch-console-left,
+  #launchGate .launch-console-right{
+    grid-column:1!important;
+    width:100%!important;
+  }
+  #launchGate .launch-console-left{grid-row:1!important}
+  #launchGate .launch-console-right{grid-row:2!important}
+  #launchGate .launch-console-left #launchTitle{
+    font-size:clamp(1.7rem,5vw,2.5rem)!important;
+  }
+  #launchGate .launch-console-right .launch-wordline{
+    grid-template-columns:1fr 1fr!important;
+  }
+  #launchGate .launch-console-right .launch-word-action{
+    grid-column:1/-1!important;
+  }
+}
+@media(max-width:620px){
+  #launchGate .launch-console-right .launch-wordline{
+    grid-template-columns:1fr!important;
+  }
+  #launchGate .launch-console-right .launch-word-action{
+    grid-column:1!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  #launchGate .launch-console-panel::before,
+  #launchGate .launch-console-panel::after,
+  #launchGate .launch-corporate-mark,
+  #launchGate .launch-corporate-mark span,
+  #launchGate .clean-launch-kicker,
+  #launchGate #launchTitle,
+  #launchGate .clean-launch-note,
+  #launchGate .clean-launch-progress span::after,
+  #launchGate .launch-console-heading span,
+  #launchGate .launch-console-heading strong,
+  #launchGate .launch-word-action,
+  #launchGate .launch-word-stat,
+  #launchGate .launch-word-stat strong,
+  #launchGate .clean-launch-enter,
+  #launchGate .launch-signal-core-dot,
+  #launchGate .launch-copy-update{
+    animation:none!important;
+  }
+}

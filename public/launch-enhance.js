@@ -44,16 +44,32 @@
   let removeTimer = 0;
   let stateTimer = 0;
 
+  const animateLaunchCopy = node => {
+    if (!node) return;
+    node.classList.remove('launch-copy-update');
+    void node.offsetWidth;
+    node.classList.add('launch-copy-update');
+  };
+
   const setProgress = (value, text, allowDecrease = false) => {
     const next = Math.max(0, Math.min(100, Number(value) || 0));
     progress = allowDecrease ? next : Math.max(progress, next);
     if (bar) bar.style.width = progress + '%';
-    if (text && status) status.textContent = text;
+    if (text && status) {
+      status.textContent = text;
+      animateLaunchCopy(status);
+    }
   };
 
   const setActivity = text => {
-    if (text && activity) activity.textContent = text;
-    if (pulse) pulse.textContent = 'signal ' + String(signal++).padStart(3, '0');
+    if (text && activity) {
+      activity.textContent = text;
+      animateLaunchCopy(activity);
+    }
+    if (pulse) {
+      pulse.textContent = 'signal ' + String(signal++).padStart(3, '0');
+      animateLaunchCopy(pulse);
+    }
   };
 
   const renderNextState = () => {
@@ -62,7 +78,10 @@
     if (!state) {
       ready = true;
       setProgress(Math.max(progress, 94), 'XRPet is ready when you are.');
-      if (activity) activity.textContent = 'Press Enter XRPet to continue';
+      if (activity) {
+        activity.textContent = 'Press Enter XRPet to continue';
+        animateLaunchCopy(activity);
+      }
       return;
     }
 
@@ -87,7 +106,10 @@
     window.clearTimeout(removeTimer);
 
     setProgress(100, 'XRPet ready.');
-    if (activity) activity.textContent = 'Opening companion interface';
+    if (activity) {
+      activity.textContent = 'Opening companion interface';
+      animateLaunchCopy(activity);
+    }
     if (enter) {
       enter.disabled = true;
       enter.setAttribute('aria-disabled', 'true');
