@@ -46,6 +46,7 @@
   const localUrl=file=>'/audio/'+encodeURIComponent(file).replace(/%2F/g,'/');
   const rawUrl=file=>'https://raw.githubusercontent.com/caspersmiles3/xrpet-si-companion/main/public/audio/'+encodeURIComponent(file).replace(/%2F/g,'/');
   let usingFallback=false;
+  let changingTrack=false;
   let audioCtx=null,analyser=null,mediaSource=null,waveRaf=0;
   let waveData=null;
 
@@ -104,6 +105,7 @@
   }
 
   function loadTrack(i,autoplay=false){
+    changingTrack=autoplay===true;
     state.index=(i+tracks.length)%tracks.length;
     const [title,file]=tracks[state.index];
     name.textContent=title;
@@ -113,7 +115,8 @@
     audio.src=localUrl(file);
     audio.load();
     save();
-    if(autoplay) attemptPlay();
+    if(autoplay) attemptPlay().finally(()=>{changingTrack=false});
+    else changingTrack=false;
   }
 
   async function attemptPlay(){
@@ -141,6 +144,7 @@
 
   function musicState(reason='state'){
     const playing=!audio.paused&&!audio.ended&&!audio.error;
+    if(changingTrack&&!playing&&reason==='pause')return window.XRPetMusicPlaying;
     const previous=window.XRPetMusicPlaying;
     window.XRPetMusicPlaying=playing;
     if(previous===playing&&reason!=='init')return playing;

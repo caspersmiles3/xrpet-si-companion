@@ -9816,3 +9816,75 @@ body:not(.music-ripplet-stage) #lifeAvatar{
 .top-command-deck{
   overflow:visible!important;
 }
+
+
+/* XRPet 5.5.57 — real Ripplet berth + physical music controls */
+.top-ripplet-box{
+  grid-template-columns:82px minmax(0,1fr) 86px!important;
+  grid-template-rows:minmax(0,1fr) 30px!important;
+  gap:5px 10px!important;
+  padding:6px 9px!important;
+}
+.top-ripplet-box .ripplet-dock-platform{
+  grid-column:1!important;
+  grid-row:1/3!important;
+  align-self:center!important;
+  justify-self:center!important;
+  width:74px!important;
+  height:86px!important;
+  min-width:74px!important;
+  min-height:86px!important;
+  border-radius:16px!important;
+  overflow:visible!important;
+  background:
+    linear-gradient(180deg,rgba(22,83,102,.18),rgba(3,11,16,.72)),
+    radial-gradient(ellipse at 50% 84%,rgba(104,236,255,.22),transparent 58%)!important;
+  border:1px solid rgba(103,232,255,.28)!important;
+  box-shadow:inset 0 0 22px rgba(74,226,255,.09),0 0 16px rgba(65,218,245,.08)!important;
+}
+.top-ripplet-box .ripplet-dock-platform::before{
+  inset:5px!important;
+  border-radius:12px!important;
+}
+.top-ripplet-box .ripplet-dock-platform::after{
+  inset:10px 9px!important;
+  border-radius:10px!important;
+}
+.top-ripplet-box .ripplet-dock-platform b{
+  position:absolute!important;
+  left:50%!important;
+  bottom:4px!important;
+  transform:translateX(-50%)!important;
+  font-size:.40rem!important;
+  opacity:.58!important;
+}
+.top-ripplet-box.is-docked .ripplet-dock-platform{
+  border-color:rgba(126,241,255,.56)!important;
+  box-shadow:inset 0 0 30px rgba(75,229,255,.14),0 0 20px rgba(70,224,247,.18)!important;
+}
+.top-ripplet-box.is-docked .ripplet-dock-platform b{opacity:.20!important}
+body.ripplet-docked #lifeAvatar{
+  filter:drop-shadow(0 5px 7px rgba(0,0,0,.38))!important;
+}
+#xrpetMusicPlayer button.ripplet-press-target{
+  outline:1px solid rgba(111,239,255,.74)!important;
+  box-shadow:0 0 13px rgba(82,228,248,.34)!important;
+}
+#xrpetMusicPlayer button.ripplet-pressed{
+  transform:scale(.88)!important;
+  background:rgba(85,230,255,.20)!important;
+  border-color:rgba(139,246,255,.82)!important;
+  box-shadow:0 0 18px rgba(82,228,248,.48)!important;
+}
+.ripplet-music-test{
+  margin-top:14px!important;
+  padding-top:12px!important;
+  border-top:1px solid rgba(96,220,246,.12)!important;
+}
+.ripplet-music-test>span{
+  display:block!important;
+  margin-bottom:8px!important;
+  font-size:.48rem!important;
+  letter-spacing:.13em!important;
+  color:#6d8f9b!important;
+}
