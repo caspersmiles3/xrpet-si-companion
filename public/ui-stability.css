@@ -1354,3 +1354,65 @@
     padding:14px!important;
   }
 }
+
+/* XRPet 5.5.76 — isolated Shadow-DOM music deck host.
+   No legacy music selector can style the player internals. */
+#xrpetSidebar #xrpetMusicDeck.xrpet-music-deck-host{
+  grid-area:music!important;
+  position:relative!important;
+  inset:auto!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  height:126px!important;
+  min-height:126px!important;
+  max-height:126px!important;
+  margin:0!important;
+  padding:0!important;
+  display:block!important;
+  overflow:visible!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  transform:none!important;
+  z-index:1!important;
+}
+
+@media (min-width:761px){
+  body:not(.sidebar-collapsed) #xrpetSidebar #topCommandDeck.sidebar-command-center{
+    flex-basis:252px!important;
+    height:252px!important;
+    min-height:252px!important;
+    grid-template-rows:162px 84px!important;
+  }
+  body:not(.sidebar-collapsed) #xrpetSidebar #topCommandDeck .top-utility-box{
+    height:162px!important;
+    min-height:162px!important;
+    grid-template-columns:minmax(0,1fr) 76px!important;
+    grid-template-rows:30px 126px!important;
+    grid-template-areas:
+      "price live"
+      "music music"!important;
+    gap:6px!important;
+  }
+}
+
+@media (min-width:761px) and (max-height:700px){
+  #xrpetSidebar #xrpetMusicDeck.xrpet-music-deck-host{
+    height:112px!important;
+    min-height:112px!important;
+    max-height:112px!important;
+  }
+  body:not(.sidebar-collapsed) #xrpetSidebar #topCommandDeck.sidebar-command-center{
+    flex-basis:234px!important;
+    height:234px!important;
+    min-height:234px!important;
+    grid-template-rows:146px 82px!important;
+  }
+  body:not(.sidebar-collapsed) #xrpetSidebar #topCommandDeck .top-utility-box{
+    height:146px!important;
+    min-height:146px!important;
+    grid-template-rows:28px 112px!important;
+  }
+}
+
