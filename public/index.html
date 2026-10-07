@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-xrpet-build="5.5.75">
+<html lang="en" data-xrpet-build="5.5.76">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -8,12 +8,12 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/xrpet-icon.svg">
   <title>XRPet SI Companion</title>
-  <link rel="stylesheet" href="/styles.css?v=5.5.75">\n  <link rel="stylesheet" href="/ui-stability.css?v=5.5.75">
+  <link rel="stylesheet" href="/styles.css?v=5.5.76">\n  <link rel="stylesheet" href="/ui-stability.css?v=5.5.76">
 </head>
 <body class="launch-locked xrpet-realistic-3d">
 <div id="launchGate" class="launch-gate clean-launch" role="dialog" aria-modal="true" aria-labelledby="launchTitle">
   <video id="launchBackgroundVideo" class="clean-launch-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
-    <source src="/media/xrpet-launch-bg.mp4?v=5.5.75" type="video/mp4">
+    <source src="/media/xrpet-launch-bg.mp4?v=5.5.76" type="video/mp4">
   </video>
   <div class="launch-pillar launch-pillar-left" aria-hidden="true"></div>
   <div class="launch-pillar launch-pillar-right" aria-hidden="true"></div>
@@ -117,35 +117,9 @@
     <strong id="globalXrpPrice">—</strong>
     <small id="globalXrpChange">Loading</small>
     </div>
-    <div id="xrpetMusicPlayer" class="xrpet-music-player top-music-player" aria-label="XRPet soundtrack">
-    <audio id="xrpetAudio" preload="metadata" playsinline></audio>
+    <div id="xrpetMusicDeck" class="xrpet-music-deck-host" aria-label="XRPet soundtrack"></div>
 
-    <div class="music-player-head">
-      <span>XRPet Soundtrack</span>
-      <span id="musicStateLabel" class="music-state">READY</span>
-    </div>
-
-    <div class="music-player-toolbar" aria-label="Music controls">
-      <button id="musicPrev" type="button" aria-label="Previous track" title="Previous">‹</button>
-      <button id="musicToggle" class="music-main" type="button" aria-label="Play soundtrack" title="Play">▶</button>
-      <button id="musicNext" type="button" aria-label="Next track" title="Next">›</button>
-      <button id="musicShuffle" type="button" aria-label="Toggle shuffle" aria-pressed="false" title="Shuffle">⤨</button>
-    </div>
-
-    <div class="music-track-row">
-      <strong id="musicTrackName">Ready</strong>
-      <small id="musicTrackMeta">Track 1 of 6</small>
-    </div>
-
-    <canvas id="musicWaveform" class="music-waveform" width="220" height="28" aria-label="Live soundtrack waveform"></canvas>
-
-    <label class="music-volume-row" for="musicVolume">
-      <span class="music-volume-icon" aria-hidden="true">VOL</span>
-      <input id="musicVolume" type="range" min="0" max="1" step="0.05" value="0.75" aria-label="Music volume">
-    </label>
-    </div>
-
-    <button type="button" data-primary-view="live" class="top-xrpl-live">
+        <button type="button" data-primary-view="live" class="top-xrpl-live">
     <i aria-hidden="true"></i>
     <span>XRPL LIVE</span>
     </button>
@@ -1115,21 +1089,21 @@
       <div id="integrationStatus" class="integration-grid"></div>
     </section>
 
-    <footer>XRPet // SIGNAL 589 · Beta 5.5.75 · XRP Ledger companion</footer>
+    <footer>XRPet // SIGNAL 589 · Beta 5.5.76 · XRP Ledger companion</footer>
   </main>
 </div>
 
 
 
-<script src="/launch-enhance.js?v=5.5.75"></script>
-<script src="/contact-directory.js?v=5.5.75"></script>
-<script src="/music-player.js?v=5.5.75"></script>
-<script src="/games.js?v=5.5.75"></script>
-<script src="/ecosystem.js?v=5.5.75"></script>
-<script src="/ripplet2d.js?v=5.5.75"></script>
-<script src="/ui-shell.js?v=5.5.75"></script>
-<script src="/app.js?v=5.5.75"></script>
-<script src="/timeline.js?v=5.5.75"></script>
+<script src="/launch-enhance.js?v=5.5.76"></script>
+<script src="/contact-directory.js?v=5.5.76"></script>
+<script src="/music-player.js?v=5.5.76"></script>
+<script src="/games.js?v=5.5.76"></script>
+<script src="/ecosystem.js?v=5.5.76"></script>
+<script src="/ripplet2d.js?v=5.5.76"></script>
+<script src="/ui-shell.js?v=5.5.76"></script>
+<script src="/app.js?v=5.5.76"></script>
+<script src="/timeline.js?v=5.5.76"></script>
 
 </body>
 </html>
