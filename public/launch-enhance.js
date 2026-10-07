@@ -132,14 +132,22 @@
       orbit.style.setProperty('--launch-y', '0px');
     };
 
+    let orbitFrame = 0;
+    let orbitPointer = null;
     orbit.addEventListener('pointermove', event => {
-      const rect = orbit.getBoundingClientRect();
-      if (!rect.width || !rect.height) return;
-      const x = (event.clientX - rect.left) / rect.width - 0.5;
-      const y = (event.clientY - rect.top) / rect.height - 0.5;
-      orbit.style.setProperty('--launch-x', (x * 16).toFixed(1) + 'px');
-      orbit.style.setProperty('--launch-y', (y * 16).toFixed(1) + 'px');
-      orbit.style.transform = 'perspective(500px) rotateX(' + (-y * 8).toFixed(1) + 'deg) rotateY(' + (x * 8).toFixed(1) + 'deg)';
+      orbitPointer = { x:event.clientX, y:event.clientY };
+      if (orbitFrame) return;
+      orbitFrame = requestAnimationFrame(() => {
+        orbitFrame = 0;
+        if (!orbitPointer) return;
+        const rect = orbit.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        const x = (orbitPointer.x - rect.left) / rect.width - 0.5;
+        const y = (orbitPointer.y - rect.top) / rect.height - 0.5;
+        orbit.style.setProperty('--launch-x', (x * 12).toFixed(1) + 'px');
+        orbit.style.setProperty('--launch-y', (y * 12).toFixed(1) + 'px');
+        orbit.style.transform = 'perspective(620px) rotateX(' + (-y * 5).toFixed(1) + 'deg) rotateY(' + (x * 5).toFixed(1) + 'deg)';
+      });
     });
     orbit.addEventListener('pointerleave', reset);
     orbit.addEventListener('click', () => {

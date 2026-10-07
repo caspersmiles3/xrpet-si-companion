@@ -1062,7 +1062,7 @@ let rippletRouteUntil=0;
 let rippletMusicDancing=false;
 let rippletMusicDanceTimer=0;
 let rippletDanceVariantIndex=0;
-const RIPPLET_DANCE_SEQUENCE=['dance','cheer','excited','victory','dance','happy','celebrate','wave'];
+const RIPPLET_DANCE_SEQUENCE=['dance','dance2','dance3','dance4','cheer','dance2','happy','dance3'];
 let rippletMusicStageState='idle';
 let rippletMusicStageToken=0;
 let rippletMusicControlToken=0;
@@ -1126,10 +1126,6 @@ function syncRoamBounds(){
   roamLayer.style.width=window.innerWidth+'px';
   roamLayer.style.height=window.innerHeight+'px';
 }
-function setRippletMotor(action,options={}){
-  window.XRPet2D?.motor?.(action,options);
-  window.XRPet3D?.motor?.(action,options);
-}
 function setRoamPosition(x,y,activity='walk',durationOverride=''){
   if(!lifeAvatar||!roamLayer)return;
   const avatar=lifeAvatar.getBoundingClientRect();
@@ -1159,11 +1155,11 @@ function walkRippletTo(x,y,activity='walk',durationOverride=''){
   const distance=Math.hypot(targetX-currentX,targetY-currentY);
   const duration=durationOverride||Math.max(.28,Math.min(3.6,distance/120)).toFixed(2)+'s';
   window.XRPet2D?.face?.(targetX<currentX?'left':'right');
-  setRippletMotor('walk');
+  window.XRPet2D?.motor?.('walk');
   setRoamPosition(targetX,targetY,activity,duration);
   rippletRouteUntil=performance.now()+parseFloat(duration)*1000;
   setTimeout(()=>{
-    if(!rippletMusicDancing&&!rippletMusicControlBusy&&!roamDocked&&!rippletRouteBusy())setRippletMotor('stand');
+    if(!rippletMusicDancing&&!rippletMusicControlBusy&&!roamDocked&&!rippletRouteBusy())window.XRPet2D?.motor?.('stand');
   },parseFloat(duration)*1000+40);
   return true;
 }
@@ -1208,7 +1204,6 @@ function setDockStatus(text){
   document.body.classList.toggle('ripplet-docked',docked);
 }
 function dockRipplet(){
-  ++rippletWorkToken;clearTimeout(rippletWorkTimer);rippletWorkBusy=false;clearRippletWorkTarget();
   roamDocked=true;
   clearTimeout(roamTimer);
   cancelRippletRoute();
@@ -1221,14 +1216,14 @@ function dockRipplet(){
     const walkMs=Math.max(320,Math.min(3600,Math.round(distance/120*1000)));
     setDockStatus('DOCKING');
     window.XRPet2D?.face?.(target.x<currentX?'left':'right');
-    setRippletMotor('walk');
+    window.XRPet2D?.motor?.('walk');
     setRoamPosition(target.x,target.y,'dock',walkMs+'ms');
     rippletRouteUntil=performance.now()+walkMs;
     setTimeout(()=>{
       if(!roamDocked||rippletMusicDancing)return;
       setDockStatus('DOCKED');
       if(lifeAvatar)lifeAvatar.dataset.activity='stand';
-      setRippletMotor('stand');
+      window.XRPet2D?.motor?.('stand');
       window.XRPet3D?.perform?.('salute');
     },walkMs+40);
   }
@@ -1260,113 +1255,14 @@ function goRipplet(activity='explore'){
   const distance=Math.hypot(targetX-currentX,targetY-currentY);
   const duration=Math.max(.32,Math.min(3.6,distance/120)).toFixed(2)+'s';
   window.XRPet2D?.face?.(targetX<currentX?'left':'right');
-  setRippletMotor('walk');
+  window.XRPet2D?.motor?.('walk');
   setRoamPosition(targetX,targetY,'walk',duration);
   rippletRouteUntil=performance.now()+parseFloat(duration)*1000;
   setTimeout(()=>{
-    if(!rippletMusicDancing&&!roamDocked&&!rippletRouteBusy())setRippletMotor('stand');
+    if(!rippletMusicDancing&&!roamDocked&&!rippletRouteBusy())window.XRPet2D?.motor?.('stand');
   },parseFloat(duration)*1000+40);
   return true;
 }
-
-let rippletWorkTimer=0;
-let rippletWorkToken=0;
-let rippletWorkTarget=null;
-let rippletWorkBusy=false;
-let rippletLastWorkTarget=null;
-
-function sidebarWorkTargets(){
-  const selectors=[
-    '#xrpetSidebar .side-link',
-    '#xrpetSidebar #globalSearchForm',
-    '#xrpetSidebar .top-composite-price',
-    '#xrpetSidebar #xrpetMusicPlayer .music-now-playing',
-    '#xrpetSidebar #xrpetMusicPlayer .music-transport button',
-    '#xrpetSidebar #xrpetMusicPlayer .music-volume-row',
-    '#xrpetSidebar #rippletDock .ripplet-dock-actions button',
-    '#xrpetSidebar .settings-trigger'
-  ];
-  return qa(selectors.join(',')).filter(el=>{
-    if(!el?.isConnected||el.disabled)return false;
-    const r=el.getBoundingClientRect();
-    if(r.width<8||r.height<8)return false;
-    const style=getComputedStyle(el);
-    return style.display!=='none'&&style.visibility!=='hidden'&&Number(style.opacity)!==0;
-  });
-}
-function clearRippletWorkTarget(){
-  if(rippletWorkTarget)rippletWorkTarget.classList.remove('ripplet-work-target','ripplet-work-active');
-  rippletWorkTarget=null;
-}
-function sidebarWorkLabel(el){
-  const raw=el?.getAttribute?.('aria-label')||el?.querySelector?.('strong,b')?.textContent||el?.textContent||'sidebar control';
-  return String(raw).replace(/\s+/g,' ').trim().slice(0,52)||'sidebar control';
-}
-function sidebarWorkPosition(el){
-  const ar=lifeAvatar?.getBoundingClientRect(),r=el?.getBoundingClientRect(),b=sidebarRoamBounds();
-  if(!ar||!r)return null;
-  const aw=Math.max(52,ar.width||52),ah=Math.max(72,ar.height||72);
-  const maxX=Math.max(b.left,b.right-aw),maxY=Math.max(b.top,b.bottom-ah);
-  // Work from the right edge of the UI element so Ripplet appears to inspect its letters/controls.
-  let x=r.right-aw-3;
-  let y=r.top+r.height*.5-ah*.52;
-  x=Math.max(b.left,Math.min(maxX,x));
-  y=Math.max(b.top,Math.min(maxY,y));
-  return {x,y};
-}
-function workSidebarElement(){
-  if(!lifeAvatar||roamDocked||rippletMusicDancing||rippletMusicControlBusy||rippletRouteBusy()||rippletWorkBusy)return false;
-  const targets=sidebarWorkTargets().filter(el=>el!==rippletLastWorkTarget);
-  if(!targets.length)return false;
-  const target=targets[Math.floor(Math.random()*targets.length)];
-  const pos=sidebarWorkPosition(target);
-  if(!pos)return false;
-
-  const token=++rippletWorkToken;
-  const ar=lifeAvatar.getBoundingClientRect();
-  const distance=Math.hypot(pos.x-ar.left,pos.y-ar.top);
-  const walkMs=Math.max(360,Math.min(3600,Math.round(distance/120*1000)));
-  const label=sidebarWorkLabel(target);
-
-  rippletWorkBusy=true;
-  clearRippletWorkTarget();
-  rippletWorkTarget=target;
-  rippletLastWorkTarget=target;
-  target.classList.add('ripplet-work-target');
-  state.mindAction='focus';
-  state.mindThought='Walking over to inspect '+label+'.';
-  renderMind();
-
-  setRippletMotor('walk');
-  window.XRPet3D?.cameraPreset?.('front');
-  setRoamPosition(pos.x,pos.y,'work',walkMs+'ms');
-  rippletRouteUntil=performance.now()+walkMs;
-
-  setTimeout(()=>{
-    if(token!==rippletWorkToken||!rippletWorkBusy)return;
-    target.classList.add('ripplet-work-active');
-    const actions=target.matches('button,.side-link,.settings-trigger')
-      ? ['reach','point','thinking']
-      : ['scan','focus','thinking','point'];
-    const action=actions[Math.floor(Math.random()*actions.length)];
-    const side=(target.getBoundingClientRect().left<lifeAvatar.getBoundingClientRect().left)?'left':'right';
-    setRippletMotor(action,{side});
-    state.mindAction=action==='scan'?'scan':'focus';
-    state.mindThought='Working on '+label+' — checking the button, label, and live interface state.';
-    renderMind();
-
-    clearTimeout(rippletWorkTimer);
-    rippletWorkTimer=setTimeout(()=>{
-      if(token!==rippletWorkToken)return;
-      clearRippletWorkTarget();
-      rippletWorkBusy=false;
-      setRippletMotor('stand');
-    },1700+Math.random()*900);
-  },walkMs+60);
-  return true;
-}
-window.XRPetSidebarWork={run:workSidebarElement,targets:sidebarWorkTargets};
-
 let lastInterfacePlayAt=0;
 let rippletTerrainCache={at:0,view:'',scrollTop:-1,width:0,height:0,text:[],lines:[],targets:[]};
 function invalidateRippletTerrain(){
@@ -1835,7 +1731,7 @@ function recoverRippletFromCollision(current,goal,activity,ignoreTarget,allowShe
   const escape=candidates[0],token=++rippletRouteToken;
   rippletRouteAllowsShell=allowShell;
   rippletRouteUntil=performance.now()+720;
-  setRippletMotor('climb');
+  window.XRPet2D?.motor?.('climb');
   setRoamPosition(escape.x,escape.y,'climb');
   setTimeout(()=>{
     if(token!==rippletRouteToken)return;
@@ -1884,12 +1780,12 @@ function routeRippletTo(x,y,activity='walk',ignoreTarget=null){
     setTimeout(()=>{
       if(routeToken!==rippletRouteToken)return;
       if(roamDocked&&activity!=='dock')return;
-      setRippletMotor(stepActivity);
+      window.XRPet2D?.motor?.(stepActivity);
       setRoamPosition(point.x,point.y,stepActivity);
       if(final){
         const finish=activity==='sit'?'sit':activity==='hang'?'hang':
           ['stand','dock','coin-return','page-enter'].includes(activity)?'stand':null;
-        if(finish)setRippletMotor(finish);
+        if(finish)window.XRPet2D?.motor?.(finish);
         rippletRouteUntil=0;
         rippletRouteAllowsShell=false;
       }
@@ -2086,7 +1982,7 @@ function depositCryptoCoin(){
   pendingCryptoCoin=null;
   cryptoCoinDeposits++;
   recordDockCryptoCoin(symbol);
-  setRippletMotor('stand');
+  window.XRPet2D?.motor?.('stand');
   window.XRPet3D?.perform?.('happy');
   setText('#mindAction','Delivered '+symbol);
   setText('#mindThought','I carried a tiny '+symbol+' coin back to the dock. I may look for another one later.');
@@ -2106,7 +2002,7 @@ function carryCryptoCoinToDock(){
     cryptoCoinMissionTimer=setTimeout(carryCryptoCoinToDock,900);
     return false;
   }
-  setRippletMotor('carry',{side:'right'});
+  window.XRPet2D?.motor?.('carry',{side:'right'});
   setText('#mindAction','Carrying '+(heldCryptoCoin.dataset.symbol||'crypto')+' to dock');
   setText('#mindThought','I picked up a tiny crypto coin and I am physically taking it back to my dock.');
   const wait=Math.max(850,rippletRouteUntil-performance.now()+180);
@@ -2142,7 +2038,7 @@ function pickUpCryptoCoin(coin){
   coin.style.left='';
   coin.style.top='';
   lifeAvatar.appendChild(coin);
-  setRippletMotor('grab',{side:'right'});
+  window.XRPet2D?.motor?.('grab',{side:'right'});
   setText('#mindAction','Picked up '+(coin.dataset.symbol||'crypto'));
   setText('#mindThought','I found a tiny coin in a clear part of the page. I am taking it to the dock.');
   cryptoCoinMissionTimer=setTimeout(carryCryptoCoinToDock,420);
@@ -2282,7 +2178,6 @@ function resumeAfterMusicControl(){
   }
 }
 function rippletPressMusicControl(control='play'){
-  ++rippletWorkToken;clearTimeout(rippletWorkTimer);rippletWorkBusy=false;clearRippletWorkTarget();
   const target=musicControlPosition(control);
   if(!target||document.body.classList.contains('launch-locked'))return false;
 
@@ -2315,17 +2210,17 @@ function rippletPressMusicControl(control='play'){
   setText('#mindAction','Pressing '+label);
   setText('#mindThought','I am going to the music player and pressing '+label+' myself.');
   window.XRPet2D?.face?.(target.x<currentX?'left':'right');
-  setRippletMotor('walk');
+  window.XRPet2D?.motor?.('walk');
   setRoamPosition(target.x,target.y,'walk',travelMs+'ms');
 
   setTimeout(()=>{
     if(token!==rippletMusicControlToken)return;
-    setRippletMotor('reach',{side:'right'});
+    window.XRPet2D?.motor?.('reach',{side:'right'});
     target.button.classList.add('ripplet-press-target');
 
     setTimeout(()=>{
       if(token!==rippletMusicControlToken)return;
-      setRippletMotor('grab',{side:'right'});
+      window.XRPet2D?.motor?.('grab',{side:'right'});
       target.button.classList.add('ripplet-pressed');
       target.button.click();
 
@@ -2396,7 +2291,7 @@ function danceToMusicBeat(){
   }
   window.XRPet3D?.perform?.(move);
   state.mindAction='dance';
-  state.mindThought='The music is playing. I am cycling through dance moves on the sidebar.';
+  state.mindThought='The music is playing. I am cycling through dance moves on the top rail.';
   renderMind();
   rippletMusicDanceTimer=setTimeout(danceToMusicBeat,1450);
 }
@@ -2419,9 +2314,9 @@ function runRippletToMusicStage(){
   document.body.classList.add('music-ripplet-stage');
   stage.player.classList.add('ripplet-stage-active');
   setText('#mindAction','Walking to music stage');
-  setText('#mindThought','Music started. I am walking along the sidebar to my dance position.');
+  setText('#mindThought','Music started. I am walking along the top rail to my dance position.');
   window.XRPet2D?.face?.(stage.x<currentX?'left':'right');
-  setRippletMotor('walk');
+  window.XRPet2D?.motor?.('walk');
   setRoamPosition(stage.x,stage.y,'walk',walkMs+'ms');
   rippletRouteUntil=performance.now()+walkMs;
 
@@ -2429,7 +2324,7 @@ function runRippletToMusicStage(){
     if(token!==rippletMusicStageToken||!rippletMusicDancing||window.XRPetMusicPlaying!==true)return;
     rippletMusicStageState='dancing';
     if(lifeAvatar)lifeAvatar.dataset.activity='dance';
-    setRippletMotor('stand');
+    window.XRPet2D?.motor?.('stand');
     danceToMusicBeat();
   },walkMs+40);
 }
@@ -2469,11 +2364,11 @@ function setRippletMusicDance(playing){
     if(lifeAvatar.dataset.activity==='dance')lifeAvatar.dataset.activity='stand';
     if(lifeAvatar.dataset.reaction==='dance')delete lifeAvatar.dataset.reaction;
   }
-  setRippletMotor('stand');
+  window.XRPet2D?.motor?.('stand');
   rippletRouteAllowsShell=false;
   rippletMusicStageState='idle';
   state.mindAction='roam';
-  state.mindThought='The music stopped. I am leaving the music-player stage and returning to the sidebar.';
+  state.mindThought='The music stopped. I am leaving the music-player stage and returning to the top rail.';
   renderMind();
 
   setTimeout(()=>{
@@ -2505,16 +2400,15 @@ function roamingStep(){
     return;
   }
 
-  // Ripplet free-roams the whole sidebar, but usually chooses a real UI task.
-  const working=Math.random()<.78&&workSidebarElement();
-  if(!working)goRipplet('explore');
-  if(!working&&Math.random()<.20){
+  // Top-rail roaming only: no text, line, box, cursor, or page collision scanning.
+  goRipplet('explore');
+  if(Math.random()<.24){
     const emotes=['wave','thinking','happy','scan','salute'];
     setTimeout(()=>{
-      if(!rippletMusicDancing&&!roamDocked&&!rippletWorkBusy)window.XRPet3D?.perform?.(emotes[Math.floor(Math.random()*emotes.length)]);
+      if(!rippletMusicDancing&&!roamDocked)window.XRPet3D?.perform?.(emotes[Math.floor(Math.random()*emotes.length)]);
     },700);
   }
-  roamTimer=setTimeout(roamingStep,working?4200+Math.random()*2200:3000+Math.random()*2600);
+  roamTimer=setTimeout(roamingStep,2600+Math.random()*3000);
 }
 function renderMind(){
   const labels={roam:'Roaming',dock:'Docked',socialize:'Signal Friend',scan:'Scanning XRPL',wave:'Waving',dance:'Dancing',music_next:'Pressing Next',music_previous:'Pressing Previous',music_shuffle:'Pressing Shuffle',focus:'Focused',run:'Running',jump:'Jumping',climb:'Climbing',reach:'Reaching',grab:'Grabbing',carry:'Carrying',crouch:'Crouching',turn:'Turning'};
@@ -2560,7 +2454,7 @@ function executeMindDecision(decision){
     state.lifeActivity='explore';window.XRPetRoam?.go?.('explore');
   }else if(['run','jump','climb'].includes(action)){
     state.mindAction='roam';
-    state.mindThought='I stay grounded on the sidebar, so I am walking instead.';
+    state.mindThought='I stay grounded on the top rail, so I am walking instead.';
     window.XRPetRoam?.go?.('explore');
   }else if(['scan','wave','focus','reach','grab','carry','crouch','turn'].includes(action)){
     window.XRPet3D?.motor?.(action,{side:Math.random()<.5?'left':'right',turn:(Math.random()<.5?-1:1)*.45});
@@ -2588,7 +2482,7 @@ async function runAutonomousMind(){
 }
 function spontaneousRippletReaction(){
   clearTimeout(spontaneousReactionTimer);
-  if(!rippletMusicDancing&&!rippletRouteBusy()&&!rippletWorkBusy){
+  if(!rippletMusicDancing&&!rippletRouteBusy()){
     const options=roamDocked
       ? ['thinking','salute','wave','shrug','happy','surprised']
       : ['greet','happy','focus','scan','wave','cheer','laugh','shrug','confused','excited','point','salute','thinking','surprised','turn','reach'];
