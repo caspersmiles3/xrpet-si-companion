@@ -811,21 +811,29 @@ bind('#useNativeCompanion','click',()=>{
 
 bind('#globalSearchForm','submit',e=>{
   e.preventDefault();
-  const term=(q('#globalSearch')?.value||'').trim().toLowerCase();
+  const input=q('#globalSearch');
+  const term=(input?.value||'').trim().toLowerCase();
   if(!term)return;
-  const map=[
-    [['589','signal','community','lore','theory','theories'], '#signal589Section'],
-    [['room','rooms','environment'], '#roomsSection'],
-    [['cosmetic','skin','appearance','equipment','eye','core','trail','halo'], '#companionSection'],
-    [['wallet','xaman','gemwallet'], '#walletPanel'],
-    [['chat','ask','si','assistant'], '#chatPanel'],
-    [['history','timeline','ripple','sec','lawsuit','escrow','odl','rlusd','acquisition'], '#xrpHistorySection'],
-    [['ledger','xrpl','xrp','network','price'], '#xrplPanel'],
-    [['companion','pet','profile','memory','evolution'], '#companionSection']
+
+  const routes=[
+    [['game','games','ledger rush','xrp flow','consensus'], 'games'],
+    [['ecosystem','asset directory','contacts','sponsorship','channel','nft'], 'ecosystem'],
+    [['announcement','announcements','news','update'], 'announcements'],
+    [['learn','quiz','education','ripple vs xrp'], 'learn'],
+    [['history','timeline','sec','lawsuit','escrow','odl','rlusd','acquisition','settlement'], 'history'],
+    [['exchange','exchanges','coinbase','kraken','gemini','market'], 'exchanges'],
+    [['ripplet','companion','pet','profile','memory','evolution','wallet','xaman','gemwallet','chat','room','rooms','cosmetic'], 'ripplet'],
+    [['xrpl live','ledger','xrpl','xrp','network','price','transaction','fee'], 'live'],
+    [['home','dashboard','overview'], 'home']
   ];
-  const match=map.find(([keys])=>keys.some(k=>term.includes(k)));
-  const target=q(match?.[1]||'#homeSection');
-  target?.scrollIntoView({behavior:'smooth',block:'start'});
+
+  const route=routes.find(([keys])=>keys.some(k=>term.includes(k)))?.[1]||'home';
+  setPrimaryView(route);
+  playSound('nav');
+  setText('#petSpeech',route==='home'
+    ? 'SEARCH // No exact module matched. Showing the XRPet Home interface.'
+    : 'SEARCH // Opened '+route.toUpperCase()+' for “'+term+'”.');
+  input?.blur();
 });
 qa('.side-link').forEach(b=>b.addEventListener('click',()=>{
   qa('.side-link').forEach(x=>x.classList.remove('active'));b.classList.add('active');
