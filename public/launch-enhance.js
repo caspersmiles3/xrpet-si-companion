@@ -15,6 +15,19 @@
   const orbit = document.getElementById('launchLiveOrbit');
   const enter = document.getElementById('launchEnter');
 
+  const backgroundVideo = document.getElementById('launchBackgroundVideo');
+  if (backgroundVideo) {
+    backgroundVideo.muted = true;
+    backgroundVideo.loop = true;
+    backgroundVideo.playsInline = true;
+    const resumeVideo = () => backgroundVideo.play?.().catch(() => {});
+    backgroundVideo.addEventListener('error', () => gate.classList.add('launch-video-fallback'), { once:true });
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && !released) resumeVideo();
+    });
+    resumeVideo();
+  }
+
   const states = [
     ['Connecting to XRPL live data…', 'Listening for validated ledgers'],
     ['Synchronizing public network signals…', 'Checking XRPL mainnet telemetry'],
@@ -27,10 +40,13 @@
   let signal = 1;
   let progress = 18;
   let released = false;
+  let ready = false;
   let removeTimer = 0;
+  let stateTimer = 0;
 
-  const setProgress = (value, text) => {
-    progress = Math.max(0, Math.min(100, Number(value) || 0));
+  const setProgress = (value, text, allowDecrease = false) => {
+    const next = Math.max(0, Math.min(100, Number(value) || 0));
+    progress = allowDecrease ? next : Math.max(progress, next);
     if (bar) bar.style.width = progress + '%';
     if (text && status) status.textContent = text;
   };
@@ -40,20 +56,34 @@
     if (pulse) pulse.textContent = 'signal ' + String(signal++).padStart(3, '0');
   };
 
-  const renderState = () => {
-    if (released || !gate.isConnected) return;
-    const [headline, detail] = states[index % states.length];
-    setProgress(Math.min(94, Math.max(progress, 18) + (index < 4 ? 11 : 0)), headline);
+  const renderNextState = () => {
+    if (released || ready || !gate.isConnected) return;
+    const state = states[index];
+    if (!state) {
+      ready = true;
+      setProgress(Math.max(progress, 94), 'XRPet is ready when you are.');
+      if (activity) activity.textContent = 'Press Enter XRPet to continue';
+      return;
+    }
+
+    const [headline, detail] = state;
+    const targetProgress = [28, 46, 66, 82, 94][index] ?? 94;
+    setProgress(targetProgress, headline);
     setActivity(detail);
     index += 1;
-  };
 
-  const timer = window.setInterval(renderState, 1350);
+    if (index >= states.length) {
+      ready = true;
+      if (activity) activity.textContent = 'Press Enter XRPet to continue';
+      return;
+    }
+    stateTimer = window.setTimeout(renderNextState, 1100);
+  };
 
   const finish = source => {
     if (released) return;
     released = true;
-    window.clearInterval(timer);
+    window.clearTimeout(stateTimer);
     window.clearTimeout(removeTimer);
 
     setProgress(100, 'XRPet ready.');
@@ -148,12 +178,15 @@
   `;
   document.head.appendChild(style);
 
-  renderState();
+  // Run the loading sequence once. It never loops back to an earlier state.
+  renderNextState();
 
-  // Never show an endless "loading" state. The user still chooses when to enter.
+  // Independent safety: even if a timer is throttled, the gate reaches a stable ready state.
   window.setTimeout(() => {
     if (released || !gate.isConnected) return;
-    setProgress(Math.max(progress, 94), 'XRPet is ready when you are.');
+    ready = true;
+    window.clearTimeout(stateTimer);
+    setProgress(94, 'XRPet is ready when you are.');
     if (activity) activity.textContent = 'Press Enter XRPet to continue';
-  }, 6500);
+  }, 6200);
 })();
