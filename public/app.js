@@ -2742,3 +2742,7 @@ q('#settingsDetails')?.addEventListener('toggle',e=>{
 });
 
 setPrimaryView('home');
+
+window.addEventListener('xrpet:model-ready',()=>window.XRPetEnforceRippletSize?.());
+window.addEventListener('xrpet:view-change',()=>window.XRPetEnforceRippletSize?.());
+setTimeout(()=>window.XRPetEnforceRippletSize?.(),900);
