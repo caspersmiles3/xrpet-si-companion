@@ -2754,12 +2754,13 @@ function setPrimaryView(view='home'){
   if(shell)shell.scrollTop=0;
 
   requestAnimationFrame(()=>{
-    try{scrollSectionTop(target)}catch{}
+    try{if(pane)pane.scrollTop=0}catch{}
     try{
       syncRoamBounds?.();
       if(rippletMusicDancing)snapRippletToMusicStage?.();
       else if(roamDocked){
-        const p=dockPosition?.();if(p)walkRippletTo?.(p.x,'dock','.35s');
+        const p=dockPosition?.();
+        if(p)walkRippletTo?.(p.x,p.y,'dock','.35s');
       }
     }catch{}
   });
@@ -2785,7 +2786,11 @@ let learnModule='xrp',quizIndex=0,quizCorrect=0,quizAnswered=false;
 function openLearnModule(name='xrp'){
   setPrimaryView('learn');
   learnModule=name;
-  qa('[data-learn-panel]').forEach(p=>p.classList.toggle('active',p.dataset.learnPanel===name));
+  qa('[data-learn-panel]').forEach(p=>{
+    const active=p.dataset.learnPanel===name;
+    p.classList.toggle('active',active);
+    p.hidden=!active;
+  });
   qa('[data-learn-module]').forEach(b=>b.classList.toggle('active',b.dataset.learnModule===name));
   q('#learnSection')?.scrollTo({top:0,behavior:'auto'});
   if(name==='quiz')renderQuiz();
@@ -2893,7 +2898,11 @@ if(!window.XRPetShell)qa('[data-history-view]').forEach(b=>b.addEventListener('c
 
 function setEcosystemSubview(view='directory'){
   setPrimaryView('ecosystem');
-  qa('[data-ecosystem-panel]').forEach(panel=>panel.classList.toggle('active',panel.dataset.ecosystemPanel===view));
+  qa('[data-ecosystem-panel]').forEach(panel=>{
+    const active=panel.dataset.ecosystemPanel===view;
+    panel.classList.toggle('active',active);
+    panel.hidden=!active;
+  });
   qa('[data-ecosystem-view]').forEach(btn=>btn.classList.toggle('active',btn.dataset.ecosystemView===view));
   q('#ecosystemNavDetails')?.removeAttribute('open');
   setTimeout(()=>scrollSectionTop('ecosystemSection'),0);
@@ -2914,7 +2923,11 @@ qa('[data-game-nav]').forEach(btn=>btn.addEventListener('click',()=>setGameSubvi
 
 function setRippletSubview(view='overview'){
   setPrimaryView('ripplet');
-  qa('[data-ripplet-panel]').forEach(panel=>panel.classList.toggle('active',panel.dataset.rippletPanel===view));
+  qa('[data-ripplet-panel]').forEach(panel=>{
+    const active=panel.dataset.rippletPanel===view;
+    panel.classList.toggle('active',active);
+    panel.hidden=!active;
+  });
   qa('[data-ripplet-view]').forEach(btn=>btn.classList.toggle('active',btn.dataset.rippletView===view));
   q('#rippletNavDetails')?.removeAttribute('open');
   const section=q('#companionSection');if(section)section.scrollTop=0;
