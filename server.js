@@ -21,24 +21,37 @@ app.use((req,res,next)=>{
 });
 
 const rateBuckets=new Map();
-function rateLimit(limit,windowMs){
+function pruneRateBuckets(now=Date.now()){
+  if(rateBuckets.size<2000)return;
+  for(const [key,bucket] of rateBuckets){
+    if(now-bucket.start>bucket.windowMs)rateBuckets.delete(key);
+  }
+}
+function rateLimit(limit,windowMs,scope='default'){
   return (req,res,next)=>{
-    const key=req.ip||req.socket.remoteAddress||'unknown';
+    const ip=req.ip||req.socket.remoteAddress||'unknown';
+    const key=scope+':'+ip;
     const now=Date.now();
+    pruneRateBuckets(now);
     const bucket=rateBuckets.get(key);
     if(!bucket||now-bucket.start>windowMs){
-      rateBuckets.set(key,{start:now,count:1}); return next();
+      rateBuckets.set(key,{start:now,count:1,windowMs}); return next();
     }
     bucket.count+=1;
-    if(bucket.count>limit) return res.status(429).json({error:'Too many requests'});
+    if(bucket.count>limit) return res.status(429).json({error:'Too many requests',scope,retryAfterMs:Math.max(0,windowMs-(now-bucket.start))});
     next();
   };
 }
 
 app.use(express.json({ limit: '100kb' }));
-app.use('/api/',rateLimit(120,60*1000));
-app.use('/api/companion',rateLimit(30,60*1000));
-app.use('/api/push/subscribe',rateLimit(10,60*1000));
+app.use('/api/',rateLimit(120,60*1000,'api'));
+app.use('/api/companion',rateLimit(30,60*1000,'companion'));
+app.use('/api/push/subscribe',rateLimit(10,60*1000,'push-subscribe'));
+app.use('/api/',(_req,res,next)=>{
+  res.setHeader('Cache-Control','no-store');
+  res.setHeader('Pragma','no-cache');
+  next();
+});
 app.use(express.static('public',{
   etag:true,
   maxAge:'1h',
@@ -550,6 +563,10 @@ app.get('/api/ecosystem/tokens', async (req,res)=>{
     }
     const payload={source:'XRPL Meta',...data,generatedAt:new Date().toISOString()};
     cache.ecosystemTokens.set(key,{at:Date.now(),data:payload});
+    while(cache.ecosystemTokens.size>120){
+      const oldest=cache.ecosystemTokens.keys().next().value;
+      cache.ecosystemTokens.delete(oldest);
+    }
     res.json(payload);
   }catch(e){
     if(cached)return res.json({...cached.data,cached:true,stale:true,warning:'Serving last-known-good XRPL Meta token directory'});
@@ -612,7 +629,7 @@ app.get('/api/x/status', (_req,res)=>{
     provider:'X API v2'
   });
 });
-app.post('/api/x/post',rateLimit(8,60*1000),async(req,res)=>{
+app.post('/api/x/post',rateLimit(8,60*1000,'x-post'),async(req,res)=>{
   const token=process.env.X_USER_ACCESS_TOKEN||'';
   if(!token)return res.status(503).json({error:'X posting is not configured',code:'X_WRITE_NOT_CONFIGURED'});
   if(!X_POST_SECRET)return res.status(503).json({error:'X posting protection is not configured',code:'X_WRITE_PROTECTION_NOT_CONFIGURED'});
@@ -938,14 +955,13 @@ app.get('/api/self-test', async (_req,res)=>{
   res.json({...runtime,integrations});
 });
 
-app.get('/api/health', (_req,res)=>{
-  res.setHeader('Cache-Control','no-store');
-  const runtime=runtimeHealthCache.data;
-  res.json({
-    ok:runtime?.ok!==false,
-    status:runtime?.status||'starting',
-    checkedAt:runtime?.checkedAt||null,
-    core:runtime?.core||null,
+app.get('/api/health', async (_req,res)=>{
+  const runtime=await getRuntimeHealth();
+  res.status(runtime.ok?200:503).json({
+    ok:runtime.ok,
+    status:runtime.status,
+    checkedAt:runtime.checkedAt,
+    core:runtime.core,
     product:'XRPet SI Companion',
     version:APP_VERSION,
     capabilities:['xrpl-live','xrp-market','official-updates','truth-mode','companion-memory','evolution','notifications','wallet-watch','gemwallet','xaman-hook','web-push','capacitor-mobile','external-si-hook','interactive-webgl-companion','signal-589-community-layer','equipment-matrix','full-audio-engine','room-environments','rigged-glb-roster','glass-studio-ui','orbit-camera','ssao','bloom','adaptive-render-quality','ripple-xrp-living-archive','auto-updating-history','ripplet-single-companion','nft-companion-override','persistent-ripplet','in-app-companion-workspaces','audio-default-on','isolated-primary-views','one-minute-live-refresh','simplified-ripplet-page','ripplet-life-system','bounded-companion-habitat','live-xrpl-transactions','sidebar-history-routing','global-xrp-ticker','cinematic-ripple-launch','global-ripplet-ecosystem','data-driven-companion-life','bounded-roaming-companion','ripplet-primary-tab','varied-live-reactions','visitor-counter','clean-home','clean-xrpl-live','expressive-ripplet-limbs','life-reaction-sounds','visible-ripplet-feet','free-roam-companion','live-reaction-overlays','spontaneous-companion-actions','xrpet-custom-cursor','ripplet-walk-cycle','autonomous-companion-mind','si-behavior-decisions','xrp-market-history','live-market-chart','ripplet-2-runtime','global-eye-tracking','organic-companion-anatomy','xrpet-games','ledger-rush','xrp-flow-game','consensus-80-game','ripplet-3-runtime','superellipsoid-shell-geometry','unified-head-rig','randomized-natural-blink','transparent-direct-alpha-render','high-detail-micro-hardware','validated-mainnet-transaction-feed','xrpl-source-failover','live-bid-ask-spread','24h-market-detail','viewport-layout-guard','physical-motor-cortex','run-gait','jump-arc','climb-cycle','reach-grab-carry','crouch-balance','autonomous-physical-motion','viewport-contained-scroll','grounded-free-roam','no-ground-ring','advanced-arcade-difficulty','arcade-combos-and-hazards','music-waveform','x-api-posting','xrpl-http-transaction-fallback','ecosystem-last-good-cache','ecosystem-retry-fallback','ripplet-v6-skinned-rig','native-animation-library','native-emote-library','runtime-health-probes','truthful-degraded-states','collision-aware-ui-terrain'],

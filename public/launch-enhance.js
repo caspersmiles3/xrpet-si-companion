@@ -36,9 +36,28 @@
   const timer = setInterval(renderState, 2400);
   renderState();
 
+  let fallbackReleaseTimer = 0;
   const stop = () => clearInterval(timer);
-  enter?.addEventListener('click', stop, { once: true });
-  window.addEventListener('xrpet:launch-failsafe-release', stop, { once: true });
+  const failSafeRelease = () => {
+    if (!gate.isConnected || !document.body.classList.contains('launch-locked')) return;
+    document.body.classList.remove('launch-locked');
+    gate.classList.add('launch-complete');
+    if (status) status.textContent = 'XRPet ready.';
+    if (bar) bar.style.width = '100%';
+    window.setTimeout(() => gate.remove(), 450);
+    window.dispatchEvent(new CustomEvent('xrpet:launch-failsafe-release'));
+  };
+  const scheduleFailSafeRelease = () => {
+    clearTimeout(fallbackReleaseTimer);
+    fallbackReleaseTimer = window.setTimeout(failSafeRelease, 900);
+  };
+  enter?.addEventListener('click', () => { stop(); scheduleFailSafeRelease(); }, { once: true });
+  gate.addEventListener('keydown', event => {
+    if (event.key === 'Enter' || event.key === ' ') scheduleFailSafeRelease();
+  });
+  const cancelFailSafe = () => { clearTimeout(fallbackReleaseTimer); stop(); };
+  window.addEventListener('xrpet:launch-failsafe-release', cancelFailSafe, { once: true });
+  window.addEventListener('xrpet:launch-complete', cancelFailSafe, { once: true });
 
   if (orbit) {
     const reset = () => {

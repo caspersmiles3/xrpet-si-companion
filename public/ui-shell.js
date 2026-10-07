@@ -334,27 +334,10 @@
       return;
     }
 
-    const primary=e.target.closest?.('[data-primary-view]');
-    if(primary&&!primary.disabled){
-      const view=primary.dataset.primaryView;
-      if(view==='ripplet')showRipplet(); else showView(view);
-      return;
-    }
-
+    // Non-summary primary navigation and subview controls are owned by app.js.
+    // Keeping a single navigation owner prevents duplicate view switches and duplicate API requests.
     const history=e.target.closest?.('[data-history-view]');
     if(history&&!history.disabled){showHistory(history.dataset.historyView);return}
-
-    const eco=e.target.closest?.('[data-ecosystem-view]');
-    if(eco&&!eco.disabled){showEcosystem(eco.dataset.ecosystemView);return}
-
-    const game=e.target.closest?.('[data-game-nav]');
-    if(game&&!game.disabled){showGame(game.dataset.gameNav);return}
-
-    const learn=e.target.closest?.('[data-learn-module],[data-learn-next]');
-    if(learn&&!learn.disabled){showLearn(learn.dataset.learnModule||learn.dataset.learnNext);return}
-
-    const exchange=e.target.closest?.('[data-exchange]');
-    if(exchange&&!exchange.disabled){selectExchange(exchange.dataset.exchange);return}
 
     const custom=e.target.closest?.('[data-customize-target]');
     if(custom&&!custom.disabled){showCustomization(custom.dataset.customizeTarget);return}
@@ -367,7 +350,6 @@
     });
   });
 
-  q('#refreshNews')?.addEventListener('click',loadAnnouncements);
   q('#xrpRefreshHistory')?.addEventListener('click',()=>{try{window.XRPetHistory?.setView?.(window.XRPetHistoryPending||'All')}catch{}});
   window.addEventListener('xrpet:view-change',e=>{
     if(e.detail?.view==='announcements')loadAnnouncements();
@@ -377,9 +359,4 @@
 
   if(!qa('.primary-view-section.view-active').length)showView('home');
   else resetWorkspace();
-
-  refreshMarket();
-  loadAnnouncements();
-  setInterval(refreshMarket,5000);
-  setInterval(()=>{if(!document.hidden)loadAnnouncements()},60000);
 })();

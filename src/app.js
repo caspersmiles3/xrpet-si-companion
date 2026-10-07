@@ -418,8 +418,8 @@ function renderExchangeBoard(data={}){
 async function loadExchangeBoard(){try{const r=await fetch('/api/exchange-board',{cache:'no-store'}),d=await r.json();if(!r.ok)throw new Error();renderExchangeBoard(d)}catch{setText('#globalXrpChange','COMPOSITE FEED OFFLINE')}}
 function bindExchangeMenu(){
   qa('[data-exchange]').forEach(button=>button.addEventListener('click',async()=>{
-    await setExchange(button.dataset.exchange);
     setPrimaryView('exchanges');
+    await setExchange(button.dataset.exchange);
   }));
   renderExchangeSelection();
   clearInterval(exchangeBoardTimer);
@@ -2539,6 +2539,7 @@ function setPrimaryView(view='home'){
   });
   qa('[data-primary-view]').forEach(b=>b.classList.toggle('active',b.dataset.primaryView===next));
   document.body.dataset.primaryView=next;
+  window.dispatchEvent(new CustomEvent('xrpet:view-change',{detail:{view:next}}));
   qa('[data-customization-panel]').forEach(p=>p.classList.remove('is-open'));
   document.body.classList.remove('workspace-open','customization-open');
 
@@ -2593,6 +2594,7 @@ const XRP_LEARN_QUIZ=[
 ];
 let learnModule='xrp',quizIndex=0,quizCorrect=0,quizAnswered=false;
 function openLearnModule(name='xrp'){
+  setPrimaryView('learn');
   learnModule=name;
   qa('[data-learn-panel]').forEach(p=>p.classList.toggle('active',p.dataset.learnPanel===name));
   qa('[data-learn-module]').forEach(b=>b.classList.toggle('active',b.dataset.learnModule===name));
