@@ -11067,3 +11067,95 @@ body.sidebar-collapsed #rippletRoamLayer{
     padding:1px 4px!important;
   }
 }
+
+
+/* XRPet 5.5.65 — bottom sidebar switch + full-column Ripplet roaming */
+#xrpetSidebar .sidebar-switch-bar{
+  position:relative!important;
+  inset:auto!important;
+  left:auto!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:auto!important;
+  flex:0 0 24px!important;
+  width:100%!important;
+  height:24px!important;
+  min-width:0!important;
+  min-height:24px!important;
+  margin:1px 0 0!important;
+  padding:0 7px!important;
+  display:grid!important;
+  grid-template-columns:16px minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:5px!important;
+  border:1px solid rgba(91,210,233,.08)!important;
+  border-radius:5px!important;
+  background:#050c11!important;
+  color:#607f8a!important;
+  box-shadow:none!important;
+  text-align:left!important;
+}
+#xrpetSidebar .sidebar-switch-bar span{
+  display:block!important;
+  font-size:.62rem!important;
+  line-height:1!important;
+  color:#78aab6!important;
+}
+#xrpetSidebar .sidebar-switch-bar b{
+  display:block!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  font-size:.36rem!important;
+  font-weight:780!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+}
+#xrpetSidebar .sidebar-switch-bar:hover{
+  color:#c5edf3!important;
+  border-color:rgba(93,211,232,.18)!important;
+  background:#08151b!important;
+}
+#xrpetSidebar .ledger-badge{
+  margin-top:0!important;
+}
+
+/* Companion can traverse the full left column; overlay never steals clicks. */
+#rippletRoamLayer.ripplet-roam-layer{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100dvh!important;
+  pointer-events:none!important;
+  overflow:visible!important;
+}
+#lifeAvatar.global-life-avatar{
+  pointer-events:none!important;
+}
+body.sidebar-collapsed #xrpetSidebar .sidebar-switch-bar{
+  position:absolute!important;
+  left:2px!important;
+  right:auto!important;
+  bottom:8px!important;
+  width:18px!important;
+  height:34px!important;
+  min-width:18px!important;
+  min-height:34px!important;
+  padding:0!important;
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  place-items:center!important;
+  border-radius:0 6px 6px 0!important;
+}
+body.sidebar-collapsed #xrpetSidebar .sidebar-switch-bar b{
+  display:none!important;
+}
+body.sidebar-collapsed #xrpetSidebar .sidebar-switch-bar span{
+  font-size:.72rem!important;
+}
+
+@media(max-width:760px){
+  #xrpetSidebar .sidebar-switch-bar{
+    width:100%!important;
+  }
+}
