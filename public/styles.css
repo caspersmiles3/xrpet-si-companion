@@ -9561,3 +9561,24 @@ body:not(.workspace-open) .main-shell>.primary-view-section:not(.view-active){
 @media(prefers-reduced-motion:reduce){
   .ripplet-crypto-coin{animation:none!important}
 }
+
+
+/* v5.5.48 — authoritative penny-size Ripplet runtime */
+#rippletRoamLayer #lifeAvatar,
+#rippletRoamLayer #persistentCompanionLayer,
+#rippletRoamLayer #floatingCompanion,
+#rippletRoamLayer #companion3d,
+#rippletRoamLayer #ripplet2d,
+#rippletRoamLayer .ripplet2d-svg{
+  width:52px!important;
+  height:72px!important;
+  min-width:52px!important;
+  min-height:72px!important;
+  max-width:52px!important;
+  max-height:72px!important;
+  box-sizing:border-box!important;
+}
+#rippletRoamLayer #ripplet2d,
+#rippletRoamLayer .ripplet2d-svg{
+  transform-origin:50% 100%!important;
+}
