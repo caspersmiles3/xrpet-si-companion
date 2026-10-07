@@ -1095,15 +1095,16 @@ function activePageBounds(pad=8){
   return {left,top,right,bottom};
 }
 function sidebarRoamBounds(){
-  const sidebar=q('#xrpetSidebar'),avatar=lifeAvatar?.getBoundingClientRect();
+  const sidebar=q('#xrpetSidebar'),switchBar=q('#sidebarToggle'),avatar=lifeAvatar?.getBoundingClientRect();
   if(!sidebar)return {left:4,top:4,right:Math.max(8,window.innerWidth-4),bottom:Math.max(8,window.innerHeight-4)};
-  const r=sidebar.getBoundingClientRect();
+  const r=sidebar.getBoundingClientRect(),sr=switchBar?.getBoundingClientRect();
   const aw=Math.max(52,avatar?.width||52),ah=Math.max(72,avatar?.height||72);
+  const usableBottom=sr?.top&&sr.top>r.top?r.bottom-Math.max(0,r.bottom-sr.top)+2:r.bottom-5;
   return {
     left:r.left+5,
     top:r.top+5,
     right:Math.max(r.left+5+aw,r.right-5),
-    bottom:Math.max(r.top+5+ah,r.bottom-5)
+    bottom:Math.max(r.top+5+ah,usableBottom-3)
   };
 }
 function topRailBounds(){

@@ -11159,3 +11159,107 @@ body.sidebar-collapsed #xrpetSidebar .sidebar-switch-bar span{
     width:100%!important;
   }
 }
+
+
+/* XRPet 5.5.66 — repair sidebar switch geometry and remove legacy edge artifacts */
+#xrpetSidebar::after,
+.sidebar::after{
+  display:none!important;
+  content:none!important;
+}
+
+body:not(.sidebar-collapsed) #xrpetSidebar #sidebarToggle.sidebar-switch-bar{
+  position:relative!important;
+  inset:auto!important;
+  top:auto!important;
+  right:auto!important;
+  bottom:auto!important;
+  left:auto!important;
+  z-index:3!important;
+  flex:0 0 24px!important;
+  width:100%!important;
+  max-width:100%!important;
+  height:24px!important;
+  min-width:0!important;
+  min-height:24px!important;
+  margin:1px 0 0!important;
+  padding:0 7px!important;
+  display:grid!important;
+  grid-template-columns:16px minmax(0,1fr)!important;
+  place-items:initial!important;
+  align-items:center!important;
+  gap:5px!important;
+  border:1px solid rgba(91,210,233,.08)!important;
+  border-radius:5px!important;
+  background:#050c11!important;
+  color:#607f8a!important;
+  box-shadow:none!important;
+  transform:none!important;
+  writing-mode:horizontal-tb!important;
+}
+body:not(.sidebar-collapsed) #xrpetSidebar #sidebarToggle.sidebar-switch-bar span{
+  display:block!important;
+  width:auto!important;
+  font-size:.62rem!important;
+  line-height:1!important;
+  transform:none!important;
+  writing-mode:horizontal-tb!important;
+}
+body:not(.sidebar-collapsed) #xrpetSidebar #sidebarToggle.sidebar-switch-bar b{
+  display:block!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  font-size:.36rem!important;
+  line-height:1!important;
+  writing-mode:horizontal-tb!important;
+}
+
+body.sidebar-collapsed #xrpetSidebar #sidebarToggle.sidebar-switch-bar{
+  display:grid!important;
+  position:absolute!important;
+  left:2px!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:8px!important;
+  width:18px!important;
+  max-width:18px!important;
+  height:34px!important;
+  min-width:18px!important;
+  min-height:34px!important;
+  padding:0!important;
+  margin:0!important;
+  grid-template-columns:1fr!important;
+  place-items:center!important;
+  border:1px solid #17333e!important;
+  border-radius:0 6px 6px 0!important;
+  background:#061117!important;
+  color:#78aab6!important;
+  box-shadow:none!important;
+  transform:none!important;
+  writing-mode:horizontal-tb!important;
+}
+body.sidebar-collapsed #xrpetSidebar #sidebarToggle.sidebar-switch-bar b{
+  display:none!important;
+}
+body.sidebar-collapsed #xrpetSidebar #sidebarToggle.sidebar-switch-bar span{
+  display:block!important;
+  font-size:.72rem!important;
+  transform:none!important;
+}
+
+/* Footer stays immediately below the switch bar. */
+#xrpetSidebar .ledger-badge{
+  margin-top:0!important;
+  position:relative!important;
+  z-index:2!important;
+}
+
+/* Keep Ripplet visually contained to the left rail. */
+#rippletRoamLayer.ripplet-roam-layer{
+  clip-path:inset(0 calc(100vw - var(--xrpet-sidebar-open)) 0 0)!important;
+}
+body.sidebar-collapsed #rippletRoamLayer.ripplet-roam-layer{
+  display:none!important;
+}
