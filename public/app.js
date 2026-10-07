@@ -1100,11 +1100,10 @@ function topRailBounds(includeDock=false){
   const dockLeft=rr?rr.left-sr.left+shell.scrollLeft:deckRight;
   const left=Math.max(2,deckLeft+8);
   const right=Math.max(left+aw,includeDock?deckRight-8:dockLeft-10);
-  // Ripplet lives over the locked top rail, not down in page content.
-  const top=Math.max(0,dr.top-sr.top+shell.scrollTop-6);
-  const deckBottom=dr.bottom-sr.top+shell.scrollTop-4;
-  const bottom=includeDock?Math.max(top+ah+4,deckBottom):top+ah+12;
-  return {left,top,right,bottom};
+  // One grounded walking line: Ripplet's feet stay on the top-rail floor.
+  const ground=dr.bottom-sr.top+shell.scrollTop-7;
+  const top=Math.max(0,ground-ah);
+  return {left,top,right,bottom:top+ah};
 }
 function rippletMovementBounds(includeDock=false){
   return topRailBounds(includeDock);
@@ -1122,22 +1121,39 @@ function syncRoamBounds(){
   roamLayer.style.width=Math.max(shell.clientWidth,shell.scrollWidth)+'px';
   roamLayer.style.height=Math.max(shell.clientHeight,shell.scrollHeight)+'px';
 }
-function setRoamPosition(x,y,activity='explore',durationOverride=''){
+function setRoamPosition(x,y,activity='walk',durationOverride=''){
   if(!lifeAvatar||!roamLayer)return;
   const avatar=lifeAvatar.getBoundingClientRect();
   const includeDock=rippletRouteAllowsShell||rippletMusicStageState!=='idle'||activity==='dock';
   const b=rippletMovementBounds(includeDock);
-  const minX=b.left,minY=b.top;
-  const maxX=Math.max(minX,b.right-avatar.width),maxY=Math.max(minY,b.bottom-avatar.height);
-  const px=Math.max(minX,Math.min(maxX,x)),py=Math.max(minY,Math.min(maxY,y));
-  lifeAvatar.style.transitionDuration=durationOverride||(
-    activity==='run'?'.72s':activity==='jump'?'.58s':activity==='climb'?'1s':'1.18s'
-  );
-  lifeAvatar.style.transitionTimingFunction=activity==='run'?'linear':'cubic-bezier(.2,.72,.2,1)';
+  const minX=b.left;
+  const maxX=Math.max(minX,b.right-avatar.width);
+  const px=Math.max(minX,Math.min(maxX,x));
+  const py=b.top;
+  const duration=durationOverride||'.9s';
+  lifeAvatar.style.transitionProperty='transform';
+  lifeAvatar.style.transitionDuration=duration;
+  lifeAvatar.style.transitionTimingFunction='linear';
   lifeAvatar.style.transform='translate3d('+px+'px,'+py+'px,0)';
   lifeAvatar.dataset.activity=activity;
   roamX=maxX>minX?(px-minX)/(maxX-minX):.5;
-  roamY=maxY>minY?(py-minY)/(maxY-minY):.5;
+  roamY=0;
+}
+function walkRippletTo(x,activity='walk',durationOverride=''){
+  if(!lifeAvatar)return false;
+  const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar.getBoundingClientRect();
+  if(!shell||!sr)return false;
+  const currentX=ar.left-sr.left+shell.scrollLeft;
+  const distance=Math.abs(x-currentX);
+  const duration=durationOverride||Math.max(.28,Math.min(2.4,distance/145)).toFixed(2)+'s';
+  window.XRPet2D?.face?.(x<currentX?'left':'right');
+  window.XRPet2D?.motor?.('walk');
+  setRoamPosition(x,0,activity,duration);
+  rippletRouteUntil=performance.now()+parseFloat(duration)*1000;
+  setTimeout(()=>{
+    if(!rippletMusicDancing&&!rippletMusicControlBusy&&!roamDocked)window.XRPet2D?.motor?.('stand');
+  },parseFloat(duration)*1000+40);
+  return true;
 }
 function cancelRippletRoute(){
   if(!lifeAvatar)return;
@@ -1170,10 +1186,9 @@ function dockPosition(){
   const w=Math.max(52,avatar?.width||52),h=Math.max(72,avatar?.height||72);
   const b=topRailBounds(true);
   const desiredX=r.left-sr.left+shell.scrollLeft+(r.width-w)/2;
-  const desiredY=r.top-sr.top+shell.scrollTop+Math.max(1,(r.height-h)/2);
   return {
     x:Math.max(b.left,Math.min(b.right-w,desiredX)),
-    y:Math.max(b.top,Math.min(b.bottom-h,desiredY))
+    y:b.top
   };
 }
 function setDockStatus(text){
@@ -1191,19 +1206,20 @@ function dockRipplet(){
   if(target){
     const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar?.getBoundingClientRect();
     const currentX=shell&&sr&&ar?ar.left-sr.left+shell.scrollLeft:target.x;
-    window.XRPet2D?.face?.(target.x<currentX?'left':'right');
-    window.XRPet2D?.motor?.('run');
+    const distance=Math.abs(target.x-currentX);
+    const walkMs=Math.max(320,Math.min(2200,Math.round(distance/145*1000)));
     setDockStatus('DOCKING');
-    setRoamPosition(target.x,target.y,'run','.48s');
+    window.XRPet2D?.face?.(target.x<currentX?'left':'right');
+    window.XRPet2D?.motor?.('walk');
+    setRoamPosition(target.x,target.y,'dock',walkMs+'ms');
+    rippletRouteUntil=performance.now()+walkMs;
     setTimeout(()=>{
       if(!roamDocked||rippletMusicDancing)return;
-      const berth=dockPosition();
-      if(berth)setRoamPosition(berth.x,berth.y,'stand','0s');
       setDockStatus('DOCKED');
       if(lifeAvatar)lifeAvatar.dataset.activity='stand';
       window.XRPet2D?.motor?.('stand');
       window.XRPet3D?.perform?.('salute');
-    },520);
+    },walkMs+40);
   }
 }
 function undockRipplet(){
@@ -1229,14 +1245,14 @@ function goRipplet(activity='explore'){
   }
   const targetY=b.top+Math.random()*4;
   const distance=Math.abs(targetX-currentX);
-  const locomotion=distance>150?'run':'walk';
+  const duration=Math.max(.32,Math.min(2.4,distance/145)).toFixed(2)+'s';
   window.XRPet2D?.face?.(targetX<currentX?'left':'right');
-  window.XRPet2D?.motor?.(locomotion);
-  setRoamPosition(targetX,targetY,locomotion,locomotion==='run'?'.55s':'.9s');
-  rippletRouteUntil=performance.now()+(locomotion==='run'?580:930);
+  window.XRPet2D?.motor?.('walk');
+  setRoamPosition(targetX,targetY,'walk',duration);
+  rippletRouteUntil=performance.now()+parseFloat(duration)*1000;
   setTimeout(()=>{
     if(!rippletMusicDancing&&!roamDocked&&!rippletRouteBusy())window.XRPet2D?.motor?.('stand');
-  },locomotion==='run'?610:960);
+  },parseFloat(duration)*1000+40);
   return true;
 }
 let lastInterfacePlayAt=0;
@@ -2131,8 +2147,7 @@ function musicControlPosition(control){
   const sr=shell.getBoundingClientRect(),br=button.getBoundingClientRect(),b=topRailBounds(false);
   const aw=Math.max(52,avatar.width||52),ah=Math.max(72,avatar.height||72);
   const x=br.left-sr.left+shell.scrollLeft+br.width/2-aw/2;
-  const y=Math.max(b.top,Math.min(b.bottom-ah,br.top-sr.top+shell.scrollTop-ah*.28));
-  return {x:Math.max(b.left,Math.min(b.right-aw,x)),y,button};
+  return {x:Math.max(b.left,Math.min(b.right-aw,x)),y:b.top,button};
 }
 function resumeAfterMusicControl(){
   rippletMusicControlBusy=false;
@@ -2176,14 +2191,14 @@ function rippletPressMusicControl(control='play'){
   const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar?.getBoundingClientRect();
   const currentX=shell&&sr&&ar?ar.left-sr.left+shell.scrollLeft:target.x;
   const distance=Math.abs(target.x-currentX);
-  const travelMs=Math.max(220,Math.min(700,Math.round(distance/1.15)));
+  const travelMs=Math.max(320,Math.min(2200,Math.round(distance/145*1000)));
   const label=control==='previous'?'Previous':control==='next'?'Next':control==='shuffle'?'Shuffle':'Play';
 
   setText('#mindAction','Pressing '+label);
   setText('#mindThought','I am going to the music player and pressing '+label+' myself.');
   window.XRPet2D?.face?.(target.x<currentX?'left':'right');
-  window.XRPet2D?.motor?.('run');
-  setRoamPosition(target.x,target.y,'run',travelMs+'ms');
+  window.XRPet2D?.motor?.('walk');
+  setRoamPosition(target.x,target.y,'walk',travelMs+'ms');
 
   setTimeout(()=>{
     if(token!==rippletMusicControlToken)return;
@@ -2232,25 +2247,20 @@ function musicPlayerStagePosition(){
   const player=q('#xrpetMusicPlayer'),shell=q('.main-shell'),ar=lifeAvatar?.getBoundingClientRect();
   if(!player||!shell||!ar)return null;
   const sr=shell.getBoundingClientRect(),pr=player.getBoundingClientRect();
-  const aw=Math.max(52,ar.width||52),ah=Math.max(72,ar.height||72);
-  // The landing strip is attached to the locked music player rail, near its waveform side.
-  const stageLineY=pr.bottom-sr.top+shell.scrollTop-3;
-  const x=pr.left-sr.left+shell.scrollLeft+Math.max(aw*.5,pr.width*.70)-aw*.5;
-  const y=stageLineY-ah;
-  const b=shellMovementBounds();
+  const aw=Math.max(52,ar.width||52);
+  const b=topRailBounds(false);
+  const x=pr.left-sr.left+shell.scrollLeft+Math.max(aw*.5,pr.width*.72)-aw*.5;
   return {
     x:Math.max(b.left,Math.min(b.right-aw,x)),
-    y:Math.max(b.top,Math.min(b.bottom-ah,y)),
-    approachY:Math.max(b.top,Math.min(b.bottom-ah,y+Math.min(30,rippletMaxJumpHeight()-4))),
+    y:b.top,
     player
   };
 }
 function snapRippletToMusicStage(){
-  if(!rippletMusicDancing||rippletMusicStageState!=='dancing')return false;
+  if(!rippletMusicDancing)return false;
   const stage=musicPlayerStagePosition();if(!stage)return false;
   rippletRouteAllowsShell=true;
-  setRoamPosition(stage.x,stage.y,'dance','0s');
-  return true;
+  return walkRippletTo(stage.x,'walk');
 }
 function danceToMusicBeat(){
   clearTimeout(rippletMusicDanceTimer);
@@ -2259,7 +2269,6 @@ function danceToMusicBeat(){
     rippletMusicDanceTimer=setTimeout(danceToMusicBeat,160);
     return;
   }
-  snapRippletToMusicStage();
   if(lifeAvatar){
     lifeAvatar.dataset.activity='dance';
     lifeAvatar.dataset.reaction='dance';
@@ -2281,34 +2290,27 @@ function runRippletToMusicStage(){
   const shell=q('.main-shell'),sr=shell?.getBoundingClientRect(),ar=lifeAvatar?.getBoundingClientRect();
   if(!shell||!sr||!ar)return;
   const currentX=ar.left-sr.left+shell.scrollLeft;
-  const currentY=ar.top-sr.top+shell.scrollTop;
-  const distance=Math.hypot(stage.x-currentX,stage.approachY-currentY);
-  const sprintMs=Math.max(170,Math.min(620,Math.round(distance/1.25)));
+  const distance=Math.abs(stage.x-currentX);
+  const walkMs=Math.max(320,Math.min(2200,Math.round(distance/145*1000)));
 
-  rippletMusicStageState='running';
+  rippletMusicStageState='walking';
   rippletRouteAllowsShell=true;
   document.body.classList.add('music-ripplet-stage');
   stage.player.classList.add('ripplet-stage-active');
-  setText('#mindAction','Sprinting to music stage');
-  setText('#mindThought','Music started. I am running to the locked music-player rail so I can dance out of the way.');
-  window.XRPet2D?.motor?.('run');
-  setRoamPosition(stage.x,stage.approachY,'run',sprintMs+'ms');
+  setText('#mindAction','Walking to music stage');
+  setText('#mindThought','Music started. I am walking along the top rail to my dance position.');
+  window.XRPet2D?.face?.(stage.x<currentX?'left':'right');
+  window.XRPet2D?.motor?.('walk');
+  setRoamPosition(stage.x,stage.y,'walk',walkMs+'ms');
+  rippletRouteUntil=performance.now()+walkMs;
 
   setTimeout(()=>{
     if(token!==rippletMusicStageToken||!rippletMusicDancing||window.XRPetMusicPlaying!==true)return;
-    rippletMusicStageState='jumping';
-    setText('#mindAction','Jumping onto music stage');
-    window.XRPet2D?.motor?.('jump');
-    setRoamPosition(stage.x,stage.y,'jump','320ms');
-
-    setTimeout(()=>{
-      if(token!==rippletMusicStageToken||!rippletMusicDancing||window.XRPetMusicPlaying!==true)return;
-      rippletMusicStageState='dancing';
-      setRoamPosition(stage.x,stage.y,'stand','0s');
-      window.XRPet2D?.motor?.('stand');
-      danceToMusicBeat();
-    },340);
-  },sprintMs+40);
+    rippletMusicStageState='dancing';
+    if(lifeAvatar)lifeAvatar.dataset.activity='dance';
+    window.XRPet2D?.motor?.('stand');
+    danceToMusicBeat();
+  },walkMs+40);
 }
 function setRippletMusicDance(playing){
   const next=playing===true;
@@ -2497,7 +2499,7 @@ addEventListener('resize',()=>{
       return;
     }
     if(roamDocked){
-      const p=dockPosition();if(p)setRoamPosition(p.x,p.y,'dock','0s');
+      const p=dockPosition();if(p)walkRippletTo(p.x,'dock','.35s');
     }else{
       goRipplet('explore');
     }
@@ -2507,7 +2509,7 @@ window.addEventListener('xrpet:view-change',()=>{
   syncRoamBounds();
   if(rippletMusicDancing)snapRippletToMusicStage();
   else if(roamDocked){
-    const p=dockPosition();if(p)setRoamPosition(p.x,p.y,'dock','0s');
+    const p=dockPosition();if(p)walkRippletTo(p.x,'dock','.35s');
   }
 });
 
@@ -2729,7 +2731,7 @@ function setPrimaryView(view='home'){
       syncRoamBounds?.();
       if(rippletMusicDancing)snapRippletToMusicStage?.();
       else if(roamDocked){
-        const p=dockPosition?.();if(p)setRoamPosition?.(p.x,p.y,'dock','0s');
+        const p=dockPosition?.();if(p)walkRippletTo?.(p.x,'dock','.35s');
       }
     }catch{}
   });

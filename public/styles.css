@@ -9888,3 +9888,148 @@ body.ripplet-docked #lifeAvatar{
   letter-spacing:.13em!important;
   color:#6d8f9b!important;
 }
+
+
+/* XRPet 5.5.59 — grounded top-rail walking + sleek dock/music surfaces */
+.top-command-deck{
+  position:sticky!important;
+  isolation:isolate!important;
+}
+.top-command-deck::after{
+  content:""!important;
+  position:absolute!important;
+  left:8px!important;
+  right:8px!important;
+  bottom:5px!important;
+  height:2px!important;
+  border-radius:99px!important;
+  background:linear-gradient(90deg,rgba(76,205,229,.08),rgba(110,235,250,.36) 20%,rgba(110,235,250,.36) 80%,rgba(76,205,229,.08))!important;
+  box-shadow:0 1px 0 rgba(255,255,255,.025)!important;
+  pointer-events:none!important;
+  z-index:2!important;
+}
+.ripplet2d .r2-ground{
+  display:none!important;
+}
+
+/* Music: one compact matte control module, no bulky nested cards. */
+.top-command-deck #xrpetMusicPlayer.top-music-player{
+  position:relative!important;
+  border:1px solid rgba(91,210,233,.14)!important;
+  border-radius:10px!important;
+  background:#071116!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
+  padding:8px 10px!important;
+  gap:6px 10px!important;
+  overflow:visible!important;
+}
+.top-command-deck #xrpetMusicPlayer .music-now-playing{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  padding:3px 4px!important;
+}
+.top-command-deck #xrpetMusicPlayer .music-now-copy span{
+  color:#58727c!important;
+  font-size:.36rem!important;
+  letter-spacing:.14em!important;
+}
+.top-command-deck #xrpetMusicPlayer .music-now-copy strong{
+  color:#dff9ff!important;
+  font-size:.60rem!important;
+  font-weight:800!important;
+}
+.top-command-deck #xrpetMusicPlayer .music-main,
+.top-command-deck #xrpetMusicPlayer .music-transport button{
+  border:1px solid rgba(91,210,233,.16)!important;
+  background:#0a171d!important;
+  color:#c9f5fb!important;
+  box-shadow:none!important;
+}
+.top-command-deck #xrpetMusicPlayer .music-main{
+  border-radius:9px!important;
+}
+.top-command-deck #xrpetMusicPlayer .music-transport button{
+  border-radius:7px!important;
+}
+.top-command-deck #xrpetMusicPlayer .music-main:hover,
+.top-command-deck #xrpetMusicPlayer .music-transport button:hover{
+  background:#0d2028!important;
+  border-color:rgba(104,226,245,.34)!important;
+}
+.top-command-deck #xrpetMusicPlayer .music-waveform{
+  opacity:.72!important;
+  border:0!important;
+  background:transparent!important;
+}
+.top-command-deck #xrpetMusicPlayer .music-volume-row{
+  background:transparent!important;
+  border:0!important;
+  padding:0 3px!important;
+}
+
+/* Dock: clean inset berth integrated into the same rail. */
+.top-ripplet-box{
+  border:1px solid rgba(91,210,233,.14)!important;
+  border-radius:10px!important;
+  background:#071116!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
+}
+.top-ripplet-box .ripplet-dock-platform{
+  width:68px!important;
+  height:88px!important;
+  min-width:68px!important;
+  min-height:88px!important;
+  border-radius:10px!important;
+  border:1px solid rgba(91,210,233,.18)!important;
+  background:#050d12!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.018)!important;
+}
+.top-ripplet-box .ripplet-dock-platform::before{
+  inset:4px!important;
+  border-radius:8px!important;
+  border:1px solid rgba(100,223,241,.08)!important;
+  animation:none!important;
+}
+.top-ripplet-box .ripplet-dock-platform::after{
+  content:""!important;
+  left:9px!important;
+  right:9px!important;
+  top:auto!important;
+  bottom:5px!important;
+  height:2px!important;
+  border:0!important;
+  border-radius:99px!important;
+  background:rgba(107,229,246,.28)!important;
+  animation:none!important;
+}
+.top-ripplet-box .ripplet-dock-platform i{
+  display:none!important;
+}
+.top-ripplet-box .ripplet-dock-platform b{
+  bottom:8px!important;
+  color:#68828b!important;
+  text-shadow:none!important;
+  font-size:.34rem!important;
+  letter-spacing:.12em!important;
+}
+.top-ripplet-box.is-docked .ripplet-dock-platform{
+  border-color:rgba(111,229,247,.32)!important;
+  box-shadow:inset 0 0 18px rgba(66,205,227,.06)!important;
+}
+.top-ripplet-box .ripplet-dock-actions button{
+  border:1px solid rgba(91,210,233,.14)!important;
+  background:#0a171d!important;
+  color:#bfeaf1!important;
+  border-radius:7px!important;
+  box-shadow:none!important;
+}
+.top-ripplet-box .ripplet-dock-actions button:hover{
+  background:#0d2028!important;
+  border-color:rgba(104,226,245,.30)!important;
+}
+body.ripplet-docked #lifeAvatar,
+body.music-ripplet-stage #lifeAvatar,
+body:not(.music-ripplet-stage) #lifeAvatar{
+  filter:none!important;
+}
