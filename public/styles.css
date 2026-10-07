@@ -9798,3 +9798,21 @@ body.music-ripplet-stage #lifeAvatar{
   outline:none!important;
   box-shadow:none!important;
 }
+
+
+/* XRPet 5.5.56 — Ripplet top-rail-only roaming */
+.ripplet-roam-layer{
+  z-index:96!important;
+  pointer-events:none!important;
+  overflow:visible!important;
+}
+#lifeAvatar{
+  z-index:214!important;
+  pointer-events:none!important;
+}
+body:not(.music-ripplet-stage) #lifeAvatar{
+  filter:drop-shadow(0 7px 9px rgba(0,0,0,.34))!important;
+}
+.top-command-deck{
+  overflow:visible!important;
+}
