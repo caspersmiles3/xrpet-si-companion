@@ -1701,7 +1701,9 @@ function setAppearance(detail={}){
   configureEquipment(detail);
   applyRoom(detail.room||'nexus');
   clearTimeout(modelLoadTimer);
+  // Show a real 3D Ripplet immediately, then upgrade to the canonical rigged GLB.
   useProceduralModel('ripplet');
+  modelLoadTimer=setTimeout(()=>{ensureBuiltInModel('ripplet')},80);
 }
 window.addEventListener('xrpet:appearance',e=>setAppearance(e.detail||{}));
 setAppearance({room:'nexus',cosmetic:'classic'});
